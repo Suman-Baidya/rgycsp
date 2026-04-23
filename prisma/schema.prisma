@@ -1,0 +1,248 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ============================================
+// Core User & Authentication
+// ============================================
+
+model User {
+  id            String     @id @default(cuid())
+  name          String?
+  email         String     @unique
+  emailVerified DateTime?
+  image         String?
+  passwordHash  String?
+  role          SystemRole @default(USER)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  accounts       Account[]
+  sessions       Session[]
+  workspaceRoles WorkspaceRole[]
+  studentProfile StudentProfile?
+}
+
+enum SystemRole {
+  SUPER_ADMIN
+  USER
+}
+
+// ============================================
+// Multi-Tenancy (Workspaces)
+// ============================================
+
+model Workspace {
+  id        String  @id @default(cuid())
+  name      String
+  subdomain String  @unique
+  logoUrl   String?
+  isActive  Boolean @default(true)
+
+  tokensBalance Int @default(0) // Custom Token Economy
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  roles           WorkspaceRole[]
+  courses         Course[]
+  batches         Batch[]
+  studentProfiles StudentProfile[]
+  attendances     Attendance[]
+  invoices        Invoice[]
+}
+
+// ============================================
+// Role-Based Access Control
+// ============================================
+
+model WorkspaceRole {
+  id          String            @id @default(cuid())
+  userId      String
+  workspaceId String
+  role        WorkspaceRoleType
+
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, workspaceId])
+}
+
+enum WorkspaceRoleType {
+  ADMIN
+  MANAGER
+  TEACHER
+  ACCOUNTANT
+  STUDENT
+  PARENT
+}
+
+// ============================================
+// Core LMS Features (Courses & Batches)
+// ============================================
+
+model Course {
+  id          String  @id @default(cuid())
+  workspaceId String
+  title       String
+  description String?
+  feeAmount   Float   @default(0) // Standard fee amount
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  batches   Batch[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Batch {
+  id          String  @id @default(cuid())
+  workspaceId String
+  courseId    String
+  name        String // e.g., "Morning Batch A"
+  schedule    String? // Could be JSON or stringified schedule
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  course    Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  students StudentProfile[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ============================================
+// Student & Parent Profiles
+// ============================================
+
+model StudentProfile {
+  id          String  @id @default(cuid())
+  userId      String? @unique // Optional if account isn't created yet
+  workspaceId String
+  batchId     String?
+
+  fullName      String
+  enrollmentNo  String // System generated ID
+  dob           DateTime?
+  gender        String?
+  phone         String?
+  parentName    String?
+  parentPhone   String?
+  address       String?
+  bloodGroup    String?
+  admissionDate DateTime  @default(now())
+
+  user      User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  batch     Batch?    @relation(fields: [batchId], references: [id], onDelete: SetNull)
+
+  attendances Attendance[]
+  invoices    Invoice[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([workspaceId, enrollmentNo])
+}
+
+// ============================================
+// ERP / Attendance
+// ============================================
+
+model Attendance {
+  id               String           @id @default(cuid())
+  studentProfileId String
+  workspaceId      String
+  date             DateTime // The day of attendance
+  status           AttendanceStatus // PRESENT, ABSENT, LATE, HALF_DAY
+  remarks          String?
+
+  student   StudentProfile @relation(fields: [studentProfileId], references: [id], onDelete: Cascade)
+  workspace Workspace      @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([studentProfileId, date])
+}
+
+enum AttendanceStatus {
+  PRESENT
+  ABSENT
+  LATE
+  HALF_DAY
+}
+
+// ============================================
+// ERP / Accounting
+// ============================================
+
+model Invoice {
+  id               String @id @default(cuid())
+  workspaceId      String
+  studentProfileId String
+
+  amount   Float
+  status   PaymentStatus // PENDING, PAID, OVERDUE, CANCELLED
+  dueDate  DateTime
+  paidDate DateTime?
+  notes    String? // E.g., "Monthly Tuition Fee - July"
+
+  workspace Workspace      @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  student   StudentProfile @relation(fields: [studentProfileId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  OVERDUE
+  CANCELLED
+}
+
+// ============================================
+// NextAuth / Auth.js Models
+// ============================================
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
