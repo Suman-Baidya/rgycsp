@@ -1,4 +1,4 @@
-import { Zap, ShieldCheck, Cpu, Globe } from "lucide-react";
+import { Zap, ShieldCheck, Cpu, Globe, Rocket, Brain, GraduationCap, Users, Layout } from "lucide-react";
 
 const FEATURES = [
   {
@@ -23,7 +23,21 @@ const FEATURES = [
   }
 ];
 
-export function WhyChooseUs() {
+export function WhyChooseUs({ data }: { data?: any }) {
+  const content = data?.content || {};
+  const title = data?.title || "The Key to Unlocking Your Institute's Potential";
+  const subtitle = data?.subtitle || "Why Choose ABCD";
+  const description = content.description || "We bypass archaic software configurations. We offer you an exclusive Token Economy system directly cutting transaction fees while automating the heavy lifting of institute administration.";
+
+  const features = content.features || [
+    { icon: "Cpu", title: "AI Ecosystem", description: "Generate certificates, schedules, and custom examinations dynamically using our powerful AI credits." },
+    { icon: "Globe", title: "Dedicated Franchise Domains", description: "Your institute receives an entirely independent subdomain ensuring premium branding to your students." },
+    { icon: "ShieldCheck", title: "Enterprise Grade Security", description: "PostgreSQL databases deployed via Neon serverless architecture isolating data comprehensively." },
+    { icon: "Zap", title: "Blazing Fast Edge Tech", description: "Built on Next.js 15, ensuring immediate load times globally on any mobile device or tablet." }
+  ];
+
+  const iconMap: any = { Zap, ShieldCheck, Cpu, Globe, Rocket, Brain, GraduationCap, Users, Layout };
+
   return (
     <section id="services" className="py-24 px-6 bg-background">
       <div className="max-w-7xl mx-auto flex flex-col lg:flex-row gap-16 items-center">
@@ -31,26 +45,28 @@ export function WhyChooseUs() {
         <div className="flex-1 order-2 lg:order-1">
           <div className="inline-flex items-center gap-2 py-1.5 px-4 rounded-full bg-primary/5 border border-primary/20 text-primary font-bold text-[10px] tracking-[0.2em] uppercase mb-4 shadow-sm">
             <span className="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
-            Why Choose ABCD
+            {subtitle}
           </div>
           <h2 className="text-4xl lg:text-5xl font-extrabold mt-3 tracking-tight leading-tight">
-            The Key to Unlocking Your Institute's Potential
+            {title}
           </h2>
           <p className="mt-6 text-lg text-muted-foreground leading-relaxed mb-10">
-            We bypass archaic software configurations. We offer you an exclusive Token Economy system directly
-            cutting transaction fees while automating the heavy lifting of institute administration.
+            {description}
           </p>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-            {FEATURES.map((feat, i) => (
-              <div key={i} className="p-6 border rounded-2xl bg-zinc-50 dark:bg-zinc-900 shadow-sm hover:shadow-md transition-shadow group">
-                <div className="w-12 h-12 bg-primary/10 text-primary rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                  {feat.icon}
+            {features.map((feat: any, i: number) => {
+              const Icon = iconMap[feat.icon] || Cpu;
+              return (
+                <div key={i} className="p-6 border rounded-2xl bg-zinc-50 dark:bg-zinc-900 shadow-sm hover:shadow-md transition-shadow group">
+                  <div className="w-12 h-12 bg-primary/10 text-primary rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                    <Icon className="w-6 h-6" />
+                  </div>
+                  <h3 className="text-lg font-bold mb-2">{feat.title}</h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed">{feat.description}</p>
                 </div>
-                <h3 className="text-lg font-bold mb-2">{feat.title}</h3>
-                <p className="text-sm text-muted-foreground leading-relaxed">{feat.description}</p>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
 

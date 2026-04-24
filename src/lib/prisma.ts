@@ -13,10 +13,17 @@ declare global {
 
 const connectionString = process.env.DATABASE_URL;
 
+if (process.env.NODE_ENV === "development") {
+  const maskedUrl = connectionString ? connectionString.split('@')[1]?.substring(0, 30) : "MISSING";
+  console.log("PRISMA: Initializing with host segment:", maskedUrl);
+}
+
 let prismaArgs = {};
 if (connectionString) {
   const adapter = new PrismaNeon({ connectionString });
   prismaArgs = { adapter };
+} else {
+  console.warn("PRISMA: DATABASE_URL is not set. Prisma will likely fail unless provided via config.");
 }
 
 export const db =

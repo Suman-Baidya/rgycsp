@@ -19,15 +19,23 @@ const Linkedin = ({ className }: { className?: string }) => (
   <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path><rect x="2" y="9" width="4" height="12"></rect><circle cx="4" cy="4" r="2"></circle></svg>
 );
 import { Button } from "@/components/ui/button";
+import { useTheme } from "next-themes";
 import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import Image from "next/image";
+import { CustomThemeStyle } from "@/components/providers/CustomThemeStyle";
 
-export function LandingNavbar() {
+export function LandingNavbar({ settings }: { settings?: any }) {
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
-  const [theme, setTheme] = useState("light");
+  const { theme, setTheme } = useTheme();
   const [isScrolled, setIsScrolled] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  // Avoid hydration mismatch
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Handle scroll for sticky behavior
   useEffect(() => {
@@ -43,117 +51,147 @@ export function LandingNavbar() {
   }, []);
 
   const toggleTheme = () => {
-    const root = document.documentElement;
-    if (theme === "light") {
-      root.classList.add('dark');
-      setTheme("dark");
-    } else {
-      root.classList.remove('dark');
-      setTheme("light");
+    setTheme(theme === "light" ? "dark" : "light");
+  };
+
+  const siteName = settings?.siteName || "ABCD Edu Hub";
+  const contactPhone = settings?.contactPhone || "8944899747";
+  const logoUrl = settings?.logoUrl || "/logo.png";
+
+  // Navbar Logic Config with deep fallbacks
+  const config = {
+    showNavbar: settings?.navbarConfig?.showNavbar ?? true,
+    showTopBar: settings?.navbarConfig?.showTopBar ?? true,
+    showMenus: settings?.navbarConfig?.showMenus ?? true,
+    ctaPrimary: {
+      text: settings?.navbarConfig?.ctaPrimary?.text || "Login",
+      link: settings?.navbarConfig?.ctaPrimary?.link || "/login"
+    },
+    ctaSecondary: {
+      text: settings?.navbarConfig?.ctaSecondary?.text || "Call Now",
+      link: settings?.navbarConfig?.ctaSecondary?.link || `tel:${contactPhone}`
     }
   };
 
-  const navLinks = [
-    { name: "Home", href: "/", id: "home", path: "/" },
-    { name: "About", href: "/about", id: "about", path: "/about" },
-    { name: "Services", href: "/services", id: "services", path: "/services" },
-    { name: "Guide", href: "/guide", id: "guide", path: "/guide" },
-    { name: "Pricing", href: "/pricing", id: "pricing", path: "/pricing" },
-    { name: "Support", href: "/support", id: "support", path: "/support" }
-  ];
+  // Filter Active Navigation Links
+  const navLinks = (settings?.navigation || [
+    { name: "Home", href: "/", id: "home", isActive: true },
+    { name: "About", href: "/about", id: "about", isActive: true },
+    { name: "Services", href: "/services", id: "services", isActive: true },
+    { name: "Guide", href: "/guide", id: "guide", isActive: true },
+    { name: "Pricing", href: "/pricing", id: "pricing", isActive: true },
+    { name: "Support", href: "/support", id: "support", isActive: true }
+  ]).filter((link: any) => link.isActive !== false);
 
-  // Simply match the current path
-  const highlighted = pathname;
+  if (config.showNavbar === false) return null;
 
   return (
     <>
-      {/* TIER 1: Top Bar (Icons, Theme) - Absolute (Scrolls away) */}
-      <div className="absolute top-0 left-0 w-full z-50 hidden lg:flex bg-primary/90 backdrop-blur-sm py-2 px-6 justify-between items-center text-xs text-primary-foreground transition-colors duration-300">
-        {/* Top Left: Social Logos only */}
-        <div className="flex items-center gap-4">
-          <Link href="#" aria-label="Youtube" className="hover:text-muted transition-colors"><Youtube className="w-4 h-4" /></Link>
-          <Link href="#" aria-label="Facebook" className="hover:text-muted transition-colors"><Facebook className="w-4 h-4" /></Link>
-          <Link href="#" aria-label="Instagram" className="hover:text-muted transition-colors"><Instagram className="w-4 h-4" /></Link>
-          <Link href="#" aria-label="X (Twitter)" className="hover:text-muted transition-colors"><Twitter className="w-4 h-4" /></Link>
-          <Link href="#" aria-label="LinkedIn" className="hover:text-muted transition-colors"><Linkedin className="w-4 h-4" /></Link>
-        </div>
+      <CustomThemeStyle primaryColor={settings?.primaryColor} accentColor={settings?.accentColor} />
 
-        {/* Top Right: Catalog, Theme */}
-        <div className="flex items-center gap-4">
-          <Link href="#" className="flex items-center gap-1.5 hover:text-muted transition-colors font-medium">
-            Download Catalog
-          </Link>
-          <button
-            onClick={toggleTheme}
-            className="hover:text-accent p-1.5 rounded-full transition-colors"
-            aria-label="Toggle Theme"
-          >
-            {theme === "light" ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
-          </button>
+      {/* TIER 1: Top Bar (Icons, Theme) - Absolute (Scrolls away) */}
+      {config.showTopBar !== false && (
+        <div className="absolute top-0 left-0 w-full z-50 hidden lg:flex bg-primary/95 dark:bg-zinc-950/90 dark:border-b dark:border-white/5 backdrop-blur-md py-2 px-6 justify-between items-center text-xs text-primary-foreground dark:text-zinc-400 transition-all duration-300">
+          {/* Top Left: Social Logos only */}
+          <div className="flex items-center gap-4">
+            {settings?.socialLinks?.youtube && <Link href={settings.socialLinks.youtube} target="_blank" aria-label="Youtube" className="hover:text-muted transition-colors"><Youtube className="w-4 h-4" /></Link>}
+            {settings?.socialLinks?.facebook && <Link href={settings.socialLinks.facebook} target="_blank" aria-label="Facebook" className="hover:text-muted transition-colors"><Facebook className="w-4 h-4" /></Link>}
+            {settings?.socialLinks?.instagram && <Link href={settings.socialLinks.instagram} target="_blank" aria-label="Instagram" className="hover:text-muted transition-colors"><Instagram className="w-4 h-4" /></Link>}
+            {settings?.socialLinks?.twitter && <Link href={settings.socialLinks.twitter} target="_blank" aria-label="X (Twitter)" className="hover:text-muted transition-colors"><Twitter className="w-4 h-4" /></Link>}
+            {settings?.socialLinks?.linkedin && <Link href={settings.socialLinks.linkedin} target="_blank" aria-label="LinkedIn" className="hover:text-muted transition-colors"><Linkedin className="w-4 h-4" /></Link>}
+            {settings?.whatsapp && <Link href={`https://wa.me/${settings.whatsapp.replace(/\D/g, '')}`} target="_blank" aria-label="WhatsApp" className="hover:text-muted transition-colors"><Phone className="w-4 h-4" /></Link>}
+          </div>
+
+          {/* Top Right: Catalog, Theme */}
+          <div className="flex items-center gap-4">
+            <Link href="/catalog" className="flex items-center gap-2 border-r border-white/20 dark:border-zinc-800 pr-4 mr-2 hover:text-muted dark:hover:text-white transition-colors">
+              <span className="font-black">Catalog</span>
+            </Link>
+            <div className="flex items-center gap-4 border-r border-white/20 dark:border-zinc-800 pr-4 mr-2">
+              <span className="opacity-70">Support:</span>
+              <Link href={`tel:${contactPhone}`} className="font-black hover:underline">{contactPhone}</Link>
+            </div>
+            <button
+              onClick={toggleTheme}
+              className="hover:text-muted dark:hover:text-white p-1.5 rounded-full transition-colors"
+              aria-label="Toggle Theme"
+            >
+              {mounted ? (theme === "light" ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />) : <div className="w-4 h-4" />}
+            </button>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* TIER 2: Main Navigation - Fixed (Sticky) */}
-      <div className={`fixed left-0 w-full z-50 transition-all duration-300 bg-background/95 backdrop-blur-md shadow-sm border-b/50 ${isScrolled ? 'top-0' : 'top-0 lg:top-[42px]'}`}>
+      <div className={`fixed left-0 w-full z-50 transition-all duration-300 bg-background/95 backdrop-blur-md shadow-sm border-b/50 ${isScrolled ? 'top-0 shadow-md' : (config.showTopBar !== false ? 'top-0 lg:top-[42px]' : 'top-0')}`}>
         <div className="w-full px-6 py-4 flex justify-between items-center max-w-7xl mx-auto">
 
           {/* Left: Branding */}
           <Link href="/" className="flex items-center gap-3 shrink-0 group">
-            <div className="relative w-10 h-10 flex items-center justify-center shrink-0 bg-primary/10 rounded-lg overflow-hidden">
-              {/* Logo Image */}
+            <div className="relative w-10 h-10 flex items-center justify-center shrink-0 bg-primary/10 rounded-lg overflow-hidden border border-primary/20">
               <Image
-                src="/logo.png"
-                alt="ABCD Edu Hub Logo"
+                src={logoUrl}
+                alt={`${siteName} Logo`}
                 fill
-                className="object-contain"
+                className="object-contain p-1"
                 onError={(e) => {
                   e.currentTarget.style.display = 'none';
-                  if (e.currentTarget.nextElementSibling) {
-                    e.currentTarget.nextElementSibling.classList.remove('hidden');
-                  }
+                  const fallback = e.currentTarget.parentElement?.querySelector('.logo-fallback');
+                  if (fallback) fallback.classList.remove('hidden');
                 }}
               />
-              {/* Fallback Initials if Logo missing */}
-              <div className="hidden w-full h-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-lg">
-                AE
+              <div className="logo-fallback hidden w-full h-full bg-primary text-primary-foreground flex items-center justify-center font-black text-lg">
+                {siteName.charAt(0)}
               </div>
             </div>
-            <span className="text-lg sm:text-2xl font-extrabold tracking-tight whitespace-nowrap font-heading text-foreground group-hover:text-primary transition-colors">
-              ABCD <span className="text-primary">Edu Hub</span>
+            <span className="text-lg sm:text-2xl font-bold tracking-tight whitespace-nowrap font-heading text-foreground group-hover:text-primary transition-colors">
+              {siteName}
             </span>
           </Link>
 
           {/* Middle: Desktop Menus */}
-          <nav className="hidden lg:flex items-center gap-6 text-[15px] font-bold text-foreground/80">
-            {navLinks.map((link) => (
-              <Link
-                key={link.id}
-                href={link.href}
-                className={`transition-all duration-300 relative py-1 px-1 group ${highlighted === link.path ? 'text-primary' : 'hover:text-primary'}`}
-              >
-                {link.name}
-                <span className={`absolute bottom-0 left-0 h-0.5 bg-primary transition-all duration-300 ${highlighted === link.path ? 'w-full' : 'w-0 group-hover:w-full'}`}></span>
-              </Link>
-            ))}
-          </nav>
+          {config.showMenus !== false && (
+            <nav className="hidden lg:flex items-center gap-6 text-[15px] font-bold text-foreground/70">
+              {navLinks.map((link: any) => {
+                const currentPath = pathname || "/";
+                // Robust matching: exact match or sub-path match (excluding root)
+                const isActive = currentPath === link.href ||
+                  (link.href !== "/" && currentPath.startsWith(link.href));
+
+                return (
+                  <Link
+                    key={link.id}
+                    href={link.href}
+                    className={`transition-all duration-300 pt-2 pb-0.5 px-1 font-bold border-b-2 ${isActive ? 'text-primary font-black border-primary' : 'text-foreground/70 border-transparent hover:text-primary hover:border-primary/50'}`}
+                  >
+                    {link.name}
+                  </Link>
+                );
+              })}
+            </nav>
+          )}
 
           {/* Right: CTAs */}
           <div className="hidden lg:flex items-center gap-4 shrink-0">
-            <Link href="/login">
-              <Button variant="outline" className="border-primary text-primary hover:bg-primary hover:text-primary-foreground font-bold px-6 border-2">
-                Login
-              </Button>
-            </Link>
-            <Link href="tel:+918944899747">
-              <Button className="font-bold shadow-md bg-primary text-primary-foreground hover:bg-primary/90 transition-opacity px-6">
-                Call Now
-              </Button>
-            </Link>
+            {config.ctaSecondary?.text && (
+              <Link href={config.ctaSecondary.link || "#"}>
+                <Button variant="outline" className="border-border text-foreground hover:bg-black hover:text-white hover:border-black font-bold px-6 border-2 rounded-xl transition-all h-11">
+                  {config.ctaSecondary.text}
+                </Button>
+              </Link>
+            )}
+            {config.ctaPrimary?.text && (
+              <Link href={config.ctaPrimary.link || "#"}>
+                <Button className="font-bold shadow-lg shadow-black/10 bg-black text-white hover:bg-zinc-800 transition-all px-8 rounded-xl h-11">
+                  {config.ctaPrimary.text}
+                </Button>
+              </Link>
+            )}
           </div>
 
           {/* Mobile Hamburger Toggle */}
-          <button 
-            className="lg:hidden p-2 text-foreground hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg transition-colors relative z-50" 
+          <button
+            className="lg:hidden p-2 text-foreground hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg transition-colors relative z-50"
             onClick={() => setIsOpen(!isOpen)}
             aria-label="Toggle Menu"
           >
@@ -166,45 +204,54 @@ export function LandingNavbar() {
       <div className={`lg:hidden fixed inset-0 z-40 transition-all duration-300 ${isOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
         {/* Overlay */}
         <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setIsOpen(false)}></div>
-        
+
         {/* Menu Content */}
         <div className={`absolute top-[72px] left-0 w-full bg-background border-t p-6 shadow-2xl transition-transform duration-300 transform ${isOpen ? 'translate-y-0' : '-translate-y-full'}`}>
           <div className="flex flex-col gap-6 font-semibold text-lg text-foreground">
-            {navLinks.map((link) => (
-              <Link 
-                key={link.id} 
-                href={link.href} 
-                onClick={() => setIsOpen(false)}
-                className={`transition-colors ${highlighted === link.path ? 'text-primary' : 'hover:text-primary'}`}
-              >
-                {link.name}
-              </Link>
-            ))}
+            {config.showMenus !== false && navLinks.map((link: any) => {
+              const currentPath = pathname || "/";
+              const isActive = currentPath === link.href ||
+                (link.href !== "/" && currentPath.startsWith(link.href));
+
+              return (
+                <Link
+                  key={link.id}
+                  href={link.href}
+                  onClick={() => setIsOpen(false)}
+                  className={`transition-colors py-2 ${isActive ? 'text-primary font-black' : 'text-foreground/70 hover:text-primary'}`}
+                >
+                  {link.name}
+                </Link>
+              );
+            })}
 
             {/* Mobile Action Buttons */}
             <div className="flex flex-col gap-3 border-t border-border pt-6 mt-2">
-              <Link href="/login" onClick={() => setIsOpen(false)} className="w-full">
-                <Button variant="outline" className="w-full h-12 text-lg border-2 border-primary/50">Login</Button>
-              </Link>
-              <Link href="tel:+918944899747" onClick={() => setIsOpen(false)} className="w-full">
-                <Button className="w-full bg-primary h-12 text-lg">Call Now</Button>
-              </Link>
+              {config.ctaSecondary?.text && (
+                <Link href={config.ctaSecondary.link || "#"} onClick={() => setIsOpen(false)} className="w-full">
+                  <Button variant="outline" className="w-full h-12 text-lg border-2 border-primary/50">{config.ctaSecondary.text}</Button>
+                </Link>
+              )}
+              {config.ctaPrimary?.text && (
+                <Link href={config.ctaPrimary.link || "#"} onClick={() => setIsOpen(false)} className="w-full">
+                  <Button className="w-full bg-black text-white h-12 text-lg">{config.ctaPrimary.text}</Button>
+                </Link>
+              )}
             </div>
 
             {/* Mobile Footer Tools */}
             <div className="flex items-center justify-between border-t border-border pt-6 mt-2 text-muted-foreground">
               <div className="flex items-center gap-6">
-                <Phone className="w-5 h-5 cursor-pointer hover:text-primary" />
-                <Mail className="w-5 h-5 cursor-pointer hover:text-primary" />
+                <Link href={`tel:${contactPhone}`}><Phone className="w-5 h-5 cursor-pointer hover:text-primary" /></Link>
+                <Link href={`mailto:${settings?.contactEmail || "sb.abcd321@gmail.com"}`}><Mail className="w-5 h-5 cursor-pointer hover:text-primary" /></Link>
               </div>
               <button onClick={toggleTheme} className="px-4 py-2 bg-zinc-100 dark:bg-zinc-800 rounded-full text-foreground flex items-center gap-2 text-sm font-bold shadow-sm">
-                {theme === "light" ? <><Moon className="w-4 h-4" /> Dark</> : <><Sun className="w-4 h-4" /> Light</>}
+                {mounted ? (theme === "light" ? <><Moon className="w-4 h-4" /> Dark</> : <><Sun className="w-4 h-4" /> Light</>) : <div className="w-4 h-4" />}
               </button>
             </div>
           </div>
         </div>
       </div>
     </>
-
   );
 }

@@ -3,11 +3,34 @@ import { LandingFooter } from "@/components/layout/LandingFooter";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { ContactSection } from "@/components/landing/ContactSection";
 import { FaqSection } from "@/components/landing/FaqSection";
+import { db } from "@/lib/prisma";
 
-export default function SupportPage() {
+export default async function SupportPage() {
+  const settings = await db.siteSettings.findFirst({
+    where: { workspaceId: null },
+    include: {
+      sections: {
+        orderBy: { order: "asc" }
+      }
+    }
+  });
+
+  if (!settings) {
+    return <div>Site configuration missing. Please check the dashboard.</div>;
+  }
+
+  // Helper to check if a section is active
+  const isSectionActive = (type: string) => {
+    return settings.sections.find(s => s.type === type)?.isActive ?? true;
+  };
+
+  const getSectionData = (type: string) => {
+    return settings.sections.find(s => s.type === type);
+  };
+
   return (
     <div className="flex flex-col min-h-screen bg-background">
-      <LandingNavbar />
+      <LandingNavbar settings={settings} />
       
       <main className="flex-1">
         <PageHeader 
@@ -18,13 +41,13 @@ export default function SupportPage() {
         />
 
         <div className="bg-zinc-50 dark:bg-transparent">
-          <ContactSection />
+          {isSectionActive("contact") && <ContactSection data={getSectionData("contact")} settings={settings} />}
         </div>
         
-        <FaqSection />
+        {isSectionActive("faq") && <FaqSection data={getSectionData("faq")} />}
       </main>
 
-      <LandingFooter />
+      <LandingFooter settings={settings} />
     </div>
   );
 }

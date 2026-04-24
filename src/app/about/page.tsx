@@ -6,11 +6,34 @@ import { PageHeader } from "@/components/layout/PageHeader";
 import { MissionSection } from "@/components/landing/MissionSection";
 import { VisionSection } from "@/components/landing/VisionSection";
 import { OurMessage } from "@/components/landing/OurMessage";
+import { db } from "@/lib/prisma";
 
-export default function AboutPage() {
+export default async function AboutPage() {
+  const settings = await db.siteSettings.findFirst({
+    where: { workspaceId: null },
+    include: {
+      sections: {
+        orderBy: { order: "asc" }
+      }
+    }
+  });
+
+  if (!settings) {
+    return <div>Site configuration missing. Please check the dashboard.</div>;
+  }
+
+  // Helper to check if a section is active
+  const isSectionActive = (type: string) => {
+    return settings.sections.find(s => s.type === type)?.isActive ?? true;
+  };
+
+  const getSectionData = (type: string) => {
+    return settings.sections.find(s => s.type === type);
+  };
+
   return (
     <div className="flex flex-col min-h-screen bg-background">
-      <LandingNavbar />
+      <LandingNavbar settings={settings} />
 
       <main className="flex-1">
         <PageHeader
@@ -20,15 +43,15 @@ export default function AboutPage() {
           breadcrumb="About Us"
         />
 
-        <AboutSection />
-        <OurMessage />
-        <MissionSection />
-        <VisionSection />
-        <Achievements />
+        {isSectionActive("about") && <AboutSection data={getSectionData("about")} />}
+        {isSectionActive("our-message") && <OurMessage data={getSectionData("our-message")} />}
+        {isSectionActive("mission") && <MissionSection data={getSectionData("mission")} />}
+        {isSectionActive("vision") && <VisionSection data={getSectionData("vision")} />}
+        {isSectionActive("achievements") && <Achievements data={getSectionData("achievements")} />}
 
       </main>
 
-      <LandingFooter />
+      <LandingFooter settings={settings} />
     </div>
   );
 }

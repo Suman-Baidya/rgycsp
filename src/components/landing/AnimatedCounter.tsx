@@ -14,7 +14,7 @@ export function AnimatedCounter({
   from = 0, 
   to, 
   duration = 2.5,
-  suffix = "+" 
+  suffix = "" 
 }: AnimatedCounterProps) {
   const ref = useRef<HTMLSpanElement>(null);
   const isInView = useInView(ref, { once: true, margin: "-50px" });

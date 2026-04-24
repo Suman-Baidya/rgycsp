@@ -18,7 +18,10 @@ const TESTIMONIALS = [
   }
 ];
 
-export function Testimonials() {
+export function Testimonials({ data }: { data?: any }) {
+  const title = data?.title || "Hear from our Visionaries";
+  const subtitle = data?.subtitle || "Testimonials";
+
   return (
     <section id="pricing" className="py-24 px-6 bg-zinc-50 dark:bg-zinc-950 relative overflow-hidden">
       {/* Decorative Blur Backgrounds */}
@@ -29,10 +32,10 @@ export function Testimonials() {
          <div className="text-center max-w-2xl mx-auto mb-16">
             <div className="inline-flex items-center gap-2 py-1.5 px-4 rounded-full bg-primary/5 border border-primary/20 text-primary font-bold text-[10px] tracking-[0.2em] uppercase mb-4 shadow-sm">
               <span className="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
-              Testimonials
+              {subtitle}
             </div>
             <h2 className="text-4xl md:text-5xl font-extrabold mt-3 tracking-tight leading-tight font-heading">
-              Hear from our Visionaries
+              {title}
             </h2>
          </div>
 

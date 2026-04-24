@@ -2,7 +2,8 @@
 
 import * as React from "react"
 import Autoplay from "embla-carousel-autoplay"
-import { Button } from "@/components/ui/button"
+import { Button, buttonVariants } from "@/components/ui/button"
+import { cn } from "@/lib/utils"
 import {
   Carousel,
   CarouselContent,
@@ -52,7 +53,8 @@ const itemVariants: Variants = {
   }
 }
 
-export function HeroSection() {
+export function HeroSection({ data }: { data?: any }) {
+  const slides = data?.content?.slides || HERO_SLIDES;
   const [currentIndex, setCurrentIndex] = React.useState(0);
   const [api, setApi] = React.useState<any>();
 
@@ -79,7 +81,7 @@ export function HeroSection() {
         opts={{ loop: true, align: "start" }}
       >
         <CarouselContent className="-ml-0">
-          {HERO_SLIDES.map((slide, index) => (
+          {slides.map((slide: any, index: number) => (
             <CarouselItem key={index} className="pl-0 overflow-hidden relative h-screen min-h-[600px] w-full basis-full">
               {/* Background Image with advanced darkening gradient overlay */}
               <motion.div
@@ -109,7 +111,7 @@ export function HeroSection() {
                           <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-[shimmer_2s_infinite]"></div>
                           <span className="relative z-10 flex items-center gap-2">
                             <span className="w-2 h-2 rounded-full bg-white animate-pulse"></span>
-                            Welcome to ABCD Edu Hub
+                            {slide.tagline || "Welcome to ABCD Edu Hub"}
                           </span>
                         </div>
                       </motion.div>
@@ -127,12 +129,37 @@ export function HeroSection() {
                       </motion.div>
 
                       <motion.div variants={itemVariants} className="mt-12 flex flex-col sm:flex-row gap-5 items-start">
-                        <Button size="lg" className="h-14 w-full sm:w-[220px] text-lg bg-white text-zinc-950 hover:bg-zinc-200 border-none shadow-[0_0_30px_rgba(255,255,255,0.2)] hover:shadow-[0_0_40px_rgba(255,255,255,0.4)] hover:-translate-y-1 transition-all duration-300 group rounded-xl font-extrabold">
-                          Get Started
-                        </Button>
-                        <Button size="lg" variant="outline" className="h-14 w-full sm:w-[220px] text-lg bg-white/5 backdrop-blur-md border border-white/20 text-white hover:bg-white/20 hover:border-white/40 transition-all duration-300 rounded-xl font-bold shadow-lg hover:-translate-y-1">
-                          Book a Demo
-                        </Button>
+                        {slide.primaryButtonText ? (
+                          <a 
+                            href={slide.primaryButtonLink || "#"}
+                            className={cn(
+                              buttonVariants({ size: "lg" }),
+                              "h-14 w-full sm:w-[220px] text-lg bg-white text-zinc-950 hover:bg-zinc-200 border-none shadow-[0_0_30px_rgba(255,255,255,0.2)] hover:shadow-[0_0_40px_rgba(255,255,255,0.4)] hover:-translate-y-1 transition-all duration-300 group rounded-xl font-extrabold flex items-center justify-center"
+                            )}
+                          >
+                            {slide.primaryButtonText}
+                          </a>
+                        ) : (
+                          <Button size="lg" className="h-14 w-full sm:w-[220px] text-lg bg-white text-zinc-950 hover:bg-zinc-200 border-none shadow-[0_0_30px_rgba(255,255,255,0.2)] hover:shadow-[0_0_40px_rgba(255,255,255,0.4)] hover:-translate-y-1 transition-all duration-300 group rounded-xl font-extrabold">
+                            Get Started
+                          </Button>
+                        )}
+
+                        {slide.secondaryButtonText ? (
+                          <a 
+                            href={slide.secondaryButtonLink || "#"}
+                            className={cn(
+                              buttonVariants({ variant: "outline", size: "lg" }),
+                              "h-14 w-full sm:w-[220px] text-lg bg-white/5 backdrop-blur-md border border-white/20 text-white hover:bg-white/20 hover:border-white/40 transition-all duration-300 rounded-xl font-bold shadow-lg hover:-translate-y-1 flex items-center justify-center"
+                            )}
+                          >
+                            {slide.secondaryButtonText}
+                          </a>
+                        ) : (
+                          <Button size="lg" variant="outline" className="h-14 w-full sm:w-[220px] text-lg bg-white/5 backdrop-blur-md border border-white/20 text-white hover:bg-white/20 hover:border-white/40 transition-all duration-300 rounded-xl font-bold shadow-lg hover:-translate-y-1">
+                            Book a Demo
+                          </Button>
+                        )}
                       </motion.div>
                     </motion.div>
                   )}
