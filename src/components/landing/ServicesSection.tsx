@@ -1,3 +1,5 @@
+"use client";
+
 import {
   ShieldCheck,
   Briefcase,
@@ -30,8 +32,24 @@ const ICON_MAP: any = {
 
 export function ServicesSection({ data }: { data?: any }) {
   const content = data?.content || {};
+  const mainTitle = data?.title || "Our Services";
+  const mainSubtitle = data?.subtitle || "Innovative solutions for every educational need.";
 
-  // Smart Fallbacks: Merge defaults with provided content
+  // Settings-based Toggles (Defaults to true)
+  const showHighlights = content.showHighlights !== false;
+  const showLms = content.showLms !== false;
+  const showEcosystem = content.showEcosystem !== false;
+
+  // Highlight Cards Fallbacks
+  const highlightDefaults = [
+    { title: "Cloud Scale", desc: "Enterprise-grade infrastructure that grows with your institute.", icon: "globe" },
+    { title: "AI Powered", desc: "Automate complex tasks with our proprietary AI modules.", icon: "cpu" },
+    { title: "Multi-Tenant", desc: "Separate, secure workspaces for every franchise or branch.", icon: "shield" },
+    { title: "Instant Support", desc: "Round-the-clock technical assistance for your entire team.", icon: "zap" }
+  ];
+  const highlights = content.highlights || highlightDefaults;
+
+  // LMS Defaults
   const lmsDefaults = {
     subtitle: "Next-Gen LMS",
     title: "A Digital Workspace for Your Institute",
@@ -43,6 +61,7 @@ export function ServicesSection({ data }: { data?: any }) {
     ]
   };
 
+  // Ecosystem Defaults
   const ecosystemDefaults = {
     subtitle: "Dashboard Ecosystem",
     title: "Multi-Tenant Role Management",
@@ -67,101 +86,139 @@ export function ServicesSection({ data }: { data?: any }) {
   return (
     <section id="services" className="py-24 px-6 bg-zinc-50 dark:bg-black/20 overflow-hidden">
       <div className="max-w-7xl mx-auto">
-        {/* Header Part: Next-Gen LMS */}
-        <div className="flex flex-col lg:flex-row items-center gap-16 mb-24">
-          <div className="flex-1">
-            <div className="inline-flex items-center gap-2 py-1.5 px-4 rounded-full bg-primary/5 border border-primary/20 text-primary font-bold text-[10px] tracking-[0.2em] uppercase mb-6">
-              <Cpu className="w-4 h-4" />
-              {lms.subtitle}
-            </div>
-            <h2 className="text-4xl md:text-5xl font-extrabold tracking-tight leading-tight mb-8">
-              {lms.title}
-            </h2>
-            <p className="text-lg text-muted-foreground leading-relaxed mb-10 max-w-2xl">
-              {lms.description}
-            </p>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-              {(lms.features || []).map((feat: any, i: number) => (
-                <div key={i} className="flex items-start gap-4">
-                  <CheckCircle2 className="w-6 h-6 text-primary shrink-0" />
-                  <div>
-                    <h4 className="font-bold">{feat.title}</h4>
-                    <p className="text-sm text-muted-foreground">{feat.text}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
+        
+        {/* 1. Main Header (Always Visible) */}
+        <div className="text-center mb-16">
+          <div className="inline-flex items-center gap-2 py-1.5 px-4 rounded-full bg-primary/5 border border-primary/20 text-primary font-bold text-[10px] tracking-[0.2em] uppercase mb-4">
+            <Zap className="w-4 h-4" />
+            Our Services
           </div>
-
-          <div className="flex-1 relative">
-            <div className="relative rounded-[2.5rem] overflow-hidden aspect-video shadow-2xl z-10 border border-white dark:border-zinc-800">
-              <Image
-                src={lms.image || ""}
-                alt={lms.title}
-                fill
-                className="object-cover"
-              />
-              <div className="absolute inset-0 bg-primary/10 backdrop-blur-[1px]"></div>
-            </div>
-            {/* Decor */}
-            <div className="absolute -top-10 -right-10 w-40 h-40 bg-primary/20 rounded-full blur-3xl -z-10 animate-pulse"></div>
-          </div>
-        </div>
-
-        {/* Roles Grid Header: Dashboard Ecosystem */}
-        <div className="text-center mb-20">
-          <div className="inline-flex items-center gap-2 py-1.5 px-4 rounded-full bg-primary/5 border border-primary/20 text-primary font-bold text-[10px] tracking-[0.2em] uppercase mb-4 shadow-sm">
-            <LayoutDashboard className="w-4 h-4" />
-            {ecosystem.subtitle}
-          </div>
-          <h2 className="text-4xl md:text-5xl font-extrabold tracking-tight leading-tight mb-6">
-            {ecosystem.title}
+          <h2 className="text-4xl md:text-6xl font-black tracking-tighter mb-6 bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">
+            {mainTitle}
           </h2>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-            {ecosystem.description}
+          <p className="text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+            {mainSubtitle}
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {(ecosystem.roles || []).map((role: any, i: number) => {
-            const Icon = ICON_MAP[role.icon] || Users;
-            return (
-              <div
-                key={i}
-                className="group relative p-10 rounded-[3rem] bg-white dark:bg-zinc-900 border border-border/50 hover:border-primary/50 transition-all duration-500 hover:shadow-[0_40px_80px_-20px_rgba(0,0,0,0.1)] dark:hover:shadow-[0_40px_80px_-20px_rgba(0,0,0,0.4)] hover:-translate-y-3 overflow-hidden"
-              >
-                {/* Floating Decorative Number */}
-                <div className="absolute top-8 right-10 text-8xl font-black text-zinc-100 dark:text-zinc-800/50 select-none group-hover:text-primary/10 transition-colors duration-500">
-                  0{i + 1}
+        {/* 2. Highlight Cards (Conditional) */}
+        {showHighlights && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-24">
+            {highlights.slice(0, 4).map((h: any, i: number) => {
+              const Icon = ICON_MAP[h.icon] || Globe;
+              return (
+                <div key={i} className="p-8 rounded-[2rem] bg-white dark:bg-zinc-900 border border-border/50 hover:shadow-xl transition-all group">
+                  <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary mb-6 group-hover:scale-110 transition-transform">
+                    <Icon className="w-6 h-6" />
+                  </div>
+                  <h4 className="text-lg font-bold mb-3">{h.title}</h4>
+                  <p className="text-sm text-muted-foreground leading-relaxed">{h.desc}</p>
                 </div>
+              );
+            })}
+          </div>
+        )}
 
-                {/* Icon Container - Glowing Pill Shape */}
-                <div className={`relative z-10 w-20 h-20 rounded-[2rem] ${role.color || "bg-primary/10 text-primary"} flex items-center justify-center mb-10 shadow-lg group-hover:scale-110 group-hover:rotate-6 transition-all duration-500 group-hover:shadow-[0_0_30px_rgba(var(--primary),0.3)]`}>
-                  <Icon className="w-6 h-6" />
-                </div>
-
-                <div className="relative z-10">
-                  <h4 className="text-2xl font-black mb-4 tracking-tight text-foreground group-hover:text-primary transition-colors">
-                    {role.title}
-                  </h4>
-                  <p className="text-[15px] text-muted-foreground leading-relaxed font-medium">
-                    {role.description}
-                  </p>
-                </div>
-
-                {/* Interactive Glow Corner */}
-                <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-primary/5 rounded-full blur-[80px] group-hover:bg-primary/20 transition-all duration-700"></div>
-
-                {/* Bottom Accent Line - Sleek */}
-                <div className="absolute bottom-0 left-0 w-full h-1.5 bg-zinc-100 dark:bg-zinc-800 overflow-hidden">
-                  <div className="h-full w-0 bg-primary group-hover:w-full transition-all duration-700 ease-in-out"></div>
-                </div>
+        {/* 3. Next-Gen LMS Content (Conditional) */}
+        {showLms && (
+          <div className={cn(
+            "flex flex-col lg:flex-row items-center gap-16",
+            showEcosystem ? "mb-32" : ""
+          )}>
+            <div className="flex-1">
+              <div className="inline-flex items-center gap-2 py-1.5 px-4 rounded-full bg-primary/5 border border-primary/20 text-primary font-bold text-[10px] tracking-[0.2em] uppercase mb-6">
+                <Cpu className="w-4 h-4" />
+                {lms.subtitle}
               </div>
-            );
-          })}
-        </div>
+              <h2 className="text-4xl md:text-5xl font-extrabold tracking-tight leading-tight mb-8">
+                {lms.title}
+              </h2>
+              <p className="text-lg text-muted-foreground leading-relaxed mb-10 max-w-2xl">
+                {lms.description}
+              </p>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                {(lms.features || []).map((feat: any, i: number) => (
+                  <div key={i} className="flex items-start gap-4 p-4 rounded-2xl bg-white dark:bg-zinc-900 border border-border/50">
+                    <CheckCircle2 className="w-6 h-6 text-primary shrink-0" />
+                    <div>
+                      <h4 className="font-bold">{feat.title}</h4>
+                      <p className="text-sm text-muted-foreground">{feat.text}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex-1 relative">
+              <div className="relative rounded-[2.5rem] overflow-hidden aspect-video shadow-2xl z-10 border border-white dark:border-zinc-800">
+                <Image
+                  src={lms.image || ""}
+                  alt={lms.title}
+                  fill
+                  className="object-cover"
+                />
+                <div className="absolute inset-0 bg-primary/10 backdrop-blur-[1px]"></div>
+              </div>
+              <div className="absolute -top-10 -right-10 w-40 h-40 bg-primary/20 rounded-full blur-3xl -z-10 animate-pulse"></div>
+            </div>
+          </div>
+        )}
+
+        {/* 4. Dashboard Ecosystem Content (Conditional) */}
+        {showEcosystem && (
+          <div className="pt-12 border-t border-border/40">
+            <div className="text-center mb-16">
+               <div className="inline-flex items-center gap-2 py-1.5 px-4 rounded-full bg-primary/5 border border-primary/20 text-primary font-bold text-[10px] tracking-[0.2em] uppercase mb-4 shadow-sm">
+                <LayoutDashboard className="w-4 h-4" />
+                {ecosystem.subtitle}
+              </div>
+              <h2 className="text-4xl md:text-5xl font-extrabold tracking-tight leading-tight mb-6">
+                {ecosystem.title}
+              </h2>
+              <p className="text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+                {ecosystem.description}
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {(ecosystem.roles || []).map((role: any, i: number) => {
+                const Icon = ICON_MAP[role.icon] || Users;
+                return (
+                  <div
+                    key={i}
+                    className="group relative p-10 rounded-[3rem] bg-white dark:bg-zinc-900 border border-border/50 hover:border-primary/50 transition-all duration-500 hover:shadow-[0_40px_80px_-20px_rgba(0,0,0,0.1)] dark:hover:shadow-[0_40px_80px_-20px_rgba(0,0,0,0.4)] hover:-translate-y-3 overflow-hidden"
+                  >
+                    <div className="absolute top-8 right-10 text-8xl font-black text-zinc-100 dark:text-zinc-800/50 select-none group-hover:text-primary/10 transition-colors duration-500">
+                      0{i + 1}
+                    </div>
+                    <div className={`relative z-10 w-20 h-20 rounded-[2rem] ${role.color || "bg-primary/10 text-primary"} flex items-center justify-center mb-10 shadow-lg group-hover:scale-110 group-hover:rotate-6 transition-all duration-500 group-hover:shadow-[0_0_30px_rgba(var(--primary),0.3)]`}>
+                      <Icon className="w-6 h-6" />
+                    </div>
+                    <div className="relative z-10">
+                      <h4 className="text-2xl font-black mb-4 tracking-tight text-foreground group-hover:text-primary transition-colors">
+                        {role.title}
+                      </h4>
+                      <p className="text-[15px] text-muted-foreground leading-relaxed font-medium">
+                        {role.description}
+                      </p>
+                    </div>
+                    <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-primary/5 rounded-full blur-[80px] group-hover:bg-primary/20 transition-all duration-700"></div>
+                    <div className="absolute bottom-0 left-0 w-full h-1.5 bg-zinc-100 dark:bg-zinc-800 overflow-hidden">
+                      <div className="h-full w-0 bg-primary group-hover:w-full transition-all duration-700 ease-in-out"></div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
       </div>
     </section>
   );
+}
+
+// Helper for conditional classNames
+function cn(...classes: any[]) {
+  return classes.filter(Boolean).join(" ");
 }

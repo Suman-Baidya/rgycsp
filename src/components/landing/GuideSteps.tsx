@@ -62,6 +62,8 @@ export function GuideSteps({ data }: { data?: any }) {
   };
 
   const final = { ...defaults, ...content };
+  const title = data?.title || final.title;
+  const subtitle = data?.subtitle || final.subtitle;
   if (!final.steps || final.steps.length === 0) final.steps = defaults.steps;
 
   return (
@@ -71,10 +73,10 @@ export function GuideSteps({ data }: { data?: any }) {
         <div className="text-center mb-20">
           <div className="inline-flex items-center gap-2 py-1.5 px-4 rounded-full bg-primary/5 border border-primary/20 text-primary font-bold text-[10px] tracking-[0.2em] uppercase mb-4">
             <ListChecks className="w-4 h-4" />
-            {final.subtitle}
+            {subtitle}
           </div>
           <h2 className="text-4xl md:text-5xl font-extrabold tracking-tight leading-tight mb-6">
-            {final.title}
+            {title}
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
             {final.description}
@@ -101,7 +103,7 @@ export function GuideSteps({ data }: { data?: any }) {
 
                 {/* Floating Icon Container */}
                 <div className="relative z-10 w-16 h-16 rounded-2xl bg-white dark:bg-zinc-800 shadow-xl border border-border flex items-center justify-center mb-8 group-hover:scale-110 group-hover:-rotate-6 transition-all duration-500">
-                  <div className="w-12 h-12 rounded-xl bg-primary text-primary-foreground flex items-center justify-center shadow-inner">
+                  <div className="w-12 h-12 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-black dark:text-white flex items-center justify-center shadow-inner">
                     <Icon className="w-6 h-6" />
                   </div>
                 </div>

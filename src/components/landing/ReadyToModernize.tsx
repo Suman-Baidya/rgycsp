@@ -17,8 +17,8 @@ export function ReadyToModernize({ data }: { data?: any }) {
 
   const final = { ...defaults, ...content };
   const bgImage = final.bgImage;
-  const subtitle = final.subtitle;
-  const title = final.title;
+  const title = data?.title || final.title;
+  const subtitle = data?.subtitle || final.subtitle;
   const description = final.description;
   const primaryBtn = final.primaryBtn;
   const secondaryBtn = final.secondaryBtn;
@@ -46,7 +46,7 @@ export function ReadyToModernize({ data }: { data?: any }) {
           {description}
         </p>
         <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
-          <a href={primaryBtn.link} className="group relative h-16 px-12 bg-primary text-primary-foreground font-black text-lg rounded-2xl overflow-hidden transition-all hover:scale-105 active:scale-95 shadow-[0_20px_40px_rgba(var(--primary),0.3)] flex items-center justify-center">
+          <a href={primaryBtn.link} className="group relative h-16 px-12 bg-primary text-primary-foreground font-black text-lg rounded-2xl overflow-hidden transition-all hover:scale-105 active:scale-95 shadow-[0_20px_40px_rgba(var(--primary),0.3)] flex items-center justify-center border border-white dark:text-white">
             <span className="relative z-10">{primaryBtn.label}</span>
             <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
           </a>

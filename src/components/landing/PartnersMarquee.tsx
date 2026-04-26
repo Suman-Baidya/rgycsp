@@ -20,7 +20,7 @@ export function PartnersMarquee({ data }: { data?: any }) {
             </div>
          </div>
 
-         <div className="relative flex max-w-full overflow-hidden w-full">
+         <div className="relative flex max-w-full w-full">
             <div className="flex w-max animate-marquee">
                {/* Ensure at least a decent number of logos for a smooth loop */}
                {[...logos, ...logos, ...logos].map((logo, index) => (

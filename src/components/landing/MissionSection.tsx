@@ -19,8 +19,8 @@ export function MissionSection({ data }: { data?: any }) {
   };
 
   const final = { ...defaults, ...content };
-  const title = final.title;
-  const subtitle = final.subtitle;
+  const title = data?.title || final.title;
+  const subtitle = data?.subtitle || final.subtitle;
   const image = final.image;
   const description = final.description;
   const items = final.items;

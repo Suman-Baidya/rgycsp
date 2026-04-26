@@ -6,15 +6,8 @@ import { WhyChooseUs } from "@/components/landing/WhyChooseUs";
 import { Achievements } from "@/components/landing/Achievements";
 import { PartnersMarquee } from "@/components/landing/PartnersMarquee";
 import { Testimonials } from "@/components/landing/Testimonials";
-import { PricingSection } from "@/components/landing/PricingSection";
 import { FaqSection } from "@/components/landing/FaqSection";
 import { ContactSection } from "@/components/landing/ContactSection";
-import { OurMessage } from "@/components/landing/OurMessage";
-import { MissionSection as Mission } from "@/components/landing/MissionSection";
-import { VisionSection as Vision } from "@/components/landing/VisionSection";
-import { ServicesSection as Services } from "@/components/landing/ServicesSection";
-import { GuideResources } from "@/components/landing/GuideResources";
-import { CustomSolution } from "@/components/landing/CustomSolution";
 import { db } from "@/lib/prisma";
 import { CustomThemeStyle } from "@/components/providers/CustomThemeStyle";
 
@@ -57,22 +50,7 @@ export default async function RootLandingPage() {
 
         {isSectionActive("partners") && <PartnersMarquee data={getSectionData("partners")} />}
 
-        {isSectionActive("our-message") && <OurMessage data={getSectionData("our-message")} />}
-
-        <div className="grid grid-cols-1 md:grid-cols-2">
-          {isSectionActive("mission") && <Mission data={getSectionData("mission")} />}
-          {isSectionActive("vision") && <Vision data={getSectionData("vision")} />}
-        </div>
-
-        {isSectionActive("services") && <div id="services"><Services data={getSectionData("services")} /></div>}
-
-        {isSectionActive("guide-resources") && <div id="guide"><GuideResources data={getSectionData("guide-resources")} /></div>}
-
         {isSectionActive("testimonials") && <div id="testimonials"><Testimonials data={getSectionData("testimonials")} /></div>}
-
-        {isSectionActive("pricing") && <div id="pricing"><PricingSection data={getSectionData("pricing")} /></div>}
-
-        {isSectionActive("custom-solution") && <CustomSolution data={getSectionData("custom-solution")} />}
 
         {isSectionActive("faq") && <div id="faq"><FaqSection data={getSectionData("faq")} /></div>}
         

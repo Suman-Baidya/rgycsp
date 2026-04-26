@@ -4,7 +4,6 @@ export function OurMessage({ data }: { data?: any }) {
   const content = data?.content || {};
 
   const defaults = {
-    subtitle: "Our Message",
     bgImage: "https://cdn.pixabay.com/photo/2015/02/02/11/08/office-620817_1280.jpg",
     quote: "Technology is not just a tool, it is the catalyst that transforms a classroom into a boundless universe.",
     description: "At ABCD Edu Hub, we are committed to building more than just software. We are building a gateway for educators and students to connect in ways never before possible.",
@@ -15,7 +14,8 @@ export function OurMessage({ data }: { data?: any }) {
   };
 
   const final = { ...defaults, ...content };
-  const subtitle = final.subtitle;
+  const title = data?.title || "";
+  const subtitle = data?.subtitle || "Our Message";
   const bgImage = final.bgImage;
   const quote = final.quote;
   const description = final.description;
@@ -45,13 +45,18 @@ export function OurMessage({ data }: { data?: any }) {
       <div className="max-w-7xl mx-auto flex flex-col lg:flex-row items-center gap-20 relative z-10">
         {/* Message Content */}
         <div className="flex-1 order-2 lg:order-1 text-white">
-          <div className="inline-flex items-center gap-2 py-1.5 px-4 rounded-full bg-secondary/90 border border-primary/30 text-primary font-bold text-[10px] tracking-[0.2em] uppercase mb-8 shadow-[0_0_15px_rgba(var(--primary),0.2)]">
+          <div className="inline-flex items-center gap-2 py-1.5 px-4 rounded-full bg-primary/90 border border-primary/30 text-primary font-bold text-[10px] tracking-[0.2em] uppercase mb-8 shadow-[0_0_15px_rgba(var(--primary),0.2)]">
             <MessageSquareQuote className="w-4 h-4 z-10" />
             {subtitle}
           </div>
 
           <div className="relative">
-            <Quote className="absolute -top-12 -left-12 w-24 h-24 text-primary/10 -z-10" />
+            <Quote className="absolute -top-12 left-140 w-24 h-24 text-primary/10 -z-10" />
+            {title && (
+              <h3 className="text-xl font-bold text-primary mb-4 tracking-wide uppercase opacity-90">
+                {title}
+              </h3>
+            )}
             <h2 className="text-4xl md:text-5xl font-extrabold italic leading-[1.1] mb-10 font-heading text-white tracking-tight">
               "{quote}"
             </h2>

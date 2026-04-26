@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
-import { Globe, Layout, Palette, Phone, Save, Settings2, Trash2, ChevronDown, Cpu, LayoutDashboard, FileText, Play, Rocket, Mail, ShieldCheck, UserCheck, BookOpenCheck, Menu, MousePointer2, ExternalLink, Plus, Check, X } from "lucide-react";
+import { Globe, Layout, Palette, Phone, Save, Settings2, Trash2, ChevronDown, Cpu, LayoutDashboard, FileText, Play, Rocket, Mail, ShieldCheck, UserCheck, BookOpenCheck, Menu, MousePointer2, ExternalLink, Plus, Check, X, Zap } from "lucide-react";
 import { updateSiteSettings, updateLandingSection, syncAllSections } from "@/app/actions/site-settings";
 import { toast } from "sonner";
 import { ImageUpload } from "@/components/ui/ImageUpload";
@@ -405,7 +405,7 @@ export function SettingsForm({ settings }: { settings: any }) {
                  variant="outline" 
                  size="sm" 
                  onClick={async () => {
-                   const types = ['hero', 'about', 'why-choose-us', 'achievements', 'partners', 'our-message', 'mission', 'vision', 'services', 'guide-resources', 'custom-solution', 'pricing', 'testimonials', 'faq', 'contact'];
+                   const types = ['hero', 'about', 'why-choose-us', 'achievements', 'partners', 'our-message', 'mission', 'vision', 'services', 'guide-steps', 'guide-resources', 'ready-to-modernize', 'custom-solution', 'pricing', 'testimonials', 'faq', 'contact'];
                    const res = await syncAllSections(settings.id, types);
                    if (res.success) {
                      toast.success(res.created ? `Initialized ${res.created} new sections!` : "All sections are already synced.");
@@ -513,7 +513,9 @@ function SectionEditor({ section, settings }: { section: any, settings: any }) {
                {section.type === 'mission' && <MissionContentEditor content={content} setContent={setContent} />}
                {section.type === 'vision' && <VisionContentEditor content={content} setContent={setContent} />}
                {section.type === 'services' && <ServicesContentEditor content={content} setContent={setContent} />}
+               {section.type === 'guide-steps' && <GuideStepsContentEditor content={content} setContent={setContent} />}
                {section.type === 'guide-resources' && <GuideResourcesContentEditor content={content} setContent={setContent} />}
+               {section.type === 'ready-to-modernize' && <ReadyToModernizeContentEditor content={content} setContent={setContent} />}
                {section.type === 'custom-solution' && <CustomSolutionContentEditor content={content} setContent={setContent} />}
                {section.type === 'pricing' && <PricingContentEditor content={content} setContent={setContent} />}
                {section.type === 'contact' && <ContactContentEditor content={content} setContent={setContent} settings={settings} />}
@@ -833,10 +835,41 @@ function VisionContentEditor({ content, setContent }: any) {
 function ServicesContentEditor({ content, setContent }: any) {
   const lms = content.lms || {};
   const ecosystem = content.ecosystem || {};
+  const highlights = content.highlights || [];
 
   return (
     <div className="space-y-16">
-       {/* LMS Part */}
+       {/* 0. Global Toggles */}
+       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-6 bg-primary/5 rounded-[2rem] border border-primary/20">
+          <div className="flex items-center justify-between p-3 bg-background rounded-xl border border-border/40">
+            <span className="text-sm font-bold">Show Highlights</span>
+            <Switch checked={content.showHighlights !== false} onCheckedChange={(val) => setContent({...content, showHighlights: val})} />
+          </div>
+          <div className="flex items-center justify-between p-3 bg-background rounded-xl border border-border/40">
+            <span className="text-sm font-bold">Show LMS</span>
+            <Switch checked={content.showLms !== false} onCheckedChange={(val) => setContent({...content, showLms: val})} />
+          </div>
+          <div className="flex items-center justify-between p-3 bg-background rounded-xl border border-border/40">
+            <span className="text-sm font-bold">Show Ecosystem</span>
+            <Switch checked={content.showEcosystem !== false} onCheckedChange={(val) => setContent({...content, showEcosystem: val})} />
+          </div>
+       </div>
+
+       {/* 1. Highlights Editor (The 4 Cards) */}
+       <div className="space-y-8">
+          <Label className="text-lg font-black uppercase text-primary border-b-2 border-primary/20 pb-2 flex items-center gap-2">
+             <Zap className="h-5 w-5" /> Service Highlights (4 Cards)
+          </Label>
+          <ListContentEditor 
+             title="Highlights" 
+             content={{ items: highlights }} 
+             setContent={(newContent: any) => setContent({ ...content, highlights: newContent.items })} 
+             itemFields={['icon', 'title', 'desc']} 
+          />
+          <p className="text-[10px] text-muted-foreground mt-2 px-2 italic">Icons: globe, cpu, shield, zap, rocket, target</p>
+       </div>
+
+       {/* 2. LMS Part */}
        <div className="space-y-8">
           <Label className="text-lg font-black uppercase text-primary border-b-2 border-primary/20 pb-2 flex items-center gap-2">
              <Cpu className="h-5 w-5" /> Next-Gen LMS
@@ -868,7 +901,7 @@ function ServicesContentEditor({ content, setContent }: any) {
           </div>
        </div>
 
-       {/* Ecosystem Part */}
+       {/* 3. Ecosystem Part */}
        <div className="space-y-8">
           <Label className="text-lg font-black uppercase text-primary border-b-2 border-primary/20 pb-2 flex items-center gap-2">
              <LayoutDashboard className="h-5 w-5" /> Dashboard Ecosystem
@@ -900,21 +933,11 @@ function ServicesContentEditor({ content, setContent }: any) {
 function ReadyToModernizeContentEditor({ content, setContent }: any) {
   return (
     <div className="space-y-10">
-       <ImageUpload value={content.bgImage || ""} onChange={(url) => setContent({ ...content, bgImage: url })} label="Parallax Background Image" folder="ABCDEdutHub/services" />
-       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <div className="space-y-3">
-             <Label className="text-xs font-bold uppercase">Section Title</Label>
-             <Input value={content.title || ""} onChange={(e) => setContent({ ...content, title: e.target.value })} />
-          </div>
-          <div className="space-y-3">
-             <Label className="text-xs font-bold uppercase">Tagline Badge</Label>
-             <Input value={content.subtitle || ""} onChange={(e) => setContent({ ...content, subtitle: e.target.value })} />
-          </div>
-       </div>
-       <div className="space-y-3">
-          <Label className="text-xs font-bold uppercase">Main Description</Label>
-          <Textarea value={content.description || ""} onChange={(e) => setContent({ ...content, description: e.target.value })} />
-       </div>
+        <ImageUpload value={content.bgImage || ""} onChange={(url) => setContent({ ...content, bgImage: url })} label="Parallax Background Image" folder="ABCDEdutHub/services" />
+        <div className="space-y-3">
+           <Label className="text-xs font-bold uppercase">Main Description</Label>
+           <Textarea value={content.description || ""} onChange={(e) => setContent({ ...content, description: e.target.value })} />
+        </div>
        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <div className="p-4 border border-border/40 rounded-2xl space-y-4">
              <Label className="text-xs font-bold uppercase">Primary Button (Pill)</Label>
@@ -940,18 +963,13 @@ function ReadyToModernizeContentEditor({ content, setContent }: any) {
 }
 
 function GuideStepsContentEditor({ content, setContent }: any) {
+  const steps = (content.steps || []).map((s: any) => ({
+    ...s,
+    substeps: Array.isArray(s.substeps) ? s.substeps.join(", ") : (s.substeps || "")
+  }));
+
   return (
     <div className="space-y-10">
-       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <div className="space-y-3">
-             <Label className="text-xs font-bold uppercase">Badge Text</Label>
-             <Input value={content.subtitle || ""} onChange={(e) => setContent({ ...content, subtitle: e.target.value })} />
-          </div>
-          <div className="space-y-3">
-             <Label className="text-xs font-bold uppercase">Main Title</Label>
-             <Input value={content.title || ""} onChange={(e) => setContent({ ...content, title: e.target.value })} />
-          </div>
-       </div>
        <div className="space-y-3">
           <Label className="text-xs font-bold uppercase">Description</Label>
           <Textarea value={content.description || ""} onChange={(e) => setContent({ ...content, description: e.target.value })} />
@@ -959,9 +977,15 @@ function GuideStepsContentEditor({ content, setContent }: any) {
        <div className="pt-8 border-t border-border/30">
           <ListContentEditor 
             title="Onboarding Steps" 
-            content={{ items: content.steps || [] }} 
-            setContent={(newContent: any) => setContent({ ...content, steps: newContent.items })} 
-            itemFields={['title', 'subtitle', 'desc', 'icon']} 
+            content={{ items: steps }} 
+            setContent={(newContent: any) => {
+              const processed = newContent.items.map((s: any) => ({
+                ...s,
+                substeps: typeof s.substeps === 'string' ? s.substeps.split(",").map((i: string) => i.trim()).filter(Boolean) : s.substeps
+              }));
+              setContent({ ...content, steps: processed });
+            }} 
+            itemFields={['title', 'subtitle', 'desc', 'icon', 'substeps']} 
           />
           <p className="text-[10px] text-muted-foreground mt-2 px-2 italic">Icons: userPlus, settings, book, rocket, userCheck, dashboard, cpu, shield</p>
        </div>
@@ -1233,6 +1257,67 @@ function ContactContentEditor({ content, setContent, settings }: any) {
                  <Input value={content.successMsg || "Message sent successfully!"} onChange={(e) => setContent({ ...content, successMsg: e.target.value })} className="h-10 text-xs" />
               </div>
            </div>
+        </div>
+      </div>
+
+      {/* CTA Box Settings */}
+      <div className="p-8 bg-primary/5 rounded-[2.5rem] border border-primary/20 space-y-8">
+        <div className="flex items-center justify-between border-b border-primary/10 pb-6">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center">
+              <Rocket className="w-6 h-6" />
+            </div>
+            <div>
+              <h4 className="font-bold text-lg">CTA Box Settings</h4>
+              <p className="text-xs text-muted-foreground font-medium">Customize the "Get Started" box on the left side.</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3 px-4 py-2 bg-background rounded-xl border border-border/40 shadow-sm">
+            <span className="text-[10px] font-black uppercase tracking-widest">{content.ctaBox?.show !== false ? "Enabled" : "Disabled"}</span>
+            <Switch 
+              checked={content.ctaBox?.show !== false} 
+              onCheckedChange={(val) => setContent({ ...content, ctaBox: { ...(content.ctaBox || {}), show: val } })} 
+            />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="space-y-6">
+            <div className="space-y-2">
+              <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Box Title</Label>
+              <Input 
+                value={content.ctaBox?.title || "Ready to Start?"} 
+                onChange={(e) => setContent({ ...content, ctaBox: { ...(content.ctaBox || {}), title: e.target.value } })} 
+                className="h-12 rounded-2xl bg-background"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Box Description</Label>
+              <Textarea 
+                value={content.ctaBox?.description || "Join 100+ institutes already scaling with us. Start your 30-day free trial."} 
+                onChange={(e) => setContent({ ...content, ctaBox: { ...(content.ctaBox || {}), description: e.target.value } })} 
+                className="min-h-[100px] rounded-2xl bg-background"
+              />
+            </div>
+          </div>
+          <div className="space-y-6">
+            <div className="space-y-2">
+              <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Button Label</Label>
+              <Input 
+                value={content.ctaBox?.buttonText || "Get Started"} 
+                onChange={(e) => setContent({ ...content, ctaBox: { ...(content.ctaBox || {}), buttonText: e.target.value } })} 
+                className="h-12 rounded-2xl bg-background font-bold text-primary"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Button Redirect URL</Label>
+              <Input 
+                value={content.ctaBox?.buttonLink || "/pricing"} 
+                onChange={(e) => setContent({ ...content, ctaBox: { ...(content.ctaBox || {}), buttonLink: e.target.value } })} 
+                className="h-12 rounded-2xl bg-background font-mono text-xs"
+              />
+            </div>
+          </div>
         </div>
       </div>
 

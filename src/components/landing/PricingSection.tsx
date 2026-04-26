@@ -17,30 +17,30 @@ const FEATURES = [
 
 export function PricingSection({ data }: { data?: any }) {
   const [isYearly, setIsYearly] = useState(true);
-  
+
   const content = data?.content || {};
   const title = data?.title || "Choose the Right Plan for You";
   const showDemoBanner = content.showDemoBanner !== false;
-  
+
   const plans = content.plans || [
-    { 
-      name: "Coaching Plan", 
-      monthlyPrice: "1,299", 
-      yearlyPrice: "999", 
+    {
+      name: "Coaching Plan",
+      monthlyPrice: "1,299",
+      yearlyPrice: "999",
       description: "Ideal for individual coaches and small batches.",
       features: ["Complete Separate Workspace", "AI-Powered Assessments", "Role-Based Dashboards", "Custom Sub-domain Branding", "Financial & Fee Management"]
     },
-    { 
-      name: "Institute Plan", 
-      monthlyPrice: "2,499", 
-      yearlyPrice: "1,999", 
+    {
+      name: "Institute Plan",
+      monthlyPrice: "2,499",
+      yearlyPrice: "1,999",
       description: "Standard choice for schools and coaching centers.",
       features: ["Complete Separate Workspace", "AI-Powered Assessments", "Role-Based Dashboards", "Custom Sub-domain Branding", "Financial & Fee Management", "Attendance & Schedule Tracking", "Parental Access Portal", "24/7 Priority Support"]
     },
-    { 
-      name: "Enterprise", 
-      monthlyPrice: "Custom", 
-      yearlyPrice: "Custom", 
+    {
+      name: "Enterprise",
+      monthlyPrice: "Custom",
+      yearlyPrice: "Custom",
       description: "Unlimited features for large franchises.",
       features: ["Complete Separate Workspace", "AI-Powered Assessments", "Role-Based Dashboards", "Custom Sub-domain Branding", "Financial & Fee Management", "Attendance & Schedule Tracking", "Parental Access Portal", "24/7 Priority Support", "White-label & Domain Support"]
     }
@@ -105,7 +105,7 @@ export function PricingSection({ data }: { data?: any }) {
                 className="relative w-20 h-10 bg-zinc-200 dark:bg-zinc-800 rounded-full p-1.5 transition-all duration-500 hover:scale-105 active:scale-95 shadow-inner group"
               >
                 <div className={`h-full aspect-square bg-primary rounded-full shadow-lg transition-all duration-500 ease-in-out transform ${isYearly ? "translate-x-10" : "translate-x-0"}`}>
-                  <div className="absolute inset-0 bg-primary/40 rounded-full group-hover:opacity-100 opacity-0 transition-opacity"></div>
+                  <div className="absolute inset-0 bg-zinc-950 dark:bg-white rounded-full group-hover:opacity-100 transition-opacity"></div>
                 </div>
               </button>
               <div className="flex items-center gap-3">
@@ -122,19 +122,18 @@ export function PricingSection({ data }: { data?: any }) {
               const price = isYearly ? plan.yearlyPrice : plan.monthlyPrice;
 
               return (
-                <div 
-                  key={idx} 
-                  className={`group relative p-10 rounded-[3rem] transition-all duration-500 hover:-translate-y-2 flex flex-col ${
-                    isMain 
-                    ? "bg-zinc-950 dark:bg-zinc-900 text-white border-4 border-primary/30 shadow-2xl scale-105 z-10" 
+                <div
+                  key={idx}
+                  className={`group relative p-10 rounded-[3rem] transition-all duration-500 hover:-translate-y-2 flex flex-col ${isMain
+                    ? "bg-zinc-950 dark:bg-zinc-900 text-white border-4 border-primary/30 shadow-2xl scale-105 z-10"
                     : "bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-sm hover:shadow-2xl"
-                  }`}
+                    }`}
                 >
                   {isMain && <div className="absolute top-0 right-0 w-32 h-32 bg-primary/20 rounded-full blur-[60px] -mr-10 -mt-10"></div>}
 
                   <div className="relative z-10 mb-8">
                     {isMain && (
-                      <div className="inline-flex items-center gap-2 py-1 px-3 rounded-full bg-white text-primary text-[10px] font-black uppercase tracking-widest mb-6">
+                      <div className="inline-flex items-center gap-2 py-1 px-3 rounded-full bg-white text-black text-[10px] font-black uppercase tracking-widest mb-6">
                         Recommended
                       </div>
                     )}
@@ -159,11 +158,10 @@ export function PricingSection({ data }: { data?: any }) {
                     )}
                   </div>
 
-                  <button className={`relative z-10 w-full h-14 font-black rounded-2xl hover:scale-105 active:scale-95 transition-all mb-10 ${
-                    isMain 
-                    ? "bg-white text-black shadow-[0_15px_30px_rgba(var(--primary),0.3)]" 
+                  <button className={`relative z-10 w-full h-14 font-black rounded-2xl hover:scale-105 active:scale-95 transition-all mb-10 ${isMain
+                    ? "bg-white text-black shadow-[0_15px_30px_rgba(var(--primary),0.3)]"
                     : "bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white hover:bg-zinc-200 dark:hover:bg-zinc-700"
-                  }`}>
+                    }`}>
                     {price === "Custom" ? "Contact for Custom Plan" : `Choose ${plan.name}`}
                   </button>
 
