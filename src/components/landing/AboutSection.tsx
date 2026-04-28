@@ -81,7 +81,7 @@ export function AboutSection({ data }: { data?: any }) {
               { label: "Faculty & Staff", value: 4200, suffix: "+", color: "text-pink-600 dark:text-pink-400" }
             ]).map((stat: any, idx: number) => (
               <div key={idx} className="space-y-1">
-                <p className={cn("text-4xl font-black tracking-tighter", stat.color || "text-primary")}>
+                <p className={cn("text-4xl font-black tracking-tight", stat.color || "text-primary")}>
                   <AnimatedCounter to={Number(stat.value) || 0} duration={2.5} />
                   {stat.suffix}
                 </p>

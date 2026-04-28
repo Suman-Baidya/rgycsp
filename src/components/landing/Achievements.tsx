@@ -6,14 +6,14 @@ export function Achievements({ data }: { data?: any }) {
    const description = content.description || "Award-winning implementations across hundreds of franchises. We pride ourselves on the tangible growth and success our partner Institutes achieve.";
 
    return (
-      <section id="guide" className="py-24 px-6 bg-zinc-950 text-white relative flex flex-col items-center overflow-hidden">
+      <section id="guide" className="py-24 px-6 bg-background dark:bg-zinc-950 text-foreground dark:text-white relative flex flex-col items-center overflow-hidden">
          {/* Background Decor */}
-         <div className="absolute top-0 right-0 w-96 h-96 bg-primary/20 rounded-full blur-[100px] pointer-events-none"></div>
-         <div className="absolute bottom-0 left-0 w-96 h-96 bg-blue-600/20 rounded-full blur-[100px] pointer-events-none"></div>
+         <div className="absolute top-0 right-0 w-96 h-96 bg-primary/10 rounded-full blur-[100px] pointer-events-none"></div>
+         <div className="absolute bottom-0 left-0 w-96 h-96 bg-accent/10 rounded-full blur-[100px] pointer-events-none"></div>
 
          <div className="text-center max-w-3xl mb-16 relative z-10">
-            <div className="inline-flex items-center gap-2 py-1.5 px-4 rounded-full bg-white/20 border border-white/30 text-white font-bold text-[10px] tracking-[0.2em] uppercase mb-6 shadow-sm">
-               <span className="w-2 h-2 rounded-full bg-white animate-pulse"></span>
+            <div className="inline-flex items-center gap-2 py-1.5 px-4 rounded-full bg-primary/5 border border-primary/20 text-primary font-bold text-[10px] tracking-[0.2em] uppercase mb-6 shadow-sm">
+               <span className="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
                {subtitle}
             </div>
             <h2 className="text-4xl lg:text-5xl font-extrabold mt-3 tracking-tight leading-tight">

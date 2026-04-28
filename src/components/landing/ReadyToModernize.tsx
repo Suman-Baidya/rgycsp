@@ -39,7 +39,7 @@ export function ReadyToModernize({ data }: { data?: any }) {
         <div className="inline-flex items-center gap-2 py-1.5 px-4 rounded-full bg-white border border-primary/30 text-black font-bold text-[10px] tracking-[0.2em] uppercase mb-8 animate-bounce">
           {subtitle}
         </div>
-        <h2 className="text-4xl md:text-6xl lg:text-7xl font-black text-white mb-8 tracking-tighter leading-none">
+        <h2 className="text-4xl md:text-6xl lg:text-7xl font-black text-white mb-8 tracking-tight leading-none">
           {title}
         </h2>
         <p className="text-xl md:text-xl text-zinc-300 mb-12 max-w-2xl mx-auto leading-relaxed">

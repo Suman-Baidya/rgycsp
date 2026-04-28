@@ -117,18 +117,45 @@
   }
   body {
     @apply bg-background text-foreground;
+    letter-spacing: 0.015em;
   }
 }
 
 /* Custom High Performance Animations */
 @layer utilities {
+  .animate-slow-zoom {
+    animation: slow-zoom 20s ease-in-out infinite alternate;
+  }
+  
+  .animate-float {
+    animation: float 6s ease-in-out infinite;
+  }
+
   .animate-marquee {
     animation: marquee 30s linear infinite;
   }
-  
+
+  .animate-marquee-reverse {
+    animation: marquee-reverse 30s linear infinite;
+  }
+
+  @keyframes slow-zoom {
+    from { transform: scale(1); }
+    to { transform: scale(1.1); }
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-20px); }
+  }
+
   @keyframes marquee {
     0% { transform: translateX(0%); }
     100% { transform: translateX(-50%); } 
-    /* Translates -50% because the track contains exact duplicates of content for a seamless loop */
+  }
+
+  @keyframes marquee-reverse {
+    0% { transform: translateX(-50%); }
+    100% { transform: translateX(0%); } 
   }
 }

@@ -2,41 +2,45 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   LayoutDashboard,
-  Globe,
   Users,
-  Coins,
+  UserCheck,
+  BookOpen,
   Settings,
   ChevronLeft,
   ChevronRight,
   Menu,
   X,
   LogOut,
-  ShieldCheck,
-  Activity,
+  Building2,
+  Wallet,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
-const navItems = [
-  { name: "Overview", href: "/super-admin", icon: LayoutDashboard },
-  { name: "Workspaces", href: "/super-admin/workspaces", icon: Globe },
-  { name: "Users", href: "/super-admin/users", icon: Users },
-  { name: "Token Economy", href: "/super-admin/token-economy", icon: Coins },
-  { name: "System Logs", href: "/super-admin/logs", icon: Activity },
-  { name: "Settings", href: "/super-admin/settings", icon: Settings },
-];
-
-export function AdminSidebar() {
+export function WorkspaceSidebar() {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
   const pathname = usePathname();
+  const params = useParams();
+  const tenant = params.tenant as string;
+
+  const navItems = [
+    { name: "Overview", href: pathname.startsWith("/app/") ? `/app/${tenant}/admin` : `/admin`, icon: LayoutDashboard },
+    { name: "Staff & Roles", href: pathname.startsWith("/app/") ? `/app/${tenant}/admin/staff` : `/admin/staff`, icon: UserCheck },
+    { name: "Students", href: pathname.startsWith("/app/") ? `/app/${tenant}/admin/students` : `/admin/students`, icon: Users },
+    { name: "Courses", href: pathname.startsWith("/app/") ? `/app/${tenant}/admin/courses` : `/admin/courses`, icon: BookOpen },
+    { name: "Landing Page", href: pathname.startsWith("/app/") ? `/app/${tenant}/admin/settings` : `/admin/settings`, icon: Building2 },
+    { name: "Token Wallet", href: pathname.startsWith("/app/") ? `/app/${tenant}/admin/wallet` : `/admin/wallet`, icon: Wallet },
+  ];
 
   // Close mobile sidebar on navigation
   useEffect(() => {
+    setIsMounted(true);
     setIsMobileOpen(false);
   }, [pathname]);
 
@@ -70,7 +74,7 @@ export function AdminSidebar() {
         initial={false}
         animate={{
           width: isCollapsed ? 80 : 280,
-          x: isMobileOpen ? 0 : (typeof window !== 'undefined' && window.innerWidth < 1024 ? -300 : 0)
+          x: isMobileOpen ? 0 : (isMounted && window.innerWidth < 1024 ? -300 : 0)
         }}
         transition={{ type: "spring", stiffness: 300, damping: 30 }}
         className={cn(
@@ -81,7 +85,7 @@ export function AdminSidebar() {
         {/* Header */}
         <div className={cn(
           "h-20 flex items-center border-b border-white/5 transition-all duration-300",
-          isCollapsed ? "justify-center" : "px-6 justify-between"
+          isCollapsed ? "justify-center" : "px-8 justify-between"
         )}>
           {!isCollapsed && (
             <AnimatePresence mode="wait">
@@ -93,9 +97,11 @@ export function AdminSidebar() {
                 className="flex items-center gap-3 overflow-hidden"
               >
                 <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center shadow-[0_0_15px_rgba(var(--primary),0.5)] shrink-0">
-                  <ShieldCheck className="h-5 w-5 text-primary-foreground" />
+                  <Building2 className="h-5 w-5 text-primary-foreground" />
                 </div>
-                <span className="font-bold text-white tracking-tight text-lg whitespace-nowrap">ABCD Admin</span>
+                <span className="font-bold text-white tracking-tight text-lg whitespace-nowrap capitalize max-w-[160px] truncate">
+                  {tenant} Admin
+                </span>
               </motion.div>
             </AnimatePresence>
           )}
@@ -125,8 +131,8 @@ export function AdminSidebar() {
         {/* Navigation */}
         <nav className="flex-1 py-6 px-4 space-y-2 overflow-y-auto overflow-x-hidden custom-scrollbar">
           {navItems.map((item) => {
-            const isActive = item.href === '/super-admin' 
-              ? pathname === '/super-admin' 
+            const isActive = item.href === '/admin' 
+              ? pathname === '/admin' 
               : pathname.startsWith(item.href);
             return (
               <Link key={item.name} href={item.href}>
@@ -153,7 +159,7 @@ export function AdminSidebar() {
 
                   {isActive && (
                     <motion.div
-                      layoutId="active-nav"
+                      layoutId="active-nav-workspace"
                       className="absolute -left-1 w-1.5 h-6 bg-white rounded-r-full"
                     />
                   )}
@@ -171,26 +177,28 @@ export function AdminSidebar() {
 
         {/* Footer */}
         <div className={cn("border-t border-white/5 transition-all duration-300", isCollapsed ? "p-2" : "p-4")}>
-          <div className={cn(
-            "flex items-center gap-3 rounded-xl hover:bg-red-500/10 hover:text-red-500 transition-all cursor-pointer group relative overflow-hidden",
-            isCollapsed ? "justify-center h-12 w-12 mx-auto" : "px-3 py-3"
-          )}>
-            <LogOut className="h-5 w-5 flex-shrink-0" />
-            {!isCollapsed && (
-              <motion.span 
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                className="font-medium"
-              >
-                Logout
-              </motion.span>
-            )}
-            {isCollapsed && (
-              <div className="absolute left-full ml-4 px-2 py-1 bg-zinc-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50 whitespace-nowrap border border-white/10 shadow-xl">
-                Logout
-              </div>
-            )}
-          </div>
+          <Link href="/login">
+            <div className={cn(
+              "flex items-center gap-3 rounded-xl hover:bg-red-500/10 hover:text-red-500 transition-all cursor-pointer group relative overflow-hidden",
+              isCollapsed ? "justify-center h-12 w-12 mx-auto" : "px-3 py-3"
+            )}>
+              <LogOut className="h-5 w-5 flex-shrink-0" />
+              {!isCollapsed && (
+                <motion.span 
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  className="font-medium"
+                >
+                  Logout
+                </motion.span>
+              )}
+              {isCollapsed && (
+                <div className="absolute left-full ml-4 px-2 py-1 bg-zinc-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50 whitespace-nowrap border border-white/10 shadow-xl">
+                  Logout
+                </div>
+              )}
+            </div>
+          </Link>
         </div>
       </motion.aside>
     </>

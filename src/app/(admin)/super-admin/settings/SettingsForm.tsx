@@ -8,17 +8,27 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
-import { Globe, Layout, Palette, Phone, Save, Settings2, Trash2, ChevronDown, Cpu, LayoutDashboard, FileText, Play, Rocket, Mail, ShieldCheck, UserCheck, BookOpenCheck, Menu, MousePointer2, ExternalLink, Plus, Check, X, Zap } from "lucide-react";
+import { Globe, Layout, Palette, Phone, Save, Settings2, Trash2, ChevronDown, Cpu, LayoutDashboard, FileText, Play, Rocket, Mail, ShieldCheck, UserCheck, BookOpenCheck, Menu, MousePointer2, ExternalLink, Plus, Check, X, Zap, Bell } from "lucide-react";
 import { updateSiteSettings, updateLandingSection, syncAllSections } from "@/app/actions/site-settings";
 import { toast } from "sonner";
 import { ImageUpload } from "@/components/ui/ImageUpload";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { cn } from "@/lib/utils";
 
-export function SettingsForm({ settings }: { settings: any }) {
+const THEME_PRESETS = [
+  { name: "Sunset Glow", primary: "#f97316", accent: "#ea580c", description: "Vibrant and energetic orange tones." },
+  { name: "Midnight Royal", primary: "#4f46e5", accent: "#7c3aed", description: "Deep indigo for a professional look." },
+  { name: "Emerald Prestige", primary: "#059669", accent: "#10b981", description: "Sophisticated and calming emerald." },
+  { name: "Rose Gold", primary: "#e11d48", accent: "#fbbf24", description: "Modern, high-contrast rose and gold." },
+  { name: "Oceanic Depth", primary: "#0d9488", accent: "#22d3ee", description: "Fresh and innovative teal and cyan." },
+];
+
+export function SettingsForm({ settings, isSuperAdmin = true }: { settings: any, isSuperAdmin?: boolean }) {
   const [siteName, setSiteName] = useState(settings.siteName);
   const [logoUrl, setLogoUrl] = useState(settings.logoUrl);
   const [primaryColor, setPrimaryColor] = useState(settings.primaryColor);
   const [accentColor, setAccentColor] = useState(settings.accentColor);
+  const [fontFamily, setFontFamily] = useState(settings.fontFamily || "Inter");
   const [contactEmail, setContactEmail] = useState(settings.contactEmail);
   const [contactPhone, setContactPhone] = useState(settings.contactPhone);
   const [whatsapp, setWhatsapp] = useState(settings.whatsapp);
@@ -41,12 +51,16 @@ export function SettingsForm({ settings }: { settings: any }) {
     { name: "Support", href: "/support", id: "support", isActive: true }
   ]);
   const [isSaving, setIsSaving] = useState(false);
+  const mediaFolderBase = settings.workspaceId && settings.workspace?.subdomain 
+    ? `ABCDEduHub/Workspaces/${settings.workspace.subdomain}` 
+    : "ABCDEduHub/SuperAdmin";
 
   useEffect(() => {
     setSiteName(settings.siteName);
     setLogoUrl(settings.logoUrl);
     setPrimaryColor(settings.primaryColor);
     setAccentColor(settings.accentColor);
+    setFontFamily(settings.fontFamily || "Inter");
     setContactEmail(settings.contactEmail);
     setContactPhone(settings.contactPhone);
     setWhatsapp(settings.whatsapp);
@@ -60,24 +74,50 @@ export function SettingsForm({ settings }: { settings: any }) {
       ctaPrimary: { text: "Login", link: "/login" },
       ctaSecondary: { text: "Call Now", link: `tel:${settings.contactPhone || "8944899747"}` }
     });
-    setNavigation(settings.navigation || [
+    const baseNav = [...(settings.navigation || (isSuperAdmin ? [
       { name: "Home", href: "/", id: "home", isActive: true },
       { name: "About", href: "/about", id: "about", isActive: true },
       { name: "Services", href: "/services", id: "services", isActive: true },
       { name: "Guide", href: "/guide", id: "guide", isActive: true },
       { name: "Pricing", href: "/pricing", id: "pricing", isActive: true },
       { name: "Support", href: "/support", id: "support", isActive: true }
-    ]);
+    ] : [
+      { name: "Home", href: "/", id: "home", isActive: true },
+      { name: "About", href: "/about", id: "about", isActive: true },
+      { name: "Courses", href: "/courses", id: "courses", isActive: true },
+      { name: "Students", href: "/students", id: "students", isActive: true },
+      { name: "Notice", href: "/notice", id: "notice", isActive: true },
+      { name: "Franchise", href: "/franchise", id: "franchise", isActive: true },
+      { name: "Contact", href: "/contact", id: "contact", isActive: true },
+    ]))];
+
+    // Ensure core items are present for workspaces even in old settings
+    if (!isSuperAdmin) {
+      const coreItems = [
+        { name: "Notice", href: "/notice", id: "notice", isActive: true },
+        { name: "Franchise", href: "/franchise", id: "franchise", isActive: true }
+      ];
+      coreItems.forEach(coreItem => {
+        if (!baseNav.some((item: any) => item.id === coreItem.id || item.name === coreItem.name)) {
+          const contactIdx = baseNav.findIndex((item: any) => item.id === 'contact' || item.name === 'Contact');
+          if (contactIdx !== -1) baseNav.splice(contactIdx, 0, coreItem);
+          else baseNav.push(coreItem);
+        }
+      });
+    }
+    setNavigation(baseNav);
   }, [settings]);
 
   const handleSaveGeneral = async () => {
     setIsSaving(true);
     try {
       const result = await updateSiteSettings({
+        workspaceId: settings.workspaceId,
         siteName,
         logoUrl,
         primaryColor,
         accentColor,
+        fontFamily,
         contactEmail,
         contactPhone,
         whatsapp,
@@ -111,6 +151,7 @@ export function SettingsForm({ settings }: { settings: any }) {
               { value: "branding", label: "Branding & Contact", icon: Palette },
               { value: "navigation", label: "Navigation", icon: Globe },
               { value: "sections", label: "Sections", icon: Layout },
+              ...(!isSuperAdmin ? [{ value: "notices", label: "Notices", icon: Bell }] : []),
               { value: "page-headers", label: "Page Headers", icon: LayoutDashboard },
               { value: "legal-pages", label: "Legal Pages", icon: ShieldCheck },
             ].map((tab) => (
@@ -147,7 +188,53 @@ export function SettingsForm({ settings }: { settings: any }) {
                   </div>
                 </AccordionTrigger>
                 <AccordionContent className="pb-8 px-6 sm:px-8 space-y-10">
-                  <div className="space-y-3">
+                  <div className="space-y-6">
+                    <Label className="text-sm font-semibold text-foreground/80">Theme Presets</Label>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {THEME_PRESETS.map((preset) => (
+                        <button
+                          key={preset.name}
+                          type="button"
+                          onClick={() => {
+                            setPrimaryColor(preset.primary);
+                            setAccentColor(preset.accent);
+                          }}
+                          className={cn(
+                            "group relative flex flex-col items-start p-4 rounded-2xl border-2 transition-all text-left",
+                            primaryColor === preset.primary && accentColor === preset.accent
+                              ? "border-primary bg-primary/5 shadow-lg shadow-primary/5"
+                              : "border-border/40 hover:border-primary/20 hover:bg-muted/50"
+                          )}
+                        >
+                          <div className="flex items-center gap-2 mb-2">
+                            <div className="w-4 h-4 rounded-full" style={{ backgroundColor: preset.primary }} />
+                            <div className="w-4 h-4 rounded-full" style={{ backgroundColor: preset.accent }} />
+                            <span className="font-bold text-xs">{preset.name}</span>
+                          </div>
+                          <p className="text-[10px] text-muted-foreground line-clamp-1">{preset.description}</p>
+                          {primaryColor === preset.primary && accentColor === preset.accent && (
+                            <div className="absolute top-2 right-2">
+                              <Check className="w-3 h-3 text-primary" />
+                            </div>
+                          )}
+                        </button>
+                      ))}
+                      <button
+                        type="button"
+                        className={cn(
+                          "group relative flex flex-col items-center justify-center p-4 rounded-2xl border-2 border-dashed transition-all text-center gap-1",
+                          !THEME_PRESETS.some(p => p.primary === primaryColor && p.accent === accentColor)
+                            ? "border-primary bg-primary/5"
+                            : "border-border/40 hover:border-primary/20"
+                        )}
+                      >
+                        <Zap className="w-4 h-4 text-muted-foreground" />
+                        <span className="font-bold text-xs uppercase tracking-widest">Custom</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="space-y-3 pt-4">
                     <Label htmlFor="siteName" className="text-sm font-semibold text-foreground/80">Site Name</Label>
                     <Input id="siteName" value={siteName || ""} onChange={(e) => setSiteName(e.target.value)} placeholder="Enter site name" className="h-12 bg-background border-border/40 rounded-2xl" />
                   </div>
@@ -175,7 +262,39 @@ export function SettingsForm({ settings }: { settings: any }) {
                     </div>
                   </div>
 
-                  <ImageUpload value={logoUrl} onChange={setLogoUrl} label="Logo" folder="ABCDEdutHub/branding" />
+                  <div className="space-y-6 pt-4">
+                    <Label className="text-sm font-semibold text-foreground/80">Typography (Font Family)</Label>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+                      {[
+                        { name: "Inter", font: "Inter", description: "Modern Sans" },
+                        { name: "Roboto", font: "Roboto", description: "Classic Sans" },
+                        { name: "Montserrat", font: "Montserrat", description: "Geometric Sans" },
+                        { name: "Outfit", font: "Outfit", description: "Premium Sans" },
+                        { name: "Playfair Display", font: "Playfair Display", description: "Elegant Serif" },
+                        { name: "Lora", font: "Lora", description: "Classic Serif" },
+                      ].map((f) => (
+                        <button
+                          key={f.font}
+                          type="button"
+                          onClick={() => setFontFamily(f.font)}
+                          className={cn(
+                            "flex flex-col items-center justify-center p-6 rounded-2xl border-2 transition-all text-center gap-2",
+                            fontFamily === f.font
+                              ? "border-primary bg-primary/5 shadow-lg shadow-primary/5"
+                              : "border-border/40 hover:border-primary/20 hover:bg-muted/50"
+                          )}
+                        >
+                          <span className="text-2xl font-black" style={{ fontFamily: f.font }}>Aa</span>
+                          <div className="flex flex-col">
+                            <span className="text-xs font-bold">{f.name}</span>
+                            <span className="text-[9px] text-muted-foreground uppercase font-medium">{f.description}</span>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <ImageUpload value={logoUrl} onChange={setLogoUrl} label="Logo" folder={`${mediaFolderBase}/branding`} />
                   
                   <div className="space-y-3">
                     <Label htmlFor="brandDescription" className="text-sm font-semibold text-foreground/80">Brand Description (Footer)</Label>
@@ -260,7 +379,8 @@ export function SettingsForm({ settings }: { settings: any }) {
                 </AccordionContent>
               </AccordionItem>
 
-              {/* 4. Navbar Configuration (NEW) */}
+              {/* 4. Navbar Configuration (Super Admin Only) */}
+              {isSuperAdmin && (
               <AccordionItem value="navbar" className="border border-border/50 bg-card/50 rounded-3xl overflow-hidden">
                 <AccordionTrigger className="hover:no-underline py-8 px-6 sm:px-8">
                   <div className="flex items-center gap-4 text-left">
@@ -327,6 +447,7 @@ export function SettingsForm({ settings }: { settings: any }) {
                   </div>
                 </AccordionContent>
               </AccordionItem>
+              )}
             </Accordion>
           </TabsContent>
 
@@ -397,6 +518,62 @@ export function SettingsForm({ settings }: { settings: any }) {
             </div>
           </TabsContent>
 
+          <TabsContent value="notices" className="mt-0 w-full focus-visible:outline-none">
+            <div className="space-y-10 max-w-4xl mx-auto">
+              <div className="flex flex-col gap-2">
+                <h2 className="text-2xl font-bold tracking-tight">Notice Board Management</h2>
+                <p className="text-muted-foreground text-sm">Manage live updates and notifications for your students and visitors.</p>
+              </div>
+
+              {/* Find the 'about' section which contains notices */}
+              {(() => {
+                const aboutSection = settings.sections?.find((s: any) => s.type === 'about');
+                if (!aboutSection) return (
+                  <div className="p-12 border-2 border-dashed rounded-[2rem] text-center space-y-4 bg-muted/20">
+                    <Bell className="w-12 h-12 text-muted-foreground mx-auto opacity-20" />
+                    <p className="text-muted-foreground font-medium">Notice Board is bundled with the 'About' section. Please sync sections first.</p>
+                    <Button variant="outline" onClick={() => setActiveTab("sections")} className="rounded-xl">Go to Sections</Button>
+                  </div>
+                );
+
+                return (
+                  <div className="p-8 bg-card border border-border/60 rounded-[2.5rem] shadow-sm space-y-8">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center">
+                          <Bell className="w-6 h-6 animate-pulse" />
+                        </div>
+                        <div>
+                          <h3 className="text-lg font-bold">Dynamic Notice Board</h3>
+                          <p className="text-xs text-muted-foreground">Updates are reflected instantly on the landing page.</p>
+                        </div>
+                      </div>
+                      <Switch 
+                        checked={aboutSection.isActive} 
+                        onCheckedChange={(val) => updateLandingSection(aboutSection.id, { ...aboutSection, isActive: val })} 
+                      />
+                    </div>
+
+                    <div className="pt-6 border-t border-border/40">
+                       <AboutNoticeContentEditor 
+                         content={aboutSection.content || {}} 
+                         setContent={async (newContent: any) => {
+                           // This is a local update for the UI, but we need to save it
+                           await updateLandingSection(aboutSection.id, {
+                             ...aboutSection,
+                             content: newContent
+                           });
+                           toast.success("Notice board updated successfully");
+                         }}
+                         mediaFolderBase={mediaFolderBase}
+                       />
+                    </div>
+                  </div>
+                );
+              })()}
+            </div>
+          </TabsContent>
+
           <TabsContent value="sections" className="mt-0 w-full space-y-8 focus-visible:outline-none">
              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
                <div className="flex flex-col gap-1">
@@ -421,7 +598,7 @@ export function SettingsForm({ settings }: { settings: any }) {
              </div>
             <div className="space-y-4">
                 {settings.sections?.filter((s: any) => !s.type.startsWith('page-header-') && !s.type.startsWith('legal-')).map((section: any) => (
-                  <SectionEditor key={section.id} section={section} settings={settings} />
+                  <SectionEditor key={section.id} section={section} settings={settings} mediaFolderBase={mediaFolderBase} />
                 ))}
             </div>
           </TabsContent>
@@ -450,7 +627,7 @@ export function SettingsForm({ settings }: { settings: any }) {
              </div>
             <div className="space-y-4">
                 {settings.sections?.filter((s: any) => s.type.startsWith('page-header-') && !s.type.includes('privacy') && !s.type.includes('terms') && !s.type.includes('cookie') && !s.type.includes('refund') && !s.type.includes('sitemap')).map((section: any) => (
-                  <SectionEditor key={section.id} section={section} settings={settings} />
+                  <SectionEditor key={section.id} section={section} settings={settings} mediaFolderBase={mediaFolderBase} />
                 ))}
             </div>
           </TabsContent>
@@ -461,6 +638,7 @@ export function SettingsForm({ settings }: { settings: any }) {
                  <h2 className="text-2xl font-bold tracking-tight">Legal & Policy Pages</h2>
                  <p className="text-muted-foreground text-sm">Manage your Privacy Policy, Terms, and other legal documents.</p>
                </div>
+               {isSuperAdmin && (
                <Button 
                  variant="outline" 
                  size="sm" 
@@ -476,10 +654,11 @@ export function SettingsForm({ settings }: { settings: any }) {
                >
                  <Plus className="h-5 w-5" /> Sync Missing Sections
                </Button>
+               )}
              </div>
             <div className="space-y-4">
                 {settings.sections?.filter((s: any) => s.type.startsWith('legal-')).map((section: any) => (
-                  <SectionEditor key={section.id} section={section} settings={settings} />
+                  <SectionEditor key={section.id} section={section} settings={settings} mediaFolderBase={mediaFolderBase} />
                 ))}
             </div>
           </TabsContent>
@@ -490,7 +669,7 @@ export function SettingsForm({ settings }: { settings: any }) {
   );
 }
 
-function SectionEditor({ section, settings }: { section: any, settings: any }) {
+function SectionEditor({ section, settings, mediaFolderBase }: { section: any, settings: any, mediaFolderBase: string }) {
   const [isActive, setIsActive] = useState(section.isActive);
   const [title, setTitle] = useState(section.title);
   const [subtitle, setSubtitle] = useState(section.subtitle);
@@ -573,25 +752,27 @@ function SectionEditor({ section, settings }: { section: any, settings: any }) {
 
             {/* Specialized Content Editors */}
             <div className="bg-muted/5 p-6 rounded-[2rem] border border-border/20 shadow-inner">
-               {section.type === 'hero' && <HeroContentEditor content={content} setContent={setContent} />}
-               {section.type === 'about' && <AboutContentEditor content={content} setContent={setContent} />}
-               {section.type === 'why-choose-us' && <WhyChooseUsContentEditor content={content} setContent={setContent} />}
-               {section.type === 'achievements' && <AchievementsContentEditor content={content} setContent={setContent} />}
-               {section.type === 'partners' && <PartnersContentEditor content={content} setContent={setContent} />}
-               {section.type === 'testimonials' && <ListContentEditor title="Testimonials" content={content} setContent={setContent} itemFields={['name', 'role', 'text', 'avatar']} />}
-               {section.type === 'faq' && <FaqContentEditor content={content} setContent={setContent} />}
-               {section.type === 'our-message' && <OurMessageContentEditor content={content} setContent={setContent} />}
-               {section.type === 'mission' && <MissionContentEditor content={content} setContent={setContent} />}
-               {section.type === 'vision' && <VisionContentEditor content={content} setContent={setContent} />}
-               {section.type === 'services' && <ServicesContentEditor content={content} setContent={setContent} />}
-               {section.type === 'guide-steps' && <GuideStepsContentEditor content={content} setContent={setContent} />}
-               {section.type === 'guide-resources' && <GuideResourcesContentEditor content={content} setContent={setContent} />}
-               {section.type === 'ready-to-modernize' && <ReadyToModernizeContentEditor content={content} setContent={setContent} />}
-               {section.type === 'custom-solution' && <CustomSolutionContentEditor content={content} setContent={setContent} />}
-               {section.type === 'pricing' && <PricingContentEditor content={content} setContent={setContent} />}
-               {section.type === 'contact' && <ContactContentEditor content={content} setContent={setContent} settings={settings} />}
-               {section.type.startsWith('page-header-') && <PageHeaderContentEditor content={content} setContent={setContent} />}
-               {section.type.startsWith('legal-') && <LegalContentEditor content={content} setContent={setContent} />}
+               {section.type === 'hero' && <HeroContentEditor content={content} setContent={setContent} mediaFolderBase={mediaFolderBase} />}
+               {section.type === 'about' && <AboutNoticeContentEditor content={content} setContent={setContent} mediaFolderBase={mediaFolderBase} />}
+               {section.type === 'counters' && <CountersContentEditor content={content} setContent={setContent} mediaFolderBase={mediaFolderBase} />}
+               {section.type === 'courses' && <CoursesContentEditor content={content} setContent={setContent} mediaFolderBase={mediaFolderBase} />}
+               {section.type === 'why-choose-us' && <WhyChooseUsContentEditor content={content} setContent={setContent} mediaFolderBase={mediaFolderBase} />}
+               {section.type === 'achievements' && <AchievementsContentEditor content={content} setContent={setContent} mediaFolderBase={mediaFolderBase} />}
+               {section.type === 'partners' && <PartnersContentEditor content={content} setContent={setContent} mediaFolderBase={mediaFolderBase} />}
+               {section.type === 'testimonials' && <ListContentEditor title="Testimonials" content={content} setContent={setContent} itemFields={['name', 'role', 'text', 'avatar']} mediaFolderBase={mediaFolderBase} />}
+               {section.type === 'faq' && <FaqContentEditor content={content} setContent={setContent} mediaFolderBase={mediaFolderBase} />}
+               {section.type === 'our-message' && <OurMessageContentEditor content={content} setContent={setContent} mediaFolderBase={mediaFolderBase} />}
+               {section.type === 'mission' && <MissionContentEditor content={content} setContent={setContent} mediaFolderBase={mediaFolderBase} />}
+               {section.type === 'vision' && <VisionContentEditor content={content} setContent={setContent} mediaFolderBase={mediaFolderBase} />}
+               {section.type === 'services' && <ServicesContentEditor content={content} setContent={setContent} mediaFolderBase={mediaFolderBase} />}
+               {section.type === 'guide-steps' && <GuideStepsContentEditor content={content} setContent={setContent} mediaFolderBase={mediaFolderBase} />}
+               {section.type === 'guide-resources' && <GuideResourcesContentEditor content={content} setContent={setContent} mediaFolderBase={mediaFolderBase} />}
+               {section.type === 'ready-to-modernize' && <ReadyToModernizeContentEditor content={content} setContent={setContent} mediaFolderBase={mediaFolderBase} />}
+               {section.type === 'custom-solution' && <CustomSolutionContentEditor content={content} setContent={setContent} mediaFolderBase={mediaFolderBase} />}
+               {section.type === 'pricing' && <PricingContentEditor content={content} setContent={setContent} mediaFolderBase={mediaFolderBase} />}
+               {section.type === 'contact' && <ContactContentEditor content={content} setContent={setContent} settings={settings} mediaFolderBase={mediaFolderBase} />}
+               {section.type.startsWith('page-header-') && <PageHeaderContentEditor content={content} setContent={setContent} mediaFolderBase={mediaFolderBase} />}
+               {section.type.startsWith('legal-') && <LegalContentEditor content={content} setContent={setContent} mediaFolderBase={mediaFolderBase} />}
             </div>
 
             <div className="flex justify-end">
@@ -608,7 +789,7 @@ function SectionEditor({ section, settings }: { section: any, settings: any }) {
 
 // --- Specialized Editors ---
 
-function HeroContentEditor({ content, setContent }: any) {
+function HeroContentEditor({ content, setContent, mediaFolderBase }: any) {
   return (
     <div className="space-y-8">
       <div className="flex items-center justify-between">
@@ -621,8 +802,9 @@ function HeroContentEditor({ content, setContent }: any) {
             subtitle: "Description...", 
             primaryButtonText: "Get Started", 
             primaryButtonLink: "#",
-            secondaryButtonText: "Book a Demo",
-            secondaryButtonLink: "#"
+            secondaryButtonText: "Enquiry Now",
+            secondaryButtonLink: "#",
+            offerImage: ""
           }];
           setContent({ ...content, slides: newSlides });
         }}>Add Slide</Button>
@@ -643,7 +825,7 @@ function HeroContentEditor({ content, setContent }: any) {
                   value={slide.src || ""} 
                   onChange={(url) => { const n = [...content.slides]; n[idx].src = url; setContent({ ...content, slides: n }); }} 
                   label="Background Banner" 
-                  folder="ABCDEdutHub/hero"
+                  folder={`${mediaFolderBase}/hero`}
                 />
               </div>
               <div className="space-y-2">
@@ -672,12 +854,20 @@ function HeroContentEditor({ content, setContent }: any) {
             <div className="grid grid-cols-2 gap-4 pt-2">
               <div className="space-y-1">
                 <Label className="text-[10px] uppercase font-bold text-muted-foreground">Secondary Button Label</Label>
-                <Input value={slide.secondaryButtonText || ""} onChange={(e) => { const n = [...content.slides]; n[idx].secondaryButtonText = e.target.value; setContent({ ...content, slides: n }); }} placeholder="e.g. Book a Demo" className="h-9 text-xs" />
+                <Input value={slide.secondaryButtonText || ""} onChange={(e) => { const n = [...content.slides]; n[idx].secondaryButtonText = e.target.value; setContent({ ...content, slides: n }); }} placeholder="e.g. Enquiry Now" className="h-9 text-xs" />
               </div>
               <div className="space-y-1">
                 <Label className="text-[10px] uppercase font-bold text-muted-foreground">Secondary Button Link</Label>
                 <Input value={slide.secondaryButtonLink || ""} onChange={(e) => { const n = [...content.slides]; n[idx].secondaryButtonLink = e.target.value; setContent({ ...content, slides: n }); }} placeholder="e.g. /contact" className="h-9 text-xs" />
               </div>
+            </div>
+            <div className="space-y-2 pt-2">
+              <ImageUpload 
+                value={slide.offerImage || ""} 
+                onChange={(url) => { const n = [...content.slides]; n[idx].offerImage = url; setContent({ ...content, slides: n }); }} 
+                label="Offer Image (Floating)" 
+                folder={`${mediaFolderBase}/hero`}
+              />
             </div>
           </div>
         ))}
@@ -686,51 +876,57 @@ function HeroContentEditor({ content, setContent }: any) {
   );
 }
 
-function AboutContentEditor({ content, setContent }: any) {
+function AboutNoticeContentEditor({ content, setContent, mediaFolderBase }: any) {
   return (
     <div className="space-y-10">
-       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <div className="space-y-3">
-             <ImageUpload 
-               value={content.image || ""} 
-               onChange={(url) => setContent({ ...content, image: url })} 
-               label="Main Image" 
-               folder="ABCDEdutHub/about"
-             />
-          </div>
-          <div className="space-y-3">
-             <Label className="text-xs font-bold uppercase">Floating Metric (e.g. "500+")</Label>
-             <Input value={content.metricValue || ""} onChange={(e) => setContent({ ...content, metricValue: e.target.value })} className="h-11 bg-background" />
-          </div>
-       </div>
        <div className="space-y-3">
-          <Label className="text-xs font-bold uppercase">Long Description</Label>
+          <Label className="text-xs font-bold uppercase">Institute Description (About Us)</Label>
           <Textarea value={content.description || ""} onChange={(e) => setContent({ ...content, description: e.target.value })} className="min-h-[120px] bg-background" />
        </div>
 
        <div className="pt-8 border-t border-border/30">
           <ListContentEditor 
-            title="Statistical Counters" 
-            content={{ items: content.stats || [] }} 
-            setContent={(newContent: any) => setContent({ ...content, stats: newContent.items })} 
-            itemFields={['label', 'value', 'suffix', 'color']} 
-          />
-          <p className="text-[10px] text-muted-foreground mt-2 px-2 italic">Color options: text-primary, text-blue-600, text-pink-600, text-zinc-500</p>
-       </div>
-
-       <div className="pt-8 border-t border-border/30">
-          <ListContentEditor 
-            title="Core Features" 
-            content={{ items: (content.features || []).map((i: string) => ({ text: i })) }} 
-            setContent={(newContent: any) => setContent({ ...content, features: newContent.items.map((i: any) => i.text) })} 
-            itemFields={['text']} 
+            title="Notice Board Items" 
+            content={{ items: content.notices || [] }} 
+            setContent={(newContent: any) => setContent({ ...content, notices: newContent.items })} 
+            itemFields={['title', 'date', 'link']} 
+            mediaFolderBase={mediaFolderBase}
           />
        </div>
     </div>
   );
 }
 
-function WhyChooseUsContentEditor({ content, setContent }: any) {
+function CountersContentEditor({ content, setContent, mediaFolderBase }: any) {
+  return (
+    <div className="space-y-6">
+       <ListContentEditor 
+         title="Counters (Total Students, Courses, etc.)" 
+         content={{ items: content.stats || [] }} 
+         setContent={(newContent: any) => setContent({ ...content, stats: newContent.items })} 
+         itemFields={['label', 'value']} 
+         mediaFolderBase={mediaFolderBase}
+       />
+       <p className="text-[10px] text-muted-foreground italic px-2">Common icons are automatically assigned based on labels.</p>
+    </div>
+  );
+}
+
+function CoursesContentEditor({ content, setContent, mediaFolderBase }: any) {
+  return (
+    <div className="space-y-6">
+       <ListContentEditor 
+         title="Featured Courses" 
+         content={{ items: content.courses || [] }} 
+         setContent={(newContent: any) => setContent({ ...content, courses: newContent.items })} 
+         itemFields={['title', 'category', 'fee', 'duration', 'image']} 
+         mediaFolderBase={mediaFolderBase}
+       />
+    </div>
+  );
+}
+
+function WhyChooseUsContentEditor({ content, setContent, mediaFolderBase }: any) {
   return (
     <div className="space-y-10">
        <div className="space-y-3">
@@ -738,7 +934,7 @@ function WhyChooseUsContentEditor({ content, setContent }: any) {
             value={content.image || ""} 
             onChange={(url) => setContent({ ...content, image: url })} 
             label="Banner Image" 
-            folder="ABCDEdutHub/why-choose-us"
+            folder={`${mediaFolderBase}/why-choose-us`}
           />
        </div>
        <div className="space-y-3">
@@ -752,6 +948,7 @@ function WhyChooseUsContentEditor({ content, setContent }: any) {
             content={{ items: content.features || [] }} 
             setContent={(newContent: any) => setContent({ ...content, features: newContent.items })} 
             itemFields={['icon', 'title', 'description']} 
+            mediaFolderBase={mediaFolderBase}
           />
           <p className="text-[10px] text-muted-foreground mt-2 px-2 italic">Available Icons: Zap, ShieldCheck, Cpu, Globe, Rocket, Brain, GraduationCap, Users, Layout</p>
        </div>
@@ -759,7 +956,7 @@ function WhyChooseUsContentEditor({ content, setContent }: any) {
   );
 }
 
-function AchievementsContentEditor({ content, setContent }: any) {
+function AchievementsContentEditor({ content, setContent, mediaFolderBase }: any) {
   return (
     <div className="space-y-10">
        <div className="space-y-3">
@@ -773,13 +970,14 @@ function AchievementsContentEditor({ content, setContent }: any) {
             content={{ items: content.items || [] }} 
             setContent={(newContent: any) => setContent({ ...content, items: newContent.items })} 
             itemFields={['src', 'title', 'description']} 
+            mediaFolderBase={mediaFolderBase}
           />
        </div>
     </div>
   );
 }
 
-function PartnersContentEditor({ content, setContent }: any) {
+function PartnersContentEditor({ content, setContent, mediaFolderBase }: any) {
   return (
     <div className="pt-4">
        <ListContentEditor 
@@ -787,12 +985,13 @@ function PartnersContentEditor({ content, setContent }: any) {
          content={{ items: (content.logos || []).map((l: string) => ({ image: l })) }} 
          setContent={(newContent: any) => setContent({ ...content, logos: newContent.items.map((i: any) => i.image) })} 
          itemFields={['image']} 
+         mediaFolderBase={mediaFolderBase}
        />
     </div>
   );
 }
 
-function FaqContentEditor({ content, setContent }: any) {
+function FaqContentEditor({ content, setContent, mediaFolderBase }: any) {
   return (
     <div className="space-y-10">
        <div className="space-y-3">
@@ -800,7 +999,7 @@ function FaqContentEditor({ content, setContent }: any) {
             value={content.image || ""} 
             onChange={(url) => setContent({ ...content, image: url })} 
             label="Left-side Support Image" 
-            folder="ABCDEdutHub/faq"
+            folder={`${mediaFolderBase}/faq`}
           />
        </div>
        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -830,12 +1029,12 @@ function FaqContentEditor({ content, setContent }: any) {
   );
 }
 
-function OurMessageContentEditor({ content, setContent }: any) {
+function OurMessageContentEditor({ content, setContent, mediaFolderBase }: any) {
   return (
     <div className="space-y-10">
        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <ImageUpload value={content.bgImage || ""} onChange={(url) => setContent({ ...content, bgImage: url })} label="Parallax Background Image" folder="ABCDEdutHub/about" />
-          <ImageUpload value={content.sideImage || ""} onChange={(url) => setContent({ ...content, sideImage: url })} label="Side Cinematic Image" folder="ABCDEdutHub/about" />
+          <ImageUpload value={content.bgImage || ""} onChange={(url) => setContent({ ...content, bgImage: url })} label="Parallax Background Image" folder={`${mediaFolderBase}/about`} />
+          <ImageUpload value={content.sideImage || ""} onChange={(url) => setContent({ ...content, sideImage: url })} label="Side Cinematic Image" folder={`${mediaFolderBase}/about`} />
        </div>
        <div className="space-y-6">
           <div className="space-y-3">
@@ -858,16 +1057,16 @@ function OurMessageContentEditor({ content, setContent }: any) {
                 <Input value={content.authorRole || ""} onChange={(e) => setContent({ ...content, authorRole: e.target.value })} />
              </div>
           </div>
-          <ImageUpload value={content.authorAvatar || ""} onChange={(url) => setContent({ ...content, authorAvatar: url })} label="Author Avatar" folder="ABCDEdutHub/about" />
+          <ImageUpload value={content.authorAvatar || ""} onChange={(url) => setContent({ ...content, authorAvatar: url })} label="Author Avatar" folder={`${mediaFolderBase}/about`} />
        </div>
     </div>
   );
 }
 
-function MissionContentEditor({ content, setContent }: any) {
+function MissionContentEditor({ content, setContent, mediaFolderBase }: any) {
   return (
     <div className="space-y-10">
-       <ImageUpload value={content.image || ""} onChange={(url) => setContent({ ...content, image: url })} label="Mission Image" folder="ABCDEdutHub/about" />
+       <ImageUpload value={content.image || ""} onChange={(url) => setContent({ ...content, image: url })} label="Mission Image" folder={`${mediaFolderBase}/about`} />
        <div className="space-y-3">
           <Label className="text-xs font-bold uppercase">Mission Description</Label>
           <Textarea value={content.description || ""} onChange={(e) => setContent({ ...content, description: e.target.value })} className="min-h-[100px]" />
@@ -884,10 +1083,10 @@ function MissionContentEditor({ content, setContent }: any) {
   );
 }
 
-function VisionContentEditor({ content, setContent }: any) {
+function VisionContentEditor({ content, setContent, mediaFolderBase }: any) {
   return (
     <div className="space-y-10">
-       <ImageUpload value={content.image || ""} onChange={(url) => setContent({ ...content, image: url })} label="Vision Image" folder="ABCDEdutHub/about" />
+       <ImageUpload value={content.image || ""} onChange={(url) => setContent({ ...content, image: url })} label="Vision Image" folder={`${mediaFolderBase}/about`} />
        <div className="space-y-3">
           <Label className="text-xs font-bold uppercase">Vision Description</Label>
           <Textarea value={content.description || ""} onChange={(e) => setContent({ ...content, description: e.target.value })} className="min-h-[100px]" />
@@ -905,7 +1104,7 @@ function VisionContentEditor({ content, setContent }: any) {
   );
 }
 
-function ServicesContentEditor({ content, setContent }: any) {
+function ServicesContentEditor({ content, setContent, mediaFolderBase }: any) {
   const lms = content.lms || {};
   const ecosystem = content.ecosystem || {};
   const highlights = content.highlights || [];
@@ -938,6 +1137,7 @@ function ServicesContentEditor({ content, setContent }: any) {
              content={{ items: highlights }} 
              setContent={(newContent: any) => setContent({ ...content, highlights: newContent.items })} 
              itemFields={['icon', 'title', 'desc']} 
+             mediaFolderBase={mediaFolderBase}
           />
           <p className="text-[10px] text-muted-foreground mt-2 px-2 italic">Icons: globe, cpu, shield, zap, rocket, target</p>
        </div>
@@ -962,7 +1162,7 @@ function ServicesContentEditor({ content, setContent }: any) {
                    <Textarea value={lms.description || ""} onChange={(e) => setContent({ ...content, lms: { ...lms, description: e.target.value } })} className="min-h-[100px]" />
                 </div>
              </div>
-             <ImageUpload value={lms.image || ""} onChange={(url) => setContent({ ...content, lms: { ...lms, image: url } })} label="LMS Preview Image" folder="ABCDEdutHub/services" />
+             <ImageUpload value={lms.image || ""} onChange={(url) => setContent({ ...content, lms: { ...lms, image: url } })} label="LMS Preview Image" folder={`${mediaFolderBase}/services`} />
           </div>
           <div className="pt-4">
              <ListContentEditor 
@@ -970,6 +1170,7 @@ function ServicesContentEditor({ content, setContent }: any) {
                 content={{ items: lms.features || [] }} 
                 setContent={(newContent: any) => setContent({ ...content, lms: { ...lms, features: newContent.items } })} 
                 itemFields={['title', 'text']} 
+                mediaFolderBase={mediaFolderBase}
              />
           </div>
        </div>
@@ -995,6 +1196,7 @@ function ServicesContentEditor({ content, setContent }: any) {
                 content={{ items: ecosystem.roles || [] }} 
                 setContent={(newContent: any) => setContent({ ...content, ecosystem: { ...ecosystem, roles: newContent.items } })} 
                 itemFields={['title', 'description', 'icon', 'color']} 
+                mediaFolderBase={mediaFolderBase}
              />
              <p className="text-[10px] text-muted-foreground mt-2 px-2 italic">Icons: shield, briefcase, wallet, users, graduation, heart, globe, zap, target</p>
           </div>
@@ -1003,14 +1205,14 @@ function ServicesContentEditor({ content, setContent }: any) {
   );
 }
 
-function PageHeaderContentEditor({ content, setContent }: any) {
+function PageHeaderContentEditor({ content, setContent, mediaFolderBase }: any) {
   return (
     <div className="space-y-8">
        <ImageUpload 
          value={content.bgImage || ""} 
          onChange={(url) => setContent({ ...content, bgImage: url })} 
          label="Header Background Image" 
-         folder="ABCDEdutHub/headers" 
+         folder={`${mediaFolderBase}/headers`} 
        />
        <div className="space-y-2">
           <Label className="text-[10px] uppercase font-bold text-muted-foreground">Breadcrumb Text</Label>
@@ -1024,7 +1226,7 @@ function PageHeaderContentEditor({ content, setContent }: any) {
   );
 }
 
-function LegalContentEditor({ content, setContent }: any) {
+function LegalContentEditor({ content, setContent, mediaFolderBase }: any) {
   return (
     <div className="space-y-12">
        {/* Header Controls */}
@@ -1037,7 +1239,7 @@ function LegalContentEditor({ content, setContent }: any) {
               value={content.bgImage || ""} 
               onChange={(url) => setContent({ ...content, bgImage: url })} 
               label="Page Background Image" 
-              folder="ABCDEdutHub/legal" 
+              folder={`${mediaFolderBase}/legal`} 
             />
             <div className="space-y-3 justify-end flex flex-col">
               <Label className="text-[10px] uppercase font-bold text-muted-foreground ml-1">Breadcrumb Text</Label>
@@ -1076,10 +1278,10 @@ function LegalContentEditor({ content, setContent }: any) {
   );
 }
 
-function ReadyToModernizeContentEditor({ content, setContent }: any) {
+function ReadyToModernizeContentEditor({ content, setContent, mediaFolderBase }: any) {
   return (
     <div className="space-y-10">
-        <ImageUpload value={content.bgImage || ""} onChange={(url) => setContent({ ...content, bgImage: url })} label="Parallax Background Image" folder="ABCDEdutHub/services" />
+        <ImageUpload value={content.bgImage || ""} onChange={(url) => setContent({ ...content, bgImage: url })} label="Parallax Background Image" folder={`${mediaFolderBase}/services`} />
         <div className="space-y-3">
            <Label className="text-xs font-bold uppercase">Main Description</Label>
            <Textarea value={content.description || ""} onChange={(e) => setContent({ ...content, description: e.target.value })} />
@@ -1108,7 +1310,7 @@ function ReadyToModernizeContentEditor({ content, setContent }: any) {
   );
 }
 
-function GuideStepsContentEditor({ content, setContent }: any) {
+function GuideStepsContentEditor({ content, setContent, mediaFolderBase }: any) {
   const steps = (content.steps || []).map((s: any) => ({
     ...s,
     substeps: Array.isArray(s.substeps) ? s.substeps.join(", ") : (s.substeps || "")
@@ -1132,6 +1334,7 @@ function GuideStepsContentEditor({ content, setContent }: any) {
               setContent({ ...content, steps: processed });
             }} 
             itemFields={['title', 'subtitle', 'desc', 'icon', 'substeps']} 
+            mediaFolderBase={mediaFolderBase}
           />
           <p className="text-[10px] text-muted-foreground mt-2 px-2 italic">Icons: userPlus, settings, book, rocket, userCheck, dashboard, cpu, shield</p>
        </div>
@@ -1139,7 +1342,7 @@ function GuideStepsContentEditor({ content, setContent }: any) {
   );
 }
 
-function GuideResourcesContentEditor({ content, setContent }: any) {
+function GuideResourcesContentEditor({ content, setContent, mediaFolderBase }: any) {
   const video = content.video || {};
   const docs = content.docs || {};
 
@@ -1212,12 +1415,12 @@ function GuideResourcesContentEditor({ content, setContent }: any) {
   );
 }
 
-function CustomSolutionContentEditor({ content, setContent }: any) {
+function CustomSolutionContentEditor({ content, setContent, mediaFolderBase }: any) {
   const contact = content.contact || {};
 
   return (
     <div className="space-y-10">
-       <ImageUpload value={content.bgImage || ""} onChange={(url) => setContent({ ...content, bgImage: url })} label="Parallax Background Image" folder="ABCDEdutHub/pricing" />
+       <ImageUpload value={content.bgImage || ""} onChange={(url) => setContent({ ...content, bgImage: url })} label="Parallax Background Image" folder={`${mediaFolderBase}/pricing`} />
        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <div className="space-y-3">
              <Label className="text-xs font-bold uppercase">Badge Text</Label>
@@ -1270,7 +1473,7 @@ function CustomSolutionContentEditor({ content, setContent }: any) {
   );
 }
 
-function PricingContentEditor({ content, setContent }: any) {
+function PricingContentEditor({ content, setContent, mediaFolderBase }: any) {
   const plans = content.plans || [
     { name: "Coaching Plan", monthlyPrice: "1,299", yearlyPrice: "999", description: "Ideal for individual coaches.", features: ["Complete Separate Workspace", "AI Assessments"] },
     { name: "Institute Plan", monthlyPrice: "2,499", yearlyPrice: "1,999", description: "Standard choice for schools.", features: ["All Coaching Features", "Financial Management"] },
@@ -1362,7 +1565,7 @@ function PricingContentEditor({ content, setContent }: any) {
   );
 }
 
-function ContactContentEditor({ content, setContent, settings }: any) {
+function ContactContentEditor({ content, setContent, settings, mediaFolderBase }: any) {
   return (
     <div className="space-y-12">
       <div className="p-8 bg-indigo-500/5 rounded-[2.5rem] border border-indigo-500/20 space-y-6">
@@ -1482,7 +1685,7 @@ function ContactContentEditor({ content, setContent, settings }: any) {
   );
 }
 
-function ListContentEditor({ title, content, setContent, itemFields }: any) {
+function ListContentEditor({ title, content, setContent, itemFields, mediaFolderBase }: any) {
   const items = content.items || [];
   return (
     <div className="space-y-6">
@@ -1510,7 +1713,7 @@ function ListContentEditor({ title, content, setContent, itemFields }: any) {
                                 const n = [...items]; n[idx][field] = url; setContent({ ...content, items: n });
                               }} 
                               label={field.charAt(0).toUpperCase() + field.slice(1)}
-                              folder={`ABCDEdutHub/${title.toLowerCase().replace(" ", "-")}`}
+                              folder={`${mediaFolderBase}/${title.toLowerCase().replace(/ /g, "-")}`}
                             />
                          ) : field === 'description' || field === 'text' || field === 'answer' ? (
                             <div className="space-y-1">

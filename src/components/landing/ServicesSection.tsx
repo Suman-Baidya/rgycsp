@@ -89,11 +89,11 @@ export function ServicesSection({ data }: { data?: any }) {
         
         {/* 1. Main Header (Always Visible) */}
         <div className="text-center mb-16">
-          <div className="inline-flex items-center gap-2 py-1.5 px-4 rounded-full bg-primary/5 border border-primary/20 text-primary font-bold text-[10px] tracking-[0.2em] uppercase mb-4">
+          <div className="inline-flex items-center gap-2 py-1.5 px-4 rounded-full bg-primary/5 border border-primary/20 text-primary font-bold text-[10px] tracking-[0.2em] mb-4">
             <Zap className="w-4 h-4" />
             Our Services
           </div>
-          <h2 className="text-4xl md:text-6xl font-black tracking-tighter mb-6 bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">
+          <h2 className="text-4xl md:text-6xl font-black tracking-tight mb-6 bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">
             {mainTitle}
           </h2>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">

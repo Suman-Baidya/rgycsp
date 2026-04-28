@@ -5,8 +5,9 @@ import { revalidatePath } from "next/cache";
 
 export async function updateSiteSettings(data: any) {
   try {
+    const workspaceId = data.workspaceId || null;
     const settings = await db.siteSettings.findFirst({
-      where: { workspaceId: null },
+      where: { workspaceId },
     });
 
     if (settings) {
@@ -25,12 +26,13 @@ export async function updateSiteSettings(data: any) {
           socialLinks: data.socialLinks,
           navigation: data.navigation,
           navbarConfig: data.navbarConfig,
+          fontFamily: data.fontFamily,
         },
       });
     } else {
       await db.siteSettings.create({
         data: {
-          workspaceId: null,
+          workspaceId,
           siteName: data.siteName,
           logoUrl: data.logoUrl,
           primaryColor: data.primaryColor,
@@ -50,6 +52,8 @@ export async function updateSiteSettings(data: any) {
     revalidatePath("/", "layout");
     revalidatePath("/");
     revalidatePath("/(admin)/super-admin/settings");
+    revalidatePath("/app/[tenant]/admin/settings");
+    revalidatePath("/app/[tenant]", "layout");
     
     return { success: true };
   } catch (error: any) {
@@ -76,6 +80,8 @@ export async function updateLandingSection(sectionId: string, data: any) {
 
     revalidatePath("/");
     revalidatePath("/(admin)/super-admin/settings");
+    revalidatePath("/app/[tenant]/admin/settings");
+    revalidatePath("/app/[tenant]", "layout");
     return { success: true };
   } catch (error) {
     console.error("Failed to update landing section:", error);
@@ -83,7 +89,7 @@ export async function updateLandingSection(sectionId: string, data: any) {
   }
 }
 
-export async function syncAllSections(settingsId: string, sectionTypes: string[]) {
+export async function syncAllSections(settingsId: string, sectionTypes: string[], skipRevalidate: boolean = false) {
   try {
     const existingSections = await db.landingSection.findMany({
       where: { siteSettingsId: settingsId }
@@ -132,8 +138,10 @@ export async function syncAllSections(settingsId: string, sectionTypes: string[]
       });
     }));
 
-    revalidatePath("/");
-    revalidatePath("/(admin)/super-admin/settings");
+    if (!skipRevalidate) {
+      revalidatePath("/");
+      revalidatePath("/(admin)/super-admin/settings");
+    }
     return { success: true, created: missingTypes.length };
   } catch (error) {
     console.error("Failed to sync sections:", error);

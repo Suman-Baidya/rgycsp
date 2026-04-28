@@ -25,7 +25,7 @@ export function OurMessage({ data }: { data?: any }) {
   const sideImage = final.sideImage;
 
   return (
-    <section className="relative py-32 px-6 overflow-hidden min-h-[700px] flex items-center">
+    <section className="relative py-32 px-6 overflow-hidden min-h-[700px] flex items-center bg-black">
       {/* Sticky Background Image (Parallax Effect) */}
       <div
         className="absolute inset-0 z-0"
@@ -37,23 +37,23 @@ export function OurMessage({ data }: { data?: any }) {
         }}
       >
         {/* Multi-layered dark overlays for depth and readability */}
-        <div className="absolute inset-0 bg-zinc-950/50 backdrop-blur-[1px]"></div>
-        <div className="absolute inset-0 bg-gradient-to-b from-zinc-950 via-transparent to-zinc-950"></div>
-        <div className="absolute inset-0 bg-zinc-950/15"></div>
+        <div className="absolute inset-0 bg-black/70 backdrop-blur-[1px]"></div>
+        {/* <div className="absolute inset-0 bg-gradient-to-b from-black via-transparent to-black"></div> */}
+        {/* <div className="absolute inset-0 bg-black/20"></div> */}
       </div>
 
       <div className="max-w-7xl mx-auto flex flex-col lg:flex-row items-center gap-20 relative z-10">
         {/* Message Content */}
         <div className="flex-1 order-2 lg:order-1 text-white">
-          <div className="inline-flex items-center gap-2 py-1.5 px-4 rounded-full bg-primary/90 border border-primary/30 text-primary font-bold text-[10px] tracking-[0.2em] uppercase mb-8 shadow-[0_0_15px_rgba(var(--primary),0.2)]">
-            <MessageSquareQuote className="w-4 h-4 z-10" />
+          <div className="inline-flex items-center gap-3 py-1.5 px-4 rounded-full bg-white/10 border border-white/20 text-white font-bold text-[10px] tracking-[0.2em] uppercase mb-8 shadow-sm">
+            <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
             {subtitle}
           </div>
 
           <div className="relative">
-            <Quote className="absolute -top-12 left-140 w-24 h-24 text-primary/10 -z-10" />
+            <Quote className="absolute -top-12 left-140 w-24 h-24 text-white/10 -z-10" />
             {title && (
-              <h3 className="text-xl font-bold text-primary mb-4 tracking-wide uppercase opacity-90">
+              <h3 className="text-xl font-bold text-white mb-4 tracking-wide opacity-90">
                 {title}
               </h3>
             )}
@@ -93,7 +93,7 @@ export function OurMessage({ data }: { data?: any }) {
               <div className="absolute inset-0 bg-gradient-to-t from-zinc-950/80 via-transparent to-transparent"></div>
             </div>
             {/* Floating Decoration */}
-            <div className="absolute -bottom-6 -right-6 w-32 h-32 bg-primary/20 rounded-full blur-[60px] animate-pulse"></div>
+            <div className="absolute -bottom-6 -right-6 w-32 h-32 bg-white/10 rounded-full blur-[60px] animate-pulse"></div>
           </div>
         </div>
       </div>

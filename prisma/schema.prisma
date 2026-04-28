@@ -69,6 +69,7 @@ model SiteSettings {
   logoUrl       String?
   primaryColor  String?
   accentColor   String?
+  fontFamily    String?
   
   contactEmail  String?
   contactPhone  String?
@@ -111,10 +112,13 @@ model WorkspaceRole {
   id          String            @id @default(cuid())
   userId      String
   workspaceId String
-  role        WorkspaceRoleType
+  role        WorkspaceRoleType @default(STAFF)
 
   user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt @default(now())
 
   @@unique([userId, workspaceId])
 }
@@ -122,6 +126,7 @@ model WorkspaceRole {
 enum WorkspaceRoleType {
   ADMIN
   MANAGER
+  STAFF
   TEACHER
   ACCOUNTANT
   STUDENT
@@ -136,6 +141,7 @@ model Course {
   id          String  @id @default(cuid())
   workspaceId String
   title       String
+  code        String?
   description String?
   feeAmount   Float   @default(0) // Standard fee amount
 

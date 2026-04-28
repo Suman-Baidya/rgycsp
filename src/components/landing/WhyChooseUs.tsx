@@ -46,7 +46,7 @@ export function WhyChooseUs({ data }: { data?: any }) {
       <div className="max-w-7xl mx-auto flex flex-col lg:flex-row gap-16 items-center">
         {/* Features Grid */}
         <div className="flex-1 order-2 lg:order-1">
-          <div className="inline-flex items-center gap-2 py-1.5 px-4 rounded-full bg-primary/5 border border-primary/20 text-primary font-bold text-[10px] tracking-[0.2em] uppercase mb-4 shadow-sm">
+          <div className="inline-flex items-center gap-2 py-1.5 px-4 rounded-full bg-primary/5 border border-primary/20 text-primary font-bold text-[10px] tracking-[0.2em] mb-4 shadow-sm">
             <span className="w-2 h-2 rounded-full bg-black dark:bg-white animate-pulse"></span>
             {subtitle}
           </div>

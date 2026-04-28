@@ -1,7 +1,20 @@
 import { db } from "@/lib/prisma";
 import { notFound } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import Link from "next/link";
+import { WorkspaceNavbar } from "@/components/layout/WorkspaceNavbar";
+import { LandingFooter } from "@/components/layout/LandingFooter";
+import { WorkspaceHero } from "@/components/landing/WorkspaceHero";
+import { AboutNoticeSection } from "@/components/landing/AboutNoticeSection";
+import { DynamicCounters } from "@/components/landing/DynamicCounters";
+import { WorkspaceCourses } from "@/components/landing/WorkspaceCourses";
+import { WorkspaceWhyChooseUs } from "@/components/landing/WorkspaceWhyChooseUs";
+import { WorkspaceAchievements } from "@/components/landing/WorkspaceAchievements";
+import { WorkspacePartners } from "@/components/landing/WorkspacePartners";
+import { WorkspaceTestimonials } from "@/components/landing/WorkspaceTestimonials";
+import { WorkspaceFaq } from "@/components/landing/WorkspaceFaq";
+import { WorkspaceContact } from "@/components/landing/WorkspaceContact";
+import { WorkspaceEvents } from "@/components/landing/WorkspaceEvents";
+import { CustomThemeStyle } from "@/components/providers/CustomThemeStyle";
+import { auth } from "@/auth";
 
 export default async function InstituteLandingPage({
   params
@@ -16,31 +29,140 @@ export default async function InstituteLandingPage({
 
   if (!workspace) notFound();
 
-  return (
-    <div className="w-full">
-      {/* Dynamic Header */}
-      <header className="p-6 border-b flex justify-between items-center shadow-sm max-w-7xl mx-auto w-full">
-        <h1 className="text-2xl font-bold">{workspace.name}</h1>
-        <div className="flex gap-4">
-          <Link href={`/app/${tenant}/login`}>
-            <Button variant="outline">Student Login</Button>
-          </Link>
-          <Button>Admissions</Button>
-        </div>
-      </header>
+  const globalSettings = await db.siteSettings.findFirst({
+    where: { workspaceId: null },
+    include: {
+      sections: {
+        orderBy: { order: "asc" }
+      }
+    }
+  });
 
-      {/* Hero Section */}
-      <section className="py-24 px-6 text-center max-w-4xl mx-auto">
-        <h2 className="text-5xl font-extrabold tracking-tight">Welcome to {workspace.name}</h2>
-        <p className="mt-6 text-xl text-muted-foreground leading-relaxed">
-          The premiere destination for educational excellence. This dynamic landing page will be 
-          configurable by the Workspace Admin toggling sections like About Us, Courses, and Testimonials.
-        </p>
-        <div className="mt-10 flex gap-4 justify-center items-center">
-          <Button size="lg" className="px-8">Browse Courses</Button>
-          <Button size="lg" variant="secondary" className="px-8">Contact Us</Button>
-        </div>
-      </section>
+  let workspaceSettings = await db.siteSettings.findFirst({
+    where: { workspaceId: workspace.id },
+    include: {
+      workspace: true,
+      sections: {
+        orderBy: { order: "asc" }
+      }
+    }
+  });
+
+  if (!globalSettings) {
+    return <div>Global site configuration missing. Super Admin must initialize settings first.</div>;
+  }
+
+  if (!workspaceSettings) {
+    workspaceSettings = await db.siteSettings.create({
+      data: {
+        workspaceId: workspace.id,
+        siteName: workspace.name,
+        primaryColor: "#f97316",
+        accentColor: "#ea580c",
+        navigation: [
+          { name: "Home", href: "/", id: "home", isActive: true },
+          { name: "About", href: "/about", id: "about", isActive: true },
+          { name: "Courses", href: "/courses", id: "courses", isActive: true },
+          { name: "Students", href: "/students", id: "students", isActive: true },
+          { name: "Notice", href: "/notice", id: "notice", isActive: true },
+          { name: "Events", href: "/events", id: "events", isActive: true },
+          { name: "Franchise", href: "/franchise", id: "franchise", isActive: true },
+          { name: "Contact", href: "/contact", id: "contact", isActive: true },
+        ],
+        navbarConfig: {
+          showNavbar: true,
+          showTopBar: true,
+          showMenus: true,
+          ctaPrimary: { text: "Login", link: "/login" },
+        }
+      },
+      include: {
+        workspace: true,
+        sections: {
+          orderBy: { order: "asc" }
+        }
+      }
+    });
+
+    const { syncAllSections } = await import("@/app/actions/site-settings");
+    const types = ['hero', 'about', 'counters', 'courses', 'why-choose-us', 'achievements', 'partners', 'events', 'testimonials', 'faq', 'contact'];
+    await syncAllSections(workspaceSettings.id, types, true);
+
+    workspaceSettings = await db.siteSettings.findFirst({
+      where: { workspaceId: workspace.id },
+      include: {
+        workspace: true,
+        sections: {
+          orderBy: { order: "asc" }
+        }
+      }
+    });
+  }
+
+  // At this point both globalSettings and workspaceSettings are guaranteed to exist
+  if (!workspaceSettings) {
+    return <div>Failed to initialize workspace settings.</div>;
+  }
+
+  // Merge logic: Workspace settings override global settings, but global layout configs apply if not editable.
+  // We use workspaceSettings for content, and globalSettings for structural toggles like navbarConfig.
+  const mergedSettings = {
+    ...workspaceSettings,
+    navbarConfig: globalSettings.navbarConfig, // Force global navbar toggles
+  };
+
+  const isSectionActive = (type: string) => {
+    // Workspace admin can toggle it off locally, but Super Admin can toggle it off globally.
+    // If Super Admin toggles it off, it's OFF for everyone.
+    // If Super Admin toggles it on, Workspace Admin can still toggle it off locally.
+    const globalSection = globalSettings.sections.find(s => s.type === type);
+    const workspaceSection = workspaceSettings.sections.find(s => s.type === type);
+    
+    if (globalSection && !globalSection.isActive) return false;
+    return workspaceSection?.isActive ?? true;
+  };
+
+  const getSectionData = (type: string) => {
+    return workspaceSettings.sections.find(s => s.type === type);
+  };
+
+  const session = await auth();
+
+  return (
+    <div className="flex flex-col min-h-screen font-sans bg-background selection:bg-primary/30">
+      <CustomThemeStyle 
+        primaryColor={mergedSettings.primaryColor || undefined} 
+        accentColor={mergedSettings.accentColor || undefined} 
+        fontFamily={mergedSettings.fontFamily || undefined} 
+      />
+      <WorkspaceNavbar settings={mergedSettings} user={session?.user} />
+
+      <main className="flex-1 w-full flex flex-col bg-slate-50 dark:bg-slate-950">
+        {isSectionActive("hero") && <WorkspaceHero data={getSectionData("hero")} />}
+        
+        {isSectionActive("about") && <AboutNoticeSection data={getSectionData("about")} />}
+
+        {isSectionActive("counters") && <DynamicCounters data={getSectionData("counters")} />}
+
+        {isSectionActive("courses") && <WorkspaceCourses data={getSectionData("courses")} />}
+
+        {isSectionActive("why-choose-us") && <WorkspaceWhyChooseUs data={getSectionData("why-choose-us")} />}
+        
+        {isSectionActive("achievements") && <WorkspaceAchievements data={getSectionData("achievements")} />}
+
+        {isSectionActive("partners") && <WorkspacePartners data={getSectionData("partners")} />}
+
+        {isSectionActive("events") && <WorkspaceEvents data={getSectionData("events")} />}
+
+        {isSectionActive("testimonials") && <div id="testimonials"><WorkspaceTestimonials data={getSectionData("testimonials")} /></div>}
+
+        {isSectionActive("faq") && <div id="faq"><WorkspaceFaq data={getSectionData("faq")} /></div>}
+        
+        {isSectionActive("contact") && <WorkspaceContact data={getSectionData("contact")} settings={mergedSettings} />}
+      </main>
+
+
+      <LandingFooter settings={mergedSettings} />
     </div>
   );
 }

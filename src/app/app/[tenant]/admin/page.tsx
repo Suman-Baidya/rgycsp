@@ -9,12 +9,25 @@ export default async function WorkspaceAdminDashboard({
   const { tenant } = await params;
   
   const workspace = await db.workspace.findUnique({
-    where: { subdomain: tenant }
+    where: { subdomain: tenant },
+    include: {
+      _count: {
+        select: {
+          studentProfiles: true,
+          courses: true,
+          roles: true,
+        }
+      }
+    }
   });
 
+  if (!workspace) {
+    return <div>Workspace not found</div>;
+  }
+
   return (
-    <div className="p-8 max-w-6xl w-full mx-auto">
-      <div className="flex items-center justify-between mb-8">
+    <div className="p-4 lg:p-10 max-w-7xl w-full mx-auto">
+      <div className="flex items-center px-8 justify-between mb-8">
         <div>
           <h1 className="text-3xl font-bold">Dashboard Overview</h1>
           <p className="text-muted-foreground mt-1">Manage all aspects of {workspace?.name}.</p>
@@ -30,9 +43,9 @@ export default async function WorkspaceAdminDashboard({
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         {/* Metric Cards */}
         {[
-          { label: "Total Students", value: "0" },
-          { label: "Active Courses", value: "0" },
-          { label: "Staff Members", value: "0" },
+          { label: "Total Students", value: workspace._count.studentProfiles.toString() },
+          { label: "Active Courses", value: workspace._count.courses.toString() },
+          { label: "Staff Members", value: workspace._count.roles.toString() },
           { label: "Pending Fees", value: "₹0" },
         ].map((stat, i) => (
           <div key={i} className="p-6 bg-card border rounded-xl shadow-sm">

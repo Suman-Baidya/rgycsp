@@ -27,7 +27,7 @@ export function ContactSection({ data, settings }: { data?: any, settings?: any 
          <div className="max-w-7xl mx-auto flex flex-col lg:flex-row gap-16">
             {/* Details Side */}
             <div className="flex-1 flex flex-col items-start text-left">
-               <div className="inline-flex items-center gap-2 py-1.5 px-4 rounded-full bg-primary/5 border border-primary/20 text-primary font-bold text-[10px] tracking-[0.2em] uppercase mb-4 shadow-sm">
+               <div className="inline-flex items-center gap-2 py-1.5 px-4 rounded-full bg-primary/5 border border-primary/20 text-primary font-bold text-[10px] tracking-[0.2em] mb-4 shadow-sm">
                   <span className="w-2 h-2 rounded-full bg-black dark:bg-white animate-pulse"></span>
                   {subtitle}
                </div>
@@ -45,7 +45,7 @@ export function ContactSection({ data, settings }: { data?: any, settings?: any 
                            <MapPin className="w-6 h-6" />
                         </div>
                         <div>
-                           <h4 className="text-lg font-black text-foreground uppercase tracking-wider text-[10px]">Headquarters</h4>
+                           <h4 className="text-lg font-black text-foreground tracking-wider text-[10px]">Headquarters</h4>
                            <p className="text-muted-foreground mt-1 font-bold leading-relaxed">{address}</p>
                         </div>
                      </div>
@@ -57,7 +57,7 @@ export function ContactSection({ data, settings }: { data?: any, settings?: any 
                            <Phone className="w-6 h-6" />
                         </div>
                         <div>
-                           <h4 className="text-lg font-black text-foreground uppercase tracking-wider text-[10px]">Phone Support</h4>
+                           <h4 className="text-lg font-black text-foreground tracking-wider text-[10px]">Phone Support</h4>
                            <p className="text-muted-foreground mt-1 font-bold">{contactPhone}</p>
                         </div>
                      </div>
@@ -68,7 +68,7 @@ export function ContactSection({ data, settings }: { data?: any, settings?: any 
                         <Mail className="w-6 h-6" />
                      </div>
                      <div>
-                        <h4 className="text-lg font-black text-foreground uppercase tracking-wider text-[10px]">Email Inquiries</h4>
+                        <h4 className="text-lg font-black text-foreground tracking-wider text-[10px]">Email Inquiries</h4>
                         <p className="text-muted-foreground mt-1 font-bold">{contactEmail}</p>
                      </div>
                   </div>
@@ -77,15 +77,15 @@ export function ContactSection({ data, settings }: { data?: any, settings?: any 
                {/* CTA Box - Below Email */}
                {content.ctaBox?.show !== false && (
                   <div className="mt-auto pt-12">
-                     <div className="p-8 rounded-[2.5rem] bg-zinc-900 dark:bg-zinc-100 border border-border/10 shadow-2xl relative overflow-hidden group">
-                        <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full -mr-16 -mt-16 blur-3xl group-hover:bg-primary/20 transition-colors"></div>
+                     <div className="p-8 rounded-[2.5rem] bg-foreground text-background border border-border shadow-2xl relative overflow-hidden group">
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-primary/20 rounded-full -mr-16 -mt-16 blur-3xl group-hover:bg-primary/30 transition-colors"></div>
                         <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
                            <div className="flex items-center gap-6">
-                              <div className="w-14 h-14 bg-white/10 dark:bg-black/10 text-white dark:text-black rounded-2xl flex items-center justify-center shrink-0 shadow-lg border border-white/10 dark:border-black/10">
+                              <div className="w-14 h-14 bg-background/10 text-background rounded-2xl flex items-center justify-center shrink-0 shadow-lg border border-background/10">
                                  <Rocket className="w-7 h-7" />
                               </div>
                               <div className="text-left">
-                                 <h4 className="text-xl font-black tracking-tight text-white dark:text-black mb-1">
+                                 <h4 className="text-xl font-black tracking-tight text-background-foreground mb-1">
                                     {content.ctaBox?.title || "Ready to Start?"}
                                  </h4>
                                  <p className="text-zinc-400 dark:text-zinc-600 text-sm font-medium leading-relaxed max-w-[320px]">
@@ -97,7 +97,7 @@ export function ContactSection({ data, settings }: { data?: any, settings?: any 
                               href={content.ctaBox?.buttonLink || "/pricing"}
                               className={cn(
                                  buttonVariants({ size: "lg" }),
-                                 "bg-white dark:bg-black text-black dark:text-white rounded-xl h-14 px-10 font-black shadow-xl hover:scale-[1.05] active:scale-95 transition-all flex items-center justify-center shrink-0 border-none hover:text-white dark:hover:text-black"
+                                 "bg-primary text-primary-foreground rounded-xl h-14 px-10 font-black shadow-xl hover:scale-[1.05] active:scale-95 transition-all flex items-center justify-center shrink-0 border-none"
                               )}
                            >
                               {content.ctaBox?.buttonText || "Get Started"}
@@ -115,31 +115,31 @@ export function ContactSection({ data, settings }: { data?: any, settings?: any 
                   <form className="space-y-6">
                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                         <div className="space-y-2">
-                           <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">First Name</label>
+                           <label className="text-[10px] font-black tracking-widest text-muted-foreground ml-1">First Name</label>
                            <Input placeholder="John" className="h-14 bg-zinc-50 dark:bg-zinc-900 rounded-xl border-border/40 focus:border-primary/50 transition-all" />
                         </div>
                         <div className="space-y-2">
-                           <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Last Name</label>
+                           <label className="text-[10px] font-black tracking-widest text-muted-foreground ml-1">Last Name</label>
                            <Input placeholder="Doe" className="h-14 bg-zinc-50 dark:bg-zinc-900 rounded-xl border-border/40 focus:border-primary/50 transition-all" />
                         </div>
                      </div>
 
                      <div className="space-y-2">
-                        <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Email Address</label>
+                        <label className="text-[10px] font-black tracking-widest text-muted-foreground ml-1">Email Address</label>
                         <Input type="email" placeholder="john@institute.edu" className="h-14 bg-zinc-50 dark:bg-zinc-900 rounded-xl border-border/40 focus:border-primary/50 transition-all" />
                      </div>
 
                      <div className="space-y-2">
-                        <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Institute Name</label>
+                        <label className="text-[10px] font-black tracking-widest text-muted-foreground ml-1">Institute Name</label>
                         <Input placeholder="ABCD High School" className="h-14 bg-zinc-50 dark:bg-zinc-900 rounded-xl border-border/40 focus:border-primary/50 transition-all" />
                      </div>
 
                      <div className="space-y-2">
-                        <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Your Needs</label>
+                        <label className="text-[10px] font-black tracking-widest text-muted-foreground ml-1">Your Needs</label>
                         <Textarea placeholder="How can we help scale your workflow?" className="min-h-[140px] bg-zinc-50 dark:bg-zinc-900 rounded-xl border-border/40 focus:border-primary/50 transition-all" />
                      </div>
 
-                     <Button size="lg" className="w-full h-16 text-lg font-black bg-black dark:bg-white dark:text-black mt-6 rounded-2xl shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all">
+                     <Button size="lg" className="w-full h-16 text-lg font-black bg-primary text-primary-foreground mt-6 rounded-2xl shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all">
                         {buttonText}
                      </Button>
                   </form>
