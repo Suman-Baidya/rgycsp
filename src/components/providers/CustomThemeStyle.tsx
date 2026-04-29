@@ -29,6 +29,12 @@ export function CustomThemeStyle({ primaryColor, accentColor, fontFamily }: { pr
       root.style.setProperty("--primary", primaryColor);
       root.style.setProperty("--primary-foreground", getContrastColor(primaryColor));
       root.style.setProperty("--ring", primaryColor);
+      // Also update RGB version for Tailwind opacity if needed
+      const hex = primaryColor.replace('#', '');
+      const r = parseInt(hex.substring(0, 2), 16);
+      const g = parseInt(hex.substring(2, 4), 16);
+      const b = parseInt(hex.substring(4, 6), 16);
+      root.style.setProperty("--primary-rgb", `${r}, ${g}, ${b}`);
     }
     
     if (accentColor && accentColor.startsWith("#")) {
@@ -38,12 +44,17 @@ export function CustomThemeStyle({ primaryColor, accentColor, fontFamily }: { pr
 
     // --- Dynamic Typography ---
     if (fontFamily) {
-      // 1. Set the CSS variable
-      root.style.setProperty("--font-sans", `${fontFamily}, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif`);
-
-      // 2. Load the font from Google Fonts if it's not a system font
       const systemFonts = ["ui-sans-serif", "system-ui", "sans-serif", "serif"];
-      if (!systemFonts.includes(fontFamily.toLowerCase())) {
+      const isSystemFont = systemFonts.includes(fontFamily.toLowerCase());
+      
+      const fullFontFamily = isSystemFont 
+        ? fontFamily 
+        : `"${fontFamily}", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif`;
+
+      root.style.setProperty("--font-sans", fullFontFamily);
+      document.body.style.fontFamily = fullFontFamily;
+
+      if (!isSystemFont) {
         const fontId = "dynamic-google-font";
         let link = document.getElementById(fontId) as HTMLLinkElement;
         
@@ -54,13 +65,25 @@ export function CustomThemeStyle({ primaryColor, accentColor, fontFamily }: { pr
           document.head.appendChild(link);
         }
         
-        // Encode font name for Google Fonts URL
         const encodedFont = fontFamily.replace(/\s+/g, "+");
-        link.href = `https://fonts.googleapis.com/css2?family=${encodedFont}:wght@100;300;400;500;700;900&display=swap`;
+        link.href = `https://fonts.googleapis.com/css2?family=${encodedFont}:wght@100;200;300;400;500;600;700;800;900&display=swap`;
       }
     }
 
   }, [primaryColor, accentColor, fontFamily]);
 
-  return null;
+  // Inject a style block to force apply the font to Tailwind classes
+  return (
+    <style dangerouslySetInnerHTML={{ __html: `
+      :root {
+        ${fontFamily ? `--font-sans: "${fontFamily}", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;` : ''}
+      }
+      .font-sans {
+        font-family: var(--font-sans) !important;
+      }
+      body {
+        font-family: var(--font-sans) !important;
+      }
+    `}} />
+  );
 }

@@ -22,11 +22,13 @@ export async function updateSiteSettings(data: any) {
           contactPhone: data.contactPhone,
           whatsapp: data.whatsapp,
           address: data.address,
+          googleMapLink: data.googleMapLink,
           brandDescription: data.brandDescription,
           socialLinks: data.socialLinks,
           navigation: data.navigation,
           navbarConfig: data.navbarConfig,
           fontFamily: data.fontFamily,
+          pageHeaderBanner: data.pageHeaderBanner,
         },
       });
     } else {
@@ -41,10 +43,13 @@ export async function updateSiteSettings(data: any) {
           contactPhone: data.contactPhone,
           whatsapp: data.whatsapp,
           address: data.address,
+          googleMapLink: data.googleMapLink,
           brandDescription: data.brandDescription,
           socialLinks: data.socialLinks,
           navigation: data.navigation,
           navbarConfig: data.navbarConfig,
+          fontFamily: data.fontFamily,
+          pageHeaderBanner: data.pageHeaderBanner,
         },
       });
     }
@@ -123,6 +128,14 @@ export async function syncAllSections(settingsId: string, sectionTypes: string[]
         defaultContent = {
           lastUpdated: new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' }),
           html
+        };
+      } else if (type === 'events') {
+        defaultContent = {
+          description: "Stay updated with the latest happenings, academic seminars, and cultural celebrations at our institute.",
+          events: [
+            { title: "Academic Seminar 2026", date: "15 May, 2026", time: "10:00 AM", location: "Main Hall", image: "https://images.unsplash.com/photo-1540575861501-7ad05823c93e?q=80&w=2070" },
+            { title: "Cultural Festival", date: "22 May, 2026", time: "11:30 AM", location: "Campus Ground", image: "https://images.unsplash.com/photo-1514525253361-bee8718a74a2?q=80&w=2070" }
+          ]
         };
       }
 

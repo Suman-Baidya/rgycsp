@@ -14,8 +14,8 @@ function DropdownMenuPortal({ ...props }: React.ComponentProps<typeof MenuPrimit
   return <MenuPrimitive.Portal data-slot="dropdown-menu-portal" {...props} />
 }
 
-function DropdownMenuTrigger({ ...props }: React.ComponentProps<typeof MenuPrimitive.Trigger>) {
-  return <MenuPrimitive.Trigger data-slot="dropdown-menu-trigger" {...props} />
+function DropdownMenuTrigger({ className, ...props }: React.ComponentProps<typeof MenuPrimitive.Trigger>) {
+  return <MenuPrimitive.Trigger data-slot="dropdown-menu-trigger" className={cn(className)} {...props} />
 }
 
 function DropdownMenuContent({

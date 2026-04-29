@@ -4,35 +4,49 @@ import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Bell, ArrowRight, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import Link from "next/link";
 
 export function AboutNoticeSection({ data }: { data: any }) {
-  const notices = data?.content?.notices || [
-    { title: "Admission Open for 2026 Batch", date: "24 Apr 2026", link: "#" },
-    { title: "Scholarship Test Results Declared", date: "20 Apr 2026", link: "#" },
-    { title: "Summer Workshop Registration Starts", date: "15 Apr 2026", link: "#" },
-  ];
+  const notices = data?.content?.notices || [];
+  const content = data?.content || {};
 
   return (
-    <section className="py-20 px-6 container mx-auto">
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
+    <section className="py-24 px-6 container mx-auto">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-16">
         {/* Left Side: About Us */}
-        <div className="lg:col-span-2 space-y-6">
-          <div className="inline-flex items-center gap-2 text-primary font-bold tracking-widest text-xs">
-            <div className="h-0.5 w-8 bg-primary" />
-            About Our Institute
+        <div className="lg:col-span-2 space-y-8">
+          <div className="inline-flex items-center gap-3 text-primary font-black tracking-[0.2em] text-[10px] uppercase">
+            <div className="h-0.5 w-10 bg-primary" />
+            {data?.subtitle || "About Our Institute"}
           </div>
-          <h2 className="text-4xl md:text-5xl font-black tracking-tight text-slate-900 dark:text-white">
-            {data?.title || "We are Dedicated to Empowering Future Leaders"}
+          <h2 className="text-4xl md:text-6xl font-black tracking-tight text-slate-900 dark:text-white leading-[1.1]">
+            {data?.title || "Dedicated to Empowering Future Leaders"}
           </h2>
-          <div className="prose prose-slate dark:prose-invert max-w-none text-slate-600 dark:text-slate-400 text-lg leading-relaxed">
-            {data?.subtitle || "Since our establishment, we have been committed to providing top-notch education that blends traditional values with modern innovation."}
-            <br /><br />
-            Our curriculum is designed by industry experts to ensure that every student is equipped with the skills and knowledge required to excel in their chosen career path. We believe in holistic development, fostering not just academic excellence but also critical thinking, creativity, and leadership.
+          <div className="prose prose-slate dark:prose-invert max-w-none text-slate-600 dark:text-slate-400 text-lg leading-relaxed space-y-6">
+            {content.description ? (
+              <div className="whitespace-pre-line">{content.description}</div>
+            ) : (
+              <>
+                <p>Since our establishment, we have been committed to providing top-notch education that blends traditional values with modern innovation.</p>
+                <p>Our curriculum is designed by industry experts to ensure that every student is equipped with the skills and knowledge required to excel in their chosen career path. We believe in holistic development, fostering academic excellence alongside critical thinking and leadership.</p>
+              </>
+            )}
           </div>
-          <Button size="lg" className="rounded-full gap-2 px-8 h-14 font-bold shadow-lg shadow-primary/20 hover:scale-105 transition-all">
-            Read More About Us
-            <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
-          </Button>
+          
+          <div className="pt-4 flex flex-wrap gap-4">
+            <Link href={content.btnLink || "/about"}>
+              <Button size="lg" className="rounded-full gap-3 px-10 h-14 font-black shadow-xl shadow-primary/20 hover:scale-105 transition-all group">
+                {content.btnText || "Discover More"}
+                <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
+              </Button>
+            </Link>
+            
+            <Link href="/courses">
+              <Button size="lg" variant="outline" className="rounded-full gap-3 px-10 h-14 font-black hover:bg-primary/5 border-primary/20 transition-all">
+                Our Programs
+              </Button>
+            </Link>
+          </div>
         </div>
 
         {/* Right Side: Notice Section */}
@@ -66,9 +80,11 @@ export function AboutNoticeSection({ data }: { data: any }) {
                 ))}
               </div>
               <div className="p-4 bg-muted/30">
-                <Button variant="ghost" className="w-full text-xs font-bold text-primary">
-                  View All Notifications
-                </Button>
+                <Link href="/notice">
+                  <Button variant="ghost" className="w-full text-xs font-black uppercase tracking-widest text-primary hover:bg-primary/10 transition-all">
+                    View All Notifications
+                  </Button>
+                </Link>
               </div>
             </CardContent>
           </Card>

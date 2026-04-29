@@ -127,6 +127,18 @@ export default async function InstituteLandingPage({
   };
 
   const session = await auth();
+  
+  // Safely fetch events (prevents crash if prisma client is still refreshing in-memory)
+  const top3Events = (db as any).event 
+    ? await (db as any).event.findMany({
+        where: { 
+          workspaceId: workspace.id,
+          isActive: true 
+        },
+        orderBy: { date: 'asc' },
+        take: 3
+      })
+    : [];
 
   return (
     <div className="flex flex-col min-h-screen font-sans bg-background selection:bg-primary/30">
@@ -152,7 +164,7 @@ export default async function InstituteLandingPage({
 
         {isSectionActive("partners") && <WorkspacePartners data={getSectionData("partners")} />}
 
-        {isSectionActive("events") && <WorkspaceEvents data={getSectionData("events")} />}
+        {isSectionActive("events") && <WorkspaceEvents data={{ ...getSectionData("events"), events: top3Events }} />}
 
         {isSectionActive("testimonials") && <div id="testimonials"><WorkspaceTestimonials data={getSectionData("testimonials")} /></div>}
 

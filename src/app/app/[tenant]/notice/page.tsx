@@ -2,13 +2,13 @@ import { db } from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import { WorkspaceNavbar } from "@/components/layout/WorkspaceNavbar";
 import { LandingFooter } from "@/components/layout/LandingFooter";
-import { PageHeader } from "@/components/layout/PageHeader";
 import { CustomThemeStyle } from "@/components/providers/CustomThemeStyle";
 import { auth } from "@/auth";
 import { Bell, Calendar, ArrowRight, ExternalLink } from "lucide-react";
 import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { WorkspacePageHeader } from "@/components/layout/WorkspacePageHeader";
 
 export default async function WorkspaceNoticePage({
   params
@@ -52,11 +52,13 @@ export default async function WorkspaceNoticePage({
       <WorkspaceNavbar settings={workspaceSettings} user={session?.user} />
 
       <main className="flex-1 w-full flex flex-col">
-        <PageHeader 
+        <WorkspacePageHeader 
           title="Notice Board"
-          subtitle="Stay updated with the latest news, events, and announcements from our institute."
-          breadcrumb="Notice"
-          bgImage="https://images.unsplash.com/photo-1506784919141-11149e24f86c?q=80&w=2070"
+          description="Stay updated with the latest news, events, and announcements from our institute."
+          bgImage={(workspaceSettings as any).pageHeaderBanner || undefined}
+          breadcrumbs={[
+            { name: "Notice", href: "/notice" }
+          ]}
         />
 
         <section className="py-24 px-6 container mx-auto">

@@ -51,6 +51,13 @@ export function WorkspaceNavbar({ settings, user }: { settings: any, user?: any 
   let navItems = settings.navigation ? [...settings.navigation] : defaultItems;
   
   if (settings.navigation) {
+    const hasEvents = navItems.some((item: any) => item.id === "events" || item.name === "Events");
+    if (!hasEvents) {
+      const contactIdx = navItems.findIndex((item: any) => item.id === "contact");
+      if (contactIdx !== -1) navItems.splice(contactIdx, 0, { name: "Events", href: "/events", id: "events", isActive: true });
+      else navItems.push({ name: "Events", href: "/events", id: "events", isActive: true });
+    }
+
     const hasNotice = navItems.some((item: any) => item.id === "notice" || item.name === "Notice");
     if (!hasNotice) {
       const contactIdx = navItems.findIndex((item: any) => item.id === "contact");
@@ -132,7 +139,7 @@ export function WorkspaceNavbar({ settings, user }: { settings: any, user?: any 
               </div>
 
               <div className="flex items-center gap-6">
-                {settings.secondaryLogo && (
+                {settings.secondaryLogo && settings.secondaryLogo !== "" && (
                   <img src={settings.secondaryLogo} alt="Logo" className="hidden lg:block h-10 w-auto opacity-40 hover:opacity-100 transition-opacity" />
                 )}
                 <div className="flex items-center gap-3 pl-6 border-l border-white/10">

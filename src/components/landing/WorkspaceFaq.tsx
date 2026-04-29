@@ -10,7 +10,7 @@ export function WorkspaceFaq({ data }: { data?: any }) {
   const title = data?.title || "Frequently Asked Questions";
   const subtitle = data?.subtitle || "Got Questions?";
   
-  const faqs = content.items || [
+  const faqs = (content.faqs && content.faqs.length > 0) ? content.faqs : [
     {
       question: "What are the eligibility criteria for admission?",
       answer: "Eligibility varies by course. Generally, for undergraduate courses, a minimum of 50% in 10+2 is required. Please check the specific course page for detailed requirements."
@@ -35,15 +35,17 @@ export function WorkspaceFaq({ data }: { data?: any }) {
     <section id="faq" className="py-24 px-6 bg-slate-50 dark:bg-slate-900/20">
       <div className="max-w-4xl mx-auto">
         <div className="text-center mb-16 space-y-4">
-          <div className="inline-flex items-center justify-center gap-2 text-primary font-bold tracking-widest text-xs uppercase w-full">
-            <div className="h-0.5 w-8 bg-primary" />
+          <div className="inline-flex items-center justify-center gap-3 text-primary font-black tracking-[0.2em] text-[10px] uppercase w-full">
+            <div className="h-0.5 w-10 bg-primary" />
             {subtitle}
-            <div className="h-0.5 w-8 bg-primary" />
+            <div className="h-0.5 w-10 bg-primary" />
           </div>
-          <h2 className="text-4xl md:text-5xl font-black tracking-tight text-slate-900 dark:text-white leading-tight">
+          <h2 className="text-4xl md:text-6xl font-black tracking-tight text-slate-900 dark:text-white leading-[1.1]">
             {title}
           </h2>
-          <p className="text-lg text-slate-600 dark:text-slate-400">Everything you need to know about our admission process, campus life, and more.</p>
+          <p className="text-lg text-slate-600 dark:text-slate-400">
+            {content.description || "Everything you need to know about our admission process, campus life, and more."}
+          </p>
         </div>
 
         <div className="space-y-4">
@@ -52,7 +54,7 @@ export function WorkspaceFaq({ data }: { data?: any }) {
               key={i} 
               className={cn(
                 "group rounded-[2rem] border transition-all duration-300 overflow-hidden",
-                activeIndex === i ? "bg-white dark:bg-zinc-900 border-primary/20 shadow-xl shadow-primary/5" : "bg-transparent border-border/60 hover:border-primary/20"
+                activeIndex === i ? "bg-white dark:bg-zinc-900 border-primary/20 shadow-md shadow-primary/5" : "bg-transparent border-border/60 hover:border-primary/20"
               )}
             >
               <button 
@@ -87,13 +89,21 @@ export function WorkspaceFaq({ data }: { data?: any }) {
                  <MessageCircle className="w-8 h-8 text-primary" />
               </div>
               <div>
-                 <h4 className="text-2xl font-black">Still have questions?</h4>
-                 <p className="text-zinc-400 font-medium">We're here to help you every step of the way.</p>
+                 <h4 className="text-2xl font-black">{content.ctaTitle || "Still have questions?"}</h4>
+                 <p className="text-zinc-400 font-medium">{content.ctaDesc || "We're here to help you every step of the way."}</p>
               </div>
            </div>
-           <Button className="relative z-10 h-14 px-10 rounded-2xl font-black text-lg bg-primary hover:scale-105 transition-transform shadow-xl shadow-primary/20 border-none">
-              Chat with Admissions
-           </Button>
+           {content.ctaButtonLink ? (
+             <a href={content.ctaButtonLink}>
+                <Button className="relative z-10 h-14 px-10 rounded-2xl font-black text-lg bg-primary hover:scale-105 transition-transform shadow-lg shadow-primary/20 border-none">
+                   {content.ctaButtonText || "Chat with Admissions"}
+                </Button>
+             </a>
+           ) : (
+              <Button className="relative z-10 h-14 px-10 rounded-2xl font-black text-lg bg-primary hover:scale-105 transition-transform shadow-lg shadow-primary/20 border-none">
+                 {content.ctaButtonText || "Chat with Admissions"}
+              </Button>
+           )}
         </div>
       </div>
     </section>

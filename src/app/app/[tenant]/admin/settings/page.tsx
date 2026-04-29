@@ -1,5 +1,5 @@
 import { db } from "@/lib/prisma";
-import { SettingsForm } from "@/app/(admin)/super-admin/settings/SettingsForm";
+import { WorkspaceSettingsForm } from "./WorkspaceSettingsForm";
 import { redirect } from "next/navigation";
 
 export default async function WorkspaceSettingsPage({ params }: { params: Promise<{ tenant: string }> }) {
@@ -19,7 +19,16 @@ export default async function WorkspaceSettingsPage({ params }: { params: Promis
       sections: {
         orderBy: { order: "asc" }
       },
-      workspace: true
+      workspace: {
+        include: {
+          events: {
+            orderBy: { date: 'desc' }
+          },
+          galleryItems: {
+            orderBy: { createdAt: 'desc' }
+          }
+        }
+      }
     }
   });
 
@@ -36,11 +45,8 @@ export default async function WorkspaceSettingsPage({ params }: { params: Promis
           { name: "About", href: "/about", id: "about", isActive: true },
           { name: "Courses", href: "/courses", id: "courses", isActive: true },
           { name: "Students", href: "/students", id: "students", isActive: true },
-          { name: "Enquiry", href: "/enquiry", id: "enquiry", isActive: true },
-          { name: "Gallery", href: "/gallery", id: "gallery", isActive: true },
-          { name: "Events", href: "/events", id: "events", isActive: true },
-          { name: "Guidance", href: "/guidance", id: "guidance", isActive: true },
           { name: "Notice", href: "/notice", id: "notice", isActive: true },
+          { name: "Events", href: "/events", id: "events", isActive: true },
           { name: "Franchise", href: "/franchise", id: "franchise", isActive: true },
           { name: "Contact", href: "/contact", id: "contact", isActive: true },
         ],
@@ -52,12 +58,17 @@ export default async function WorkspaceSettingsPage({ params }: { params: Promis
         }
       },
       include: {
-        workspace: true
+        workspace: {
+          include: {
+            events: true,
+            galleryItems: true
+          }
+        }
       }
     });
 
     const { syncAllSections } = await import("@/app/actions/site-settings");
-    const types = ['hero', 'about', 'why-choose-us', 'achievements', 'partners', 'our-message', 'mission', 'vision', 'services', 'guide-steps', 'guide-resources', 'ready-to-modernize', 'custom-solution', 'pricing', 'testimonials', 'faq', 'contact', 'page-header-about', 'page-header-services', 'page-header-guide', 'page-header-pricing', 'page-header-support', 'legal-privacy-policy', 'legal-terms-conditions', 'legal-cookie-policy', 'legal-refund-policy', 'legal-sitemap'];
+    const types = ['hero', 'about', 'counters', 'courses', 'why-choose-us', 'achievements', 'partners', 'events', 'testimonials', 'faq', 'contact'];
     await syncAllSections(siteSettings.id, types, true);
 
     siteSettings = await db.siteSettings.findFirst({
@@ -66,7 +77,16 @@ export default async function WorkspaceSettingsPage({ params }: { params: Promis
         sections: {
           orderBy: { order: "asc" }
         },
-        workspace: true
+        workspace: {
+          include: {
+            events: {
+              orderBy: { date: 'desc' }
+            },
+            galleryItems: {
+              orderBy: { createdAt: 'desc' }
+            }
+          }
+        }
       }
     });
   }
@@ -74,13 +94,13 @@ export default async function WorkspaceSettingsPage({ params }: { params: Promis
   return (
     <div className="p-4 lg:p-10 space-y-6">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Landing Page Settings</h1>
+        <h1 className="text-3xl font-bold tracking-tight">Institute Settings</h1>
         <p className="text-muted-foreground text-lg">
           Configure your institute's landing page content, branding, and visibility.
         </p>
       </div>
 
-      <SettingsForm settings={siteSettings} isSuperAdmin={false} />
+      <WorkspaceSettingsForm settings={siteSettings} />
     </div>
   );
 }

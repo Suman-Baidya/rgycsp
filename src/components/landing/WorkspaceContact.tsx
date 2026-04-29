@@ -13,15 +13,27 @@ const Linkedin = ({ className }: any) => <svg className={className} viewBox="0 0
 
 export function WorkspaceContact({ data, settings }: { data?: any, settings?: any }) {
    const content = data?.content || {};
-   const title = data?.title || "Visit Our Campus";
+   const title = data?.title || "Let's Start a Conversation";
    const subtitle = data?.subtitle || "Get in Touch";
    const description = content.description || "Have questions or want to visit? We'd love to hear from you. Fill out the form or use our contact details to reach out.";
 
    const contactPhone = settings?.contactPhone || "8944899747";
    const contactEmail = settings?.contactEmail || "sb.abcd321@gmail.com";
    const address = settings?.address || "Kolkata, West Bengal, India - 700001";
+   const whatsapp = settings?.whatsapp;
+   const socialLinks = settings?.socialLinks || {};
 
    const showSocials = content.showSocials !== false;
+
+   const Youtube = ({ className }: any) => <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.42a2.78 2.78 0 0 0-1.94 2C1 8.14 1 12 1 12s0 3.86.42 5.58a2.78 2.78 0 0 0 1.94 2C5.12 20 12 20 12 20s6.88 0 8.6-.42a2.78 2.78 0 0 0 1.94-2C23 15.86 23 12 23 12s0-3.86-.42-5.58z"></path><polygon points="9.75 15.02 15.5 12 9.75 8.98 9.75 15.02"></polygon></svg>
+
+   const platforms = [
+      { id: 'facebook', icon: Facebook, link: socialLinks.facebook },
+      { id: 'instagram', icon: Instagram, link: socialLinks.instagram },
+      { id: 'twitter', icon: Twitter, link: socialLinks.twitter },
+      { id: 'linkedin', icon: Linkedin, link: socialLinks.linkedin },
+      { id: 'youtube', icon: Youtube, link: socialLinks.youtube },
+   ];
 
    return (
       <section id="contact" className="py-24 relative overflow-hidden">
@@ -38,63 +50,72 @@ export function WorkspaceContact({ data, settings }: { data?: any, settings?: an
          </div>
 
          <div className="max-w-7xl mx-auto px-6 relative z-10">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-20">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-20 mb-20">
                {/* Info Side */}
                <div className="space-y-12">
                   <div className="space-y-6">
-                     <div className="inline-flex items-center gap-2 text-primary font-bold tracking-widest text-xs uppercase">
-                        <div className="h-0.5 w-8 bg-primary" />
+                     <div className="inline-flex items-center gap-3 text-primary font-black tracking-[0.2em] text-[10px] uppercase">
+                        <div className="h-0.5 w-10 bg-primary" />
                         {subtitle}
                      </div>
-                     <h2 className="text-4xl md:text-6xl font-black tracking-tight text-slate-900 dark:text-white leading-tight">
-                        Let's Start a <span className="text-primary">Conversation</span>
+                     <h2 className="text-4xl md:text-6xl font-black tracking-tight text-slate-900 dark:text-white leading-[1.1]">
+                        {title.split(' ').map((word: string, i: number, arr: string[]) => (
+                          <span key={i} className={i === arr.length - 1 ? "text-primary" : ""}>
+                            {word}{" "}
+                          </span>
+                        ))}
                      </h2>
                      <p className="text-lg text-slate-600 dark:text-slate-400 leading-relaxed max-w-lg">
                         {description}
                      </p>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
-                     <div className="p-8 rounded-[2rem] bg-white dark:bg-zinc-900 border border-border shadow-sm group hover:border-primary/20 transition-colors">
-                        <div className="w-12 h-12 bg-primary/10 text-primary rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                           <MapPin className="w-6 h-6" />
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                     <div className="p-6 rounded-3xl bg-white dark:bg-zinc-900 border border-border shadow-sm group hover:border-primary/20 transition-all hover:shadow-md">
+                        <div className="w-10 h-10 bg-primary/10 text-primary rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                           <MapPin className="w-5 h-5" />
                         </div>
-                        <h4 className="text-xs font-black uppercase tracking-widest text-muted-foreground mb-2">Our Campus</h4>
-                        <p className="font-bold leading-relaxed">{address}</p>
+                        <h4 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">{content.addressLabel || "Our Campus"}</h4>
+                        <p className="font-bold text-sm leading-relaxed">{address}</p>
                      </div>
 
-                     <div className="p-8 rounded-[2rem] bg-white dark:bg-zinc-900 border border-border shadow-sm group hover:border-primary/20 transition-colors">
-                        <div className="w-12 h-12 bg-primary/10 text-primary rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                           <Phone className="w-6 h-6" />
+                     <div className="p-6 rounded-3xl bg-white dark:bg-zinc-900 border border-border shadow-sm group hover:border-primary/20 transition-all hover:shadow-md">
+                        <div className="w-10 h-10 bg-primary/10 text-primary rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                           <Phone className="w-5 h-5" />
                         </div>
-                        <h4 className="text-xs font-black uppercase tracking-widest text-muted-foreground mb-2">Call Us</h4>
-                        <p className="font-bold leading-relaxed">{contactPhone}</p>
+                        <h4 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">{content.phoneLabel || "Call Us"}</h4>
+                        <p className="font-bold text-sm leading-relaxed">{contactPhone}</p>
                      </div>
 
-                     <div className="p-8 rounded-[2rem] bg-white dark:bg-zinc-900 border border-border shadow-sm group hover:border-primary/20 transition-colors">
-                        <div className="w-12 h-12 bg-primary/10 text-primary rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                           <Mail className="w-6 h-6" />
+                     <div className="p-6 rounded-3xl bg-white dark:bg-zinc-900 border border-border shadow-sm group hover:border-primary/20 transition-all hover:shadow-md">
+                        <div className="w-10 h-10 bg-primary/10 text-primary rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                           <Mail className="w-5 h-5" />
                         </div>
-                        <h4 className="text-xs font-black uppercase tracking-widest text-muted-foreground mb-2">Email Us</h4>
-                        <p className="font-bold leading-relaxed break-all">{contactEmail}</p>
+                        <h4 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">{content.emailLabel || "Email Us"}</h4>
+                        <p className="font-bold text-sm leading-relaxed break-all">{contactEmail}</p>
                      </div>
 
-                     <div className="p-8 rounded-[2rem] bg-white dark:bg-zinc-900 border border-border shadow-sm group hover:border-primary/20 transition-colors">
-                        <div className="w-12 h-12 bg-primary/10 text-primary rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                           <Clock className="w-6 h-6" />
+                     <div className="p-6 rounded-3xl bg-white dark:bg-zinc-900 border border-border shadow-sm group hover:border-primary/20 transition-all hover:shadow-md">
+                        <div className="w-10 h-10 bg-primary/10 text-primary rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                           <Clock className="w-5 h-5" />
                         </div>
-                        <h4 className="text-xs font-black uppercase tracking-widest text-muted-foreground mb-2">Office Hours</h4>
-                        <p className="font-bold leading-relaxed">Mon - Sat: 9:00 AM - 6:00 PM</p>
+                        <h4 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">{content.hoursLabel || "Office Hours"}</h4>
+                        <p className="font-bold text-sm leading-relaxed">{content.officeHours || "Mon - Sat: 9:00 AM - 6:00 PM"}</p>
                      </div>
                   </div>
 
                   {showSocials && (
                      <div className="flex items-center gap-4">
-                        {[Facebook, Instagram, Twitter, Linkedin].map((Icon, idx) => (
-                           <div key={idx} className="w-12 h-12 rounded-full bg-muted flex items-center justify-center hover:bg-primary hover:text-white transition-all cursor-pointer shadow-sm">
-                              <Icon className="w-5 h-5" />
-                           </div>
+                        {platforms.filter(p => p.link).map((p, idx) => (
+                           <a key={idx} href={p.link} target="_blank" rel="noopener noreferrer" className="w-12 h-12 rounded-full bg-muted flex items-center justify-center hover:bg-primary hover:text-white transition-all cursor-pointer shadow-sm">
+                              <p.icon className="w-5 h-5" />
+                           </a>
                         ))}
+                        {whatsapp && (
+                           <a href={`https://wa.me/${whatsapp}`} target="_blank" rel="noopener noreferrer" className="w-12 h-12 rounded-full bg-green-500/10 text-green-600 flex items-center justify-center hover:bg-green-500 hover:text-white transition-all cursor-pointer shadow-sm">
+                              <Phone className="w-5 h-5" />
+                           </a>
+                        )}
                      </div>
                   )}
                </div>
@@ -102,8 +123,8 @@ export function WorkspaceContact({ data, settings }: { data?: any, settings?: an
                {/* Form Side */}
                <div className="relative">
                   <div className="absolute inset-0 bg-primary/5 rounded-[3rem] -rotate-2 scale-105" />
-                  <div className="relative bg-white dark:bg-zinc-900 border border-border p-10 md:p-14 rounded-[3rem] shadow-2xl">
-                     <h3 className="text-3xl font-black mb-10 tracking-tight">Admissions Inquiry</h3>
+                  <div className="relative bg-white dark:bg-zinc-900 border border-border p-10 md:p-14 rounded-[3rem] shadow-lg">
+                     <h3 className="text-3xl font-black mb-10 tracking-tight">{content.formTitle || "Admissions Inquiry"}</h3>
                      <form className="space-y-8">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                            <div className="space-y-3">
@@ -126,7 +147,7 @@ export function WorkspaceContact({ data, settings }: { data?: any, settings?: an
                            <Textarea placeholder="How can we help you?" className="min-h-[160px] bg-zinc-50 dark:bg-zinc-800 border-none rounded-2xl p-6 focus:ring-2 focus:ring-primary/20" />
                         </div>
 
-                        <Button className="w-full h-16 rounded-2xl font-black text-xl gap-3 bg-primary hover:scale-[1.02] active:scale-95 transition-all shadow-xl shadow-primary/20 border-none">
+                        <Button className="w-full h-16 rounded-2xl font-black text-xl gap-3 bg-primary hover:scale-[1.02] active:scale-95 transition-all shadow-md shadow-primary/20 border-none">
                            Send Message
                            <Send className="w-5 h-5" />
                         </Button>
@@ -134,6 +155,23 @@ export function WorkspaceContact({ data, settings }: { data?: any, settings?: an
                   </div>
                </div>
             </div>
+
+            {/* Mapping Section - Full Width Bottom */}
+            {settings?.googleMapLink && (
+               <div className="w-full h-[450px] rounded-[3rem] overflow-hidden border border-border shadow-2xl bg-muted relative group">
+                  <iframe 
+                     src={settings.googleMapLink}
+                     width="100%" 
+                     height="100%" 
+                     style={{ border: 0 }} 
+                     allowFullScreen={true} 
+                     loading="lazy" 
+                     referrerPolicy="no-referrer-when-downgrade"
+                     className="grayscale contrast-125 dark:invert dark:opacity-80 transition-all duration-700 group-hover:grayscale-0 group-hover:contrast-100"
+                  />
+                  <div className="absolute inset-0 pointer-events-none border-[16px] border-white dark:border-zinc-900 rounded-[3rem]" />
+               </div>
+            )}
          </div>
       </section>
    );
