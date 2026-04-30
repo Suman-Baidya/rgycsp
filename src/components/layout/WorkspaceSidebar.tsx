@@ -21,21 +21,29 @@ import {
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
-export function WorkspaceSidebar() {
+export function WorkspaceSidebar({ tenant: propTenant }: { tenant?: string }) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
   const pathname = usePathname();
   const params = useParams();
-  const tenant = params.tenant as string;
+  
+  // Robust tenant detection: prioritize prop, then params, then pathname
+  const tenant = propTenant || (params.tenant as string) || (pathname.startsWith('/app/') ? pathname.split('/')[2] : "");
+  const displayTenant = tenant || "Workspace";
+
+  // Determine if we are in subdirectory mode (/app/tenant/...) or subdomain mode (tenant.domain.com/...)
+  // If the pathname starts with /app/, we are in subdirectory mode.
+  const isSubdirectoryMode = pathname.startsWith('/app/');
+  const adminBase = isSubdirectoryMode ? `/app/${tenant}/admin` : `/admin`;
 
   const navItems = [
-    { name: "Overview", href: pathname.startsWith("/app/") ? `/app/${tenant}/admin` : `/admin`, icon: LayoutDashboard },
-    { name: "Staff & Roles", href: pathname.startsWith("/app/") ? `/app/${tenant}/admin/staff` : `/admin/staff`, icon: UserCheck },
-    { name: "Students", href: pathname.startsWith("/app/") ? `/app/${tenant}/admin/students` : `/admin/students`, icon: Users },
-    { name: "Courses", href: pathname.startsWith("/app/") ? `/app/${tenant}/admin/courses` : `/admin/courses`, icon: BookOpen },
-    { name: "Landing Page", href: pathname.startsWith("/app/") ? `/app/${tenant}/admin/settings` : `/admin/settings`, icon: Building2 },
-    { name: "Token Wallet", href: pathname.startsWith("/app/") ? `/app/${tenant}/admin/wallet` : `/admin/wallet`, icon: Wallet },
+    { name: "Overview", href: adminBase, icon: LayoutDashboard },
+    { name: "Staff & Roles", href: `${adminBase}/staff`, icon: UserCheck },
+    { name: "Students", href: `${adminBase}/students`, icon: Users },
+    { name: "Courses", href: `${adminBase}/courses`, icon: BookOpen },
+    { name: "Landing Page", href: `${adminBase}/settings`, icon: Building2 },
+    { name: "Token Wallet", href: `${adminBase}/wallet`, icon: Wallet },
   ];
 
   // Close mobile sidebar on navigation
@@ -100,7 +108,7 @@ export function WorkspaceSidebar() {
                   <Building2 className="h-5 w-5 text-primary-foreground" />
                 </div>
                 <span className="font-bold text-white tracking-tight text-lg whitespace-nowrap capitalize max-w-[160px] truncate">
-                  {tenant} Admin
+                  {displayTenant} Admin
                 </span>
               </motion.div>
             </AnimatePresence>
@@ -131,9 +139,7 @@ export function WorkspaceSidebar() {
         {/* Navigation */}
         <nav className="flex-1 py-6 px-4 space-y-2 overflow-y-auto overflow-x-hidden custom-scrollbar">
           {navItems.map((item) => {
-            const isActive = item.href === '/admin' 
-              ? pathname === '/admin' 
-              : pathname.startsWith(item.href);
+            const isActive = pathname === item.href || (item.href !== adminBase && pathname.startsWith(item.href));
             return (
               <Link key={item.name} href={item.href}>
                 <div

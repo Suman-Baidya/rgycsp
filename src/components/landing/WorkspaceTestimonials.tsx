@@ -38,6 +38,18 @@ export function WorkspaceTestimonials({ data }: { data?: any }) {
 
   return (
     <section id="testimonials" className="py-24 bg-white dark:bg-slate-950 overflow-hidden relative">
+      {/* Premium Background Elements */}
+      <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[120px] -translate-x-1/2 -translate-y-1/2 pointer-events-none" />
+      <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-blue-500/5 rounded-full blur-[120px] translate-x-1/2 translate-y-1/2 pointer-events-none" />
+      
+      {/* Floating Quote Decorations */}
+      <div className="absolute top-40 right-[10%] opacity-[0.03] dark:opacity-[0.05] animate-float pointer-events-none">
+        <Quote className="w-40 h-40 text-slate-900 dark:text-white rotate-12" />
+      </div>
+      <div className="absolute bottom-20 left-[5%] opacity-[0.02] dark:opacity-[0.04] animate-float delay-1000 pointer-events-none">
+        <Quote className="w-64 h-64 text-slate-900 dark:text-white -rotate-12" />
+      </div>
+
       <div className="max-w-7xl mx-auto px-6 relative z-10">
         <div className="flex flex-col md:flex-row justify-between items-end gap-8 mb-20">
           <div className="max-w-2xl space-y-4 text-left">
@@ -93,7 +105,7 @@ export function WorkspaceTestimonials({ data }: { data?: any }) {
                 <div className="pt-8 border-t border-border/50 flex items-center gap-4">
                   <div className="w-14 h-14 rounded-2xl overflow-hidden relative border-2 border-primary/20 bg-slate-100">
                     {t.avatar ? (
-                      <Image src={t.avatar} alt={t.name} fill className="object-cover" />
+                      <Image src={t.avatar} alt={t.name || "Testimonial Avatar"} fill className="object-cover" />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-primary font-black">{t.name?.charAt(0)}</div>
                     )}

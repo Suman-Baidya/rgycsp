@@ -47,7 +47,31 @@ export function WorkspaceSettingsForm({ settings }: { settings: any }) {
   const [brandDescription, setBrandDescription] = useState(settings.brandDescription);
   const [socialLinks, setSocialLinks] = useState(settings.socialLinks || {});
   const [pageHeaderBanner, setPageHeaderBanner] = useState(settings.pageHeaderBanner);
-  const [navigation, setNavigation] = useState(settings.navigation || []);
+  const DEFAULT_NAV = [
+    { name: "Home", href: "/", id: "home", isActive: true },
+    { name: "About", href: "/about", id: "about", isActive: true },
+    { name: "Courses", href: "/courses", id: "courses", isActive: true },
+    { name: "Students", href: "/students", id: "students", isActive: true },
+    { name: "Enquery", href: "/enquiry", id: "enquiry", isActive: true },
+    { name: "Gallery", href: "/gallery", id: "gallery", isActive: true },
+    { name: "Events", href: "/events", id: "events", isActive: true },
+    { name: "Guidance", href: "/guidance", id: "guidance", isActive: true },
+    { name: "Notice", href: "/notice", id: "notice", isActive: true },
+    { name: "Contact", href: "/contact", id: "contact", isActive: true },
+  ];
+
+  const [navigation, setNavigation] = useState(() => {
+    if (!settings.navigation || settings.navigation.length === 0) return DEFAULT_NAV;
+    // Merge: ensure all defaults exist
+    const current = [...settings.navigation];
+    DEFAULT_NAV.forEach(def => {
+      const exists = current.some(item => item.id === def.id);
+      if (!exists) current.push(def);
+    });
+    // Remove franchise if present
+    return current.filter(item => item.id !== 'franchise' && item.name?.toLowerCase() !== 'franchise');
+  });
+
   const [isSaving, setIsSaving] = useState(false);
   const [activeTab, setActiveTab] = useState("branding");
   const [sectionSearch, setSectionSearch] = useState("");
@@ -68,7 +92,21 @@ export function WorkspaceSettingsForm({ settings }: { settings: any }) {
     setBrandDescription(settings.brandDescription);
     setSocialLinks(settings.socialLinks || {});
     setPageHeaderBanner(settings.pageHeaderBanner);
-    setNavigation(settings.navigation || []);
+    
+    // Update navigation with defaults if needed
+    const nav = settings.navigation && settings.navigation.length > 0 
+      ? [...settings.navigation] 
+      : [...DEFAULT_NAV];
+    
+    const filteredNav = nav.filter(item => item.id !== 'franchise' && item.name?.toLowerCase() !== 'franchise');
+    
+    // Ensure all required are there
+    DEFAULT_NAV.forEach(def => {
+      if (!filteredNav.some(item => item.id === def.id)) {
+        filteredNav.push(def);
+      }
+    });
+    setNavigation(filteredNav);
 
     // --- Load Fonts for Preview ---
     const fontsToLoad = [
@@ -142,6 +180,7 @@ export function WorkspaceSettingsForm({ settings }: { settings: any }) {
               { value: "events", label: "Events", icon: Calendar },
               { value: "notices", label: "Notice Board", icon: Bell },
               { value: "gallery", label: "Gallery", icon: ImageIcon },
+              { value: "legal", label: "Legal & Help", icon: ShieldCheck },
             ].map((tab) => (
               <TabsTrigger
                 key={tab.value}
@@ -156,7 +195,7 @@ export function WorkspaceSettingsForm({ settings }: { settings: any }) {
           </TabsList>
         </div>
 
-        <div className="w-full max-w-4xl mx-auto px-4 sm:px-6">
+        <div className="w-full max-w-6xl mx-auto px-4 sm:px-8">
           <TabsContent value="branding" className="mt-0 w-full space-y-10 focus-visible:outline-none">
             <Accordion className="space-y-6">
               <AccordionItem value="identity" className="border border-border/50 bg-card/50 rounded-3xl overflow-hidden shadow-md">
@@ -514,6 +553,17 @@ export function WorkspaceSettingsForm({ settings }: { settings: any }) {
                 galleryItems={settings.workspace?.galleryItems || []} 
                 mediaFolderBase={mediaFolderBase}
              />
+          </TabsContent>
+
+          <TabsContent value="legal" className="mt-0 w-full space-y-10 focus-visible:outline-none">
+             <div className="flex flex-col gap-2 mb-8">
+               <h2 className="text-2xl font-black tracking-tight">Legal & Help Management</h2>
+               <p className="text-muted-foreground text-sm font-medium flex items-center gap-2">
+                 <ShieldCheck className="w-4 h-4 text-primary" />
+                 Manage your official documentation and student support center.
+               </p>
+             </div>
+             <LegalContentEditor settings={settings} />
           </TabsContent>
 
           <TabsContent value="sections" className="mt-0 w-full space-y-10 focus-visible:outline-none">
@@ -876,7 +926,7 @@ function CountersContentEditor({ content, setContent, mediaFolderBase }: any) {
               const next = [...stats];
               next[idx].value = e.target.value;
               setContent({ ...content, stats: next });
-            }} placeholder="Value" className="w-24 h-10 font-black text-primary" />
+            }} placeholder="Value" className="w-32 h-10 font-black text-primary text-center" />
             <Button variant="ghost" size="icon" className="h-8 w-8 text-red-500 rounded-lg" onClick={() => setContent({ ...content, stats: stats.filter((_: any, i: number) => i !== idx) })}>
               <Trash2 className="w-4 h-4" />
             </Button>
@@ -887,87 +937,27 @@ function CountersContentEditor({ content, setContent, mediaFolderBase }: any) {
   );
 }
 
-function CoursesContentEditor({ content, setContent, mediaFolderBase }: any) {
-  const courses = content.courses || [];
+function CoursesContentEditor({ content, setContent }: any) {
   return (
-    <div className="space-y-8">
-      <div className="flex items-center justify-between">
-        <h4 className="text-xs font-black uppercase tracking-[0.2em] text-primary">Courses List</h4>
-        <Button size="sm" variant="outline" onClick={() => setContent({ ...content, courses: [...courses, { title: "New Course", category: "Science", fee: "₹0", duration: "3 Months", description: "", image: "" }] })} className="rounded-xl font-bold h-10 border-primary/20 text-primary">
-          <Plus className="w-4 h-4 mr-2" /> Add Course
-        </Button>
+    <div className="space-y-6">
+      <div className="space-y-3">
+        <Label className="text-xs font-black uppercase tracking-widest text-primary ml-1">Section Description</Label>
+        <Textarea 
+          value={content.description || ""} 
+          onChange={(e) => setContent({ ...content, description: e.target.value })} 
+          placeholder="e.g. Unlock your potential with our meticulously crafted curriculum..." 
+          className="min-h-[120px] rounded-2xl bg-white dark:bg-zinc-900 border-border/40 p-6 font-medium leading-relaxed" 
+        />
+        <p className="text-[10px] text-muted-foreground font-medium ml-1 italic">
+          This description appears at the top of the Courses section on your home page.
+        </p>
       </div>
-      <div className="grid grid-cols-1 gap-8">
-        {courses.map((course: any, idx: number) => (
-          <div key={idx} className="p-8 bg-white dark:bg-zinc-900 rounded-[2rem] border border-border/40 shadow-sm relative group">
-            <Button variant="ghost" size="icon" className="absolute top-4 right-4 h-10 w-10 text-red-500 rounded-xl bg-red-50 dark:bg-red-950/30 opacity-0 group-hover:opacity-100 transition-all" onClick={() => setContent({ ...content, courses: courses.filter((_: any, i: number) => i !== idx) })}>
-              <Trash2 className="w-5 h-5" />
-            </Button>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
-               <div className="space-y-6">
-                  <div className="grid grid-cols-2 gap-4">
-                     <div className="space-y-2">
-                        <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Category</Label>
-                        <Input value={course.category || ""} onChange={(e) => {
-                          const next = [...courses];
-                          next[idx].category = e.target.value;
-                          setContent({ ...content, courses: next });
-                        }} className="h-10 rounded-xl" />
-                     </div>
-                     <div className="space-y-2">
-                        <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Fee</Label>
-                        <Input value={course.fee || ""} onChange={(e) => {
-                          const next = [...courses];
-                          next[idx].fee = e.target.value;
-                          setContent({ ...content, courses: next });
-                        }} className="h-10 rounded-xl" />
-                     </div>
-                  </div>
-                  <div className="space-y-2">
-                     <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Course Title</Label>
-                     <Input value={course.title || ""} onChange={(e) => {
-                       const next = [...courses];
-                       next[idx].title = e.target.value;
-                       setContent({ ...content, courses: next });
-                     }} className="h-12 rounded-xl font-bold" />
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                     <div className="space-y-2">
-                        <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Duration</Label>
-                        <Input value={course.duration || ""} onChange={(e) => {
-                          const next = [...courses];
-                          next[idx].duration = e.target.value;
-                          setContent({ ...content, courses: next });
-                        }} className="h-10 rounded-xl" />
-                     </div>
-                     <div className="space-y-2">
-                        <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Students</Label>
-                        <Input value={course.students || ""} onChange={(e) => {
-                          const next = [...courses];
-                          next[idx].students = e.target.value;
-                          setContent({ ...content, courses: next });
-                        }} placeholder="e.g. 1.2K+" className="h-10 rounded-xl" />
-                     </div>
-                  </div>
-               </div>
-               <div className="space-y-6">
-                  <div className="space-y-2">
-                     <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Short Description</Label>
-                     <Textarea value={course.description || ""} onChange={(e) => {
-                        const next = [...courses];
-                        next[idx].description = e.target.value;
-                        setContent({ ...content, courses: next });
-                     }} className="min-h-[100px] rounded-2xl resize-none" />
-                  </div>
-                  <ImageUpload value={course.image} onChange={(url) => {
-                    const next = [...courses];
-                    next[idx].image = url;
-                    setContent({ ...content, courses: next });
-                  }} folder={`${mediaFolderBase}/courses`} />
-               </div>
-            </div>
-          </div>
-        ))}
+      
+      <div className="p-6 bg-blue-500/5 rounded-2xl border border-blue-500/10">
+        <p className="text-xs text-blue-600 dark:text-blue-400 font-bold flex items-center gap-2">
+          <BookOpenCheck className="w-4 h-4" />
+          The courses themselves are managed from the main <span className="uppercase tracking-widest">Courses</span> tab in the sidebar.
+        </p>
       </div>
     </div>
   );
@@ -1197,7 +1187,7 @@ function AchievementsContentEditor({ content, setContent, mediaFolderBase }: any
               </div>
 
               <div className="flex items-center gap-2 w-full sm:w-auto">
-                <div className="relative flex-1 sm:w-24">
+                <div className="relative flex-1 sm:w-32">
                   <Input value={stat.value || ""} onChange={(e) => {
                     const next = [...stats];
                     next[idx].value = e.target.value;
@@ -1833,3 +1823,279 @@ function EventForm({ initialData, onSave, isProcessing, mediaFolderBase }: any) 
   );
 }
 
+function LegalContentEditor({ settings }: { settings: any }) {
+  const [activeLegal, setActiveLegal] = useState<string>("help-center");
+  const [isProcessing, setIsProcessing] = useState(false);
+
+  const legalPages = [
+    { type: "help-center", label: "Help Center", icon: HelpCircle },
+    { type: "legal-privacy", label: "Privacy Policy", icon: ShieldCheck },
+    { type: "legal-terms", label: "Terms of Service", icon: FileText },
+    { type: "legal-cookie", label: "Cookie Policy", icon: Cpu }
+  ];
+
+  const currentSection = settings.sections?.find((s: any) => s.type === activeLegal);
+  
+  const [formData, setFormData] = useState<any>({
+    title: "",
+    subtitle: "",
+    text: "",
+    categories: [],
+    cta: {
+      ticketText: "Open a Ticket",
+      ticketLink: "#",
+      emailText: "Email Support",
+      emailLink: ""
+    }
+  });
+
+  useEffect(() => {
+    // Fallback logic for content loading
+    const rawContent = currentSection?.content as any;
+    let initialText = rawContent?.text || "";
+    
+    // If no markdown text exists but HTML does (from initial sync), use HTML as starting point
+    if (!initialText && rawContent?.html) {
+      initialText = rawContent.html.replace(/<[^>]*>?/gm, ''); // Very basic strip for legacy sync
+    }
+
+    setFormData({
+      title: currentSection?.title || "",
+      subtitle: currentSection?.subtitle || "",
+      text: initialText,
+      categories: rawContent?.categories || [],
+      cta: rawContent?.cta || {
+        ticketText: "Open a Ticket",
+        ticketLink: "#",
+        emailText: "Email Support",
+        emailLink: ""
+      }
+    });
+  }, [activeLegal, currentSection]);
+
+  const handleSave = async () => {
+    setIsProcessing(true);
+    try {
+      let sectionId = currentSection?.id;
+
+      // If section doesn't exist, sync it first
+      if (!sectionId) {
+        const syncRes = await syncAllSections(settings.id, [activeLegal], true);
+        if (syncRes.success) {
+          // Find the newly created section ID
+          // We might need to refresh settings or just use a more direct create action
+          // To keep it simple for now, I'll advise syncing if it fails, 
+          // but I'll try to make it smarter by using a dedicated create-or-update action.
+          toast.info("Initializing section... please try saving again in a moment.");
+          window.location.reload(); // Hard reload to get new IDs
+          return;
+        } else {
+          toast.error("Failed to initialize section. Please use 'Sync Content' in the Sections tab.");
+          return;
+        }
+      }
+
+      const result = await updateLandingSection(sectionId, {
+        title: formData.title,
+        subtitle: formData.subtitle,
+        content: activeLegal === 'help-center' 
+          ? { text: formData.text, categories: formData.categories, cta: formData.cta }
+          : { text: formData.text },
+        isActive: true
+      });
+
+      if (result.success) {
+        toast.success(`${legalPages.find(p => p.type === activeLegal)?.label} updated`);
+        // Refresh to get updated settings props
+        window.location.reload();
+      } else {
+        toast.error(result.error || "Update failed");
+      }
+    } catch (error: any) {
+      toast.error(error.message || "An unexpected error occurred");
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const addCategory = () => {
+    setFormData({
+      ...formData,
+      categories: [...formData.categories, { title: "", desc: "", icon: "HelpCircle", link: "#" }]
+    });
+  };
+
+  const removeCategory = (index: number) => {
+    const newCats = [...formData.categories];
+    newCats.splice(index, 1);
+    setFormData({ ...formData, categories: newCats });
+  };
+
+  const updateCategory = (index: number, field: string, value: string) => {
+    const newCats = [...formData.categories];
+    newCats[index] = { ...newCats[index], [field]: value };
+    setFormData({ ...formData, categories: newCats });
+  };
+
+  return (
+    <div className="space-y-12">
+      <div className="flex flex-wrap gap-4">
+        {legalPages.map((page) => (
+          <button
+            key={page.type}
+            onClick={() => setActiveLegal(page.type)}
+            className={cn(
+              "flex items-center gap-3 px-6 py-4 rounded-2xl border-2 transition-all font-bold",
+              activeLegal === page.type 
+                ? "bg-primary text-primary-foreground border-primary shadow-lg shadow-primary/20" 
+                : "bg-white dark:bg-zinc-900 border-border/40 hover:border-primary/20 text-zinc-600 dark:text-zinc-400"
+            )}
+          >
+            <page.icon className="w-5 h-5" />
+            {page.label}
+          </button>
+        ))}
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="lg:col-span-2 space-y-8">
+          <div className="p-8 bg-white dark:bg-zinc-900 rounded-[2.5rem] border border-border/40 shadow-sm space-y-6">
+            <div className="space-y-3">
+              <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">Page Title</Label>
+              <Input 
+                value={formData.title} 
+                onChange={(e) => setFormData({ ...formData, title: e.target.value })} 
+                placeholder={`e.g., ${legalPages.find(p => p.type === activeLegal)?.label}`} 
+                className="h-14 rounded-2xl font-bold text-lg" 
+              />
+            </div>
+            <div className="space-y-3">
+              <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">Subtitle / Subheader</Label>
+              <Input 
+                value={formData.subtitle} 
+                onChange={(e) => setFormData({ ...formData, subtitle: e.target.value })} 
+                placeholder="e.g., How can we assist you today?" 
+                className="h-12 rounded-2xl font-bold" 
+              />
+            </div>
+
+            {activeLegal === 'help-center' && (
+              <div className="space-y-8 pt-6 border-t border-border/40">
+                <div className="flex items-center justify-between">
+                   <h4 className="text-sm font-black uppercase tracking-widest text-primary">Help Categories</h4>
+                   <Button onClick={addCategory} variant="outline" className="rounded-xl h-10 gap-2 border-primary/20 text-primary hover:bg-primary/5">
+                      <Plus className="w-4 h-4" /> Add Category
+                   </Button>
+                </div>
+
+                <div className="grid grid-cols-1 gap-6">
+                   {formData.categories.map((cat: any, i: number) => (
+                     <div key={i} className="p-6 bg-zinc-50 dark:bg-zinc-900/50 rounded-2xl border border-border/40 space-y-4 relative group">
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          onClick={() => removeCategory(i)}
+                          className="absolute top-4 right-4 text-muted-foreground hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                           <Trash2 className="w-4 h-4" />
+                        </Button>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                           <div className="space-y-2">
+                              <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Card Title</Label>
+                              <Input value={cat.title} onChange={(e) => updateCategory(i, "title", e.target.value)} placeholder="e.g., Getting Started" className="h-10 rounded-xl font-bold" />
+                           </div>
+                           <div className="space-y-2">
+                              <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Icon Name (Lucide)</Label>
+                              <Input value={cat.icon} onChange={(e) => updateCategory(i, "icon", e.target.value)} placeholder="e.g., BookOpen, Mail, HelpCircle" className="h-10 rounded-xl font-medium" />
+                           </div>
+                        </div>
+                        <div className="space-y-2">
+                           <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Description</Label>
+                           <Input value={cat.desc} onChange={(e) => updateCategory(i, "desc", e.target.value)} placeholder="Short description of the category..." className="h-10 rounded-xl font-medium text-xs" />
+                        </div>
+                        <div className="space-y-2">
+                           <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Link URL</Label>
+                           <Input value={cat.link} onChange={(e) => updateCategory(i, "link", e.target.value)} placeholder="/help/getting-started" className="h-10 rounded-xl font-medium text-xs" />
+                        </div>
+                     </div>
+                   ))}
+                </div>
+
+                <div className="space-y-6 pt-6 border-t border-border/40">
+                   <h4 className="text-sm font-black uppercase tracking-widest text-primary">Support Call-To-Action</h4>
+                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                      <div className="space-y-4">
+                         <div className="space-y-2">
+                            <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Primary Button Text</Label>
+                            <Input value={formData.cta.ticketText} onChange={(e) => setFormData({ ...formData, cta: { ...formData.cta, ticketText: e.target.value }})} className="h-10 rounded-xl font-bold" />
+                         </div>
+                         <div className="space-y-2">
+                            <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Primary Button Link</Label>
+                            <Input value={formData.cta.ticketLink} onChange={(e) => setFormData({ ...formData, cta: { ...formData.cta, ticketLink: e.target.value }})} className="h-10 rounded-xl font-medium text-xs" />
+                         </div>
+                      </div>
+                      <div className="space-y-4">
+                         <div className="space-y-2">
+                            <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Secondary Button Text</Label>
+                            <Input value={formData.cta.emailText} onChange={(e) => setFormData({ ...formData, cta: { ...formData.cta, emailText: e.target.value }})} className="h-10 rounded-xl font-bold" />
+                         </div>
+                         <div className="space-y-2">
+                            <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Secondary Button Link</Label>
+                            <Input value={formData.cta.emailLink} onChange={(e) => setFormData({ ...formData, cta: { ...formData.cta, emailLink: e.target.value }})} className="h-10 rounded-xl font-medium text-xs" />
+                         </div>
+                      </div>
+                   </div>
+                </div>
+              </div>
+            )}
+
+            {activeLegal !== 'help-center' && (
+              <div className="space-y-3">
+                <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">Content (Markdown Supported)</Label>
+                <Textarea 
+                  value={formData.text} 
+                  onChange={(e) => setFormData({ ...formData, text: e.target.value })} 
+                  placeholder="Write your policy content here..." 
+                  className="min-h-[400px] rounded-2xl p-8 font-medium leading-relaxed" 
+                />
+              </div>
+            )}
+          </div>
+
+          <div className="p-8 bg-white dark:bg-zinc-900 rounded-[2.5rem] border border-border/40 shadow-sm flex items-center justify-between">
+            <div className="flex items-center gap-3 text-sm text-muted-foreground font-medium italic">
+               <ShieldCheck className="w-4 h-4 text-primary" />
+               Changes reflect immediately on the live page.
+            </div>
+            <Button 
+              onClick={handleSave} 
+              disabled={isProcessing} 
+              className="h-14 px-10 rounded-2xl font-black text-lg shadow-lg shadow-primary/20 transition-all"
+            >
+              {isProcessing ? "Saving..." : "Save Content"}
+            </Button>
+          </div>
+        </div>
+
+        <div className="space-y-8">
+           <div className="p-8 bg-primary/5 rounded-[2.5rem] border border-primary/10 space-y-6">
+              <h4 className="text-xl font-black text-primary">Content Guide</h4>
+              <ul className="space-y-4">
+                 {[
+                   { t: "Markdown Support", d: "Use # for headings, ** for bold, and - for lists." },
+                   { t: "Dynamic Headers", d: "The title and subtitle appear in the premium page header." },
+                   { t: "SEO Optimized", d: "Clean semantic HTML is generated from your content." },
+                   { t: "Auto-Sync", d: "Links in the footer are automatically updated." }
+                 ].map((item, i) => (
+                   <li key={i} className="space-y-1">
+                      <div className="text-sm font-black text-slate-900 dark:text-white">{item.t}</div>
+                      <div className="text-xs text-muted-foreground font-medium">{item.d}</div>
+                   </li>
+                 ))}
+              </ul>
+           </div>
+        </div>
+      </div>
+    </div>
+  );
+}

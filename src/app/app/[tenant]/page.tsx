@@ -1,7 +1,7 @@
 import { db } from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import { WorkspaceNavbar } from "@/components/layout/WorkspaceNavbar";
-import { LandingFooter } from "@/components/layout/LandingFooter";
+import { WorkspaceFooter } from "@/components/layout/WorkspaceFooter";
 import { WorkspaceHero } from "@/components/landing/WorkspaceHero";
 import { AboutNoticeSection } from "@/components/landing/AboutNoticeSection";
 import { DynamicCounters } from "@/components/landing/DynamicCounters";
@@ -128,17 +128,19 @@ export default async function InstituteLandingPage({
 
   const session = await auth();
   
-  // Safely fetch events (prevents crash if prisma client is still refreshing in-memory)
-  const top3Events = (db as any).event 
-    ? await (db as any).event.findMany({
-        where: { 
-          workspaceId: workspace.id,
-          isActive: true 
-        },
-        orderBy: { date: 'asc' },
-        take: 3
-      })
-    : [];
+  // Fetch courses and events from the LMS model
+  // We filter isActive in JS to avoid Prisma synchronization issues with the new schema fields
+  const allCourses = await db.course.findMany({
+    where: { workspaceId: workspace.id },
+    orderBy: { createdAt: 'desc' }
+  });
+  const top3Courses = (allCourses as any[]).filter(c => c.isActive !== false).slice(0, 3);
+
+  const allEvents = await db.event.findMany({
+    where: { workspaceId: workspace.id },
+    orderBy: { date: 'asc' }
+  });
+  const top3Events = allEvents.filter(e => (e as any).isActive !== false).slice(0, 3);
 
   return (
     <div className="flex flex-col min-h-screen font-sans bg-background selection:bg-primary/30">
@@ -149,14 +151,33 @@ export default async function InstituteLandingPage({
       />
       <WorkspaceNavbar settings={mergedSettings} user={session?.user} />
 
-      <main className="flex-1 w-full flex flex-col bg-slate-50 dark:bg-slate-950">
+      <main className="flex-1 w-full flex flex-col relative overflow-hidden bg-white dark:bg-zinc-950">
+        {/* Advanced Background Layer */}
+        <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
+          {/* Animated Mesh Orbs */}
+          <div className="absolute top-[-10%] left-[-10%] w-[60%] h-[60%] bg-primary/10 rounded-full blur-[120px] animate-pulse" />
+          <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-blue-500/5 rounded-full blur-[100px] animate-pulse delay-700" />
+          
+          {/* Geometric Grid Pattern */}
+          <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:40px_40px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)]" />
+          
+          {/* Noise Texture */}
+          <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[url('https://grainy-gradients.vercel.app/noise.svg')]" />
+        </div>
+
+        <div className="relative z-10 flex flex-col w-full">
         {isSectionActive("hero") && <WorkspaceHero data={getSectionData("hero")} />}
         
         {isSectionActive("about") && <AboutNoticeSection data={getSectionData("about")} />}
 
         {isSectionActive("counters") && <DynamicCounters data={getSectionData("counters")} />}
 
-        {isSectionActive("courses") && <WorkspaceCourses data={getSectionData("courses")} />}
+        {isSectionActive("courses") && (
+          <WorkspaceCourses 
+            data={getSectionData("courses")} 
+            dbCourses={top3Courses} 
+          />
+        )}
 
         {isSectionActive("why-choose-us") && <WorkspaceWhyChooseUs data={getSectionData("why-choose-us")} />}
         
@@ -171,10 +192,11 @@ export default async function InstituteLandingPage({
         {isSectionActive("faq") && <div id="faq"><WorkspaceFaq data={getSectionData("faq")} /></div>}
         
         {isSectionActive("contact") && <WorkspaceContact data={getSectionData("contact")} settings={mergedSettings} />}
+        </div>
       </main>
 
 
-      <LandingFooter settings={mergedSettings} />
+      <WorkspaceFooter settings={mergedSettings} tenant={tenant} />
     </div>
   );
 }

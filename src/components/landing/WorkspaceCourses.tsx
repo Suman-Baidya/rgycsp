@@ -8,36 +8,47 @@ import { motion } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
 
-export function WorkspaceCourses({ data }: { data: any }) {
-  const courses = data?.content?.courses || [
+export function WorkspaceCourses({ data, dbCourses }: { data: any, dbCourses?: any[] }) {
+  const hasDbCourses = dbCourses && dbCourses.length > 0;
+  
+  const courses = hasDbCourses
+    ? dbCourses.map(c => ({
+        ...c,
+        fee: `₹${c.feeAmount}`,
+        lessons: (c as any).topics ? ((c as any).topics as any[]).reduce((acc: number, t: any) => acc + (t.items?.length || 0), 0) : "12"
+      }))
+    : [
     { 
-      title: "Advanced Mathematics", 
+      title: "Mathematics", 
       category: "Science", 
       fee: "₹5000", 
       duration: "6 Months", 
-      image: "https://images.unsplash.com/photo-1509228468518-180dd48a5f5f?q=80&w=2070", 
+      image: "https://cdn.pixabay.com/photo/2015/11/05/08/21/geometry-1023846_1280.jpg", 
       students: "1.2K+", 
       rating: "4.9",
+      lessons: "24",
       description: "Master complex calculus and algebraic structures with our advanced curriculum designed for engineering aspirants."
     },
     { 
-      title: "English Literature", 
+      title: "English", 
       category: "Arts", 
       fee: "₹3500", 
       duration: "4 Months", 
-      image: "https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?q=80&w=2070", 
+      image: "https://cdn.pixabay.com/photo/2015/03/12/21/17/stationery-670871_1280.jpg", 
       students: "850+", 
       rating: "4.8",
+      lessons: "18",
       description: "Explore the works of classic and modern authors while developing critical analysis and writing skills."
     },
     { 
-      title: "Computer Science", 
+      title: "Computer", 
       category: "Technology", 
       fee: "₹8000", 
       duration: "1 Year", 
-      image: "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?q=80&w=2070", 
+      image: "https://cdn.pixabay.com/photo/2012/10/29/15/36/ball-63527_1280.jpg", 
       students: "2.5K+", 
       rating: "5.0",
+      lessons: "36",
       description: "Comprehensive guide to algorithms, data structures, and modern software development practices."
     },
   ];
@@ -122,7 +133,7 @@ export function WorkspaceCourses({ data }: { data: any }) {
                     </div>
                     <div className="flex items-center gap-1.5">
                       <BookOpen className="h-3.5 w-3.5 text-primary" />
-                      12 Lessons
+                      {course.lessons || "12"} Lessons
                     </div>
                   </div>
                   

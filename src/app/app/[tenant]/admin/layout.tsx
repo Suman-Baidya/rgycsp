@@ -15,7 +15,7 @@ export default async function WorkspaceAdminLayout({
 
   return (
     <div className="flex min-h-screen bg-background text-foreground transition-colors duration-300">
-      <WorkspaceSidebar />
+      <WorkspaceSidebar tenant={tenant} />
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         <header className="h-16 border-b border-border/40 bg-background/50 backdrop-blur-md flex items-center px-4 lg:px-8 sticky top-0 z-40">
           <div className="lg:hidden ml-14 font-bold tracking-tight text-lg text-foreground capitalize truncate max-w-[200px]">

@@ -1,7 +1,7 @@
 import { db } from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import { WorkspaceNavbar } from "@/components/layout/WorkspaceNavbar";
-import { LandingFooter } from "@/components/layout/LandingFooter";
+import { WorkspaceFooter } from "@/components/layout/WorkspaceFooter";
 import { CustomThemeStyle } from "@/components/providers/CustomThemeStyle";
 import { auth } from "@/auth";
 import { EventsList } from "./EventsList";
@@ -71,7 +71,7 @@ export default async function EventsPage({
         </div>
       </main>
 
-      <LandingFooter settings={workspaceSettings} />
+      <WorkspaceFooter settings={workspaceSettings} />
     </div>
   );
 }

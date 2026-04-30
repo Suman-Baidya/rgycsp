@@ -19,9 +19,9 @@ export function WorkspaceAchievements({ data }: { data?: any }) {
   ];
 
   const gallery = (content.items && content.items.length > 0) ? content.items : [
-    { src: "https://images.unsplash.com/photo-1523580494863-6f3031224c94?q=80&w=2070", title: "National Rankers", description: "Our students secured top ranks in national competitive exams." },
-    { src: "https://images.unsplash.com/photo-1517486808906-6ca8b3f04846?q=80&w=2070", title: "Cultural Excellence", description: "Winning the state level inter-college cultural fest." },
-    { src: "https://images.unsplash.com/photo-1524178232363-1fb2b075b655?q=80&w=2070", title: "Sports Champions", description: "Victory in the annual sports meet 2025." },
+    { src: "https://cdn.pixabay.com/photo/2015/02/24/00/43/medal-646943_1280.jpg", title: "National Rankers", description: "Our students secured top ranks in national competitive exams." },
+    { src: "https://cdn.pixabay.com/photo/2024/05/20/08/46/ai-generated-8774244_1280.jpg", title: "Innovation Award", description: "Winning the state level inter-college innovation fest." },
+    { src: "https://cdn.pixabay.com/photo/2023/09/12/11/22/ai-generated-8248622_1280.jpg", title: "Global Recognition", description: "Excellence in international academic collaboration." },
   ];
 
   return (
@@ -67,7 +67,7 @@ export function WorkspaceAchievements({ data }: { data?: any }) {
           {gallery.map((item: any, i: number) => (
             <div key={i} className="group relative h-[450px] rounded-[3rem] overflow-hidden shadow-xl border-4 border-white dark:border-zinc-900">
               <Image
-                src={(item.src && item.src.trim() !== "") ? item.src : (item.image && item.image.trim() !== "") ? item.image : "https://images.unsplash.com/photo-1523580494863-6f3031224c94?q=80&w=2070"}
+                src={(item.src && item.src.trim() !== "") ? item.src : (item.image && item.image.trim() !== "") ? item.image : "https://cdn.pixabay.com/photo/2015/02/24/00/43/medal-646943_1280.jpg"}
                 alt={item.title}
                 fill
                 className="object-cover group-hover:scale-110 transition-transform duration-1000"

@@ -1,7 +1,7 @@
 import { db } from "@/lib/prisma";
 import { GalleryList } from "./GalleryList";
 import { WorkspacePageHeader } from "@/components/layout/WorkspacePageHeader";
-import { LandingFooter } from "@/components/layout/LandingFooter";
+import { WorkspaceFooter } from "@/components/layout/WorkspaceFooter";
 import { CustomThemeStyle } from "@/components/providers/CustomThemeStyle";
 import { WorkspaceNavbar } from "@/components/layout/WorkspaceNavbar";
 import { auth } from "@/auth";
@@ -58,7 +58,7 @@ export default async function GalleryPage({ params }: { params: Promise<{ tenant
         </div>
       </main>
 
-      <LandingFooter settings={workspace.siteSettings} />
+      <WorkspaceFooter settings={workspace.siteSettings} />
     </div>
   );
 }

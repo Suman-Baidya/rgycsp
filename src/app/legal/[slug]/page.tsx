@@ -1,7 +1,7 @@
 import { db } from "@/lib/prisma";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { LandingNavbar } from "@/components/layout/LandingNavbar";
-import { LandingFooter } from "@/components/layout/LandingFooter";
+import { MainFooter } from "@/components/layout/MainFooter";
 import { notFound } from "next/navigation";
 
 export default async function LegalPage({ params }: { params: Promise<{ slug: string }> }) {
@@ -11,9 +11,7 @@ export default async function LegalPage({ params }: { params: Promise<{ slug: st
   const settings = await db.siteSettings.findFirst({
     where: { workspaceId: null },
     include: {
-      sections: {
-        where: { type: sectionType }
-      }
+      sections: true
     }
   });
 
@@ -91,7 +89,7 @@ export default async function LegalPage({ params }: { params: Promise<{ slug: st
         </div>
       </main>
 
-      <LandingFooter settings={settings} />
+      <MainFooter settings={settings} />
     </div>
   );
 }

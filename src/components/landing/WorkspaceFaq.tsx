@@ -32,8 +32,17 @@ export function WorkspaceFaq({ data }: { data?: any }) {
   const [activeIndex, setActiveIndex] = useState<number | null>(0);
 
   return (
-    <section id="faq" className="py-24 px-6 bg-slate-50 dark:bg-slate-900/20">
-      <div className="max-w-4xl mx-auto">
+    <section id="faq" className="py-24 px-6 bg-slate-50 dark:bg-slate-900/10 relative overflow-hidden">
+      {/* Decorative Background Elements */}
+      <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-primary/5 rounded-full blur-[100px] -mr-64 -mt-64" />
+      <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-blue-500/5 rounded-full blur-[80px] -ml-48 -mb-48" />
+      
+      {/* Watermark Icon */}
+      <div className="absolute top-20 left-10 opacity-[0.03] dark:opacity-[0.05] -rotate-12 pointer-events-none">
+        <HelpCircle className="w-[400px] h-[400px] text-slate-900 dark:text-white" />
+      </div>
+
+      <div className="max-w-4xl mx-auto relative z-10">
         <div className="text-center mb-16 space-y-4">
           <div className="inline-flex items-center justify-center gap-3 text-primary font-black tracking-[0.2em] text-[10px] uppercase w-full">
             <div className="h-0.5 w-10 bg-primary" />

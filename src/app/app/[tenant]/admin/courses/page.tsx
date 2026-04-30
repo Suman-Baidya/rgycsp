@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { getCourses } from "@/app/actions/courses";
 import CourseList from "./CourseList";
 
+// Trigger refresh to resolve HMR stale cache issue
 export default async function CoursesPage({
   params
 }: {

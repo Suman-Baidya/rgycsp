@@ -7,13 +7,17 @@ interface WorkspacePageHeaderProps {
   description?: string;
   breadcrumbs: { name: string; href: string }[];
   bgImage?: string;
+  statusTitle?: string;
+  statusSub?: string;
 }
 
 export function WorkspacePageHeader({
   title,
   description,
   breadcrumbs,
-  bgImage = "https://cdn.pixabay.com/photo/2016/01/19/01/42/library-1147815_1280.jpg"
+  bgImage = "https://cdn.pixabay.com/photo/2016/01/19/01/42/library-1147815_1280.jpg",
+  statusTitle = "LIVE",
+  statusSub = "Updates"
 }: WorkspacePageHeaderProps) {
   return (
     <div className="relative w-full overflow-hidden bg-slate-950 group">
@@ -88,8 +92,8 @@ export function WorkspacePageHeader({
             </div>
             <div className="h-16 w-px bg-gradient-to-b from-transparent via-white/20 to-transparent" />
             <div className="space-y-1 text-primary">
-              <div className="text-3xl font-black">LIVE</div>
-              <div className="text-[10px] font-black text-white/40 uppercase tracking-widest">Updates</div>
+              <div className="text-3xl font-black">{statusTitle}</div>
+              <div className="text-[10px] font-black text-white/40 uppercase tracking-widest">{statusSub}</div>
             </div>
           </div>
         </div>

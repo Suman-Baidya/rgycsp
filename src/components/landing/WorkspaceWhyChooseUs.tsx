@@ -17,7 +17,7 @@ export function WorkspaceWhyChooseUs({ data }: { data?: any }) {
     { icon: "Rocket", title: "Career Support", description: "Dedicated placement cell and career guidance to help you land your dream opportunity." }
   ];
 
-  const image = content.image || "https://images.unsplash.com/photo-1523050335191-91fb50b5fd46?q=80&w=2070";
+  const image = content.image || "https://cdn.pixabay.com/photo/2019/11/25/18/01/unknown-4652690_1280.jpg";
 
   const iconMap: any = { Zap, ShieldCheck, Cpu, Globe, Rocket, Brain, GraduationCap, Users, Layout, Trophy, Star };
 
@@ -40,7 +40,7 @@ export function WorkspaceWhyChooseUs({ data }: { data?: any }) {
         <div className="flex-1 w-full relative">
           <div className="relative rounded-[3rem] overflow-hidden aspect-[4/5] shadow-2xl border-8 border-white dark:border-zinc-900 group">
             <Image
-              src={image || "https://images.unsplash.com/photo-1523050335191-91fb50b5fd46?q=80&w=2070"}
+              src={image || "https://cdn.pixabay.com/photo/2019/11/25/18/01/unknown-4652690_1280.jpg"}
               alt={title || "Why Choose Us"}
               fill
               className="object-cover group-hover:scale-105 transition-transform duration-700"

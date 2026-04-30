@@ -1,5 +1,5 @@
 import { LandingNavbar } from "@/components/layout/LandingNavbar";
-import { LandingFooter } from "@/components/layout/LandingFooter";
+import { MainFooter } from "@/components/layout/MainFooter";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { WhyChooseUs } from "@/components/landing/WhyChooseUs";
 import { ServicesSection } from "@/components/landing/ServicesSection";
@@ -48,7 +48,7 @@ export default async function ServicesPage() {
         {isSectionActive("ready-to-modernize") && <ReadyToModernize data={getSectionData("ready-to-modernize")} />}
       </main>
 
-      <LandingFooter settings={settings} />
+      <MainFooter settings={settings} />
     </div>
   );
 }

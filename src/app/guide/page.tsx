@@ -1,5 +1,5 @@
 import { LandingNavbar } from "@/components/layout/LandingNavbar";
-import { LandingFooter } from "@/components/layout/LandingFooter";
+import { MainFooter } from "@/components/layout/MainFooter";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { GuideSteps } from "@/components/landing/GuideSteps";
 import { GuideResources } from "@/components/landing/GuideResources";
@@ -48,7 +48,7 @@ export default async function GuidePage() {
 
       </main>
 
-      <LandingFooter settings={settings} />
+      <MainFooter settings={settings} />
     </div>
   );
 }

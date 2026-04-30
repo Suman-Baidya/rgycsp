@@ -1,5 +1,5 @@
 import { LandingNavbar } from "@/components/layout/LandingNavbar";
-import { LandingFooter } from "@/components/layout/LandingFooter";
+import { MainFooter } from "@/components/layout/MainFooter";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { ContactSection } from "@/components/landing/ContactSection";
 import { FaqSection } from "@/components/landing/FaqSection";
@@ -50,7 +50,7 @@ export default async function SupportPage() {
         {isSectionActive("faq") && <FaqSection data={getSectionData("faq")} />}
       </main>
 
-      <LandingFooter settings={settings} />
+      <MainFooter settings={settings} />
     </div>
   );
 }

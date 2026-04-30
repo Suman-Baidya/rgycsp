@@ -1,5 +1,5 @@
 import { LandingNavbar } from "@/components/layout/LandingNavbar";
-import { LandingFooter } from "@/components/layout/LandingFooter";
+import { MainFooter } from "@/components/layout/MainFooter";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { PricingSection } from "@/components/landing/PricingSection";
 import { CustomSolution } from "@/components/landing/CustomSolution";
@@ -50,7 +50,7 @@ export default async function PricingPage() {
 
       </main>
 
-      <LandingFooter settings={settings} />
+      <MainFooter settings={settings} />
     </div>
   );
 }

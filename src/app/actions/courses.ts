@@ -23,15 +23,24 @@ export async function getCourses(workspaceId: string) {
 
 export async function createCourse(workspaceId: string, data: any) {
   try {
-    const { name, code, description, price } = data;
+    const { 
+      title, code, description, feeAmount, 
+      category, level, duration, topics, image 
+    } = data;
 
     const course = await db.course.create({
       data: {
         workspaceId,
-        title: name,
+        title,
         code,
         description,
-        feeAmount: parseFloat(price) || 0,
+        image,
+        feeAmount: parseFloat(feeAmount) || 0,
+        category,
+        level,
+        duration,
+        topics: topics || [],
+        isActive: true
       }
     });
 
@@ -40,6 +49,65 @@ export async function createCourse(workspaceId: string, data: any) {
   } catch (error: any) {
     console.error("Failed to create course:", error);
     return { success: false, error: error.message || "Failed to create course" };
+  }
+}
+
+export async function updateCourse(courseId: string, data: any) {
+  try {
+    const { 
+      title, code, description, feeAmount, 
+      category, level, duration, topics, isActive, image 
+    } = data;
+
+    const course = await db.course.update({
+      where: { id: courseId },
+      data: {
+        title,
+        code,
+        description,
+        image,
+        feeAmount: parseFloat(feeAmount) || 0,
+        category,
+        level,
+        duration,
+        topics: topics || [],
+        isActive: isActive !== undefined ? isActive : true
+      }
+    });
+
+    revalidatePath(`/app/[tenant]/admin/courses`, "page");
+    return { success: true, data: course };
+  } catch (error: any) {
+    console.error("Failed to update course:", error);
+    return { success: false, error: error.message || "Failed to update course" };
+  }
+}
+
+export async function deleteCourse(courseId: string) {
+  try {
+    await db.course.delete({
+      where: { id: courseId }
+    });
+
+    revalidatePath(`/app/[tenant]/admin/courses`, "page");
+    return { success: true };
+  } catch (error: any) {
+    console.error("Failed to delete course:", error);
+    return { success: false, error: error.message || "Failed to delete course" };
+  }
+}
+
+export async function deleteMultipleCourses(courseIds: string[]) {
+  try {
+    await db.course.deleteMany({
+      where: { id: { in: courseIds } }
+    });
+
+    revalidatePath(`/app/[tenant]/admin/courses`, "page");
+    return { success: true };
+  } catch (error: any) {
+    console.error("Failed to delete multiple courses:", error);
+    return { success: false, error: error.message || "Failed to delete courses" };
   }
 }
 

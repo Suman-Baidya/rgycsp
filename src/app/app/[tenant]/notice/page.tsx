@@ -1,7 +1,7 @@
 import { db } from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import { WorkspaceNavbar } from "@/components/layout/WorkspaceNavbar";
-import { LandingFooter } from "@/components/layout/LandingFooter";
+import { WorkspaceFooter } from "@/components/layout/WorkspaceFooter";
 import { CustomThemeStyle } from "@/components/providers/CustomThemeStyle";
 import { auth } from "@/auth";
 import { Bell, Calendar, ArrowRight, ExternalLink } from "lucide-react";
@@ -122,7 +122,7 @@ export default async function WorkspaceNoticePage({
         </section>
       </main>
 
-      <LandingFooter settings={workspaceSettings} />
+      <WorkspaceFooter settings={workspaceSettings} />
     </div>
   );
 }

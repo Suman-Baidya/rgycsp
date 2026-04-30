@@ -105,6 +105,8 @@ model LandingSection {
   isActive       Boolean @default(true)
 
   siteSettings   SiteSettings @relation(fields: [siteSettingsId], references: [id], onDelete: Cascade)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @default(now()) @updatedAt
 
   @@unique([siteSettingsId, type])
 }
@@ -148,7 +150,14 @@ model Course {
   title       String
   code        String?
   description String?
+  image       String?  // Banner/Thumbnail URL
   feeAmount   Float   @default(0) // Standard fee amount
+  
+  category    String?  // e.g. "Science", "Technology"
+  level       String?  // e.g. "Beginner", "Advanced"
+  duration    String?  // e.g. "6 Months"
+  topics      Json?    // [{ title: '...', items: ['...', '...'] }, ...]
+  isActive    Boolean  @default(true)
 
   workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   batches   Batch[]

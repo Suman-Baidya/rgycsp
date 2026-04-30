@@ -34,43 +34,39 @@ export function WorkspaceNavbar({ settings, user }: { settings: any, user?: any 
 
   const socialLinks = settings.socialLinks || {};
   const defaultItems = [
-    { name: "Home", href: "/", id: "home" },
-    { name: "About", href: "/about", id: "about" },
-    { name: "Courses", href: "/courses", id: "courses" },
-    { name: "Students", href: "/students", id: "students" },
-    { name: "Enquiry", href: "/enquiry", id: "enquiry" },
-    { name: "Gallery", href: "/gallery", id: "gallery" },
-    { name: "Events", href: "/events", id: "events" },
-    { name: "Guidance", href: "/guidance", id: "guidance" },
-    { name: "Notice", href: "/notice", id: "notice" },
-    { name: "Franchise", href: "/franchise", id: "franchise" },
-    { name: "Contact", href: "/contact", id: "contact" },
+    { name: "Home", href: "/", id: "home", isActive: true },
+    { name: "About", href: "/about", id: "about", isActive: true },
+    { name: "Courses", href: "/courses", id: "courses", isActive: true },
+    { name: "Students", href: "/students", id: "students", isActive: true },
+    { name: "Enquery", href: "/enquiry", id: "enquiry", isActive: true },
+    { name: "Gallery", href: "/gallery", id: "gallery", isActive: true },
+    { name: "Events", href: "/events", id: "events", isActive: true },
+    { name: "Guidance", href: "/guidance", id: "guidance", isActive: true },
+    { name: "Notice", href: "/notice", id: "notice", isActive: true },
+    { name: "Contact", href: "/contact", id: "contact", isActive: true },
   ];
 
-  // Merge logic: Use settings.navigation but inject Notice/Franchise if missing
-  let navItems = settings.navigation ? [...settings.navigation] : defaultItems;
-  
-  if (settings.navigation) {
-    const hasEvents = navItems.some((item: any) => item.id === "events" || item.name === "Events");
-    if (!hasEvents) {
-      const contactIdx = navItems.findIndex((item: any) => item.id === "contact");
-      if (contactIdx !== -1) navItems.splice(contactIdx, 0, { name: "Events", href: "/events", id: "events", isActive: true });
-      else navItems.push({ name: "Events", href: "/events", id: "events", isActive: true });
-    }
+  // Logic: Use settings.navigation if provided, otherwise use defaultItems
+  // If settings.navigation exists, we still ensure the requested items are present or updated
+  let navItems = settings.navigation && settings.navigation.length > 0 
+    ? [...settings.navigation] 
+    : [...defaultItems];
 
-    const hasNotice = navItems.some((item: any) => item.id === "notice" || item.name === "Notice");
-    if (!hasNotice) {
-      const contactIdx = navItems.findIndex((item: any) => item.id === "contact");
-      if (contactIdx !== -1) navItems.splice(contactIdx, 0, { name: "Notice", href: "/notice", id: "notice", isActive: true });
-      else navItems.push({ name: "Notice", href: "/notice", id: "notice", isActive: true });
-    }
+  // If using settings.navigation, we should remove 'Franchise' if it exists
+  if (settings.navigation) {
+    navItems = navItems.filter((item: any) => 
+      item.id !== "franchise" && item.name?.toLowerCase() !== "franchise"
+    );
     
-    const hasFranchise = navItems.some((item: any) => item.id === "franchise" || item.name === "Franchise");
-    if (!hasFranchise) {
-      const contactIdx = navItems.findIndex((item: any) => item.id === "contact");
-      if (contactIdx !== -1) navItems.splice(contactIdx, 0, { name: "Franchise", href: "/franchise", id: "franchise", isActive: true });
-      else navItems.push({ name: "Franchise", href: "/franchise", id: "franchise", isActive: true });
-    }
+    // Ensure all requested items exist even if they were manually removed from settings
+    const requiredIds = ["home", "about", "courses", "students", "enquiry", "gallery", "events", "guidance", "notice", "contact"];
+    requiredIds.forEach(id => {
+      const exists = navItems.some((item: any) => item.id === id);
+      if (!exists) {
+        const def = defaultItems.find(d => d.id === id);
+        if (def) navItems.push(def);
+      }
+    });
   }
 
   // Final filter for visibility

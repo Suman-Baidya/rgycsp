@@ -1,5 +1,5 @@
 import { LandingNavbar } from "@/components/layout/LandingNavbar";
-import { LandingFooter } from "@/components/layout/LandingFooter";
+import { MainFooter } from "@/components/layout/MainFooter";
 import { HeroSection } from "@/components/landing/HeroSection";
 import { AboutSection } from "@/components/landing/AboutSection";
 import { WhyChooseUs } from "@/components/landing/WhyChooseUs";
@@ -57,7 +57,7 @@ export default async function RootLandingPage() {
         {isSectionActive("contact") && <ContactSection data={getSectionData("contact")} settings={settings} />}
       </main>
 
-      <LandingFooter settings={settings} />
+      <MainFooter settings={settings} />
     </div>
   );
 }
