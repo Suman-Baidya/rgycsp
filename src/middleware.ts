@@ -8,7 +8,7 @@ export default auth((req) => {
   const url = req.nextUrl;
   
   // Get hostname of request
-  let hostname = req.headers.get("host") || "";
+  const hostname = req.headers.get("host") || "";
   
   // Clean up local development hostnames
   const localDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "localhost:3000";
