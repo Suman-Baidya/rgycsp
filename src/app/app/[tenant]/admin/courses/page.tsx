@@ -30,7 +30,7 @@ export default async function CoursesPage({
       
       <CourseList 
         workspaceId={workspace.id} 
-        initialCourses={coursesResult.success ? coursesResult.data : []} 
+        initialCourses={coursesResult.data ?? []} 
       />
     </div>
   );

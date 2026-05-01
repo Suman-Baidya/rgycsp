@@ -42,10 +42,10 @@ export default async function StudentsPage({
   return (
     <StudentsDashboardClient 
       workspaceId={workspace.id}
-      initialStudents={studentsResult.success ? studentsResult.data : []}
+      initialStudents={studentsResult.data ?? []}
       batches={batches}
       applications={workspace.admissionApps || []}
-      config={config}
+      config={configResult.data ?? {}}
       pendingCount={pendingCount}
     />
   );

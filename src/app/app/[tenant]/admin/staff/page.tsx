@@ -29,7 +29,7 @@ export default async function StaffPage({
       
       <StaffList 
         workspaceId={workspace.id} 
-        initialStaff={staffResult.success ? staffResult.data : []} 
+        initialStaff={staffResult.data ?? []} 
       />
     </div>
   );
