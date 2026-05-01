@@ -38,7 +38,7 @@ export function WorkspaceEvents({ data }: { data: any }) {
 
   return (
     <section id="events" className="py-24 bg-slate-50/50 dark:bg-white/[0.02] px-6">
-      <div className="container mx-auto">
+      <div className="max-w-7xl mx-auto">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
           <div className="space-y-4 max-w-2xl">
             <div className="inline-flex items-center gap-3 text-primary font-black tracking-[0.2em] text-[10px] uppercase">
@@ -79,7 +79,12 @@ export function WorkspaceEvents({ data }: { data: any }) {
                   <div className="absolute top-4 left-4">
                     <div className="bg-white/90 dark:bg-zinc-900/90 backdrop-blur-sm p-3 rounded-2xl text-center shadow-lg border border-white/20">
                       <div className="text-xs font-black text-primary uppercase tracking-tighter">
-                        {new Date(event.date).toLocaleDateString('en-GB', { month: '2-digit', year: 'numeric' })}
+                        {/* Stable date formatting for hydration */}
+                        {(() => {
+                          const d = new Date(event.date);
+                          const months = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
+                          return `${months[d.getMonth()]} ${d.getFullYear()}`;
+                        })()}
                       </div>
                       <div className="text-xl font-black text-slate-900 dark:text-white">
                         {new Date(event.date).getDate().toString().padStart(2, '0')}
@@ -91,13 +96,17 @@ export function WorkspaceEvents({ data }: { data: any }) {
                   <h3 className="text-2xl font-black tracking-tight group-hover:text-primary transition-colors line-clamp-2 leading-tight">
                     {event.title}
                   </h3>
-
+  
                   <div className="space-y-3 pt-2">
                     <div className="flex items-center gap-3 text-slate-600 dark:text-slate-400 font-medium">
                       <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
                         <Calendar className="h-4 w-4" />
                       </div>
-                      {new Date(event.date).toLocaleDateString('en-GB')}
+                      {/* Stable date formatting for hydration */}
+                      {(() => {
+                        const d = new Date(event.date);
+                        return `${d.getDate().toString().padStart(2, '0')}/${(d.getMonth() + 1).toString().padStart(2, '0')}/${d.getFullYear()}`;
+                      })()}
                     </div>
                     <div className="flex items-center gap-3 text-slate-600 dark:text-slate-400 font-medium">
                       <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary">

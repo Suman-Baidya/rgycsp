@@ -11,7 +11,7 @@ export function AboutNoticeSection({ data }: { data: any }) {
   const content = data?.content || {};
 
   return (
-    <section className="py-24 px-6 container mx-auto">
+    <section className="py-24 px-6 max-w-7xl mx-auto">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-16">
         {/* Left Side: About Us */}
         <div className="lg:col-span-2 space-y-8">

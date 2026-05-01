@@ -16,8 +16,8 @@ export function WorkspaceHero({ data }: { data: any }) {
       title: "Empowering Smart Learning with Tech",
       description: "Experience a next-generation learning environment equipped with state-of-the-art facilities and expert-led mentorship.",
       offerImage: "https://cdn.pixabay.com/photo/2016/06/06/06/14/limited-time-offer-1438906_1280.png",
-      btn1Text: "Get Started",
-      btn1Link: "/login",
+      btn1Text: "Admission",
+      btn1Link: "/admission",
       btn2Text: "Learn More",
       btn2Link: "/about"
     },
@@ -67,7 +67,7 @@ export function WorkspaceHero({ data }: { data: any }) {
         </AnimatePresence>
       </div>
 
-      <div className="relative z-10 container mx-auto px-8 pt-8 grid grid-cols-1 lg:grid-cols-[1.3fr_0.7fr] items-center gap-12">
+      <div className="relative z-10 max-w-7xl mx-auto px-6 pt-8 grid grid-cols-1 lg:grid-cols-[1.3fr_0.7fr] items-center gap-12">
         {/* Left Content */}
         <motion.div
           key={`content-${currentSlide}`}
@@ -138,6 +138,7 @@ export function WorkspaceHero({ data }: { data: any }) {
             {slides.map((_: any, i: number) => (
               <button
                 key={i}
+                suppressHydrationWarning
                 onClick={() => setCurrentSlide(i)}
                 className={cn(
                   "h-1 rounded-full transition-all duration-1000",

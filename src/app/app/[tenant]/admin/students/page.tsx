@@ -1,7 +1,8 @@
 import { db } from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import { getStudents } from "@/app/actions/students";
-import StudentList from "./StudentList";
+import { getAdmissionConfig } from "@/app/actions/admission-config";
+import StudentsDashboardClient from "./StudentsDashboardClient";
 
 export default async function StudentsPage({
   params
@@ -9,9 +10,15 @@ export default async function StudentsPage({
   params: Promise<{ tenant: string }>;
 }) {
   const { tenant } = await params;
+  const normalizedTenant = tenant?.toLowerCase();
 
   const workspace = await db.workspace.findUnique({
-    where: { subdomain: tenant }
+    where: { subdomain: normalizedTenant },
+    include: {
+      admissionApps: {
+        orderBy: { createdAt: "desc" }
+      }
+    }
   });
 
   if (!workspace) notFound();
@@ -22,20 +29,25 @@ export default async function StudentsPage({
     select: { id: true, name: true }
   });
 
+  const configResult = await getAdmissionConfig(workspace.id);
+  const config = configResult.success ? configResult.data : {};
+
+  const pendingCount = await db.admissionApplication.count({
+    where: { 
+      workspaceId: workspace.id,
+      status: "PENDING"
+    }
+  });
+
   return (
-    <div className="p-4 lg:p-10">
-      <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Students Management</h1>
-          <p className="text-muted-foreground mt-1">Manage enrollments, batches, and student records.</p>
-        </div>
-      </div>
-      
-      <StudentList 
-        workspaceId={workspace.id} 
-        initialStudents={studentsResult.success ? studentsResult.data : []} 
-        batches={batches}
-      />
-    </div>
+    <StudentsDashboardClient 
+      workspaceId={workspace.id}
+      initialStudents={studentsResult.success ? studentsResult.data : []}
+      batches={batches}
+      applications={workspace.admissionApps || []}
+      config={config}
+      pendingCount={pendingCount}
+    />
   );
 }
+

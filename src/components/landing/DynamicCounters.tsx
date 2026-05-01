@@ -20,7 +20,7 @@ export function DynamicCounters({ data }: { data: any }) {
   return (
     <section className="py-20 bg-zinc-950 dark:bg-zinc-900/50 text-white relative overflow-hidden border-y border-white/5">
       <div className="absolute inset-0 bg-primary/10 opacity-30" />
-      <div className="w-full px-8 md:px-24 relative z-10">
+      <div className="max-w-7xl mx-auto px-6 relative z-10">
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-12 md:gap-24">
           {stats.map((stat: any, i: number) => {
             const Icon = iconMap[stat.icon] || Users;

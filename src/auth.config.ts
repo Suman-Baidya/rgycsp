@@ -40,6 +40,18 @@ export default {
         token.role = session.user.role;
       }
       return token;
+    },
+    async redirect({ url, baseUrl }) {
+      // Allows relative paths
+      if (url.startsWith("/")) return `${baseUrl}${url}`
+      // Allows absolute URLs that match the current origin (including subdomains)
+      // This is crucial for multi-tenant setups
+      const urlHost = new URL(url).host;
+      const baseHost = new URL(baseUrl).host;
+      if (urlHost.endsWith(baseHost) || baseHost.endsWith(urlHost)) {
+        return url
+      }
+      return baseUrl
     }
   },
   session: { strategy: "jwt" } // Use JWT for Edge compatibility and lower DB overhead

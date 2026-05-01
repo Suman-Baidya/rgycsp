@@ -13,7 +13,8 @@ datasource db {
 model User {
   id            String     @id @default(cuid())
   name          String?
-  email         String     @unique
+  username      String?    @unique // Added for students (Application No)
+  email         String?    @unique // Made optional for students
   emailVerified DateTime?
   image         String?
   passwordHash  String?
@@ -26,6 +27,7 @@ model User {
   sessions       Session[]
   workspaceRoles WorkspaceRole[]
   studentProfile StudentProfile?
+  notifications  Notification[]
 }
 
 enum SystemRole {
@@ -58,6 +60,9 @@ model Workspace {
   siteSettings    SiteSettings?
   events          Event[]
   galleryItems    GalleryItem[]
+  admissionConfig AdmissionFormConfig?
+  admissionApps   AdmissionApplication[]
+  notifications   Notification[]
 }
 
 // ============================================
@@ -65,31 +70,30 @@ model Workspace {
 // ============================================
 
 model SiteSettings {
-  id            String  @id @default(cuid())
-  workspaceId   String? @unique // null means global site settings
-  siteName      String?
-  logoUrl       String?
-  primaryColor  String?
-  accentColor   String?
-  fontFamily    String?
-  
-  contactEmail  String?
-  contactPhone  String?
-  whatsapp      String?
-  address       String?
-  googleMapLink String?
+  id           String  @id @default(cuid())
+  workspaceId  String? @unique // null means global site settings
+  siteName     String?
+  logoUrl      String?
+  primaryColor String?
+  accentColor  String?
+  fontFamily   String?
+
+  contactEmail     String?
+  contactPhone     String?
+  whatsapp         String?
+  address          String?
+  googleMapLink    String?
   brandDescription String?
-  socialLinks   Json?   // { facebook, twitter, instagram, linkedin, youtube }
+  socialLinks      Json? // { facebook, twitter, instagram, linkedin, youtube }
   pageHeaderBanner String?
 
+  navigation   Json? // [{ label: 'Home', href: '/', isActive: true }, ...]
+  navbarConfig Json? // { showNavbar, showTopBar, showMenus, ctaPrimary: {text, link}, ctaSecondary: {text, link} }
 
-  navigation    Json?   // [{ label: 'Home', href: '/', isActive: true }, ...]
-  navbarConfig  Json?   // { showNavbar, showTopBar, showMenus, ctaPrimary: {text, link}, ctaSecondary: {text, link} }
+  sections LandingSection[]
 
-  sections      LandingSection[]
-  
-  workspace     Workspace? @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-  
+  workspace Workspace? @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -97,16 +101,16 @@ model SiteSettings {
 model LandingSection {
   id             String  @id @default(cuid())
   siteSettingsId String
-  type           String  // hero, about, why-choose-us, achievements, partners, testimonials, faq, contact
+  type           String // hero, about, why-choose-us, achievements, partners, testimonials, faq, contact
   title          String?
   subtitle       String?
-  content        Json?   // component-specific data (e.g., slides for hero, items for achievements)
+  content        Json? // component-specific data (e.g., slides for hero, items for achievements)
   order          Int     @default(0)
   isActive       Boolean @default(true)
 
-  siteSettings   SiteSettings @relation(fields: [siteSettingsId], references: [id], onDelete: Cascade)
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @default(now()) @updatedAt
+  siteSettings SiteSettings @relation(fields: [siteSettingsId], references: [id], onDelete: Cascade)
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @default(now()) @updatedAt
 
   @@unique([siteSettingsId, type])
 }
@@ -125,7 +129,7 @@ model WorkspaceRole {
   workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
 
   @@unique([userId, workspaceId])
 }
@@ -150,17 +154,18 @@ model Course {
   title       String
   code        String?
   description String?
-  image       String?  // Banner/Thumbnail URL
+  image       String? // Banner/Thumbnail URL
   feeAmount   Float   @default(0) // Standard fee amount
-  
-  category    String?  // e.g. "Science", "Technology"
-  level       String?  // e.g. "Beginner", "Advanced"
-  duration    String?  // e.g. "6 Months"
-  topics      Json?    // [{ title: '...', items: ['...', '...'] }, ...]
-  isActive    Boolean  @default(true)
 
-  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-  batches   Batch[]
+  category String? // e.g. "Science", "Technology"
+  level    String? // e.g. "Beginner", "Advanced"
+  duration String? // e.g. "6 Months"
+  topics   Json? // [{ title: '...', items: ['...', '...'] }, ...]
+  isActive Boolean @default(true)
+
+  workspace     Workspace              @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  batches       Batch[]
+  admissionApps AdmissionApplication[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -197,11 +202,19 @@ model StudentProfile {
   dob           DateTime?
   gender        String?
   phone         String?
+  email         String?
+  whatsapp      String?
   parentName    String?
   parentPhone   String?
   address       String?
   bloodGroup    String?
+  religion      String?
+  caste         String?
+  qualification Json?   // { name, year, percentage, board }
   admissionDate DateTime  @default(now())
+  applicationId String?   @unique
+
+  admissionApp AdmissionApplication? @relation(fields: [applicationId], references: [id], onDelete: SetNull)
 
   user      User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
   workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
@@ -321,25 +334,127 @@ model Event {
   time        String?
   location    String?
   image       String?
-  category    String?  // Topic/Category for filtering
+  category    String? // Topic/Category for filtering
   isFeatured  Boolean  @default(false)
   isActive    Boolean  @default(true)
 
-  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
 model GalleryItem {
-  id          String   @id @default(cuid())
+  id          String  @id @default(cuid())
   workspaceId String
   title       String?
   image       String
-  category    String?  // e.g., Campus, Events, Sports
-  isActive    Boolean  @default(true)
+  category    String? // e.g., Campus, Events, Sports
+  isActive    Boolean @default(true)
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ============================================
+// Student Admission System
+// ============================================
+
+model AdmissionFormConfig {
+  id          String @id @default(cuid())
+  workspaceId String @unique
+
+  // JSON array of field names that are explicitly disabled. If empty/null, all default fields are enabled.
+  disabledFields Json?
+
+  // Instructions or terms to display at the beginning/end of the form
+  instructions   String? @db.Text
+  successMessage String? @db.Text
   
-  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  // Dynamic Content for PDF and Portal
+  declarationText String? @db.Text
+  requiredDocs    Json?   // ["Aadhaar Card", "Birth Certificate", ...]
+
+  isActive Boolean @default(true)
+  enableEmailVerification Boolean @default(true)
+  customFields Json? // [{ id, label, type, required, options }]
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model AdmissionApplication {
+  id            String  @id @default(cuid())
+  applicationNo String  @unique // Auto-generated human-readable ID
+  workspaceId   String
+  courseId      String?
+  appliedCourse String? // To store the display name/fallback name
+
+  // Step 1: Personal
+  fullName     String
+  guardianName String?
+  dob          DateTime?
+  gender       String?
+  religion     String?
+  caste        String?
+
+  // Step 2: Contact & Address
+  address  Json? // { vill, po, ps, dist, pin, state }
+  mobile   String
+  whatsapp String?
+  email    String?
+
+  // Step 3: Education
+  qualification Json? // { name, year, percentage, board }
+
+  // Custom Data (New)
+  customData Json? // { fieldId: value }
+
+  // Step 4: Documents
+  photoUrl     String?
+  signatureUrl String?
+  idProofUrl   String?
+
+  // System Tracking
+  status          ApplicationStatus @default(PENDING)
+  tempPassword    String? // For applicant portal login
+  rejectionReason String?           @db.Text
+
+  workspace      Workspace       @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  course         Course?         @relation(fields: [courseId], references: [id], onDelete: SetNull)
+  studentProfile StudentProfile?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum ApplicationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+// ============================================
+// Internal Notifications
+// ============================================
+
+model Notification {
+  id          String  @id @default(cuid())
+  workspaceId String
+  userId      String? // If null, it's a broadcast to all workspace admins
+
+  title   String
+  message String  @db.Text
+  type    String  @default("INFO") // INFO, SUCCESS, WARNING, ERROR, APPLICATION
+  link    String? // Actionable link (e.g., /admin/students/applications/123)
+  isRead  Boolean @default(false)
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  user      User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

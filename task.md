@@ -1,0 +1,25 @@
+# Multi-Tenant Student Admission System Tasks
+
+- `[x]` 1. Database Schema Updates
+  - `[x]` Add `AdmissionApplication` model
+  - `[x]` Add `AdmissionFormConfig` model
+  - `[x]` Add `Notification` model
+  - `[x]` Run Prisma migration
+- `[x]` 2. Utilities & Server Actions
+  - `[x]` Implement Postal PIN code API integration
+  - `[x]` Implement Cloudinary upload wrapper with workspace-folder logic
+- `[x]` 3. Admin Configuration UI
+  - `[x]` Admission Form Settings Page (Enable/Disable fields, instructions)
+- `[x]` 4. Public Admission Form
+  - `[x]` Multi-step UI Component
+  - `[x]` Cloudinary integration (Photo, Sign, ID)
+  - `[x]` Form submission logic & credential generation
+- `[x]` 5. Applicant Tracking & PDF
+  - `[x]` Applicant Login Portal
+  - `[x]` Status Dashboard
+  - `[x]` A4 Printable PDF Generation
+- `[x]` 6. Admin Approval Workflow
+  - `[x]` Applications List View (Admin Dashboard)
+  - `[x]` Application Details View
+  - `[x]` Approval action (Convert to `StudentProfile` and `User`)
+- `[ ]` 7. Verification & Testing

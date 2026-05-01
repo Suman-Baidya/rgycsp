@@ -52,9 +52,10 @@ export function WorkspaceFooter({ settings, tenant: propTenant }: { settings?: a
   const brandDescription = settings?.brandDescription || "Providing quality education and digital resources to students. Your success is our mission.";
   
   const navLinks = settings?.navigation || [
-    { name: "Home", href: "/", id: "home" },
     { name: "About", href: "/about", id: "about" },
     { name: "Courses", href: "/courses", id: "courses" },
+    { name: "Admission", href: "/admission", id: "admission" },
+    { name: "Students", href: "/students", id: "students" },
     { name: "Contact", href: "/contact", id: "contact" }
   ];
 

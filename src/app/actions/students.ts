@@ -10,6 +10,9 @@ export async function getStudents(workspaceId: string) {
       include: {
         batch: {
           select: { name: true }
+        },
+        admissionApp: {
+          select: { appliedCourse: true, createdAt: true, email: true }
         }
       },
       orderBy: { createdAt: "desc" }
@@ -23,7 +26,11 @@ export async function getStudents(workspaceId: string) {
 
 export async function createStudent(workspaceId: string, data: any) {
   try {
-    const { fullName, enrollmentNo, phone, parentName, parentPhone, batchId } = data;
+    const { 
+      fullName, enrollmentNo, phone, email, whatsapp, 
+      dob, gender, religion, caste, bloodGroup, address,
+      parentName, parentPhone, batchId, qualification 
+    } = data;
 
     const student = await db.studentProfile.create({
       data: {
@@ -31,9 +38,18 @@ export async function createStudent(workspaceId: string, data: any) {
         fullName,
         enrollmentNo,
         phone,
+        email,
+        whatsapp,
+        dob: dob ? new Date(dob) : null,
+        gender,
+        religion,
+        caste,
+        bloodGroup,
+        address,
         parentName,
         parentPhone,
-        batchId: batchId || null,
+        batchId: batchId === "none" ? null : (batchId || null),
+        qualification: qualification || null,
       }
     });
 
@@ -42,5 +58,42 @@ export async function createStudent(workspaceId: string, data: any) {
   } catch (error: any) {
     console.error("Failed to create student:", error);
     return { success: false, error: error.message || "Failed to create student" };
+  }
+}
+
+export async function updateStudent(id: string, data: any) {
+  try {
+    const { 
+      fullName, enrollmentNo, phone, email, whatsapp, 
+      dob, gender, religion, caste, bloodGroup, address,
+      parentName, parentPhone, batchId, qualification 
+    } = data;
+
+    const student = await db.studentProfile.update({
+      where: { id },
+      data: {
+        fullName,
+        enrollmentNo,
+        phone,
+        email,
+        whatsapp,
+        dob: dob ? new Date(dob) : null,
+        gender,
+        religion,
+        caste,
+        bloodGroup,
+        address,
+        parentName,
+        parentPhone,
+        batchId: batchId === "none" ? null : (batchId || null),
+        qualification: qualification || null,
+      }
+    });
+
+    revalidatePath(`/app/[tenant]/admin/students`, "page");
+    return { success: true, data: student };
+  } catch (error: any) {
+    console.error("Failed to update student:", error);
+    return { success: false, error: error.message || "Failed to update student" };
   }
 }

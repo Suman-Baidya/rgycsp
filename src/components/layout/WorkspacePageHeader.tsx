@@ -14,7 +14,7 @@ interface WorkspacePageHeaderProps {
 export function WorkspacePageHeader({
   title,
   description,
-  breadcrumbs,
+  breadcrumbs = [],
   bgImage = "https://cdn.pixabay.com/photo/2016/01/19/01/42/library-1147815_1280.jpg",
   statusTitle = "LIVE",
   statusSub = "Updates"

@@ -8,11 +8,16 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-export async function uploadImage(file: string, folder: string = "ABCDEdutHub/general") {
-  console.log("Attempting upload to Cloudinary, folder:", folder);
+export async function uploadImage(file: string, folder: string = "general", workspaceName?: string) {
+  const baseFolder = "ABCDEduHub";
+  // Clean workspace name (remove spaces, special chars) to be safe for Cloudinary folder
+  const cleanWorkspace = workspaceName ? workspaceName.replace(/[^a-zA-Z0-9]/g, '_') : "global";
+  const finalFolder = `${baseFolder}/${cleanWorkspace}/${folder}`;
+  
+  console.log("Attempting upload to Cloudinary, folder:", finalFolder);
   try {
     const result = await cloudinary.uploader.upload(file, {
-      folder: folder,
+      folder: finalFolder,
       resource_type: "auto",
     });
     console.log("Upload successful:", result.secure_url);

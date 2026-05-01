@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { signOut } from "next-auth/react";
 
 export function WorkspaceSidebar({ tenant: propTenant }: { tenant?: string }) {
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -32,29 +33,31 @@ export function WorkspaceSidebar({ tenant: propTenant }: { tenant?: string }) {
   const getTenant = () => {
     if (propTenant) return propTenant;
     if (params?.tenant) return params.tenant as string;
-    if (pathname.startsWith('/app/')) return pathname.split('/')[2];
     
-    // Client-side fallback for subdomains
+    // Check hostname first (Subdomain Mode)
     if (typeof window !== 'undefined') {
       const hostname = window.location.hostname;
       const parts = hostname.split('.');
       if (parts.length >= 2 && !hostname.startsWith('localhost')) {
         return parts[0];
       }
-      // Special case for tenant.localhost
       if (hostname.endsWith('.localhost')) {
         return hostname.replace('.localhost', '');
       }
     }
+
+    // Fallback to pathname (Subdirectory Mode)
+    if (pathname.startsWith('/app/')) return pathname.split('/')[2];
+    
     return "";
   };
 
   const tenant = getTenant();
   const displayTenant = tenant || "Workspace";
 
-  // Determine if we are in subdirectory mode (/app/tenant/...) or subdomain mode (tenant.domain.com/...)
   const isSubdirectoryMode = pathname.startsWith('/app/');
-  const adminBase = (isSubdirectoryMode && tenant) ? `/app/${tenant}/admin` : `/admin`;
+  const workspaceBase = isSubdirectoryMode ? `/app/${tenant}` : '';
+  const adminBase = isSubdirectoryMode ? `${workspaceBase}/admin` : `/admin`;
 
   const navItems = [
     { name: "Overview", href: adminBase, icon: LayoutDashboard },
@@ -202,28 +205,34 @@ export function WorkspaceSidebar({ tenant: propTenant }: { tenant?: string }) {
 
         {/* Footer */}
         <div className={cn("border-t border-white/5 transition-all duration-300", isCollapsed ? "p-2" : "p-4")}>
-          <Link href="/login">
-            <div className={cn(
+          <div 
+            onClick={async () => {
+              const origin = typeof window !== 'undefined' ? `${window.location.protocol}//${window.location.host}` : '';
+              const target = `${origin}${workspaceBase || '/'}`;
+              await signOut({ redirect: false });
+              window.location.href = target;
+            }}
+            className={cn(
               "flex items-center gap-3 rounded-xl hover:bg-red-500/10 hover:text-red-500 transition-all cursor-pointer group relative overflow-hidden",
               isCollapsed ? "justify-center h-12 w-12 mx-auto" : "px-3 py-3"
-            )}>
-              <LogOut className="h-5 w-5 flex-shrink-0" />
-              {!isCollapsed && (
-                <motion.span 
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  className="font-medium"
-                >
-                  Logout
-                </motion.span>
-              )}
-              {isCollapsed && (
-                <div className="absolute left-full ml-4 px-2 py-1 bg-zinc-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50 whitespace-nowrap border border-white/10 shadow-xl">
-                  Logout
-                </div>
-              )}
-            </div>
-          </Link>
+            )}
+          >
+            <LogOut className="h-5 w-5 flex-shrink-0" />
+            {!isCollapsed && (
+              <motion.span 
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                className="font-medium"
+              >
+                Logout
+              </motion.span>
+            )}
+            {isCollapsed && (
+              <div className="absolute left-full ml-4 px-2 py-1 bg-zinc-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50 whitespace-nowrap border border-white/10 shadow-xl">
+                Logout
+              </div>
+            )}
+          </div>
         </div>
       </motion.aside>
     </>

@@ -68,6 +68,7 @@ export function WorkspaceFaq({ data }: { data?: any }) {
             >
               <button 
                 onClick={() => setActiveIndex(activeIndex === i ? null : i)}
+                suppressHydrationWarning
                 className="w-full p-8 flex items-center justify-between text-left focus:outline-none"
               >
                 <span className="text-xl font-bold pr-8">{faq.question}</span>
