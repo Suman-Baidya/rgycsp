@@ -7,7 +7,7 @@ export function WorkspaceAchievements({ data }: { data?: any }) {
   const content = data?.content || {};
   const title = data?.title || "Our Pride & Achievements";
   const subtitle = data?.subtitle || "Success Stories";
-  const description = content.description || "Over the years, our students and faculty have consistently set new benchmarks in academic and extra-curricular excellence.";
+  const description = content.description || "Over the years, our learners and faculty have consistently set new benchmarks in academic and extra-curricular excellence.";
 
   const iconMap: any = { Trophy, Star, Users, BookOpen, GraduationCap, Award, CheckCircle, Zap };
 
@@ -19,7 +19,7 @@ export function WorkspaceAchievements({ data }: { data?: any }) {
   ];
 
   const gallery = (content.items && content.items.length > 0) ? content.items : [
-    { src: "https://cdn.pixabay.com/photo/2015/02/24/00/43/medal-646943_1280.jpg", title: "National Rankers", description: "Our students secured top ranks in national competitive exams." },
+    { src: "https://cdn.pixabay.com/photo/2015/02/24/00/43/medal-646943_1280.jpg", title: "National Rankers", description: "Our learners secured top ranks in national competitive exams." },
     { src: "https://cdn.pixabay.com/photo/2024/05/20/08/46/ai-generated-8774244_1280.jpg", title: "Innovation Award", description: "Winning the state level inter-college innovation fest." },
     { src: "https://cdn.pixabay.com/photo/2023/09/12/11/22/ai-generated-8248622_1280.jpg", title: "Global Recognition", description: "Excellence in international academic collaboration." },
   ];

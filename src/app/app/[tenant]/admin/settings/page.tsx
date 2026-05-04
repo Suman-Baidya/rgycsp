@@ -44,7 +44,7 @@ export default async function WorkspaceSettingsPage({ params }: { params: Promis
           { name: "Home", href: "/", id: "home", isActive: true },
           { name: "About", href: "/about", id: "about", isActive: true },
           { name: "Courses", href: "/courses", id: "courses", isActive: true },
-          { name: "Students", href: "/students", id: "students", isActive: true },
+          { name: "Learners", href: "/learners", id: "learners", isActive: true },
           { name: "Notice", href: "/notice", id: "notice", isActive: true },
           { name: "Events", href: "/events", id: "events", isActive: true },
           { name: "Franchise", href: "/franchise", id: "franchise", isActive: true },

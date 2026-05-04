@@ -5,8 +5,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Bell, ArrowRight, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { getTenantLink, detectTenant } from "@/lib/routing";
+import { usePathname } from "next/navigation";
 
 export function AboutNoticeSection({ data }: { data: any }) {
+  const pathname = usePathname();
+  const tenant = detectTenant(pathname, typeof window !== 'undefined' ? window.location.hostname : undefined);
+  const getLink = (path: string) => getTenantLink(path, tenant, pathname);
+
   const notices = data?.content?.notices || [];
   const content = data?.content || {};
 
@@ -28,20 +34,20 @@ export function AboutNoticeSection({ data }: { data: any }) {
             ) : (
               <>
                 <p>Since our establishment, we have been committed to providing top-notch education that blends traditional values with modern innovation.</p>
-                <p>Our curriculum is designed by industry experts to ensure that every student is equipped with the skills and knowledge required to excel in their chosen career path. We believe in holistic development, fostering academic excellence alongside critical thinking and leadership.</p>
+                <p>Our curriculum is designed by industry experts to ensure that every learner is equipped with the skills and knowledge required to excel in their chosen career path. We believe in holistic development, fostering academic excellence alongside critical thinking and leadership.</p>
               </>
             )}
           </div>
           
           <div className="pt-4 flex flex-wrap gap-4">
-            <Link href={content.btnLink || "/about"}>
+            <Link href={getLink(content.btnLink || "/about")}>
               <Button size="lg" className="rounded-full gap-3 px-10 h-14 font-black shadow-xl shadow-primary/20 hover:scale-105 transition-all group">
                 {content.btnText || "Discover More"}
                 <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
               </Button>
             </Link>
             
-            <Link href="/courses">
+            <Link href={getLink("/courses")}>
               <Button size="lg" variant="outline" className="rounded-full gap-3 px-10 h-14 font-black hover:bg-primary/5 border-primary/20 transition-all">
                 Our Programs
               </Button>
@@ -80,7 +86,7 @@ export function AboutNoticeSection({ data }: { data: any }) {
                 ))}
               </div>
               <div className="p-4 bg-muted/30">
-                <Link href="/notice">
+                <Link href={getLink("/notice")}>
                   <Button variant="ghost" className="w-full text-xs font-black uppercase tracking-widest text-primary hover:bg-primary/10 transition-all">
                     View All Notifications
                   </Button>

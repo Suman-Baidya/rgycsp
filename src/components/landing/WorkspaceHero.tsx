@@ -6,8 +6,11 @@ import { Button } from "@/components/ui/button";
 import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
+import { getTenantLink, detectTenant } from "@/lib/routing";
+import { usePathname } from "next/navigation";
 
 export function WorkspaceHero({ data }: { data: any }) {
+  const pathname = usePathname();
   const [currentSlide, setCurrentSlide] = useState(0);
   const slides = (data?.content?.slides && data.content.slides.length > 0) ? data.content.slides : [
     {
@@ -43,6 +46,10 @@ export function WorkspaceHero({ data }: { data: any }) {
   }, [slides.length]);
 
   const slide = slides[currentSlide];
+  
+  // Robust tenant detection
+  const tenant = detectTenant(pathname, typeof window !== 'undefined' ? window.location.hostname : undefined);
+  const getLink = (path: string) => getTenantLink(path, tenant, pathname);
 
   return (
     <section className="relative w-full h-screen min-h-[700px] overflow-hidden bg-zinc-950 flex items-center">
@@ -95,7 +102,7 @@ export function WorkspaceHero({ data }: { data: any }) {
 
           <div className="flex flex-wrap items-center gap-6 pt-4">
             {slide.btn1Text && (
-               <Link href={slide.btn1Link || "/login"}>
+               <Link href={getLink(slide.btn1Link || "/login")}>
                 <Button size="lg" className="w-full sm:w-[220px] bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl h-16 text-lg font-bold shadow-2xl shadow-primary/20 transition-all hover:scale-[1.02] active:scale-95 group">
                   {slide.btn1Text}
                   <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
@@ -103,7 +110,7 @@ export function WorkspaceHero({ data }: { data: any }) {
               </Link>
             )}
             {slide.btn2Text && (
-              <Link href={slide.btn2Link || "/about"}>
+              <Link href={getLink(slide.btn2Link || "/about")}>
                 <Button size="lg" variant="outline" className="w-full sm:w-[220px] border-white/10 text-primary hover:text-primary hover:bg-primary/5 rounded-xl h-16 text-lg font-bold backdrop-blur-xl transition-all hover:scale-[1.02] active:scale-95">
                   {slide.btn2Text}
                 </Button>

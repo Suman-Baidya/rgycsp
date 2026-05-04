@@ -7,8 +7,14 @@ import { ArrowRight, Star, Clock, BookOpen, Users } from "lucide-react";
 import { motion } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
+import { getTenantLink, detectTenant } from "@/lib/routing";
+import { usePathname } from "next/navigation";
 
 export function WorkspaceCourses({ data, dbCourses }: { data: any, dbCourses?: any[] }) {
+  const pathname = usePathname();
+  const tenant = detectTenant(pathname, typeof window !== 'undefined' ? window.location.hostname : undefined);
+  const getLink = (path: string) => getTenantLink(path, tenant, pathname);
+  
   const hasDbCourses = dbCourses && dbCourses.length > 0;
   
   const courses = hasDbCourses
@@ -69,7 +75,7 @@ export function WorkspaceCourses({ data, dbCourses }: { data: any, dbCourses?: a
               {data?.content?.description || "Unlock your potential with our meticulously crafted curriculum and expert-led training."}
             </p>
           </div>
-          <Link href="/courses">
+          <Link href={getLink("/courses")}>
             <Button size="lg" className="rounded-full gap-2 px-10 h-14 font-black shadow-xl shadow-primary/20 hover:scale-105 transition-all">
               View All Courses
               <ArrowRight className="h-5 w-5" />
@@ -113,7 +119,7 @@ export function WorkspaceCourses({ data, dbCourses }: { data: any, dbCourses?: a
                     </div>
                     <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400">
                       <Users className="h-4 w-4" />
-                      <span className="text-xs font-bold">{course.students || "1.2K+"} Students</span>
+                      <span className="text-xs font-bold">{course.students || "1.2K+"} Learners</span>
                     </div>
                   </div>
 

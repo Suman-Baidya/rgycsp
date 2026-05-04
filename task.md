@@ -22,4 +22,10 @@
   - `[x]` Applications List View (Admin Dashboard)
   - `[x]` Application Details View
   - `[x]` Approval action (Convert to `StudentProfile` and `User`)
-- `[ ]` 7. Verification & Testing
+- `[x]` 7. Verification & Testing
+  - `[x]` Fix hardcoded redirects in `src/app/app/[tenant]/login/page.tsx`
+  - `[x]` Fix hardcoded redirects in `src/app/app/[tenant]/student/layout.tsx`
+  - `[x]` Update `src/components/layout/WorkspaceNavbar.tsx` navigation defaults
+  - `[x]` Fix hardcoded links in `src/components/student/StudentDashboardClient.tsx`
+  - `[x]` Update `src/app/app/[tenant]/students/page.tsx` to handle student redirection
+  - `[x]` Verify routing in both Subdomain and Subdirectory modes

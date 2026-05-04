@@ -12,14 +12,26 @@ import { getTenantLink, detectTenant } from "@/lib/routing";
 import { usePathname } from "next/navigation";
 
 import { useState, useEffect } from "react";
+import { getWorkspaceRole } from "@/app/actions/student";
 
-export function WorkspaceFooter({ settings, tenant: propTenant }: { settings?: any; tenant?: string }) {
+export function WorkspaceFooter({ settings, tenant: propTenant, user }: { settings?: any; tenant?: string; user?: any }) {
   const pathname = usePathname();
+  const [workspaceRole, setWorkspaceRole] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
   
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  useEffect(() => {
+    const fetchRole = async () => {
+      if (user?.id && settings?.workspaceId) {
+        const role = await getWorkspaceRole(settings.workspaceId, user.id);
+        setWorkspaceRole(role);
+      }
+    };
+    fetchRole();
+  }, [user, settings?.workspaceId]);
   
   // Robust tenant detection using unified utility
   const tenant = propTenant || detectTenant(pathname, typeof window !== 'undefined' ? window.location.hostname : undefined);
@@ -35,7 +47,7 @@ export function WorkspaceFooter({ settings, tenant: propTenant }: { settings?: a
   const socialLinks = settings?.socialLinks || {};
   const whatsapp = settings?.whatsapp;
   
-  const brandDescription = settings?.brandDescription || "Providing quality education and digital resources to students. Your success is our mission.";
+  const brandDescription = settings?.brandDescription || "Providing quality education and digital resources to learners. Your success is our mission.";
   
   // Link helper
   const getLink = (path: string) => getTenantLink(path, tenant, pathname);
@@ -44,7 +56,7 @@ export function WorkspaceFooter({ settings, tenant: propTenant }: { settings?: a
     { name: "About", href: "/about", id: "about" },
     { name: "Courses", href: "/courses", id: "courses" },
     { name: "Admission", href: "/admission", id: "admission" },
-    { name: "Students", href: "/students", id: "students" },
+    { name: "Learners", href: "/learners", id: "learners" },
     { name: "Contact", href: "/contact", id: "contact" }
   ];
 
@@ -63,7 +75,7 @@ export function WorkspaceFooter({ settings, tenant: propTenant }: { settings?: a
              <h3 className="text-3xl md:text-4xl font-black text-white tracking-tight leading-tight">
                Stay ahead with our <span className="text-primary">educational</span> insights
              </h3>
-             <p className="text-zinc-400 font-medium text-lg">Join 5,000+ students receiving weekly updates and career tips.</p>
+             <p className="text-zinc-400 font-medium text-lg">Join 5,000+ learners receiving weekly updates and career tips.</p>
           </div>
           <div className="flex flex-col sm:flex-row gap-3">
              <div className="relative flex-1 group">
@@ -101,9 +113,9 @@ export function WorkspaceFooter({ settings, tenant: propTenant }: { settings?: a
               </span>
             </Link>
             {mounted && tenant && (
-              <Link href={adminBase}>
+              <Link href={workspaceRole === "STUDENT" ? getLink("/student/dashboard") : adminBase}>
                 <Button variant="ghost" size="sm" className="text-[10px] font-bold tracking-widest text-white hover:bg-white/10 h-8">
-                  DASHBOARD
+                  {workspaceRole === "STUDENT" ? "LEARNER PORTAL" : "DASHBOARD"}
                 </Button>
               </Link>
             )}

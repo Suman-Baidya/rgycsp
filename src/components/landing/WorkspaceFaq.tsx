@@ -21,11 +21,11 @@ export function WorkspaceFaq({ data }: { data?: any }) {
     },
     {
       question: "Are there any scholarship programs available?",
-      answer: "We offer various merit-based and need-based scholarships. Students with exceptional academic records or sports achievements are encouraged to apply."
+      answer: "We offer various merit-based and need-based scholarships. Learners with exceptional academic records or sports achievements are encouraged to apply."
     },
     {
       question: "What is the placement record of the institute?",
-      answer: "We have an excellent placement record with 90%+ students placed in reputed organizations every year. Our average package has consistently increased year-on-year."
+      answer: "We have an excellent placement record with 90%+ learners placed in reputed organizations every year. Our average package has consistently increased year-on-year."
     }
   ];
 

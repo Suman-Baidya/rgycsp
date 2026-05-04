@@ -62,11 +62,9 @@ export default async function InstituteLandingPage({
         navigation: [
           { name: "Home", href: "/", id: "home", isActive: true },
           { name: "About", href: "/about", id: "about", isActive: true },
+          { name: "Learner", href: "/learners", id: "learner-public", isActive: true },
           { name: "Courses", href: "/courses", id: "courses", isActive: true },
-          { name: "Students", href: "/students", id: "students", isActive: true },
-          { name: "Notice", href: "/notice", id: "notice", isActive: true },
-          { name: "Events", href: "/events", id: "events", isActive: true },
-          { name: "Franchise", href: "/franchise", id: "franchise", isActive: true },
+          { name: "Gallery", href: "/gallery", id: "gallery", isActive: true },
           { name: "Contact", href: "/contact", id: "contact", isActive: true },
         ],
         navbarConfig: {
@@ -196,7 +194,7 @@ export default async function InstituteLandingPage({
       </main>
 
 
-      <WorkspaceFooter settings={mergedSettings} tenant={tenant} />
+      <WorkspaceFooter settings={mergedSettings} tenant={tenant} user={session?.user} />
     </div>
   );
 }

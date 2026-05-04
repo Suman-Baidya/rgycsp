@@ -39,7 +39,7 @@ export function WorkspaceSidebar({ tenant: propTenant }: { tenant?: string }) {
   const navItems = [
     { name: "Overview", href: adminBase, icon: LayoutDashboard },
     { name: "Staff & Roles", href: `${adminBase}/staff`, icon: UserCheck },
-    { name: "Students", href: `${adminBase}/students`, icon: Users },
+    { name: "Learners", href: `${adminBase}/students`, icon: Users },
     { name: "Courses", href: `${adminBase}/courses`, icon: BookOpen },
     { name: "Landing Page", href: `${adminBase}/settings`, icon: Building2 },
     { name: "Token Wallet", href: `${adminBase}/wallet`, icon: Wallet },

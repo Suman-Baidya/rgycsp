@@ -36,8 +36,8 @@ export async function getStudentProfile(workspaceId: string) {
 
     if (!user) return { success: false, error: "User not found" };
 
-    const workspaceRole = user.workspaceRoles[0];
-    if (!workspaceRole || workspaceRole.role !== "STUDENT") {
+    const isStudent = user.workspaceRoles.some(r => r.role === "STUDENT");
+    if (!isStudent) {
       return { success: false, error: "Access denied. Not a student of this workspace." };
     }
 

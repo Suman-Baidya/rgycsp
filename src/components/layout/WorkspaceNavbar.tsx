@@ -68,25 +68,41 @@ export function WorkspaceNavbar({ settings, user, tenant: propTenant }: { settin
   }, [user, settings.workspaceId]);
 
   const dashboardHref = workspaceRole === "STUDENT" ? studentBase : adminBase;
-  const dashboardLabel = workspaceRole === "STUDENT" ? "DASHBOARD" : "ADMIN";
+  const dashboardLabel = workspaceRole === "STUDENT" ? "Learner Portal" : "Dashboard";
 
   const socialLinks = settings.socialLinks || {};
   const defaultItems = [
     { name: "Home", href: "/", id: "home", isActive: true },
     { name: "About", href: "/about", id: "about", isActive: true },
+    { name: "Learner", href: "/learners", id: "learners-public", isActive: true },
     { name: "Courses", href: "/courses", id: "courses", isActive: true },
-    { name: "Students", href: "/students", id: "students", isActive: true },
-    { name: "Admission", href: "/admission", id: "admission", isActive: true },
     { name: "Gallery", href: "/gallery", id: "gallery", isActive: true },
-    { name: "Events", href: "/events", id: "events", isActive: true },
-    { name: "Guidance", href: "/guidance", id: "guidance", isActive: true },
-    { name: "Notice", href: "/notice", id: "notice", isActive: true },
     { name: "Contact", href: "/contact", id: "contact", isActive: true },
   ];
 
   let navItems = settings.navigation && settings.navigation.length > 0
     ? [...settings.navigation]
     : [...defaultItems];
+
+  // Force include 'Learner' if missing (for existing workspaces)
+  const hasLearner = navItems.some((item: any) =>
+    item.href === '/learners' || item.name.toLowerCase() === 'learner' || item.id === 'learners-public'
+  );
+
+  if (!hasLearner && settings.navigation && settings.navigation.length > 0) {
+    // Add it after About if possible, else at the end
+    const aboutIndex = navItems.findIndex((item: any) => item.name.toLowerCase() === 'about');
+    if (aboutIndex !== -1) {
+      navItems.splice(aboutIndex + 1, 0, { name: "Learner", href: "/learners", id: "learners-public", isActive: true });
+    } else {
+      navItems.push({ name: "Learner", href: "/learners", id: "learners-public", isActive: true });
+    }
+  }
+
+  // Explicitly remove any 'Students' menu item
+  navItems = navItems.filter((item: any) =>
+    item.name.toLowerCase() !== 'students' && item.href !== '/students'
+  );
 
   const visibleNavItems = navItems.filter((item: any) => item.isActive !== false);
 
@@ -152,7 +168,7 @@ export function WorkspaceNavbar({ settings, user, tenant: propTenant }: { settin
   return (
     <div className="absolute top-0 left-0 w-full z-[100] flex flex-col">
       <CustomThemeStyle primaryColor={settings?.primaryColor} accentColor={settings?.accentColor} />
-      
+
       {/* Tier 1: Top Bar */}
       <AnimatePresence>
         {!isScrolled && (
@@ -204,16 +220,18 @@ export function WorkspaceNavbar({ settings, user, tenant: propTenant }: { settin
               {user ? (
                 <div className="flex items-center gap-5">
                   <Link href={dashboardHref}>
-                    <Button variant="ghost" className="text-[10px] font-black tracking-widest text-white hover:bg-white/10 h-10 px-6 border border-white/5 rounded-xl flex items-center gap-2 group/dash">
-                      <LayoutDashboard className="w-3.5 h-3.5 text-primary group-hover/dash:scale-110 transition-transform" />
+                    <Button className="text-[12px] font-bold uppercase tracking-wide bg-primary hover:bg-primary/90 text-primary-foreground h-10 px-6 rounded-xl flex items-center gap-2 group/dash shadow-lg shadow-primary/20 border-none transition-all">
+                      <LayoutDashboard className="w-3.5 h-3.5 group-hover/dash:rotate-12 transition-transform" />
                       {dashboardLabel}
                     </Button>
                   </Link>
                   <UserMenu />
                 </div>
               ) : (
-                <Link href={getLink("/login")}>
-                  <Button className="bg-primary hover:bg-primary/90 text-primary-foreground font-black px-8 h-11 rounded-lg text-xs tracking-widest shadow-xl shadow-primary/20 uppercase">LOGIN</Button>
+                <Link href={getLink(settings.navbarConfig?.ctaPrimary?.link || "/login")}>
+                  <Button className="bg-primary hover:bg-primary/90 text-primary-foreground font-black px-8 h-11 rounded-lg text-xs tracking-widest shadow-xl shadow-primary/20 uppercase">
+                    {settings.navbarConfig?.ctaPrimary?.text || "LOGIN"}
+                  </Button>
                 </Link>
               )}
               <Button variant="ghost" size="icon" className="lg:hidden text-white" onClick={() => setIsMobileMenuOpen(true)}>
@@ -266,7 +284,7 @@ export function WorkspaceNavbar({ settings, user, tenant: propTenant }: { settin
               })}
             </div>
           </div>
-          
+
           {/* Right: Auth / Dashboard */}
           <div className="flex justify-end">
             {isScrolled && (
@@ -274,15 +292,17 @@ export function WorkspaceNavbar({ settings, user, tenant: propTenant }: { settin
                 {user ? (
                   <div className="flex items-center gap-4">
                     <Link href={dashboardHref}>
-                      <Button variant="ghost" size="sm" className="text-[10px] font-black tracking-widest text-white h-8">
-                        {dashboardLabel}
+                      <Button size="icon" className="w-9 h-9 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl shadow-lg shadow-primary/20 border-none transition-all group/dash-scroll">
+                        <LayoutDashboard className="w-4 h-4 group-hover/dash-scroll:rotate-12 transition-transform" />
                       </Button>
                     </Link>
                     <UserMenu />
                   </div>
                 ) : (
-                  <Link href={getLink("/login")}>
-                    <Button size="sm" className="bg-primary text-primary-foreground font-black h-8 text-[10px] px-6">LOGIN</Button>
+                  <Link href={getLink(settings.navbarConfig?.ctaPrimary?.link || "/login")}>
+                    <Button size="sm" className="bg-primary text-primary-foreground font-black h-8 text-[10px] px-6">
+                      {settings.navbarConfig?.ctaPrimary?.text || "LOGIN"}
+                    </Button>
                   </Link>
                 )}
               </div>

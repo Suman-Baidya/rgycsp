@@ -8,7 +8,7 @@ export function WorkspaceWhyChooseUs({ data }: { data?: any }) {
   const content = data?.content || {};
   const title = data?.title || "Why Choose Our Institute?";
   const subtitle = data?.subtitle || "Excellence in Education";
-  const description = content.description || "We provide a nurturing environment where students can thrive academically and personally. Our commitment to excellence is reflected in our modern facilities and expert faculty.";
+  const description = content.description || "We provide a nurturing environment where learners can thrive academically and personally. Our commitment to excellence is reflected in our modern facilities and expert faculty.";
 
   const features = content.features || content.items || [
     { icon: "GraduationCap", title: "Expert Faculty", description: "Learn from industry professionals and experienced educators dedicated to your success." },
@@ -24,7 +24,7 @@ export function WorkspaceWhyChooseUs({ data }: { data?: any }) {
   const floatingCard = content.floatingCard || {
     icon: "Users",
     value: "10K+",
-    label: "Happy Students"
+    label: "Happy Learners"
   };
 
   const FloatingIcon = iconMap[floatingCard.icon] || Users;

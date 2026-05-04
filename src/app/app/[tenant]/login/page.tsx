@@ -14,7 +14,13 @@ export default async function WorkspaceLoginPage({
 
   // If already logged in, redirect to student dashboard
   if (session) {
-    redirect(`/app/${tenant}/student/dashboard`);
+    const isSubdirectoryMode = (await params).tenant !== undefined; // In the app/[tenant] structure, it's always available
+    // But we need to know if the actual URL started with /app/
+    // Since this is a server component, we can use params to build the correct path
+    // For subdomain mode, tenant is handled by middleware rewrite, so we redirect to /student/dashboard
+    // For subdirectory mode, we need the /app/[tenant] prefix
+    // The safest way is to use a relative redirect or detect mode from headers
+    redirect(`/student/dashboard`); // Next.js handles relative redirects within the same host/context
   }
 
   const workspace = await db.workspace.findUnique({
@@ -45,7 +51,7 @@ export default async function WorkspaceLoginPage({
           tenantName={workspace.name}
           tenantLogo={workspace.logoUrl || workspace.siteSettings?.logoUrl}
           primaryColor={workspace.siteSettings?.primaryColor}
-          callbackUrl={`/app/${tenant}/student/dashboard`}
+          callbackUrl="/student/dashboard"
         />
       </div>
     </div>

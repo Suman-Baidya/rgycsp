@@ -5,9 +5,11 @@ import { WorkspaceFooter } from "@/components/layout/WorkspaceFooter";
 import { WorkspacePageHeader } from "@/components/layout/WorkspacePageHeader";
 import { CustomThemeStyle } from "@/components/providers/CustomThemeStyle";
 import { auth } from "@/auth";
-import { GraduationCap, Users, BookOpen, Star } from "lucide-react";
+import { GraduationCap, Users, BookOpen, Star, ArrowRight } from "lucide-react";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
 
-export default async function WorkspaceStudentsPage({
+export default async function WorkspaceLearnersPage({
   params
 }: {
   params: Promise<{ tenant: string }>;
@@ -37,13 +39,13 @@ export default async function WorkspaceStudentsPage({
 
       <main className="flex-1 w-full">
         <WorkspacePageHeader 
-          title="Students Portal"
-          description="A dedicated space for our students to explore resources, track progress, and stay updated."
+          title="Learners Portal"
+          description="A dedicated space for our learners to explore resources, track progress, and stay updated."
           bgImage={workspace.siteSettings.pageHeaderBanner || "https://images.unsplash.com/photo-1523240715181-01489a943ee2?q=80&w=2070"}
-          statusTitle="STUDENT"
+          statusTitle="LEARNER"
           statusSub="Access Area"
           breadcrumbs={[
-            { name: "Students", href: "/students" }
+            { name: "Learners", href: "/learners" }
           ]}
         />
 
@@ -55,17 +57,26 @@ export default async function WorkspaceStudentsPage({
           
           <div className="space-y-6">
             <h2 className="text-4xl md:text-6xl font-black tracking-tight text-slate-900 dark:text-white">
-              Student Resources & Portal
+              Learner Resources & Portal
             </h2>
             <p className="text-slate-600 dark:text-slate-400 text-lg max-w-3xl mx-auto leading-relaxed">
-              We are currently building a premium digital experience for our students. Soon you'll be able to access your course materials, attendance, and certificates right here.
+              We are currently building a premium digital experience for our learners. Soon you'll be able to access your course materials, attendance, and certificates right here.
             </p>
+            {session?.user && (
+              <div className="pt-8">
+                <Link href="/student/dashboard">
+                  <Button size="lg" className="rounded-2xl h-14 px-10 font-black gap-3 shadow-xl shadow-primary/20 hover:scale-105 transition-all">
+                    Go to My Dashboard <ArrowRight className="w-5 h-5" />
+                  </Button>
+                </Link>
+              </div>
+            )}
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 pt-12">
             {[
               { icon: BookOpen, title: "LMS Integration", desc: "Access all your course videos and notes in one place." },
-              { icon: Users, title: "Community Forum", desc: "Interact with fellow students and faculty members." },
+              { icon: Users, title: "Community Forum", desc: "Interact with fellow learners and faculty members." },
               { icon: Star, title: "Performance Tracking", desc: "Monitor your grades and progress throughout the semester." }
             ].map((feature, i) => (
               <div key={i} className="p-10 rounded-[3rem] bg-slate-50 dark:bg-zinc-900 border border-border/40 space-y-6 hover:shadow-2xl transition-all duration-500">
@@ -80,7 +91,7 @@ export default async function WorkspaceStudentsPage({
         </div>
       </main>
 
-      <WorkspaceFooter settings={workspace.siteSettings} tenant={tenant} />
+      <WorkspaceFooter settings={workspace.siteSettings} tenant={tenant} user={session?.user} />
     </div>
   );
 }

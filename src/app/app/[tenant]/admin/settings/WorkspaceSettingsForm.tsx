@@ -51,7 +51,7 @@ export function WorkspaceSettingsForm({ settings }: { settings: any }) {
     { name: "Home", href: "/", id: "home", isActive: true },
     { name: "About", href: "/about", id: "about", isActive: true },
     { name: "Courses", href: "/courses", id: "courses", isActive: true },
-    { name: "Students", href: "/students", id: "students", isActive: true },
+    { name: "Learners", href: "/learners", id: "learners", isActive: true },
     { name: "Enquery", href: "/enquiry", id: "enquiry", isActive: true },
     { name: "Gallery", href: "/gallery", id: "gallery", isActive: true },
     { name: "Events", href: "/events", id: "events", isActive: true },

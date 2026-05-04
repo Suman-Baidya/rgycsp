@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { usePathname, useParams } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   LayoutDashboard,
@@ -13,17 +13,15 @@ import {
   Wallet,
   ChevronLeft,
   ChevronRight,
-  Menu,
-  X,
   LogOut,
-  GraduationCap,
   Building2,
+  FileText,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { signOut } from "next-auth/react";
 
-import { detectTenant, getWorkspaceBase, getTenantLink } from "@/lib/routing";
+import { detectTenant, getWorkspaceBase } from "@/lib/routing";
 
 export function StudentSidebar({ tenant: propTenant }: { tenant?: string }) {
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -31,7 +29,6 @@ export function StudentSidebar({ tenant: propTenant }: { tenant?: string }) {
   const [isMounted, setIsMounted] = useState(false);
   const pathname = usePathname();
   
-  // Robust tenant detection using unified utility
   const tenant = propTenant || detectTenant(pathname, typeof window !== 'undefined' ? window.location.hostname : undefined);
   const workspaceBase = getWorkspaceBase(tenant, pathname);
   const studentBase = `${workspaceBase}/student`;
@@ -40,6 +37,7 @@ export function StudentSidebar({ tenant: propTenant }: { tenant?: string }) {
     { name: "Overview", href: `${studentBase}/dashboard`, icon: LayoutDashboard },
     { name: "My Courses", href: `${studentBase}/courses`, icon: BookOpen },
     { name: "Attendance", href: `${studentBase}/attendance`, icon: Calendar },
+    { name: "Exams", href: `${studentBase}/exams`, icon: FileText },
     { name: "Fees & Invoices", href: `${studentBase}/fees`, icon: Wallet },
     { name: "Notices", href: `${studentBase}/notices`, icon: Bell },
     { name: "My Profile", href: `${studentBase}/profile`, icon: User },
@@ -57,12 +55,6 @@ export function StudentSidebar({ tenant: propTenant }: { tenant?: string }) {
 
   return (
     <>
-      <div className="lg:hidden fixed top-4 left-4 z-[60]">
-        <Button variant="outline" size="icon" onClick={toggleMobile} className="bg-background/80 backdrop-blur-md border-primary/20 shadow-lg">
-          <Menu className="h-5 w-5" />
-        </Button>
-      </div>
-
       <AnimatePresence>
         {isMobileOpen && (
           <motion.div
@@ -79,12 +71,10 @@ export function StudentSidebar({ tenant: propTenant }: { tenant?: string }) {
         initial={false}
         animate={{
           width: isCollapsed ? 80 : 280,
-          x: isMobileOpen ? 0 : (window.innerWidth < 1024 ? -300 : 0)
         }}
         transition={{ type: "spring", stiffness: 300, damping: 30 }}
         className={cn(
-          "fixed lg:sticky top-0 inset-y-0 left-0 z-[60] bg-slate-900 text-slate-400 border-r border-white/5 flex flex-col transition-all duration-300 ease-in-out h-screen overflow-x-hidden",
-          isMobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
+          "hidden lg:flex sticky top-0 inset-y-0 left-0 z-[60] bg-slate-900 text-slate-400 border-r border-white/5 flex-col transition-all duration-300 ease-in-out h-screen overflow-x-hidden",
         )}
       >
         <div className={cn(
@@ -165,7 +155,8 @@ export function StudentSidebar({ tenant: propTenant }: { tenant?: string }) {
           <div 
             onClick={async () => {
               const origin = typeof window !== 'undefined' ? `${window.location.protocol}//${window.location.host}` : '';
-              const target = `${origin}${workspaceBase || '/'}`;
+              const workspaceBaseUrl = workspaceBase || '/';
+              const target = `${origin}${workspaceBaseUrl}`;
               await signOut({ redirect: false });
               window.location.href = target;
             }}

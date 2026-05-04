@@ -14,12 +14,19 @@ const pathname = usePathname();
 const isSubdirectoryMode = pathname.startsWith('/app/');
 ```
 
-### How to generate Workspace Links:
-NEVER hardcode `/app/[tenant]` or assume a root path. Use a dynamic base:
+### How to generate Workspace Links (GOLD RULE):
+NEVER hardcode `/app/[tenant]` or assume a root path in components or redirects. Use the centralized `getTenantLink` utility or `WORKSPACE_ROUTES` constants:
 ```tsx
-const workspaceBase = isSubdirectoryMode ? `/app/${tenant}` : '';
-const finalLink = `${workspaceBase}/courses`;
+import { getTenantLink, WORKSPACE_ROUTES } from "@/lib/routing";
+
+// Correct way to generate a link:
+const finalLink = getTenantLink(WORKSPACE_ROUTES.COURSES, tenant, pathname);
+
+// Correct way to redirect (relative to host):
+redirect(WORKSPACE_ROUTES.STUDENT_DASHBOARD); 
 ```
+> [!CAUTION]
+> Hardcoding `/app/${tenant}/...` in redirects will BREAK subdomain mode (causing double-prefix 404s). Always use relative paths like `/student/dashboard` for internal redirects within a workspace context.
 
 ## 2. Context Separation
 - **Global Admin**: Routes starting with `/super-admin`. Data stored in `SiteSettings` with `workspaceId: null`.
@@ -29,6 +36,10 @@ const finalLink = `${workspaceBase}/courses`;
 ## 3. Data Integrity
 - **Legal Pages**: Global legal pages (`/legal/[slug]`) and Workspace legal pages (`/app/[tenant]/legal/[slug]`) are separate entities. DO NOT mix them.
 - **Help Center**: Workspaces have their own help center at `/help`. Global site uses `/support`.
+- **Student Routes**: 
+    - Public Info/Placeholder: `/students` (Plural)
+    - Private Portal/Dashboard: `/student/dashboard` (Singular)
+    - **Rule**: Navigation menus should link to `/student/dashboard` (Portal) for logged-in students to avoid the "Coming Soon" landing page.
 
 ## 4. UI/UX Standards
 - **Workspace Footer**: MUST remain high-contrast (Black background, White text) unless specifically asked to change.
@@ -40,5 +51,5 @@ const finalLink = `${workspaceBase}/courses`;
 
 ## 6. Prohibited Actions
 - DO NOT use `window.location` for navigation; use `next/link` or `useRouter`.
-- DO NOT modify the `proxy.ts` (middleware) unless explicitly investigating routing failures.
+- **Middleware Convention**: Next.js 16+ uses `src/proxy.ts` instead of `middleware.ts`. DO NOT create a `middleware.ts` file; all routing rewrites and auth protection must reside in `src/proxy.ts`.
 - DO NOT use global styles that could bleed into the workspace isolation.

@@ -6,8 +6,13 @@ import { Button } from "@/components/ui/button";
 import { Calendar, MapPin, ArrowRight, Clock } from "lucide-react";
 import { motion } from "framer-motion";
 import Link from "next/link";
+import { getTenantLink, detectTenant } from "@/lib/routing";
+import { usePathname } from "next/navigation";
 
 export function WorkspaceEvents({ data }: { data: any }) {
+  const pathname = usePathname();
+  const tenant = detectTenant(pathname, typeof window !== 'undefined' ? window.location.hostname : undefined);
+  const getLink = (path: string) => getTenantLink(path, tenant, pathname);
   const events = (data?.events && data.events.length > 0) ? data.events : [
     {
       title: "Annual Cultural Fest 2026",
@@ -52,7 +57,7 @@ export function WorkspaceEvents({ data }: { data: any }) {
               {description}
             </p>
           </div>
-          <Link href="/events">
+          <Link href={getLink("/events")}>
             <Button size="lg" className="rounded-full gap-2 px-10 h-14 font-black shadow-xl shadow-primary/20 hover:scale-105 transition-all">
               View All Events
               <ArrowRight className="h-5 w-5" />
@@ -122,7 +127,7 @@ export function WorkspaceEvents({ data }: { data: any }) {
                     </div>
                   </div>
 
-                  <Link href={`/events/${event.id}`}>
+                  <Link href={getLink(`/events/${event.id}`)}>
                     <Button variant="outline" className="w-full rounded-2xl h-12 font-bold group-hover:bg-primary group-hover:text-primary-foreground group-hover:border-primary transition-all">
                       Event Details
                     </Button>

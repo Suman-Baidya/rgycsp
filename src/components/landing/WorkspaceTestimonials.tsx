@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 
 export function WorkspaceTestimonials({ data }: { data?: any }) {
   const content = data?.content || {};
-  const title = data?.title || "What Our Students Say";
+  const title = data?.title || "What Our Learners Say";
   const subtitle = data?.subtitle || "Success Stories";
 
   const testimonials = (content.items && content.items.length > 0) ? content.items : [
@@ -20,7 +20,7 @@ export function WorkspaceTestimonials({ data }: { data?: any }) {
     },
     {
       name: "Priya Patel",
-      role: "MBA Student",
+      role: "MBA Learner",
       text: "Excellent infrastructure and very supportive environment. The practical exposure I got here was invaluable for my career growth.",
       avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=200",
       rating: 5,
@@ -28,7 +28,7 @@ export function WorkspaceTestimonials({ data }: { data?: any }) {
     },
     {
       name: "Rahul Verma",
-      role: "Diploma Student",
+      role: "Diploma Learner",
       text: "The training programs are very well structured. I learned a lot of technical skills that helped me secure a great job right after my diploma.",
       avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=200",
       rating: 4,
@@ -115,7 +115,7 @@ export function WorkspaceTestimonials({ data }: { data?: any }) {
                       {t.name}
                       <CheckCircle2 className="w-4 h-4 text-primary" />
                     </h4>
-                    <div className="text-xs font-bold text-primary uppercase tracking-widest">{t.role || t.course || "Student"}</div>
+                    <div className="text-xs font-bold text-primary uppercase tracking-widest">{t.role || t.course || "Learner"}</div>
                   </div>
                 </div>
               </div>

@@ -11,21 +11,21 @@ export default auth((req) => {
   const hostname = req.headers.get("host") || "";
   
   // 1. Detect the root domain dynamically
-  let localDomain = "";
   const rootEnv = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "";
+  let localDomain = "";
   
-  if (hostname.includes('localhost') || hostname.includes('127.0.0.1')) {
-    // For localhost, root is the base (e.g., localhost:3000)
+  if (rootEnv && hostname.endsWith(rootEnv)) {
+    // Priority 1: Use explicit Root Domain ENV if current host matches it
+    localDomain = rootEnv;
+  } else if (hostname.includes('localhost') || hostname.includes('127.0.0.1')) {
+    // Priority 2: Localhost development
     const parts = hostname.split('.');
     localDomain = parts.length > 1 ? parts.slice(1).join('.') : hostname;
-  } else if (rootEnv && hostname.endsWith(rootEnv)) {
-    // If env var is set and matches current host suffix
-    localDomain = rootEnv;
   } else {
-    // Production/Vercel fallback: extract root from hostname
+    // Priority 3: Dynamic extraction from Vercel or Custom Domains
     const parts = hostname.split('.');
     if (hostname.includes("vercel.app")) {
-      // tenant.project.vercel.app -> project.vercel.app
+      // Handles project.vercel.app or branch.project.vercel.app
       localDomain = parts.length > 3 ? parts.slice(1).join('.') : hostname;
     } else {
       // tenant.domain.com -> domain.com
