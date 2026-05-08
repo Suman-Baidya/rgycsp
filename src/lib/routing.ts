@@ -129,8 +129,8 @@ export function isActivePath(pathname: string, href: string, exact = false): boo
   if (p === h) return true;
 
   // For parent highlighting (e.g., /admin should highlight when on /admin/staff)
-  // But we must be careful not to highlight "/" on every page
-  if (h === "" || h === "/" || h.endsWith("/admin")) {
+  // But we must be careful not to highlight "/" or base admin routes on every sub-page
+  if (h === "" || h === "/" || h.endsWith("/admin") || h.endsWith("/super-admin")) {
     return p === h;
   }
 

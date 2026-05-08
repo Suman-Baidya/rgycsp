@@ -17,18 +17,20 @@ import {
   LogOut,
   ShieldCheck,
   Activity,
+  FileText
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { isActivePath } from "@/lib/routing";
+import { isActivePath, getTenantLink, detectTenant } from "@/lib/routing";
 
 const navItems = [
-  { name: "Overview", href: "/super-admin", icon: LayoutDashboard },
-  { name: "Workspaces", href: "/super-admin/workspaces", icon: Globe },
-  { name: "Users", href: "/super-admin/users", icon: Users },
-  { name: "Token Economy", href: "/super-admin/token-economy", icon: Coins },
-  { name: "System Logs", href: "/super-admin/logs", icon: Activity },
-  { name: "Settings", href: "/super-admin/settings", icon: Settings },
+  { name: "Overview", href: "/", icon: LayoutDashboard },
+  { name: "Workspaces", href: "/workspaces", icon: Globe },
+  { name: "Users", href: "/users", icon: Users },
+  { name: "Documents", href: "/documents", icon: FileText },
+  { name: "Token Economy", href: "/token-economy", icon: Coins },
+  { name: "System Logs", href: "/logs", icon: Activity },
+  { name: "Settings", href: "/settings", icon: Settings },
 ];
 
 export function AdminSidebar() {
@@ -126,9 +128,15 @@ export function AdminSidebar() {
         {/* Navigation */}
         <nav className="flex-1 py-6 px-4 space-y-2 overflow-y-auto overflow-x-hidden custom-scrollbar">
           {navItems.map((item) => {
-            const isActive = isActivePath(pathname, item.href);
+            const tenant = "super-admin";
+            // In subdomain mode, href should be relative to root. 
+            // In root domain mode, it must include /super-admin.
+            const isSubdomain = typeof window !== 'undefined' && window.location.host.startsWith('super-admin.');
+            const href = isSubdomain ? item.href : `/super-admin${item.href === "/" ? "" : item.href}`;
+            const isActive = isActivePath(pathname, href);
+            
             return (
-              <Link key={item.name} href={item.href}>
+              <Link key={item.name} href={href}>
                 <div
                   className={cn(
                     "flex items-center gap-3 transition-all duration-300 group relative overflow-hidden",

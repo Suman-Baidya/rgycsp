@@ -35,5 +35,5 @@ export const db =
 
 if (process.env.NODE_ENV !== "production") globalThis.prisma = db;
 
-// Trigger Next.js recompile to load the updated Prisma Client (Application relation added)
-// Last Updated: 2026-04-30T14:55:00Z
+// Trigger Next.js recompile to load the updated Prisma Client (DocumentTemplate added)
+// Last Updated: 2026-05-06T16:45:00Z

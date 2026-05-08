@@ -169,7 +169,7 @@ export function SettingsForm({ settings, isSuperAdmin = true }: { settings: any,
         </div>
 
         {/* ROW 2: Content (Premium Minimalist Cards) */}
-        <div className="w-full animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-4xl mx-auto px-4 sm:px-6">
+        <div className="w-full animate-in fade-in slide-in-from-bottom-4 duration-500 px-4 sm:px-6">
           
           <TabsContent value="branding" className="mt-0 w-full focus-visible:outline-none">
             <Accordion defaultValue={[]} className="space-y-6">
@@ -519,7 +519,7 @@ export function SettingsForm({ settings, isSuperAdmin = true }: { settings: any,
           </TabsContent>
 
           <TabsContent value="notices" className="mt-0 w-full focus-visible:outline-none">
-            <div className="space-y-10 max-w-4xl mx-auto">
+            <div className="space-y-10 pb-12 w-full mx-auto">
               <div className="flex flex-col gap-2">
                 <h2 className="text-2xl font-bold tracking-tight">Notice Board Management</h2>
                 <p className="text-muted-foreground text-sm">Manage live updates and notifications for your students and visitors.</p>

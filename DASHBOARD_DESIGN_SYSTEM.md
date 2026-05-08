@@ -62,7 +62,31 @@ Always use the `AdminPageHeader` component.
 
 ---
 
-## 4. Implementation Workflow
+## 4. Super Admin Dashboard
+*Used by platform developers and global managers.*
+
+### Global Context
+- **Layout**: Centered `max-w-7xl mx-auto` for all pages.
+- **Background**: `bg-slate-50 dark:bg-slate-950` with subtle patterns.
+- **Radius**: Heavy use of `rounded-[2.5rem]` (40px) for major cards and `rounded-2xl` for sub-components.
+
+### Navigation & Header
+- **Sidebar**: `AdminSidebar` (zinc-950/black based) for high-contrast global separation.
+- **Page Header**: Always use `AdminPageHeader` with `font-black` titles.
+
+### Visual Components
+- **Stats Cards**: 
+    - Container: `border-2 border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 rounded-[2rem]`
+    - Labels: `text-[10px] font-black uppercase tracking-widest text-slate-400`
+    - Values: `text-3xl font-black text-slate-900 dark:text-white tracking-tight`
+- **Charts**: Use `ChartContainer` with `rounded-[2.5rem]` wrappers and large `p-8` padding.
+- **Activity Logs**: 
+    - Item Container: `p-6 rounded-[1.5rem] hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-all`
+    - Icons: `h-12 w-12 rounded-2xl bg-[Color]/10` with matching icon color.
+
+---
+
+## 5. Implementation Workflow
 
 1.  **Routing Check**:
     - Server: `getServerTenantLink(path, tenant)`
@@ -71,36 +95,50 @@ Always use the `AdminPageHeader` component.
     - Use `getRoutingConfig(pathname, hostname)` to detect Subdomain vs Subdirectory mode.
 3.  **Active State**:
     - Use `isActivePath(pathname, href)` for sidebar/nav highlighting.
-4.  **Case Sensitivity**:
-    - ALWAYS `.toLowerCase()` the `tenant` parameter before querying the database to prevent 404s.
+4.  **Hydration Pattern**:
+    - ALWAYS place `if (!mounted) return null;` at the end of the client component logic to prevent React hydration mismatches while ensuring hooks remain in order.
 
 ---
 
-## 5. Standard Component Snippets
+## 6. Standard Component Snippets
 
 ### Admin Page Container
 ```tsx
-<div className="p-4 lg:p-10 max-w-7xl mx-auto space-y-10">
+<div className="space-y-10 pb-12 max-w-7xl mx-auto">
   <AdminPageHeader 
     title="Module Name" 
     description="Brief instruction about this module."
   >
-    <Button>Primary Action</Button>
+    <Button className="h-11 px-6 rounded-xl gap-2 shadow-lg shadow-primary/20 bg-primary font-bold text-white">
+      Primary Action
+    </Button>
   </AdminPageHeader>
   
-  <div className="grid gap-6">
+  <div className="grid gap-10">
     {/* Page Content */}
   </div>
 </div>
 ```
 
-### Premium Metric Card
+### Premium Metric Card (Super Admin)
 ```tsx
-<div className="p-8 bg-white dark:bg-slate-900 border-2 border-slate-100/50 dark:border-slate-800/50 rounded-3xl shadow-sm hover:shadow-xl transition-all duration-300">
-  <div className="p-3 w-fit rounded-2xl bg-primary/10 mb-4">
-    <Icon className="w-6 h-6 text-primary" />
+<Card className="relative overflow-hidden border-2 border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 rounded-[2rem] hover:border-primary/30 transition-all group">
+  <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+    <Icon className="h-12 w-12 text-primary" />
   </div>
-  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{label}</p>
-  <p className="text-4xl font-black mt-1 leading-none">{value}</p>
-</div>
+  <CardHeader className="pb-2">
+    <CardDescription className="text-[10px] uppercase tracking-widest font-black text-slate-400">
+       {label}
+    </CardDescription>
+    <CardTitle className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">{value}</CardTitle>
+  </CardHeader>
+  <CardContent>
+    <div className="flex items-center gap-2">
+      <span className="text-xs font-bold px-2 py-0.5 rounded-lg bg-green-500/10 text-green-600">
+        +12.5%
+      </span>
+      <span className="text-[10px] font-bold text-slate-400">vs last month</span>
+    </div>
+  </CardContent>
+</Card>
 ```

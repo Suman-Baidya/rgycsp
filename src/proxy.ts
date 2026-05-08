@@ -6,7 +6,21 @@ const { auth } = NextAuth(authConfig);
 
 export default auth((req) => {
   const url = req.nextUrl;
-  
+  const isLoggedIn = !!req.auth;
+  const userRole = req.auth?.user?.role;
+  const isSuperAdminRoute = url.pathname.startsWith('/super-admin');
+
+  // Handle Protected Routes
+  if (isSuperAdminRoute) {
+    if (!isLoggedIn) {
+      return NextResponse.redirect(new URL('/login', req.url));
+    }
+    if (userRole !== 'SUPER_ADMIN') {
+      // If logged in but not a super admin, redirect to root or error
+      return NextResponse.redirect(new URL('/', req.url));
+    }
+  }
+
   // Get hostname of request
   const hostname = req.headers.get("host") || "";
   

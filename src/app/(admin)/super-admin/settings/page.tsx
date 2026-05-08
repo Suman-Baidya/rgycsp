@@ -1,6 +1,8 @@
 import { db } from "@/lib/prisma";
 import { SettingsForm } from "./SettingsForm";
 
+import { AdminPageHeader } from "@/components/layout/AdminPageHeader";
+
 export default async function SettingsPage() {
   const siteSettings = await db.siteSettings.findFirst({
     where: { workspaceId: null },
@@ -16,13 +18,11 @@ export default async function SettingsPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Site Management</h1>
-        <p className="text-muted-foreground text-lg">
-          Configure the global landing page, branding, and navigation.
-        </p>
-      </div>
+    <div className="space-y-10 pb-12 max-w-7xl mx-auto">
+      <AdminPageHeader 
+        title="Site Management" 
+        description="Configure the global landing page, branding, and navigation."
+      />
 
       <SettingsForm settings={siteSettings} />
     </div>
