@@ -25,7 +25,19 @@ import { usePathname } from "next/navigation";
 import Image from "next/image";
 import { CustomThemeStyle } from "@/components/providers/CustomThemeStyle";
 
-export function LandingNavbar({ settings }: { settings?: any }) {
+import { signOut } from "next-auth/react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { LayoutDashboard, LogOut, Settings, User as UserIcon } from "lucide-react";
+
+export function LandingNavbar({ settings, user }: { settings?: any, user?: any }) {
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
   const { theme, setTheme } = useTheme();
@@ -58,6 +70,9 @@ export function LandingNavbar({ settings }: { settings?: any }) {
   const contactPhone = settings?.contactPhone || "8944899747";
   const logoUrl = settings?.logoUrl || "/logo.png";
 
+  const dashboardHref = user?.role === "SUPER_ADMIN" ? "/super-admin" : "/workspaces";
+  const dashboardLabel = user?.role === "SUPER_ADMIN" ? "Global Admin" : "My Workspaces";
+
   // Navbar Logic Config with deep fallbacks
   const config = {
     showNavbar: settings?.navbarConfig?.showNavbar ?? true,
@@ -82,6 +97,41 @@ export function LandingNavbar({ settings }: { settings?: any }) {
     { name: "Pricing", href: "/pricing", id: "pricing", isActive: true },
     { name: "Support", href: "/support", id: "support", isActive: true }
   ]).filter((link: any) => link.isActive !== false);
+
+  const UserMenu = () => (
+    <DropdownMenu>
+      <DropdownMenuTrigger className="outline-none">
+        <div className="flex items-center gap-3 cursor-pointer group">
+          <Avatar className="h-10 w-10 ring-2 ring-primary/20 group-hover:ring-primary transition-all">
+            <AvatarImage src={user.image} />
+            <AvatarFallback className="bg-primary text-primary-foreground font-bold">{user.name?.charAt(0)}</AvatarFallback>
+          </Avatar>
+        </div>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-56 rounded-2xl p-2 border-slate-100 dark:border-zinc-800 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+        <DropdownMenuLabel className="px-3 py-2 text-xs font-black uppercase tracking-widest text-slate-400">Account</DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        <Link href={dashboardHref}>
+          <DropdownMenuItem className="rounded-xl h-10 gap-3 font-bold text-xs uppercase tracking-widest cursor-pointer">
+            <LayoutDashboard className="h-4 w-4" /> {dashboardLabel}
+          </DropdownMenuItem>
+        </Link>
+        <DropdownMenuItem className="rounded-xl h-10 gap-3 font-bold text-xs uppercase tracking-widest cursor-pointer">
+          <UserIcon className="h-4 w-4" /> Profile
+        </DropdownMenuItem>
+        <DropdownMenuItem className="rounded-xl h-10 gap-3 font-bold text-xs uppercase tracking-widest cursor-pointer">
+          <Settings className="h-4 w-4" /> Settings
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem 
+          onClick={() => signOut({ callbackUrl: "/" })}
+          className="rounded-xl h-10 gap-3 font-bold text-xs uppercase tracking-widest cursor-pointer text-red-500 focus:bg-red-500 focus:text-white"
+        >
+          <LogOut className="h-4 w-4" /> Sign Out
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
 
   if (config.showNavbar === false) return null;
 
@@ -177,19 +227,25 @@ export function LandingNavbar({ settings }: { settings?: any }) {
 
           {/* Right: CTAs */}
           <div className="hidden lg:flex items-center gap-4 shrink-0">
-            {config.ctaSecondary?.text && (
-              <Link href={config.ctaSecondary.link || "#"}>
-                <Button variant="outline" className="border-border text-foreground hover:bg-primary hover:text-primary-foreground hover:border-primary font-bold px-6 border-2 rounded-xl transition-all h-11">
-                  {config.ctaSecondary.text}
-                </Button>
-              </Link>
-            )}
-            {config.ctaPrimary?.text && (
-              <Link href={config.ctaPrimary.link || "#"}>
-                <Button className="font-bold shadow-lg shadow-primary/10 bg-primary text-primary-foreground hover:opacity-90 transition-all px-8 rounded-xl h-11">
-                  {config.ctaPrimary.text}
-                </Button>
-              </Link>
+            {user ? (
+              <UserMenu />
+            ) : (
+              <>
+                {config.ctaSecondary?.text && (
+                  <Link href={config.ctaSecondary.link || "#"}>
+                    <Button variant="outline" className="border-border text-foreground hover:bg-primary hover:text-primary-foreground hover:border-primary font-bold px-6 border-2 rounded-xl transition-all h-11">
+                      {config.ctaSecondary.text}
+                    </Button>
+                  </Link>
+                )}
+                {config.ctaPrimary?.text && (
+                  <Link href={config.ctaPrimary.link || "#"}>
+                    <Button className="font-bold shadow-lg shadow-primary/10 bg-primary text-primary-foreground hover:opacity-90 transition-all px-8 rounded-xl h-11">
+                      {config.ctaPrimary.text}
+                    </Button>
+                  </Link>
+                )}
+              </>
             )}
           </div>
 
@@ -231,15 +287,28 @@ export function LandingNavbar({ settings }: { settings?: any }) {
 
             {/* Mobile Action Buttons */}
             <div className="flex flex-col gap-3 border-t border-border pt-6 mt-2">
-              {config.ctaSecondary?.text && (
-                <Link href={config.ctaSecondary.link || "#"} onClick={() => setIsOpen(false)} className="w-full">
-                  <Button variant="outline" className="w-full h-12 text-lg border-2 border-primary/50">{config.ctaSecondary.text}</Button>
-                </Link>
-              )}
-              {config.ctaPrimary?.text && (
-                <Link href={config.ctaPrimary.link || "#"} onClick={() => setIsOpen(false)} className="w-full">
-                  <Button className="w-full bg-black text-white h-12 text-lg">{config.ctaPrimary.text}</Button>
-                </Link>
+              {user ? (
+                <>
+                  <Link href={dashboardHref} onClick={() => setIsOpen(false)} className="flex items-center gap-3 py-2 text-primary font-bold">
+                    <LayoutDashboard className="w-5 h-5" /> {dashboardLabel}
+                  </Link>
+                  <button onClick={() => signOut({ callbackUrl: "/" })} className="flex items-center gap-3 py-2 text-red-500 font-bold text-left">
+                    <LogOut className="w-5 h-5" /> Sign Out
+                  </button>
+                </>
+              ) : (
+                <>
+                  {config.ctaSecondary?.text && (
+                    <Link href={config.ctaSecondary.link || "#"} onClick={() => setIsOpen(false)} className="w-full">
+                      <Button variant="outline" className="w-full h-12 text-lg border-2 border-primary/50">{config.ctaSecondary.text}</Button>
+                    </Link>
+                  )}
+                  {config.ctaPrimary?.text && (
+                    <Link href={config.ctaPrimary.link || "#"} onClick={() => setIsOpen(false)} className="w-full">
+                      <Button className="w-full bg-black text-white h-12 text-lg">{config.ctaPrimary.text}</Button>
+                    </Link>
+                  )}
+                </>
               )}
             </div>
 

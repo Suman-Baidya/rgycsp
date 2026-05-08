@@ -104,6 +104,18 @@ const chartConfig = {
 
 
 export default function SuperAdminOverview() {
+  const [mounted, setMounted] = React.useState(false);
+
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) return (
+    <div className="flex items-center justify-center min-h-[400px]">
+      <Activity className="h-8 w-8 animate-spin text-primary/20" />
+    </div>
+  );
+
   return (
     <div className="space-y-10 pb-12 w-full mx-auto">
       <AdminPageHeader 

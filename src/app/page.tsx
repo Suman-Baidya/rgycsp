@@ -11,7 +11,10 @@ import { ContactSection } from "@/components/landing/ContactSection";
 import { db } from "@/lib/prisma";
 import { CustomThemeStyle } from "@/components/providers/CustomThemeStyle";
 
+import { auth } from "@/auth";
+
 export default async function RootLandingPage() {
+  const session = await auth();
   const settings = await db.siteSettings.findFirst({
     where: { workspaceId: null },
     include: {
@@ -37,7 +40,7 @@ export default async function RootLandingPage() {
   return (
     <div className="flex flex-col min-h-screen font-sans bg-background selection:bg-primary/30">
       <CustomThemeStyle primaryColor={settings.primaryColor || undefined} accentColor={settings.accentColor || undefined} />
-      <LandingNavbar settings={settings} />
+      <LandingNavbar settings={settings} user={session?.user} />
 
       <main className="flex-1 w-full flex flex-col">
         {isSectionActive("hero") && <HeroSection data={getSectionData("hero")} />}

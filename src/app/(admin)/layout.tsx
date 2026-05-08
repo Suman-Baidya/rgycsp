@@ -1,12 +1,20 @@
 import { AdminSidebar } from "@/components/layout/AdminSidebar";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { Breadcrumbs } from "@/components/layout/Breadcrumbs";
+import { auth } from "@/auth";
+import { redirect } from "next/navigation";
 
-export default function AdminLayout({
+export default async function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const session = await auth();
+
+  if (!session?.user || session.user.role !== "SUPER_ADMIN") {
+    redirect("/");
+  }
+
   return (
     <div className="flex min-h-screen bg-background text-foreground transition-colors duration-300">
       <AdminSidebar />

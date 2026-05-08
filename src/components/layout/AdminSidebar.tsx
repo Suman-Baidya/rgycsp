@@ -178,26 +178,29 @@ export function AdminSidebar() {
 
         {/* Footer */}
         <div className={cn("border-t border-white/5 transition-all duration-300", isCollapsed ? "p-2" : "p-4")}>
-          <div className={cn(
+          <div 
+          onClick={() => signOut({ callbackUrl: "/" })}
+          className={cn(
             "flex items-center gap-3 rounded-xl hover:bg-red-500/10 hover:text-red-500 transition-all cursor-pointer group relative overflow-hidden",
             isCollapsed ? "justify-center h-12 w-12 mx-auto" : "px-3 py-3"
-          )}>
-            <LogOut className="h-5 w-5 flex-shrink-0" />
-            {!isCollapsed && (
-              <motion.span 
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                className="font-medium"
-              >
-                Logout
-              </motion.span>
-            )}
-            {isCollapsed && (
-              <div className="absolute left-full ml-4 px-2 py-1 bg-zinc-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50 whitespace-nowrap border border-white/10 shadow-xl">
-                Logout
-              </div>
-            )}
-          </div>
+          )}
+        >
+          <LogOut className="h-5 w-5 flex-shrink-0" />
+          {!isCollapsed && (
+            <motion.span 
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              className="font-medium"
+            >
+              Logout
+            </motion.span>
+          )}
+          {isCollapsed && (
+            <div className="absolute left-full ml-4 px-2 py-1 bg-zinc-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50 whitespace-nowrap border border-white/10 shadow-xl">
+              Logout
+            </div>
+          )}
+        </div>
         </div>
       </motion.aside>
     </>
