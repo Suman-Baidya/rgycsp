@@ -28,10 +28,14 @@ export default async function LoginPage() {
   }
 
   // Get Branding Information
-  let branding = {
+  let branding: {
+    name: string;
+    logo: string | null | undefined;
+    settings: any;
+  } = {
     name: "ABCD Educational Hub",
     logo: null,
-    settings: null as any
+    settings: null
   };
 
   if (tenant && tenant !== "super-admin") {

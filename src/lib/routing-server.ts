@@ -25,7 +25,7 @@ export async function getServerTenantLink(path: string, tenant: string): Promise
   // Currently getTenantLink does: typeof window !== 'undefined' ? window.location.host : undefined
   
   // So we should probably export a version that takes config or just pass the parameters.
-  return getTenantLink(path, tenant, pathname); 
+  return getTenantLink(path, tenant, pathname, host); 
 }
 
 /**

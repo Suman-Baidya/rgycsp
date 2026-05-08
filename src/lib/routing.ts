@@ -59,9 +59,13 @@ export function getRoutingConfig(pathname: string, hostname?: string, tenantOver
  * Generates a public link within a workspace context.
  * e.g., /app/tenant/courses (Subdirectory) or /courses (Subdomain)
  */
-export function getTenantLink(path: string, tenant: string, pathname: string): string {
+export function getTenantLink(path: string, tenant: string, pathname: string, hostname?: string): string {
   // Use centralized config to determine the correct prefix
-  const { workspaceBase } = getRoutingConfig(pathname, typeof window !== 'undefined' ? window.location.host : undefined, tenant);
+  const { workspaceBase } = getRoutingConfig(
+    pathname, 
+    hostname || (typeof window !== 'undefined' ? window.location.host : undefined), 
+    tenant
+  );
   
   // Clean the path
   const cleanPath = path.startsWith('/') ? path : `/${path}`;
