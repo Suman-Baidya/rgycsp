@@ -144,7 +144,7 @@ export function LoginForm({
               </div>
               <div className="relative group">
                 <div className="absolute inset-y-0 left-5 flex items-center pointer-events-none">
-                  <User className="w-4 h-4 text-slate-400 group-focus-within:text-primary transition-colors" style={{ color: primaryColor && 'group-focus-within:primaryColor' }} />
+                  <User className="w-4 h-4 text-slate-400 group-focus-within:text-primary transition-colors" style={{ color: primaryColor || undefined }} />
                 </div>
                 <Input
                   name="username"
@@ -160,7 +160,7 @@ export function LoginForm({
               <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 px-1">Security Key</label>
               <div className="relative group">
                 <div className="absolute inset-y-0 left-5 flex items-center pointer-events-none">
-                  <Lock className="w-4 h-4 text-slate-400 group-focus-within:text-primary transition-colors" />
+                  <Lock className="w-4 h-4 text-slate-400 group-focus-within:text-primary transition-colors" style={{ color: primaryColor || undefined }} />
                 </div>
                 <Input
                   name="password"
