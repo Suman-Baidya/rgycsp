@@ -37,7 +37,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { LayoutDashboard, LogOut, Settings, User as UserIcon } from "lucide-react";
 
-export function LandingNavbar({ settings, user }: { settings?: any, user?: any }) {
+export function LandingNavbar({ settings, user, isHome }: { settings?: any, user?: any, isHome?: boolean }) {
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
   const { theme, setTheme } = useTheme();

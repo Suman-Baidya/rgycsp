@@ -7,13 +7,22 @@ import {
   Plus, 
   Search, 
   Filter, 
-  ChevronRight,
+  ChevronRight as ChevronRightIcon,
   ExternalLink,
   Shield,
   ShieldOff,
   Trash2,
   Mail,
-  ShieldCheck
+  ShieldCheck,
+  CheckCircle2,
+  Clock,
+  Users,
+  ChevronLeft,
+  BookOpen,
+  Layers,
+  Calendar,
+  Activity,
+  Settings
 } from "lucide-react";
 import { 
   Table, 
@@ -53,18 +62,6 @@ import {
   SelectTrigger, 
   SelectValue 
 } from "@/components/ui/select";
-import { 
-  ChevronLeft, 
-  ChevronRight as ChevronRightIcon,
-  Users,
-  BookOpen,
-  Layers,
-  Calendar,
-  Activity,
-  CheckCircle2,
-  Clock,
-  Settings
-} from "lucide-react";
 
 
 export default function WorkspacesClient({ initialWorkspaces }: { initialWorkspaces: any[] }) {
