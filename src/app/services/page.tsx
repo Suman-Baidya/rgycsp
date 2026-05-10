@@ -5,8 +5,10 @@ import { WhyChooseUs } from "@/components/landing/WhyChooseUs";
 import { ServicesSection } from "@/components/landing/ServicesSection";
 import { ReadyToModernize } from "@/components/landing/ReadyToModernize";
 import { db } from "@/lib/prisma";
+import { auth } from "@/auth";
 
 export default async function ServicesPage() {
+  const session = await auth();
   const settings = await db.siteSettings.findFirst({
     where: { workspaceId: null },
     include: {
@@ -31,7 +33,7 @@ export default async function ServicesPage() {
 
   return (
     <div className="flex flex-col min-h-screen bg-background">
-      <LandingNavbar settings={settings} />
+      <LandingNavbar settings={settings} user={session?.user} />
 
       <main className="flex-1">
         {isSectionActive("page-header-services") && (

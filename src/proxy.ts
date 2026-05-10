@@ -53,6 +53,17 @@ export default auth((req) => {
   const searchParams = req.nextUrl.searchParams.toString();
   const path = `${url.pathname}${searchParams.length > 0 ? `?${searchParams}` : ""}`;
 
+  // 0. Bypass API and Static routes (Ensure they are not rewritten)
+  if (url.pathname.startsWith('/api') || url.pathname.startsWith('/_next') || url.pathname.includes('.')) {
+    const requestHeaders = new Headers(req.headers);
+    requestHeaders.set('x-pathname', url.pathname);
+    return NextResponse.next({
+      request: {
+        headers: requestHeaders,
+      }
+    });
+  }
+
   // 1. Handle root domain and specific bypasses
   if (
     hostname === localDomain ||
@@ -110,5 +121,5 @@ export default auth((req) => {
 });
 
 export const config = {
-  matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)'],
+  matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'],
 };

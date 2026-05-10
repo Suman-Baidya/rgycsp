@@ -3,9 +3,11 @@ import { PageHeader } from "@/components/layout/PageHeader";
 import { LandingNavbar } from "@/components/layout/LandingNavbar";
 import { MainFooter } from "@/components/layout/MainFooter";
 import { notFound } from "next/navigation";
+import { auth } from "@/auth";
 
 export default async function LegalPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
+  const session = await auth();
   const sectionType = `legal-${slug}`;
 
   const settings = await db.siteSettings.findFirst({
@@ -50,7 +52,7 @@ export default async function LegalPage({ params }: { params: Promise<{ slug: st
 
   return (
     <div className="flex flex-col min-h-screen bg-background">
-      <LandingNavbar settings={settings} />
+      <LandingNavbar settings={settings} user={session?.user} />
 
       <main className="flex-1">
         <PageHeader 

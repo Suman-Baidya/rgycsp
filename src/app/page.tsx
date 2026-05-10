@@ -40,7 +40,7 @@ export default async function RootLandingPage() {
   return (
     <div className="flex flex-col min-h-screen font-sans bg-background selection:bg-primary/30">
       <CustomThemeStyle primaryColor={settings.primaryColor || undefined} accentColor={settings.accentColor || undefined} />
-      <LandingNavbar settings={settings} user={session?.user} />
+      <LandingNavbar settings={settings} user={session?.user} isHome={true} />
 
       <main className="flex-1 w-full flex flex-col">
         {isSectionActive("hero") && <HeroSection data={getSectionData("hero")} />}

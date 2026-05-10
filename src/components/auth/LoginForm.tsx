@@ -17,7 +17,9 @@ import {
   ShieldCheck,
   AlertCircle,
   Building2,
-  GraduationCap
+  GraduationCap,
+  Eye,
+  EyeOff
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -36,6 +38,7 @@ export function LoginForm({
   isGlobal?: boolean;
 }) {
   const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -99,7 +102,7 @@ export function LoginForm({
           />
         </div>
 
-        <CardContent className="p-8 md:p-12 space-y-8">
+        <CardContent className="p-6 md:p-10 space-y-6">
           {/* Header Section */}
           <div className="flex flex-col items-center text-center space-y-6">
             <Link href="/" className="group relative">
@@ -114,12 +117,12 @@ export function LoginForm({
             </Link>
 
             <div className="space-y-1">
-              <h1 className="text-2xl md:text-3xl font-black tracking-tight text-slate-900 dark:text-white uppercase">
+              <h1 className="text-xl md:text-2xl font-bold tracking-tight text-slate-900 dark:text-white uppercase">
                 {tenantName || (isGlobal ? "ABCD Hub" : "Institute Portal")}
               </h1>
               <div className="flex items-center justify-center gap-3">
                 <span className="h-px w-6 bg-slate-200 dark:bg-white/10" />
-                <p className="text-[10px] font-black text-primary uppercase tracking-[0.3em]" style={{ color: primaryColor || undefined }}>
+                <p className="text-[10px] font-bold text-primary uppercase tracking-[0.2em]" style={{ color: primaryColor || undefined }}>
                   {isGlobal ? "Global Administration" : "Secured Member Login"}
                 </p>
                 <span className="h-px w-6 bg-slate-200 dark:bg-white/10" />
@@ -137,7 +140,7 @@ export function LoginForm({
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="space-y-2">
               <div className="flex justify-between items-end px-1">
-                <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">Identification</label>
+                <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">Identification</label>
                 <Badge variant="outline" className="bg-slate-50 dark:bg-white/5 border-none text-[8px] font-bold px-2 py-0.5 opacity-60">
                   {isGlobal ? "Staff Email" : "Student ID / Email"}
                 </Badge>
@@ -157,26 +160,33 @@ export function LoginForm({
             </div>
 
             <div className="space-y-2">
-              <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 px-1">Security Key</label>
+              <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 px-1">Security Key</label>
               <div className="relative group">
                 <div className="absolute inset-y-0 left-5 flex items-center pointer-events-none">
                   <Lock className="w-4 h-4 text-slate-400 group-focus-within:text-primary transition-colors" style={{ color: primaryColor || undefined }} />
                 </div>
                 <Input
                   name="password"
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   placeholder="••••••••"
                   autoComplete="current-password"
-                  className="h-14 pl-12 rounded-2xl border-slate-200 dark:border-white/10 bg-slate-50/50 dark:bg-white/5 focus:bg-white dark:focus:bg-zinc-900 focus:ring-4 focus:ring-primary/10 font-bold text-sm transition-all outline-none"
+                  className="h-14 pl-12 pr-12 rounded-2xl border-slate-200 dark:border-white/10 bg-slate-50/50 dark:bg-white/5 focus:bg-white dark:focus:bg-zinc-900 focus:ring-4 focus:ring-primary/10 font-bold text-sm transition-all outline-none"
                   required
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 right-4 flex items-center text-slate-400 hover:text-primary transition-colors outline-none"
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
               </div>
             </div>
 
             <Button
               type="submit"
               disabled={isLoading}
-              className="w-full h-14 rounded-2xl font-black uppercase text-xs tracking-widest shadow-xl transition-all duration-300 mt-2 bg-primary hover:opacity-90 active:scale-[0.98]"
+              className="w-full h-14 rounded-2xl font-bold uppercase text-xs tracking-widest shadow-xl transition-all duration-300 mt-2 bg-primary hover:opacity-90 active:scale-[0.98]"
               style={{ backgroundColor: primaryColor || undefined }}
             >
               {isLoading ? (
@@ -193,17 +203,17 @@ export function LoginForm({
             </Button>
           </form>
 
-          <div className="pt-4 flex flex-col items-center gap-6">
+          <div className="pt-2 flex flex-col items-center gap-4">
             <Link 
               href="/" 
-              className="text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-primary transition-colors flex items-center gap-2"
+              className="text-[10px] font-bold uppercase tracking-widest text-slate-400 hover:text-primary transition-colors flex items-center gap-2"
             >
               <ArrowRight className="w-3 h-3 rotate-180" /> Back to Homepage
             </Link>
             
             <div className="flex items-center gap-3 px-4 py-2 bg-slate-50 dark:bg-white/5 rounded-full border border-slate-100 dark:border-white/5">
               <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
-              <span className="text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">
+              <span className="text-[9px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
                 AES-256 Bit Encrypted Authorization
               </span>
             </div>
@@ -211,9 +221,9 @@ export function LoginForm({
         </CardContent>
       </Card>
 
-      <div className="mt-12 text-center">
-        <p className="text-[9px] font-black uppercase tracking-[0.4em] text-slate-400 dark:text-slate-600">
-          POWERED BY ABCD PLATFORM &copy; {new Date().getFullYear()}
+      <div className="mt-6 text-center">
+        <p className="text-[11px] font-bold text-slate-500 dark:text-slate-400 tracking-tight">
+          POWERED BY <span className="text-primary" style={{ color: primaryColor || undefined }}>ABCD PLATFORM</span> &copy; 2026
         </p>
       </div>
     </div>

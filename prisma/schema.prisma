@@ -19,6 +19,7 @@ model User {
   image         String?
   passwordHash  String?
   role          SystemRole @default(USER)
+  lastSeen      DateTime?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

@@ -98,40 +98,60 @@ export function LandingNavbar({ settings, user }: { settings?: any, user?: any }
     { name: "Support", href: "/support", id: "support", isActive: true }
   ]).filter((link: any) => link.isActive !== false);
 
-  const UserMenu = () => (
-    <DropdownMenu>
-      <DropdownMenuTrigger className="outline-none">
-        <div className="flex items-center gap-3 cursor-pointer group">
-          <Avatar className="h-10 w-10 ring-2 ring-primary/20 group-hover:ring-primary transition-all">
-            <AvatarImage src={user.image} />
-            <AvatarFallback className="bg-primary text-primary-foreground font-bold">{user.name?.charAt(0)}</AvatarFallback>
-          </Avatar>
-        </div>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-56 rounded-2xl p-2 border-slate-100 dark:border-zinc-800 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
-        <DropdownMenuLabel className="px-3 py-2 text-xs font-black uppercase tracking-widest text-slate-400">Account</DropdownMenuLabel>
-        <DropdownMenuSeparator />
+  const UserMenu = () => {
+    return (
+      <div className="flex items-center gap-4">
         <Link href={dashboardHref}>
-          <DropdownMenuItem className="rounded-xl h-10 gap-3 font-bold text-xs uppercase tracking-widest cursor-pointer">
-            <LayoutDashboard className="h-4 w-4" /> {dashboardLabel}
-          </DropdownMenuItem>
+          <Button className="font-bold shadow-lg shadow-primary/20 bg-primary text-primary-foreground hover:scale-[1.02] active:scale-95 transition-all px-8 rounded-xl h-11 gap-2 dark:text-white">
+            <LayoutDashboard className="h-4 w-4" />
+            Dashboard
+          </Button>
         </Link>
-        <DropdownMenuItem className="rounded-xl h-10 gap-3 font-bold text-xs uppercase tracking-widest cursor-pointer">
-          <UserIcon className="h-4 w-4" /> Profile
-        </DropdownMenuItem>
-        <DropdownMenuItem className="rounded-xl h-10 gap-3 font-bold text-xs uppercase tracking-widest cursor-pointer">
-          <Settings className="h-4 w-4" /> Settings
-        </DropdownMenuItem>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem 
-          onClick={() => signOut({ callbackUrl: "/" })}
-          className="rounded-xl h-10 gap-3 font-bold text-xs uppercase tracking-widest cursor-pointer text-red-500 focus:bg-red-500 focus:text-white"
-        >
-          <LogOut className="h-4 w-4" /> Sign Out
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
-  );
+
+        <DropdownMenu>
+          <DropdownMenuTrigger className="outline-none">
+            <div className="flex items-center gap-3 cursor-pointer group">
+              <Avatar className="h-11 w-11 ring-2 ring-primary/10 group-hover:ring-primary transition-all duration-300 shadow-lg">
+                <AvatarImage src={user.image} />
+                <AvatarFallback className="bg-primary text-primary-foreground font-bold">{user.name?.charAt(0)}</AvatarFallback>
+              </Avatar>
+            </div>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-64 rounded-[1.5rem] p-3 border-slate-100 dark:border-zinc-800 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex items-center gap-3 px-2 py-3">
+              <Avatar className="h-10 w-10">
+                <AvatarImage src={user.image} />
+                <AvatarFallback className="bg-primary text-primary-foreground font-bold">{user.name?.charAt(0)}</AvatarFallback>
+              </Avatar>
+              <div className="flex flex-col">
+                <p className="text-sm font-bold text-foreground leading-none mb-1">{user.name}</p>
+                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{user.role?.replace('_', ' ')}</p>
+              </div>
+            </div>
+            <DropdownMenuSeparator className="my-2 bg-slate-50 dark:bg-zinc-900" />
+            <DropdownMenuLabel className="px-3 py-2 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">Management</DropdownMenuLabel>
+            <Link href={dashboardHref}>
+              <DropdownMenuItem className="rounded-xl h-11 gap-3 font-bold text-xs uppercase tracking-widest cursor-pointer mt-1">
+                <LayoutDashboard className="h-4 w-4" /> {dashboardLabel}
+              </DropdownMenuItem>
+            </Link>
+            <Link href={user?.role === "SUPER_ADMIN" ? "/super-admin/profile" : "/profile"}>
+              <DropdownMenuItem className="rounded-xl h-11 gap-3 font-bold text-xs uppercase tracking-widest cursor-pointer">
+                <UserIcon className="h-4 w-4" /> My Profile
+              </DropdownMenuItem>
+            </Link>
+            <DropdownMenuSeparator className="my-2 bg-slate-50 dark:bg-zinc-900" />
+            <DropdownMenuItem 
+              onClick={() => signOut({ callbackUrl: "/" })}
+              className="rounded-xl h-11 gap-3 font-bold text-xs uppercase tracking-widest cursor-pointer text-red-500 focus:bg-red-500 focus:text-white"
+            >
+              <LogOut className="h-4 w-4" /> Sign Out
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+    );
+  };
 
   if (config.showNavbar === false) return null;
 
@@ -231,20 +251,17 @@ export function LandingNavbar({ settings, user }: { settings?: any, user?: any }
               <UserMenu />
             ) : (
               <>
-                {config.ctaSecondary?.text && (
-                  <Link href={config.ctaSecondary.link || "#"}>
-                    <Button variant="outline" className="border-border text-foreground hover:bg-primary hover:text-primary-foreground hover:border-primary font-bold px-6 border-2 rounded-xl transition-all h-11">
-                      {config.ctaSecondary.text}
-                    </Button>
-                  </Link>
-                )}
-                {config.ctaPrimary?.text && (
-                  <Link href={config.ctaPrimary.link || "#"}>
-                    <Button className="font-bold shadow-lg shadow-primary/10 bg-primary text-primary-foreground hover:opacity-90 transition-all px-8 rounded-xl h-11">
-                      {config.ctaPrimary.text}
-                    </Button>
-                  </Link>
-                )}
+                <Link href={`tel:${contactPhone}`}>
+                  <Button variant="outline" className="border-primary/20 text-foreground hover:bg-primary/5 hover:border-primary/40 font-bold px-6 rounded-xl transition-all h-11 gap-2">
+                    <Phone className="h-4 w-4 text-primary dark:text-white" />
+                    Call Now
+                  </Button>
+                </Link>
+                <Link href="/login">
+                  <Button className="font-bold shadow-lg shadow-primary/20 bg-primary text-primary-foreground hover:scale-[1.02] active:scale-95 transition-all px-8 rounded-xl h-11">
+                    Login
+                  </Button>
+                </Link>
               </>
             )}
           </div>
@@ -288,26 +305,49 @@ export function LandingNavbar({ settings, user }: { settings?: any, user?: any }
             {/* Mobile Action Buttons */}
             <div className="flex flex-col gap-3 border-t border-border pt-6 mt-2">
               {user ? (
-                <>
-                  <Link href={dashboardHref} onClick={() => setIsOpen(false)} className="flex items-center gap-3 py-2 text-primary font-bold">
-                    <LayoutDashboard className="w-5 h-5" /> {dashboardLabel}
+                <div className="space-y-3">
+                  <div className="flex items-center gap-3 px-2 py-4 rounded-2xl bg-slate-50 dark:bg-zinc-900 mb-2">
+                    <Avatar className="h-12 w-12 ring-2 ring-primary/20">
+                      <AvatarImage src={user.image} />
+                      <AvatarFallback className="bg-primary text-primary-foreground font-bold">{user.name?.charAt(0)}</AvatarFallback>
+                    </Avatar>
+                    <div className="flex flex-col">
+                      <p className="text-base font-bold text-foreground leading-tight">{user.name}</p>
+                      <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">{user.role}</p>
+                    </div>
+                  </div>
+                  
+                  <Link href={dashboardHref} onClick={() => setIsOpen(false)}>
+                    <Button className="w-full h-14 rounded-2xl bg-primary text-primary-foreground font-bold gap-3 shadow-xl shadow-primary/20 dark:text-white">
+                      <LayoutDashboard className="h-5 w-5" />
+                      Go to Dashboard
+                    </Button>
                   </Link>
-                  <button onClick={() => signOut({ callbackUrl: "/" })} className="flex items-center gap-3 py-2 text-red-500 font-bold text-left">
-                    <LogOut className="w-5 h-5" /> Sign Out
-                  </button>
-                </>
+                  
+                  <div className="grid grid-cols-2 gap-3 pt-2">
+                    <Link href={user?.role === "SUPER_ADMIN" ? "/super-admin/profile" : "/profile"} onClick={() => setIsOpen(false)}>
+                      <Button variant="outline" className="w-full h-12 rounded-xl font-bold gap-2">
+                        <UserIcon className="h-4 w-4" />
+                        Profile
+                      </Button>
+                    </Link>
+                    <button onClick={() => signOut({ callbackUrl: "/" })} className="w-full h-12 rounded-xl bg-red-500/5 text-red-500 border border-red-500/20 font-bold flex items-center justify-center gap-2 transition-all active:scale-95">
+                      <LogOut className="h-4 w-4" />
+                      Logout
+                    </button>
+                  </div>
+                </div>
               ) : (
                 <>
-                  {config.ctaSecondary?.text && (
-                    <Link href={config.ctaSecondary.link || "#"} onClick={() => setIsOpen(false)} className="w-full">
-                      <Button variant="outline" className="w-full h-12 text-lg border-2 border-primary/50">{config.ctaSecondary.text}</Button>
-                    </Link>
-                  )}
-                  {config.ctaPrimary?.text && (
-                    <Link href={config.ctaPrimary.link || "#"} onClick={() => setIsOpen(false)} className="w-full">
-                      <Button className="w-full bg-black text-white h-12 text-lg">{config.ctaPrimary.text}</Button>
-                    </Link>
-                  )}
+                  <Link href={`tel:${contactPhone}`} onClick={() => setIsOpen(false)} className="w-full">
+                    <Button variant="outline" className="w-full h-14 text-lg border-2 border-primary/20 rounded-2xl font-bold gap-3 text-foreground">
+                      <Phone className="h-5 w-5 text-primary dark:text-white" />
+                      Call Support
+                    </Button>
+                  </Link>
+                  <Link href="/login" onClick={() => setIsOpen(false)} className="w-full">
+                    <Button className="w-full bg-primary text-primary-foreground h-14 text-lg rounded-2xl font-bold shadow-xl shadow-primary/20 dark:text-white">Login to Account</Button>
+                  </Link>
                 </>
               )}
             </div>

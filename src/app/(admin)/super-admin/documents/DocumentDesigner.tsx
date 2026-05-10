@@ -341,34 +341,75 @@ export default function DocumentDesigner() {
               <Card 
                 key={template.id} 
                 onClick={() => handleEditTemplate(template)}
-                className="group border-2 border-slate-100 hover:border-primary/30 transition-all rounded-[2.5rem] cursor-pointer bg-white dark:bg-slate-900 overflow-hidden shadow-sm hover:shadow-xl hover:shadow-primary/5 active:scale-[0.98]"
+                className="group border border-slate-200 dark:border-slate-800 hover:border-primary/50 transition-all duration-500 rounded-[2rem] cursor-pointer bg-white dark:bg-zinc-900 overflow-hidden shadow-sm hover:shadow-2xl hover:shadow-primary/10 active:scale-[0.98] flex flex-col"
               >
-                <div className="aspect-[3/4] relative bg-slate-100 dark:bg-slate-800 overflow-hidden">
+                <div className="aspect-[3/2] relative bg-slate-100 dark:bg-zinc-800 overflow-hidden">
                   {template.background ? (
-                    <img src={template.background || ""} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt={template.name} />
+                    <img 
+                      src={template.background || ""} 
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000 ease-out" 
+                      alt={template.name} 
+                    />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center text-slate-300">
-                      <Layout className="w-12 h-12 opacity-20" />
+                    <div className="w-full h-full flex flex-col items-center justify-center text-slate-300 dark:text-zinc-600 space-y-2">
+                      <div className="w-12 h-12 rounded-full bg-slate-50 dark:bg-zinc-900 flex items-center justify-center border border-slate-100 dark:border-zinc-800">
+                        <Layout className="w-6 h-6 opacity-40" />
+                      </div>
+                      <span className="text-[9px] font-black uppercase tracking-widest opacity-40">No Background</span>
                     </div>
                   )}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                  <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-all translate-y-2 group-hover:translate-y-0">
-                     <Button 
-                       variant="destructive" 
-                       size="icon" 
-                       onClick={(e) => handleDelete(template.id, e)}
-                       className="h-10 w-10 rounded-xl"
-                     >
-                       <Trash2 className="h-4 w-4" />
-                     </Button>
+                  
+                  {/* Overlays */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                  
+                  {/* Actions */}
+                  <div className="absolute top-3 right-3 z-20">
+                    <div className="transition-all duration-300 transform translate-y-[-10px] opacity-0 group-hover:translate-y-0 group-hover:opacity-100">
+                       <Button 
+                         variant="destructive" 
+                         size="icon" 
+                         onClick={(e) => handleDelete(template.id, e)}
+                         className="h-9 w-9 rounded-xl shadow-xl backdrop-blur-md bg-red-500/90 hover:bg-red-600 border border-white/20 transition-all active:scale-90"
+                       >
+                         <Trash2 className="h-4 w-4 text-white" />
+                       </Button>
+                    </div>
+                  </div>
+
+                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+                    <div className="px-5 py-2.5 rounded-2xl bg-white/90 dark:bg-zinc-900/90 backdrop-blur-md border border-white/20 shadow-2xl transform scale-90 group-hover:scale-100 transition-transform duration-500">
+                      <span className="text-[10px] font-black uppercase tracking-tighter text-slate-900 dark:text-white flex items-center gap-2">
+                        <Settings2 className="h-3 w-3" />
+                        Modify Design
+                      </span>
+                    </div>
                   </div>
                 </div>
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between gap-2 mb-1">
-                    <span className="text-[10px] font-black uppercase tracking-widest text-primary bg-primary/5 px-2 py-1 rounded-md">{template.type}</span>
-                    <span className="text-[10px] text-slate-400 font-bold">{new Date(template.updatedAt).toLocaleDateString()}</span>
+
+                <CardContent className="p-5 flex flex-col">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="px-2.5 py-0.5 rounded-full bg-primary/10 border border-primary/20">
+                      <span className="text-[9px] font-black uppercase tracking-widest text-primary">{template.type}</span>
+                    </div>
+                    <div className="flex items-center gap-1.5 text-slate-400 dark:text-zinc-500">
+                       <div className="w-1 h-1 rounded-full bg-slate-300 dark:bg-zinc-700" />
+                       <span className="text-[9px] font-bold uppercase tracking-tight">{new Date(template.updatedAt).toLocaleDateString()}</span>
+                    </div>
                   </div>
-                  <h4 className="font-bold text-slate-900 dark:text-white truncate">{template.name}</h4>
+                  <h4 className="font-black text-slate-900 dark:text-white text-base leading-tight group-hover:text-primary transition-colors line-clamp-1">
+                    {template.name}
+                  </h4>
+                  
+                  <div className="mt-4 pt-4 flex items-center justify-between border-t border-slate-50 dark:border-zinc-800/50">
+                    <div className="flex -space-x-1.5">
+                      <div className="w-5 h-5 rounded-full bg-blue-500/10 border border-white dark:border-zinc-900 flex items-center justify-center"><Type className="h-2.5 w-2.5 text-blue-500" /></div>
+                      <div className="w-5 h-5 rounded-full bg-purple-500/10 border border-white dark:border-zinc-900 flex items-center justify-center"><ImageIcon className="h-2.5 w-2.5 text-purple-500" /></div>
+                      <div className="w-5 h-5 rounded-full bg-amber-500/10 border border-white dark:border-zinc-900 flex items-center justify-center"><Signature className="h-2.5 w-2.5 text-amber-500" /></div>
+                    </div>
+                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">
+                      {template.config ? (template.config as any[]).length : 0} Elements
+                    </span>
+                  </div>
                 </CardContent>
               </Card>
             ))}

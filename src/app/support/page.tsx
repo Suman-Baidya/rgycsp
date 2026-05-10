@@ -4,8 +4,10 @@ import { PageHeader } from "@/components/layout/PageHeader";
 import { ContactSection } from "@/components/landing/ContactSection";
 import { FaqSection } from "@/components/landing/FaqSection";
 import { db } from "@/lib/prisma";
+import { auth } from "@/auth";
 
 export default async function SupportPage() {
+  const session = await auth();
   const settings = await db.siteSettings.findFirst({
     where: { workspaceId: null },
     include: {
@@ -30,7 +32,7 @@ export default async function SupportPage() {
 
   return (
     <div className="flex flex-col min-h-screen bg-background">
-      <LandingNavbar settings={settings} />
+      <LandingNavbar settings={settings} user={session?.user} />
       
       <main className="flex-1">
         {isSectionActive("page-header-support") && (

@@ -7,8 +7,10 @@ import { MissionSection } from "@/components/landing/MissionSection";
 import { VisionSection } from "@/components/landing/VisionSection";
 import { OurMessage } from "@/components/landing/OurMessage";
 import { db } from "@/lib/prisma";
+import { auth } from "@/auth";
 
 export default async function AboutPage() {
+  const session = await auth();
   const settings = await db.siteSettings.findFirst({
     where: { workspaceId: null },
     include: {
@@ -33,7 +35,7 @@ export default async function AboutPage() {
 
   return (
     <div className="flex flex-col min-h-screen bg-background">
-      <LandingNavbar settings={settings} />
+      <LandingNavbar settings={settings} user={session?.user} />
 
       <main className="flex-1">
         {isSectionActive("page-header-about") && (

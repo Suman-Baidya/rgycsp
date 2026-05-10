@@ -1,9 +1,11 @@
 import { db } from "@/lib/prisma";
+import { auth } from "@/auth";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { LandingNavbar } from "@/components/layout/LandingNavbar";
 import { MainFooter } from "@/components/layout/MainFooter";
 
 export default async function PrivacyPage() {
+  const session = await auth();
   const settings = await db.siteSettings.findFirst({
     where: { workspaceId: null }
   });
@@ -14,7 +16,7 @@ export default async function PrivacyPage() {
 
   return (
     <div className="flex flex-col min-h-screen bg-background">
-      <LandingNavbar settings={settings} />
+      <LandingNavbar settings={settings} user={session?.user} />
 
       <main className="flex-1">
         <PageHeader 

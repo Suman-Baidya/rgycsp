@@ -6,7 +6,16 @@ import { revalidatePath } from "next/cache";
 
 export async function createWorkspace(data: any) {
   try {
-    const { name, subdomain, ownerName, ownerEmail, ownerPassword } = data;
+    const { 
+      name, 
+      subdomain, 
+      ownerName, 
+      ownerEmail, 
+      ownerPassword,
+      contactPhone,
+      primaryColor,
+      brandDescription
+    } = data;
 
     // 1. Check if subdomain exists
     const existingWorkspace = await db.workspace.findUnique({
@@ -29,17 +38,26 @@ export async function createWorkspace(data: any) {
           name: ownerName,
           email: ownerEmail,
           passwordHash,
-          role: "USER", // Super admins are SUPER_ADMIN, workspace owners are USER with an ADMIN WorkspaceRole
+          role: "USER",
         },
       });
     }
 
-    // 3. Create Workspace
+    // 3. Create Workspace with associated SiteSettings
     const workspace = await db.workspace.create({
       data: {
         name,
         subdomain,
         isActive: true,
+        siteSettings: {
+          create: {
+            siteName: name,
+            contactEmail: ownerEmail,
+            contactPhone: contactPhone || null,
+            primaryColor: primaryColor || "#3b82f6",
+            brandDescription: brandDescription || `Welcome to ${name}`,
+          }
+        }
       },
     });
 
@@ -69,7 +87,11 @@ export async function getWorkspaces() {
           include: { user: true },
         },
         _count: {
-          select: { studentProfiles: true },
+          select: { 
+            studentProfiles: true,
+            courses: true,
+            batches: true
+          },
         },
       },
       orderBy: { createdAt: "desc" },

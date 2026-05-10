@@ -5,8 +5,10 @@ import { PricingSection } from "@/components/landing/PricingSection";
 import { CustomSolution } from "@/components/landing/CustomSolution";
 import { Testimonials } from "@/components/landing/Testimonials";
 import { db } from "@/lib/prisma";
+import { auth } from "@/auth";
 
 export default async function PricingPage() {
+  const session = await auth();
   const settings = await db.siteSettings.findFirst({
     where: { workspaceId: null },
     include: {
@@ -31,7 +33,7 @@ export default async function PricingPage() {
 
   return (
     <div className="flex flex-col min-h-screen bg-background">
-      <LandingNavbar settings={settings} />
+      <LandingNavbar settings={settings} user={session?.user} />
 
       <main className="flex-1 bg-background">
         {isSectionActive("page-header-pricing") && (

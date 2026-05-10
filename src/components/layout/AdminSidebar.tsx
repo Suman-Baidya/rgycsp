@@ -17,10 +17,12 @@ import {
   LogOut,
   ShieldCheck,
   Activity,
-  FileText
+  FileText,
+  User
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { signOut } from "next-auth/react";
 import { isActivePath, getTenantLink, detectTenant } from "@/lib/routing";
 
 const navItems = [
@@ -31,6 +33,7 @@ const navItems = [
   { name: "Token Economy", href: "/token-economy", icon: Coins },
   { name: "System Logs", href: "/logs", icon: Activity },
   { name: "Settings", href: "/settings", icon: Settings },
+  { name: "Profile", href: "/profile", icon: User },
 ];
 
 export function AdminSidebar() {
