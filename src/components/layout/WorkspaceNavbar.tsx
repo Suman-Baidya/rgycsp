@@ -68,7 +68,7 @@ export function WorkspaceNavbar({ settings, user, tenant: propTenant }: { settin
   }, [user, settings.workspaceId]);
 
   const dashboardHref = workspaceRole === "STUDENT" ? studentBase : adminBase;
-  const dashboardLabel = workspaceRole === "STUDENT" ? "Learner Portal" : "Dashboard";
+  const dashboardLabel = "Dashboard";
 
   const socialLinks = settings.socialLinks || {};
   const defaultItems = [
@@ -106,8 +106,8 @@ export function WorkspaceNavbar({ settings, user, tenant: propTenant }: { settin
 
   const visibleNavItems = navItems.filter((item: any) => item.isActive !== false);
 
-  const Logo = ({ size = "w-12 h-12", iconSize = "text-2xl", showName = true }: { size?: string, iconSize?: string, showName?: boolean }) => (
-    <div className="flex items-center gap-5 group">
+  const Logo = ({ size = "w-10 h-10 lg:w-12 lg:h-12", iconSize = "text-xl lg:text-2xl", showName = true }: { size?: string, iconSize?: string, showName?: boolean }) => (
+    <div className="flex items-center gap-3 lg:gap-5 group min-w-0">
       <div className={cn(size, "rounded-xl bg-primary flex items-center justify-center shadow-2xl shadow-primary/20 group-hover:scale-105 transition-transform overflow-hidden shrink-0")}>
         {settings.logoUrl ? (
           <img src={settings.logoUrl} alt={settings.siteName} className="w-full h-full object-contain p-1" />
@@ -118,9 +118,13 @@ export function WorkspaceNavbar({ settings, user, tenant: propTenant }: { settin
         )}
       </div>
       {showName && (
-        <div className="flex flex-col">
-          <h1 className="text-2xl font-black text-white leading-none uppercase group-hover:text-primary transition-colors">{settings.siteName || "WORKSPACE"}</h1>
-          <p className="text-[10px] text-primary font-bold tracking-widest mt-1">Computer Education Institute</p>
+        <div className="flex flex-col min-w-0">
+          <h1 className="text-lg lg:text-2xl font-black text-white leading-tight uppercase group-hover:text-primary transition-colors line-clamp-2 break-words">
+            {settings.siteName || "WORKSPACE"}
+          </h1>
+          <p className="text-[8px] lg:text-[10px] text-primary font-bold tracking-widest mt-1 line-clamp-2">
+            Computer Education Institute
+          </p>
         </div>
       )}
     </div>
@@ -141,6 +145,12 @@ export function WorkspaceNavbar({ settings, user, tenant: propTenant }: { settin
           <p className="text-xs font-black uppercase tracking-widest text-slate-400">My Account</p>
         </DropdownMenuLabel>
         <DropdownMenuSeparator className="bg-slate-50 dark:bg-slate-800" />
+        <DropdownMenuItem 
+          onClick={() => window.location.href = dashboardHref}
+          className="lg:hidden rounded-xl h-10 gap-3 font-bold text-xs uppercase tracking-widest cursor-pointer focus:bg-primary focus:text-white"
+        >
+          <LayoutDashboard className="h-4 w-4" /> {dashboardLabel}
+        </DropdownMenuItem>
         <DropdownMenuItem className="rounded-xl h-10 gap-3 font-bold text-xs uppercase tracking-widest cursor-pointer focus:bg-primary focus:text-white">
           <UserIcon className="h-4 w-4" /> Profile
         </DropdownMenuItem>
@@ -210,17 +220,17 @@ export function WorkspaceNavbar({ settings, user, tenant: propTenant }: { settin
         "w-full bg-white/5 backdrop-blur-xl border-b border-white/5 py-4 overflow-hidden transition-all duration-500",
         isScrolled ? "lg:hidden fixed top-0 bg-zinc-950/90 border-b border-white/10 py-3 shadow-2xl z-[150]" : "relative"
       )}>
-        <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
-          <Link href={rootHref}>
+        <div className="max-w-7xl mx-auto px-4 lg:px-6 flex items-center justify-between gap-2 lg:gap-4">
+          <Link href={rootHref} className="min-w-0 flex-1">
             <Logo />
           </Link>
 
-          <div className="flex items-center gap-6">
-            <div className="flex items-center gap-3 pl-6 border-l border-white/10">
+          <div className="flex items-center gap-2 lg:gap-6 shrink-0">
+            <div className="flex items-center gap-2 lg:gap-3 pl-3 lg:pl-6 border-l border-white/10">
               {user ? (
-                <div className="flex items-center gap-5">
-                  <Link href={dashboardHref}>
-                    <Button className="text-[12px] font-bold uppercase tracking-wide bg-primary hover:bg-primary/90 text-primary-foreground h-10 px-6 rounded-xl flex items-center gap-2 group/dash shadow-lg shadow-primary/20 border-none transition-all">
+                <div className="flex items-center gap-3 lg:gap-5">
+                  <Link href={dashboardHref} className="hidden lg:block">
+                    <Button className="hidden lg:flex text-[12px] font-bold uppercase tracking-wide bg-primary hover:bg-primary/90 text-primary-foreground h-10 px-6 rounded-xl items-center gap-2 group/dash shadow-lg shadow-primary/20 border-none transition-all">
                       <LayoutDashboard className="w-3.5 h-3.5 group-hover/dash:rotate-12 transition-transform" />
                       {dashboardLabel}
                     </Button>
@@ -229,12 +239,12 @@ export function WorkspaceNavbar({ settings, user, tenant: propTenant }: { settin
                 </div>
               ) : (
                 <Link href={getLink(settings.navbarConfig?.ctaPrimary?.link || "/login")}>
-                  <Button className="bg-primary hover:bg-primary/90 text-primary-foreground font-black px-8 h-11 rounded-lg text-xs tracking-widest shadow-xl shadow-primary/20 uppercase">
+                  <Button className="bg-primary hover:bg-primary/90 text-primary-foreground font-black px-4 h-9 lg:px-8 lg:h-11 rounded-lg text-[10px] lg:text-xs tracking-widest shadow-xl shadow-primary/20 uppercase">
                     {settings.navbarConfig?.ctaPrimary?.text || "LOGIN"}
                   </Button>
                 </Link>
               )}
-              <Button variant="ghost" size="icon" className="lg:hidden text-white" onClick={() => setIsMobileMenuOpen(true)}>
+              <Button variant="ghost" size="icon" className="lg:hidden text-white shrink-0 -mr-2" onClick={() => setIsMobileMenuOpen(true)}>
                 <Menu className="h-6 w-6" />
               </Button>
             </div>
@@ -320,9 +330,11 @@ export function WorkspaceNavbar({ settings, user, tenant: propTenant }: { settin
             exit={{ x: "100%" }}
             className="fixed inset-0 z-[200] bg-zinc-950 flex flex-col p-8"
           >
-            <div className="flex items-center justify-between mb-12">
-              <span className="font-black text-2xl tracking-tighter text-white uppercase">{settings.siteName}</span>
-              <Button variant="ghost" size="icon" onClick={() => setIsMobileMenuOpen(false)} className="text-white">
+            <div className="flex items-start justify-between mb-8 gap-4">
+              <span className="font-black text-xl leading-tight tracking-tighter text-white uppercase break-words line-clamp-3">
+                {settings.siteName}
+              </span>
+              <Button variant="ghost" size="icon" onClick={() => setIsMobileMenuOpen(false)} className="text-white shrink-0 mt-[-4px] -mr-2">
                 <X className="h-8 w-8" />
               </Button>
             </div>

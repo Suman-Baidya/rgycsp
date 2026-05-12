@@ -18,7 +18,8 @@ import {
   ShieldCheck,
   Activity,
   FileText,
-  User
+  User,
+  MoreHorizontal
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -38,50 +39,31 @@ const navItems = [
 
 export function AdminSidebar() {
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const [isMoreOpen, setIsMoreOpen] = useState(false);
   const pathname = usePathname();
 
-  // Close mobile sidebar on navigation
+  // Close mobile drawer on navigation
   useEffect(() => {
-    setIsMobileOpen(false);
+    setIsMoreOpen(false);
   }, [pathname]);
 
   const toggleSidebar = () => setIsCollapsed(!isCollapsed);
-  const toggleMobile = () => setIsMobileOpen(!isMobileOpen);
+  const toggleMore = () => setIsMoreOpen(!isMoreOpen);
+
+  const mainNavItems = navItems.slice(0, 4);
+  const moreNavItems = navItems.slice(4);
 
   return (
     <>
-      {/* Mobile Trigger */}
-      <div className="lg:hidden fixed top-4 left-4 z-[60]">
-        <Button variant="outline" size="icon" onClick={toggleMobile} className="bg-background/80 backdrop-blur-md border-primary/20 shadow-lg">
-          <Menu className="h-5 w-5" />
-        </Button>
-      </div>
-
-      {/* Mobile Overlay */}
-      <AnimatePresence>
-        {isMobileOpen && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={toggleMobile}
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[55] lg:hidden"
-          />
-        )}
-      </AnimatePresence>
-
-      {/* Sidebar Content */}
+      {/* Desktop Sidebar Content */}
       <motion.aside
         initial={false}
         animate={{
           width: isCollapsed ? 80 : 280,
-          x: isMobileOpen ? 0 : (typeof window !== 'undefined' && window.innerWidth < 1024 ? -300 : 0)
         }}
         transition={{ type: "spring", stiffness: 300, damping: 30 }}
         className={cn(
-          "fixed lg:sticky top-0 inset-y-0 left-0 z-[60] bg-zinc-950 text-zinc-400 border-r border-white/5 flex flex-col transition-all duration-300 ease-in-out h-screen overflow-x-hidden",
-          isMobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
+          "hidden lg:flex sticky top-0 inset-y-0 left-0 z-[60] bg-zinc-950 text-zinc-400 border-r border-white/5 flex-col transition-all duration-300 ease-in-out h-screen overflow-x-hidden",
         )}
       >
         {/* Header */}
@@ -116,15 +98,6 @@ export function AdminSidebar() {
             )}
           >
             {isCollapsed ? <ChevronRight className="h-6 w-6" /> : <ChevronLeft className="h-4 w-4" />}
-          </Button>
-
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={toggleMobile}
-            className="lg:hidden hover:bg-white/5 text-zinc-500 absolute right-4"
-          >
-            <X className="h-5 w-5" />
           </Button>
         </div>
 
@@ -206,6 +179,101 @@ export function AdminSidebar() {
         </div>
         </div>
       </motion.aside>
+
+      {/* Mobile Bottom Navigation */}
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-[60] bg-zinc-950/95 backdrop-blur-md border-t border-white/10 pb-safe pb-4 pt-2">
+        <div className="flex items-center justify-around px-2">
+          {mainNavItems.map((item) => {
+            const isSubdomain = typeof window !== 'undefined' && window.location.host.startsWith('super-admin.');
+            const href = isSubdomain ? item.href : `/super-admin${item.href === "/" ? "" : item.href}`;
+            const isActive = isActivePath(pathname, href);
+            
+            return (
+              <Link key={item.name} href={href} className="flex flex-col items-center gap-1 w-16">
+                <div className={cn(
+                  "p-2 rounded-xl transition-all duration-300 flex items-center justify-center",
+                  isActive ? "bg-primary text-primary-foreground shadow-[0_4px_12px_-4px_rgba(var(--primary),0.5)]" : "text-zinc-400"
+                )}>
+                  <item.icon className="h-5 w-5" />
+                </div>
+                <span className={cn(
+                  "text-[10px] font-medium transition-colors text-center w-full truncate px-1",
+                  isActive ? "text-primary" : "text-zinc-500"
+                )}>
+                  {item.name}
+                </span>
+              </Link>
+            );
+          })}
+          
+          <button onClick={toggleMore} className="flex flex-col items-center gap-1 w-16">
+            <div className={cn(
+              "p-2 rounded-xl transition-all duration-300 flex items-center justify-center",
+              isMoreOpen ? "bg-white/10 text-white" : "text-zinc-400"
+            )}>
+              <MoreHorizontal className="h-5 w-5" />
+            </div>
+            <span className={cn(
+              "text-[10px] font-medium transition-colors text-center w-full truncate px-1",
+              isMoreOpen ? "text-white" : "text-zinc-500"
+            )}>
+              More
+            </span>
+          </button>
+        </div>
+      </div>
+
+      {/* Mobile More Drawer */}
+      <AnimatePresence>
+        {isMoreOpen && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={toggleMore}
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[55] lg:hidden"
+            />
+            <motion.div
+              initial={{ y: "100%" }}
+              animate={{ y: 0 }}
+              exit={{ y: "100%" }}
+              transition={{ type: "spring", stiffness: 300, damping: 30 }}
+              className="fixed bottom-[76px] left-0 right-0 z-[55] bg-zinc-950 border-t border-white/10 rounded-t-3xl overflow-hidden flex flex-col max-h-[70vh] lg:hidden shadow-[0_-10px_40px_rgba(0,0,0,0.5)]"
+            >
+              <div className="w-12 h-1.5 bg-zinc-800 rounded-full mx-auto mt-4 mb-2" />
+              <div className="flex-1 overflow-y-auto p-4 space-y-2 custom-scrollbar">
+                {moreNavItems.map((item) => {
+                  const isSubdomain = typeof window !== 'undefined' && window.location.host.startsWith('super-admin.');
+                  const href = isSubdomain ? item.href : `/super-admin${item.href === "/" ? "" : item.href}`;
+                  const isActive = isActivePath(pathname, href);
+                  
+                  return (
+                    <Link key={item.name} href={href}>
+                      <div className={cn(
+                        "flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-300",
+                        isActive ? "bg-primary text-primary-foreground shadow-md" : "hover:bg-white/5 text-zinc-300"
+                      )}>
+                        <item.icon className="h-5 w-5" />
+                        <span className="font-medium">{item.name}</span>
+                      </div>
+                    </Link>
+                  );
+                })}
+              </div>
+              <div className="p-4 border-t border-white/5 bg-zinc-950">
+                <div 
+                  onClick={() => signOut({ callbackUrl: "/" })}
+                  className="flex items-center gap-3 px-4 py-3.5 rounded-xl hover:bg-red-500/10 bg-red-500/5 text-red-500 transition-all cursor-pointer"
+                >
+                  <LogOut className="h-5 w-5" />
+                  <span className="font-medium">Logout</span>
+                </div>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </>
   );
 }

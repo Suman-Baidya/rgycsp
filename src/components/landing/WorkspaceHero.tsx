@@ -100,18 +100,18 @@ export function WorkspaceHero({ data }: { data: any }) {
             {slide.description}
           </p>
 
-          <div className="flex flex-wrap items-center gap-6 pt-4">
+          <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6 pt-4 w-full sm:w-auto">
             {slide.btn1Text && (
-               <Link href={getLink(slide.btn1Link || "/login")}>
-                <Button size="lg" className="w-full sm:w-[220px] bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl h-16 text-lg font-bold shadow-2xl shadow-primary/20 transition-all hover:scale-[1.02] active:scale-95 group">
+               <Link href={getLink(slide.btn1Link || "/login")} className="w-full sm:w-auto">
+                <Button size="lg" className="w-full sm:w-[220px] bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl h-14 sm:h-16 text-base sm:text-lg font-bold shadow-2xl shadow-primary/20 transition-all hover:scale-[1.02] active:scale-95 group">
                   {slide.btn1Text}
                   <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
                 </Button>
               </Link>
             )}
             {slide.btn2Text && (
-              <Link href={getLink(slide.btn2Link || "/about")}>
-                <Button size="lg" variant="outline" className="w-full sm:w-[220px] border-white/10 text-primary hover:text-primary hover:bg-primary/5 rounded-xl h-16 text-lg font-bold backdrop-blur-xl transition-all hover:scale-[1.02] active:scale-95">
+              <Link href={getLink(slide.btn2Link || "/about")} className="w-full sm:w-auto">
+                <Button size="lg" variant="outline" className="w-full sm:w-[220px] border-white/10 text-primary hover:text-primary hover:bg-primary/5 rounded-xl h-14 sm:h-16 text-base sm:text-lg font-bold backdrop-blur-xl transition-all hover:scale-[1.02] active:scale-95">
                   {slide.btn2Text}
                 </Button>
               </Link>

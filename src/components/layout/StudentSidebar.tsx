@@ -16,6 +16,7 @@ import {
   LogOut,
   Building2,
   FileText,
+  MoreHorizontal,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -25,7 +26,7 @@ import { detectTenant, getTenantLink, isActivePath, WORKSPACE_ROUTES } from "@/l
 
 export function StudentSidebar({ tenant: propTenant }: { tenant?: string }) {
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const [isMoreOpen, setIsMoreOpen] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
   const pathname = usePathname();
   
@@ -42,28 +43,19 @@ export function StudentSidebar({ tenant: propTenant }: { tenant?: string }) {
 
   useEffect(() => {
     setIsMounted(true);
-    setIsMobileOpen(false);
+    setIsMoreOpen(false);
   }, [pathname]);
 
   const toggleSidebar = () => setIsCollapsed(!isCollapsed);
-  const toggleMobile = () => setIsMobileOpen(!isMobileOpen);
+  const toggleMore = () => setIsMoreOpen(!isMoreOpen);
 
   if (!isMounted) return null;
 
+  const mainNavItems = navItems.slice(0, 4);
+  const moreNavItems = navItems.slice(4);
+
   return (
     <>
-      <AnimatePresence>
-        {isMobileOpen && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={toggleMobile}
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[55] lg:hidden"
-          />
-        )}
-      </AnimatePresence>
-
       <motion.aside
         initial={false}
         animate={{
@@ -169,6 +161,103 @@ export function StudentSidebar({ tenant: propTenant }: { tenant?: string }) {
           </div>
         </div>
       </motion.aside>
+
+      {/* Mobile Bottom Navigation */}
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-[60] bg-slate-900/95 backdrop-blur-md border-t border-white/10 pb-safe pb-4 pt-2">
+        <div className="flex items-center justify-around px-2">
+          {mainNavItems.map((item) => {
+            const isActive = isActivePath(pathname, item.href);
+            
+            return (
+              <Link key={item.name} href={item.href} className="flex flex-col items-center gap-1 w-16 relative">
+                <div className={cn(
+                  "p-2 rounded-xl transition-all duration-300 flex items-center justify-center",
+                  isActive ? "bg-primary text-primary-foreground shadow-lg" : "text-slate-400"
+                )}>
+                  <item.icon className="h-5 w-5" />
+                </div>
+                <span className={cn(
+                  "text-[10px] font-medium transition-colors text-center w-full truncate px-1",
+                  isActive ? "text-primary" : "text-slate-500"
+                )}>
+                  {item.name}
+                </span>
+              </Link>
+            );
+          })}
+          
+          <button onClick={toggleMore} className="flex flex-col items-center gap-1 w-16 relative">
+            <div className={cn(
+              "p-2 rounded-xl transition-all duration-300 flex items-center justify-center",
+              isMoreOpen ? "bg-white/10 text-white" : "text-slate-400"
+            )}>
+              <MoreHorizontal className="h-5 w-5" />
+            </div>
+            <span className={cn(
+              "text-[10px] font-medium transition-colors text-center w-full truncate px-1",
+              isMoreOpen ? "text-white" : "text-slate-500"
+            )}>
+              More
+            </span>
+          </button>
+        </div>
+      </div>
+
+      {/* Mobile More Drawer */}
+      <AnimatePresence>
+        {isMoreOpen && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={toggleMore}
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[55] lg:hidden"
+            />
+            <motion.div
+              initial={{ y: "100%" }}
+              animate={{ y: 0 }}
+              exit={{ y: "100%" }}
+              transition={{ type: "spring", stiffness: 300, damping: 30 }}
+              className="fixed bottom-[76px] left-0 right-0 z-[55] bg-slate-900 border-t border-white/10 rounded-t-3xl overflow-hidden flex flex-col max-h-[70vh] lg:hidden shadow-[0_-10px_40px_rgba(0,0,0,0.5)]"
+            >
+              <div className="w-12 h-1.5 bg-slate-800 rounded-full mx-auto mt-4 mb-2" />
+              <div className="flex-1 overflow-y-auto p-4 space-y-2 custom-scrollbar">
+                {moreNavItems.map((item) => {
+                  const isActive = isActivePath(pathname, item.href);
+                  
+                  return (
+                    <Link key={item.name} href={item.href}>
+                      <div className={cn(
+                        "flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-300",
+                        isActive ? "bg-primary text-primary-foreground shadow-md" : "hover:bg-white/5 text-slate-300"
+                      )}>
+                        <item.icon className="h-5 w-5" />
+                        <span className="font-medium">{item.name}</span>
+                      </div>
+                    </Link>
+                  );
+                })}
+              </div>
+              <div className="p-4 border-t border-white/5 bg-slate-900">
+                <div 
+                  onClick={async () => {
+                    const origin = typeof window !== 'undefined' ? `${window.location.protocol}//${window.location.host}` : '';
+                    const workspaceBaseUrl = getTenantLink("/", tenant, pathname);
+                    const target = `${origin}${workspaceBaseUrl}`;
+                    await signOut({ redirect: false });
+                    window.location.href = target;
+                  }}
+                  className="flex items-center gap-3 px-4 py-3.5 rounded-xl hover:bg-red-500/10 bg-red-500/5 text-red-500 transition-all cursor-pointer"
+                >
+                  <LogOut className="h-5 w-5" />
+                  <span className="font-medium">Logout</span>
+                </div>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </>
   );
 }
