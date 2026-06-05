@@ -71,7 +71,7 @@ export default async function WorkspaceEnquiryPage({
                <div className="p-8 rounded-[2rem] bg-slate-50 dark:bg-zinc-900 border border-border/40 space-y-4">
                   <Mail className="w-6 h-6 text-primary" />
                   <h4 className="font-black text-sm uppercase tracking-widest">Email Us</h4>
-                  <p className="text-xl font-bold text-slate-700 dark:text-slate-300 break-words">{workspace.siteSettings.contactEmail || "info@abcdeduhub.com"}</p>
+                  <p className="text-xl font-bold text-slate-700 dark:text-slate-300 break-words">{workspace.siteSettings.contactEmail || "info@rgycsp.com"}</p>
                </div>
             </div>
           </div>

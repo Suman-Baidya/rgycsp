@@ -76,7 +76,7 @@ export function WorkspaceSettingsForm({ settings }: { settings: any }) {
   const [activeTab, setActiveTab] = useState("branding");
   const [sectionSearch, setSectionSearch] = useState("");
 
-  const mediaFolderBase = `ABCDEduHub/Workspaces/${settings.workspace?.subdomain || 'Unknown'}`;
+  const mediaFolderBase = `RGYCSP/Workspaces/${settings.workspace?.subdomain || 'Unknown'}`;
 
   useEffect(() => {
     setSiteName(settings.siteName);
@@ -577,7 +577,7 @@ export function WorkspaceSettingsForm({ settings }: { settings: any }) {
                    variant="outline" 
                    size="sm" 
                    onClick={async () => {
-                     const types = ['hero', 'about', 'counters', 'courses', 'why-choose-us', 'achievements', 'partners', 'events', 'testimonials', 'faq', 'contact'];
+                     const types = ['hero', 'quick-links', 'about', 'counters', 'courses', 'why-choose-us', 'achievements', 'partners', 'events', 'testimonials', 'faq', 'contact'];
                      const res = await syncAllSections(settings.id, types);
                      if (res.success) {
                        toast.success(res.created ? `Initialized ${res.created} new sections!` : "Sections already synced.");
@@ -695,6 +695,7 @@ function SectionEditor({ section, settings, mediaFolderBase }: { section: any, s
 
             <div className="bg-zinc-50 dark:bg-zinc-950 p-8 rounded-[2.5rem] border border-border/20 shadow-inner">
                {section.type === 'hero' && <HeroContentEditor content={content} setContent={setContent} mediaFolderBase={mediaFolderBase} />}
+               {section.type === 'quick-links' && <QuickLinksContentEditor content={content} setContent={setContent} />}
                {section.type === 'about' && <AboutNoticeContentEditor content={content} setContent={setContent} mediaFolderBase={mediaFolderBase} />}
                {section.type === 'counters' && <CountersContentEditor content={content} setContent={setContent} mediaFolderBase={mediaFolderBase} />}
                {section.type === 'courses' && <CoursesContentEditor content={content} setContent={setContent} mediaFolderBase={mediaFolderBase} />}
@@ -2109,6 +2110,56 @@ function LegalContentEditor({ settings }: { settings: any }) {
               </ul>
            </div>
         </div>
+      </div>
+    </div>
+  );
+}
+
+function QuickLinksContentEditor({ content, setContent }: any) {
+  return (
+    <div className="space-y-8">
+      <div className="flex items-center justify-between mb-4">
+        <h4 className="text-xs font-black uppercase tracking-[0.2em] text-primary">Quick Links</h4>
+        <Button size="sm" variant="outline" onClick={() => {
+          const newLinks = [...(content.links || []), { title: "New Link", description: "Description", url: "#", icon: "Link" }];
+          setContent({ ...content, links: newLinks });
+        }} className="rounded-xl font-bold h-10 border-primary/20 text-primary">
+          <Plus className="w-4 h-4 mr-2" /> Add Link
+        </Button>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {(content.links || []).map((link: any, idx: number) => (
+          <div key={idx} className="p-6 bg-white dark:bg-zinc-900 border border-border/40 rounded-[2rem] space-y-4 shadow-sm relative group">
+            <div className="flex justify-between items-center">
+              <span className="text-[10px] font-black text-primary/60 uppercase tracking-widest">Link #{idx + 1}</span>
+              <Button variant="ghost" size="icon" className="h-8 w-8 text-red-500 rounded-lg opacity-0 group-hover:opacity-100 transition-all" onClick={() => {
+                const newLinks = content.links.filter((_: any, i: number) => i !== idx);
+                setContent({ ...content, links: newLinks });
+              }}><Trash2 className="h-4 w-4" /></Button>
+            </div>
+            <div className="space-y-2">
+              <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Title</Label>
+              <Input value={link.title || ""} onChange={(e) => { const n = [...content.links]; n[idx].title = e.target.value; setContent({ ...content, links: n }); }} className="h-10 rounded-xl bg-zinc-50 dark:bg-zinc-800 border-none font-bold text-sm" />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Description</Label>
+              <Input value={link.description || ""} onChange={(e) => { const n = [...content.links]; n[idx].description = e.target.value; setContent({ ...content, links: n }); }} className="h-10 rounded-xl bg-zinc-50 dark:bg-zinc-800 border-none text-sm" />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">URL</Label>
+                <Input value={link.url || ""} onChange={(e) => { const n = [...content.links]; n[idx].url = e.target.value; setContent({ ...content, links: n }); }} className="h-10 rounded-xl bg-zinc-50 dark:bg-zinc-800 border-none text-sm" placeholder="/student/dashboard" />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Icon Name</Label>
+                <Input value={link.icon || ""} onChange={(e) => { const n = [...content.links]; n[idx].icon = e.target.value; setContent({ ...content, links: n }); }} className="h-10 rounded-xl bg-zinc-50 dark:bg-zinc-800 border-none text-sm" placeholder="e.g. Building2" />
+                <p className="text-[9px] text-muted-foreground mt-1 ml-1">
+                  Popular icons: <span className="font-bold">Building2, GraduationCap, FileCheck, Newspaper, User, Mail, Phone, Shield, Globe, BookOpen, Users</span>
+                </p>
+              </div>
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );

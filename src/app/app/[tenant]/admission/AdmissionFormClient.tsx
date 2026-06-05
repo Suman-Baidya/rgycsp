@@ -575,15 +575,15 @@ export default function AdmissionFormClient({ workspaceId, workspaceName, config
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div className="space-y-2">
                   <Label>Photo *</Label>
-                  <ImageUpload value={watch("photoUrl")} onChange={(url) => setValue("photoUrl", url)} maxSizeK={100} />
+                  <ImageUpload value={watch("photoUrl")} onChange={(url) => setValue("photoUrl", url)} maxSizeK={100} folder={`RGYCSP/Workspaces/${tenant || 'global'}/admissions`} />
                 </div>
                 <div className="space-y-2">
                   <Label>Signature *</Label>
-                  <ImageUpload value={watch("signatureUrl")} onChange={(url) => setValue("signatureUrl", url)} maxSizeK={100} />
+                  <ImageUpload value={watch("signatureUrl")} onChange={(url) => setValue("signatureUrl", url)} maxSizeK={100} folder={`RGYCSP/Workspaces/${tenant || 'global'}/admissions`} />
                 </div>
                 <div className="space-y-2 md:col-span-2">
                   <Label>ID Proof *</Label>
-                  <ImageUpload value={watch("idProofUrl")} onChange={(url) => setValue("idProofUrl", url)} maxSizeK={1024} />
+                  <ImageUpload value={watch("idProofUrl")} onChange={(url) => setValue("idProofUrl", url)} maxSizeK={1024} folder={`RGYCSP/Workspaces/${tenant || 'global'}/admissions`} />
                 </div>
               </div>
             )}

@@ -1,6 +1,7 @@
 import { LandingNavbar } from "@/components/layout/LandingNavbar";
 import { MainFooter } from "@/components/layout/MainFooter";
 import { HeroSection } from "@/components/landing/HeroSection";
+import { QuickLinksSection } from "@/components/landing/QuickLinksSection";
 import { AboutSection } from "@/components/landing/AboutSection";
 import { WhyChooseUs } from "@/components/landing/WhyChooseUs";
 import { Achievements } from "@/components/landing/Achievements";
@@ -45,6 +46,8 @@ export default async function RootLandingPage() {
       <main className="flex-1 w-full flex flex-col">
         {isSectionActive("hero") && <HeroSection data={getSectionData("hero")} />}
         
+        {isSectionActive("quick-links") && <QuickLinksSection data={getSectionData("quick-links")} />}
+
         {isSectionActive("about") && <AboutSection data={getSectionData("about")} />}
 
         {isSectionActive("why-choose-us") && <WhyChooseUs data={getSectionData("why-choose-us")} />}

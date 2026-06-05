@@ -8,11 +8,10 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-export async function uploadImage(file: string, folder: string = "general", workspaceName?: string) {
-  const baseFolder = "ABCDEduHub";
-  // Clean workspace name (remove spaces, special chars) to be safe for Cloudinary folder
-  const cleanWorkspace = workspaceName ? workspaceName.replace(/[^a-zA-Z0-9]/g, '_') : "global";
-  const finalFolder = `${baseFolder}/${cleanWorkspace}/${folder}`;
+export async function uploadImage(file: string, folder: string = "RGYCSP/Uncategorized") {
+  // Ensure the folder starts with RGYCSP for root organization
+  const finalFolder = folder.startsWith("RGYCSP") ? folder : `RGYCSP/${folder}`;
+
   
   console.log("Attempting upload to Cloudinary, folder:", finalFolder);
   try {

@@ -13,13 +13,13 @@ interface PageHeaderProps {
 
 export function PageHeader({ title: propTitle, subtitle: propSubtitle, bgImage: propBgImage, breadcrumb: propBreadcrumb, data }: PageHeaderProps) {
   const content = data?.content || {};
-  
+
   const title = (data?.title !== null && data?.title !== undefined) ? data.title : (propTitle || "Page Title");
   const subtitle = (data?.subtitle !== null && data?.subtitle !== undefined) ? data.subtitle : (propSubtitle || "");
   const bgImage = content.bgImage || propBgImage || "https://images.unsplash.com/photo-1517245318773-b7b83696770c?q=80&w=2070";
   const breadcrumb = content.breadcrumb || propBreadcrumb || title;
   return (
-    <div className="relative h-[400px] md:h-[500px] w-full flex items-center justify-center overflow-hidden">
+    <div className="relative h-[350px] md:h-[580px] w-full flex items-center justify-center overflow-hidden">
       {/* Background Image with Overlay */}
       <div
         className="absolute inset-0 z-0"

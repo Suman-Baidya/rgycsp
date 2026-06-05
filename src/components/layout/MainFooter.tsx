@@ -10,7 +10,9 @@ import { Button } from "@/components/ui/button";
 
 export function MainFooter({ settings }: { settings?: any }) {
   const siteName = settings?.siteName || "ABCD Edu Hub";
+  const footerBrandName = settings?.navbarConfig?.footerBrandName || siteName;
   const logoUrl = settings?.logoUrl || "/logo.png";
+  const footerTagline = settings?.navbarConfig?.footerTagline || "Global Education Platform";
   const contactEmail = settings?.contactEmail || "sb.abcd321@gmail.com";
   const contactPhone = settings?.contactPhone || "8944899747";
   const address = settings?.address || "Kolkata, West Bengal, India - 700001";
@@ -58,8 +60,8 @@ export function MainFooter({ settings }: { settings?: any }) {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-16 lg:gap-12">
           {/* Brand Info */}
           <div className="lg:col-span-4 space-y-10">
-            <Link href="/" className="flex items-center gap-4 w-fit group">
-              <div className="relative w-12 h-12 flex items-center justify-center bg-white rounded-2xl overflow-hidden p-2 shadow-2xl shadow-white/10 group-hover:scale-105 transition-all duration-500">
+            <Link href="/" className="flex items-center gap-1 w-fit group">
+              <div className="relative w-20 h-20 flex items-center justify-center rounded overflow-hidden p-2 shadow-2xl shadow-white/10 group-hover:scale-105 transition-all duration-500">
                 <Image
                   src={logoUrl}
                   alt={siteName}
@@ -76,10 +78,12 @@ export function MainFooter({ settings }: { settings?: any }) {
                 </div>
               </div>
               <div className="flex flex-col">
-                <span className="text-2xl font-black tracking-tighter text-white uppercase leading-none">
-                  {siteName}
+                <span className="text-4xl font-black text-white leading-none">
+                  {footerBrandName}
                 </span>
-                <span className="text-[10px] font-bold text-white tracking-[0.3em] uppercase mt-2 opacity-60">Global Education Platform</span>
+                <span className="text-[10px] font-bold text-white tracking-tight mt-2 opacity-60">
+                  {footerTagline}
+                </span>
               </div>
             </Link>
 

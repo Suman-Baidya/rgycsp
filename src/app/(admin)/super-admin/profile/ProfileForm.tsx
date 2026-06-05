@@ -260,7 +260,7 @@ export function ProfileForm({ user }: ProfileFormProps) {
                             value={image} 
                             onChange={setImage} 
                             label="Avatar" 
-                            folder="ABCDEduHub/SuperAdmin/Profile" 
+                            folder="RGYCSP/SuperAdmin/Profile" 
                           />
                         </div>
                         <p className="text-[10px] text-slate-400 font-bold italic mt-2 px-1 text-center">

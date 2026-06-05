@@ -40,7 +40,9 @@ export function WorkspaceFooter({ settings, tenant: propTenant, user }: { settin
   const rootHref = getTenantLink("/", tenant, pathname);
 
   const siteName = settings?.siteName || "Institute Portal";
+  const footerBrandName = settings?.navbarConfig?.footerBrandName || siteName;
   const logoUrl = settings?.logoUrl || "/logo.png";
+  const footerTagline = settings?.navbarConfig?.footerTagline || "Official Institute Portal";
   const contactEmail = settings?.contactEmail || "";
   const contactPhone = settings?.contactPhone || "";
   const address = settings?.address || "";
@@ -108,9 +110,14 @@ export function WorkspaceFooter({ settings, tenant: propTenant, user }: { settin
                   </div>
                 )}
               </div>
-              <span className="text-2xl font-bold tracking-tighter text-white group-hover:text-primary transition-colors">
-                {siteName}
-              </span>
+              <div className="flex flex-col ml-1">
+                <span className="text-2xl font-bold tracking-tighter text-white group-hover:text-primary transition-colors leading-none">
+                  {footerBrandName}
+                </span>
+                <span className="text-[10px] font-bold text-zinc-500 tracking-[0.2em] uppercase mt-1">
+                  {footerTagline}
+                </span>
+              </div>
             </Link>
             {mounted && tenant && (
               <Link href={workspaceRole === "STUDENT" ? getLink("/student/dashboard") : adminBase}>

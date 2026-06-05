@@ -39,7 +39,12 @@ export async function getPostLoginRedirect(currentHost: string, currentPath: str
     include: { workspace: true }
   });
 
-  if (workspaceRoles.length === 0) {
+  const studentProfiles = await db.studentProfile.findMany({
+    where: { userId: user.id },
+    include: { workspace: true }
+  });
+
+  if (workspaceRoles.length === 0 && studentProfiles.length === 0) {
     return "/"; 
   }
 
@@ -48,16 +53,26 @@ export async function getPostLoginRedirect(currentHost: string, currentPath: str
   
   const currentWorkspaceRole = workspaceRoles.find(wr => wr.workspace.subdomain === currentTenant);
   if (currentWorkspaceRole) {
-    // They belong to this workspace
+    // They belong to this workspace via Role
     const base = currentWorkspaceRole.role === "STUDENT" ? "/student/dashboard" : "/admin";
     return base;
   }
 
+  const currentStudentProfile = studentProfiles.find(sp => sp.workspace.subdomain === currentTenant);
+  if (currentStudentProfile) {
+    // They belong to this workspace via Student Profile
+    return "/student/dashboard";
+  }
+
   // If they are on a workspace subdomain they DON'T belong to (e.g. invited link)
   // Redirect to their first workspace dashboard (absolute URL)
-  const primaryWR = workspaceRoles[0];
   const protocol = currentHost.includes("localhost") ? "http" : "https";
-  const base = primaryWR.role === "STUDENT" ? "/student/dashboard" : "/admin";
-  
-  return `${protocol}://${primaryWR.workspace.subdomain}.${rootDomain}${base}`;
+  if (workspaceRoles.length > 0) {
+    const primaryWR = workspaceRoles[0];
+    const base = primaryWR.role === "STUDENT" ? "/student/dashboard" : "/admin";
+    return `${protocol}://${primaryWR.workspace.subdomain}.${rootDomain}${base}`;
+  } else {
+    const primarySP = studentProfiles[0];
+    return `${protocol}://${primarySP.workspace.subdomain}.${rootDomain}/student/dashboard`;
+  }
 }

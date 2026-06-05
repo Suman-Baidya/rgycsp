@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { WorkspaceNavbar } from "@/components/layout/WorkspaceNavbar";
 import { WorkspaceFooter } from "@/components/layout/WorkspaceFooter";
 import { WorkspaceHero } from "@/components/landing/WorkspaceHero";
+import { QuickLinksSection } from "@/components/landing/QuickLinksSection";
 import { AboutNoticeSection } from "@/components/landing/AboutNoticeSection";
 import { DynamicCounters } from "@/components/landing/DynamicCounters";
 import { WorkspaceCourses } from "@/components/landing/WorkspaceCourses";
@@ -165,6 +166,8 @@ export default async function InstituteLandingPage({
 
         <div className="relative z-10 flex flex-col w-full">
         {isSectionActive("hero") && <WorkspaceHero data={getSectionData("hero")} />}
+        
+        {isSectionActive("quick-links") && <QuickLinksSection data={getSectionData("quick-links")} tenant={tenant} />}
         
         {isSectionActive("about") && <AboutNoticeSection data={getSectionData("about")} />}
 

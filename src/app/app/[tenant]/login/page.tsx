@@ -3,6 +3,8 @@ import { LoginForm } from "@/components/auth/LoginForm";
 import { CustomThemeStyle } from "@/components/providers/CustomThemeStyle";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
+import { headers } from "next/headers";
+import { getPostLoginRedirect } from "@/app/actions/auth";
 
 export default async function WorkspaceLoginPage({
   params
@@ -12,15 +14,13 @@ export default async function WorkspaceLoginPage({
   const session = await auth();
   const { tenant } = await params;
 
-  // If already logged in, redirect to student dashboard
+  // If already logged in, intelligently redirect based on role
   if (session) {
-    const isSubdirectoryMode = (await params).tenant !== undefined; // In the app/[tenant] structure, it's always available
-    // But we need to know if the actual URL started with /app/
-    // Since this is a server component, we can use params to build the correct path
-    // For subdomain mode, tenant is handled by middleware rewrite, so we redirect to /student/dashboard
-    // For subdirectory mode, we need the /app/[tenant] prefix
-    // The safest way is to use a relative redirect or detect mode from headers
-    redirect(`/student/dashboard`); // Next.js handles relative redirects within the same host/context
+    const headersList = await headers();
+    const host = headersList.get("host") || "";
+    const pathname = headersList.get("x-pathname") || `/app/${tenant}/login`;
+    const redirectUrl = await getPostLoginRedirect(host, pathname);
+    redirect(redirectUrl);
   }
 
   const workspace = await db.workspace.findUnique({
@@ -51,7 +51,7 @@ export default async function WorkspaceLoginPage({
           tenantName={workspace.name}
           tenantLogo={workspace.logoUrl || workspace.siteSettings?.logoUrl}
           primaryColor={workspace.siteSettings?.primaryColor}
-          callbackUrl="/student/dashboard"
+          tenantSlug={tenant}
         />
       </div>
     </div>

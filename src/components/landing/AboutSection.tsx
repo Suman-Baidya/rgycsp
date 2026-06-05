@@ -1,15 +1,25 @@
+"use client";
+
 import { AnimatedCounter } from "./AnimatedCounter";
-import { CheckCircle2 } from "lucide-react";
+import { CheckCircle2, ChevronDown, ChevronUp, Globe, Users, Building2, TrendingUp, Award, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
+import { useState } from "react";
 
 export function AboutSection({ data }: { data?: any }) {
+  const [isExpanded, setIsExpanded] = useState(false);
   const content = data?.content || {};
   const title = data?.title || "Pioneering the Digital Era of Education";
   const subtitle = data?.subtitle || "About Us";
   const description = content.description || "ABCD Edu Hub was established with a singular vision: to empower educational institutions with the ultimate toolkit. From AI-driven assessment generation to a robust internal token economy, we bring Silicon Valley technology directly to your classroom.";
   const image = content.image || "https://cdn.pixabay.com/photo/2019/12/12/00/11/digitization-4689528_1280.jpg";
+  
   const metricValue = content.metricValue || "500+";
+  const metricTitle = content.metricTitle || "Global Reach";
+  const metricSuffix = content.metricSuffix || "Inst.";
+  const metricIconName = content.metricIcon || "CheckCircle2";
+  const iconMap: any = { CheckCircle2, Globe, Users, Building2, TrendingUp, Award, Zap };
+  const MetricIcon = iconMap[metricIconName] || CheckCircle2;
 
   const defaultFeatures = [
     "Next-generation multi-tenant cloud capability.",
@@ -18,6 +28,8 @@ export function AboutSection({ data }: { data?: any }) {
   ];
 
   const features = content.features || defaultFeatures;
+
+  const isLongDescription = description.length > 250;
 
   return (
     <section id="about" className="py-24 px-6 bg-zinc-50 dark:bg-black/20">
@@ -37,13 +49,13 @@ export function AboutSection({ data }: { data?: any }) {
 
           {/* Floating Metric Card */}
           <div className="absolute -bottom-8 -right-8 bg-background border border-border/40 shadow-2xl p-6 rounded-[2rem] z-20 flex items-center gap-4 hidden sm:flex">
-            <div className="w-14 h-14 bg-primary text-primary flex items-center justify-center rounded-2xl shadow-lg shadow-primary/30">
-              <CheckCircle2 className="w-8 h-8" />
+            <div className="w-14 h-14 bg-primary text-primary-foreground flex items-center justify-center rounded-2xl shadow-lg shadow-primary/30">
+              <MetricIcon className="w-8 h-8" />
             </div>
             <div>
-              <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest">Global Reach</p>
+              <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest">{metricTitle}</p>
               <p className="text-3xl font-black text-foreground">
-                {metricValue} <span className="text-xs text-muted-foreground font-bold tracking-normal">Inst.</span>
+                {metricValue} <span className="text-xs text-muted-foreground font-bold tracking-normal">{metricSuffix}</span>
               </p>
             </div>
           </div>
@@ -58,9 +70,27 @@ export function AboutSection({ data }: { data?: any }) {
           <h2 className="text-4xl lg:text-5xl font-extrabold mt-3 tracking-tight leading-tight">
             {title}
           </h2>
-          <p className="mt-6 text-lg text-muted-foreground leading-relaxed">
-            {description}
-          </p>
+          
+          <div className="mt-6 relative">
+            <p className={cn(
+              "text-lg text-muted-foreground leading-relaxed whitespace-pre-line transition-all duration-300",
+              !isExpanded && isLongDescription ? "line-clamp-4" : ""
+            )}>
+              {description}
+            </p>
+            {isLongDescription && (
+              <button 
+                onClick={() => setIsExpanded(!isExpanded)}
+                className="mt-3 flex items-center gap-1.5 text-sm font-bold text-primary hover:text-primary/80 transition-colors"
+              >
+                {isExpanded ? (
+                  <>Show Less <ChevronUp className="w-4 h-4" /></>
+                ) : (
+                  <>Read More <ChevronDown className="w-4 h-4" /></>
+                )}
+              </button>
+            )}
+          </div>
 
           <ul className="mt-8 space-y-4">
             {features.map((feature: string, i: number) => (

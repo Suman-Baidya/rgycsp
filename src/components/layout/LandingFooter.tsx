@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 
 export function LandingFooter({ settings }: { settings?: any }) {
   const siteName = settings?.siteName || "ABCD Edu Hub";
+  const footerBrandName = settings?.navbarConfig?.footerBrandName || siteName;
   const logoUrl = settings?.logoUrl || "/logo.png";
   const contactEmail = settings?.contactEmail || "sb.abcd321@gmail.com";
   const contactPhone = settings?.contactPhone || "8944899747";
@@ -19,6 +20,7 @@ export function LandingFooter({ settings }: { settings?: any }) {
   const whatsapp = settings?.whatsapp;
   
   const brandDescription = settings?.brandDescription || "Empowering the next generation of learners through innovative technology and expert-led educational programs. Your success is our ultimate mission.";
+  const footerTagline = settings?.navbarConfig?.footerTagline || settings?.navbarConfig?.secondarySiteName || "Empowering Education Worldwide";
   
   const navLinks = settings?.navigation || [
     { name: "Home", href: "/", id: "home" },
@@ -58,30 +60,35 @@ export function LandingFooter({ settings }: { settings?: any }) {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-16">
           {/* Brand Column */}
-          <div className="space-y-8">
-            <Link href="/" className="flex items-center gap-3 shrink-0 group w-fit">
-              <div className="relative w-12 h-12 flex items-center justify-center shrink-0 bg-white/5 rounded-2xl overflow-hidden border border-white/10 p-1 group-hover:border-primary/50 transition-all">
+          <div className="space-y-6">
+            <Link href="/" className="flex items-center gap-4 shrink-0 group w-fit">
+              <div className="relative w-14 h-14 flex items-center justify-center shrink-0 bg-white rounded-xl overflow-hidden shadow-lg p-2 group-hover:shadow-primary/20 group-hover:scale-105 transition-all duration-300">
                 <Image
                   src={logoUrl}
                   alt={`${siteName} Logo`}
                   fill
-                  className="object-contain"
+                  className="object-contain p-1"
                   onError={(e) => {
                     e.currentTarget.style.display = 'none';
                     const fallback = e.currentTarget.parentElement?.querySelector('.logo-fallback');
                     if (fallback) fallback.classList.remove('hidden');
                   }}
                 />
-                <div className="logo-fallback hidden w-full h-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-xl">
+                <div className="logo-fallback hidden w-full h-full bg-primary text-primary-foreground flex items-center justify-center font-black text-2xl">
                   {siteName.charAt(0)}
                 </div>
               </div>
-              <span className="text-2xl font-bold tracking-tighter text-white group-hover:text-primary transition-colors">
-                {siteName}
-              </span>
+              <div className="flex flex-col border-l-2 border-white/10 pl-4">
+                <span className="text-2xl font-black tracking-tight text-white group-hover:text-primary transition-colors leading-tight">
+                  {footerBrandName}
+                </span>
+                <span className="text-[10px] sm:text-xs text-zinc-400 font-bold uppercase tracking-widest mt-1">
+                  {footerTagline}
+                </span>
+              </div>
             </Link>
 
-            <p className="text-[15px] leading-relaxed text-zinc-400 font-medium">
+            <p className="text-[14px] leading-relaxed text-zinc-400 font-medium pt-2">
               {brandDescription}
             </p>
             

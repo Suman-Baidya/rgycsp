@@ -126,70 +126,88 @@ export function HeroSection({ data }: { data?: any }) {
 
               {/* Foreground Content */}
               <div className="absolute inset-0 flex items-center">
-                <div className="max-w-7xl mx-auto px-6 w-full pb-2 pt-12 z-10">
+                <div className={cn("max-w-7xl mx-auto px-6 w-full pb-2 pt-12 z-10", slide.offerImage ? "grid grid-cols-1 lg:grid-cols-[1.3fr_0.7fr] items-center gap-12" : "")}>
                   {currentIndex === index && (
-                    <motion.div
-                      variants={containerVariants}
-                      initial="hidden"
-                      animate="visible"
-                      className="max-w-3xl"
-                    >
-                      <motion.div variants={itemVariants}>
-                        <div className="inline-flex items-center gap-2 py-2 px-6 rounded-full bg-white/5 backdrop-blur-md border border-white/20 text-white font-bold text-xs tracking-[0.25em] uppercase mb-8 shadow-[0_0_20px_rgba(255,255,255,0.1)] relative overflow-hidden group">
-                          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-[shimmer_2s_infinite]"></div>
-                          <span className="relative z-10 flex items-center gap-2">
-                            <span className="w-2 h-2 rounded-full bg-white animate-pulse"></span>
-                            {slide.tagline || "Welcome to ABCD Edu Hub"}
-                          </span>
-                        </div>
+                    <>
+                      <motion.div
+                        variants={containerVariants}
+                        initial="hidden"
+                        animate="visible"
+                        className="max-w-3xl"
+                      >
+                        <motion.div variants={itemVariants}>
+                          <div className="inline-flex items-center gap-2 py-2 px-6 rounded-full bg-white/5 backdrop-blur-md border border-white/20 text-white font-bold text-xs tracking-[0.25em] uppercase mb-8 shadow-[0_0_20px_rgba(255,255,255,0.1)] relative overflow-hidden group">
+                            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-[shimmer_2s_infinite]"></div>
+                            <span className="relative z-10 flex items-center gap-2">
+                              <span className="w-2 h-2 rounded-full bg-white animate-pulse"></span>
+                              {slide.tagline || "Welcome to ABCD Edu Hub"}
+                            </span>
+                          </div>
+                        </motion.div>
+
+                        <motion.div variants={itemVariants}>
+                          <h1 className="text-5xl md:text-7xl lg:text-[5.5rem] font-extrabold text-transparent bg-clip-text bg-gradient-to-b from-white via-zinc-100 to-zinc-400 tracking-tight leading-[1.05] font-heading drop-shadow-[0_0_30px_rgba(255,255,255,0.1)] text-balance">
+                            {slide.title}
+                          </h1>
+                        </motion.div>
+
+                        <motion.div variants={itemVariants}>
+                          <p className="mt-8 text-md md:text-lg text-zinc-300 leading-relaxed font-sans max-w-2xl font-medium text-balance drop-shadow-md">
+                            {slide.subtitle}
+                          </p>
+                        </motion.div>
+
+                        <motion.div variants={itemVariants} className="mt-12 flex flex-col sm:flex-row gap-5 items-start">
+                          {slide.primaryButtonText ? (
+                            <a
+                              href={slide.primaryButtonLink || "#"}
+                              className={cn(
+                                buttonVariants({ size: "lg" }),
+                                "h-14 w-full sm:w-[220px] text-lg bg-white text-zinc-950 hover:bg-zinc-200 border-none shadow-[0_0_30px_rgba(255,255,255,0.2)] hover:shadow-[0_0_40px_rgba(255,255,255,0.4)] hover:-translate-y-1 transition-all duration-300 group rounded-xl font-extrabold flex items-center justify-center hover:text-white"
+                              )}
+                            >
+                              {slide.primaryButtonText}
+                            </a>
+                          ) : (
+                            <Button size="lg" className="h-14 w-full sm:w-[220px] text-lg bg-white text-zinc-950 hover:bg-zinc-200 border-none shadow-[0_0_30px_rgba(255,255,255,0.2)] hover:shadow-[0_0_40px_rgba(255,255,255,0.4)] hover:-translate-y-1 transition-all duration-300 group rounded-xl font-extrabold hover:text-white">
+                              Get Started
+                            </Button>
+                          )}
+
+                          {slide.secondaryButtonText ? (
+                            <a
+                              href={slide.secondaryButtonLink || "#"}
+                              className={cn(
+                                buttonVariants({ variant: "outline", size: "lg" }),
+                                "h-14 w-full sm:w-[220px] text-lg bg-white/5 backdrop-blur-md border border-white/20 text-white hover:bg-white/20 hover:border-white/40 transition-all duration-300 rounded-xl font-bold shadow-lg hover:-translate-y-1 flex items-center justify-center hover:text-white"
+                              )}
+                            >
+                              {slide.secondaryButtonText}
+                            </a>
+                          ) : (
+                            <Button size="lg" variant="outline" className="h-14 w-full sm:w-[220px] text-lg bg-white/5 backdrop-blur-md border border-white/20 text-white hover:bg-white/20 hover:border-white/40 transition-all duration-300 rounded-xl font-bold shadow-lg hover:-translate-y-1 hover:text-white">
+                              Book a Demo
+                            </Button>
+                          )}
+                        </motion.div>
                       </motion.div>
 
-                      <motion.div variants={itemVariants}>
-                        <h1 className="text-5xl md:text-7xl lg:text-[5.5rem] font-extrabold text-transparent bg-clip-text bg-gradient-to-b from-white via-zinc-100 to-zinc-400 tracking-tight leading-[1.05] font-heading drop-shadow-[0_0_30px_rgba(255,255,255,0.1)] text-balance">
-                          {slide.title}
-                        </h1>
-                      </motion.div>
-
-                      <motion.div variants={itemVariants}>
-                        <p className="mt-8 text-md md:text-lg text-zinc-300 leading-relaxed font-sans max-w-2xl font-medium text-balance drop-shadow-md">
-                          {slide.subtitle}
-                        </p>
-                      </motion.div>
-
-                      <motion.div variants={itemVariants} className="mt-12 flex flex-col sm:flex-row gap-5 items-start">
-                        {slide.primaryButtonText ? (
-                          <a
-                            href={slide.primaryButtonLink || "#"}
-                            className={cn(
-                              buttonVariants({ size: "lg" }),
-                              "h-14 w-full sm:w-[220px] text-lg bg-white text-zinc-950 hover:bg-zinc-200 border-none shadow-[0_0_30px_rgba(255,255,255,0.2)] hover:shadow-[0_0_40px_rgba(255,255,255,0.4)] hover:-translate-y-1 transition-all duration-300 group rounded-xl font-extrabold flex items-center justify-center hover:text-white"
-                            )}
-                          >
-                            {slide.primaryButtonText}
-                          </a>
-                        ) : (
-                          <Button size="lg" className="h-14 w-full sm:w-[220px] text-lg bg-white text-zinc-950 hover:bg-zinc-200 border-none shadow-[0_0_30px_rgba(255,255,255,0.2)] hover:shadow-[0_0_40px_rgba(255,255,255,0.4)] hover:-translate-y-1 transition-all duration-300 group rounded-xl font-extrabold hover:text-white">
-                            Get Started
-                          </Button>
-                        )}
-
-                        {slide.secondaryButtonText ? (
-                          <a
-                            href={slide.secondaryButtonLink || "#"}
-                            className={cn(
-                              buttonVariants({ variant: "outline", size: "lg" }),
-                              "h-14 w-full sm:w-[220px] text-lg bg-white/5 backdrop-blur-md border border-white/20 text-white hover:bg-white/20 hover:border-white/40 transition-all duration-300 rounded-xl font-bold shadow-lg hover:-translate-y-1 flex items-center justify-center hover:text-white"
-                            )}
-                          >
-                            {slide.secondaryButtonText}
-                          </a>
-                        ) : (
-                          <Button size="lg" variant="outline" className="h-14 w-full sm:w-[220px] text-lg bg-white/5 backdrop-blur-md border border-white/20 text-white hover:bg-white/20 hover:border-white/40 transition-all duration-300 rounded-xl font-bold shadow-lg hover:-translate-y-1 hover:text-white">
-                            Book a Demo
-                          </Button>
-                        )}
-                      </motion.div>
-                    </motion.div>
+                      {slide.offerImage && (
+                        <motion.div
+                          initial={{ opacity: 0, scale: 0.8 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          transition={{ duration: 1, delay: 0.4, type: "spring" }}
+                          className="hidden lg:flex justify-center relative"
+                        >
+                          <div className="absolute inset-0 bg-primary/20 blur-[150px] rounded-full animate-pulse" />
+                          <img
+                            src={slide.offerImage}
+                            alt="Promotion"
+                            className="relative z-10 h-[450px] w-auto object-contain drop-shadow-[0_40px_80px_rgba(0,0,0,0.6)] animate-float"
+                          />
+                        </motion.div>
+                      )}
+                    </>
                   )}
                 </div>
               </div>

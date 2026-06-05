@@ -24,6 +24,7 @@ import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import Image from "next/image";
 import { CustomThemeStyle } from "@/components/providers/CustomThemeStyle";
+import { cn } from "@/lib/utils";
 
 import { signOut } from "next-auth/react";
 import {
@@ -35,7 +36,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { LayoutDashboard, LogOut, Settings, User as UserIcon } from "lucide-react";
+import { LayoutDashboard, LogOut, Settings, User as UserIcon, LogIn } from "lucide-react";
 
 export function LandingNavbar({ settings, user, isHome }: { settings?: any, user?: any, isHome?: boolean }) {
   const pathname = usePathname();
@@ -85,7 +86,9 @@ export function LandingNavbar({ settings, user, isHome }: { settings?: any, user
     ctaSecondary: {
       text: settings?.navbarConfig?.ctaSecondary?.text || "Call Now",
       link: settings?.navbarConfig?.ctaSecondary?.link || `tel:${contactPhone}`
-    }
+    },
+    secondarySiteName: settings?.navbarConfig?.secondarySiteName,
+    secondaryLogoUrl: settings?.navbarConfig?.secondaryLogoUrl
   };
 
   // Filter Active Navigation Links
@@ -98,16 +101,57 @@ export function LandingNavbar({ settings, user, isHome }: { settings?: any, user
     { name: "Support", href: "/support", id: "support", isActive: true }
   ]).filter((link: any) => link.isActive !== false);
 
+  const Logo = ({ size = "w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20", showName = true }: { size?: string, showName?: boolean }) => (
+    <div className="flex items-center gap-2 shrink-0 group">
+      <div className={cn("relative flex items-center justify-center shrink-0 rounded-lg transition-transform group-hover:scale-105", size)}>
+        <Image
+          src={logoUrl}
+          alt={`${siteName} Logo`}
+          fill
+          className="object-contain"
+          onError={(e) => {
+            e.currentTarget.style.display = 'none';
+            const fallback = e.currentTarget.parentElement?.querySelector('.logo-fallback');
+            if (fallback) fallback.classList.remove('hidden');
+          }}
+        />
+        <div className="logo-fallback hidden w-full h-full bg-primary text-primary-foreground flex items-center justify-center font-black text-lg">
+          {siteName.charAt(0)}
+        </div>
+      </div>
+      {showName && (
+        <>
+          {/* Mobile Text (Hidden on Desktop) */}
+          <div className="flex lg:hidden flex-col border-l-2 border-foreground/20 dark:border-foreground/30 pl-2 overflow-hidden min-w-0 max-w-[160px] sm:max-w-[200px]">
+            <span className="text-lg sm:text-xl font-bold tracking-tight whitespace-nowrap font-heading text-foreground group-hover:text-primary transition-colors leading-tight">
+              R.G.Y.C.S.P
+            </span>
+            <div className="overflow-hidden w-full relative h-[14px] mt-0.5">
+              <div className="absolute whitespace-nowrap flex animate-marquee text-[10px] sm:text-xs text-foreground/70 font-bold tracking-widest uppercase leading-none group-hover:text-foreground/90 transition-colors">
+                <span className="mr-8">Rajeev Gandhi Youth Computer Shiksha Parishad</span>
+                <span className="mr-8">Rajeev Gandhi Youth Computer Shiksha Parishad</span>
+              </div>
+            </div>
+          </div>
+          {/* Desktop Text (Hidden on Mobile) */}
+          <div className="hidden lg:flex flex-col border-l-2 border-foreground/20 dark:border-foreground/30 pl-2">
+            <span className="text-lg sm:text-2xl font-bold tracking-tight whitespace-nowrap font-heading text-foreground group-hover:text-primary transition-colors leading-tight">
+              {siteName}
+            </span>
+            {config?.secondarySiteName && (
+              <span className="text-[10px] sm:text-xs text-foreground/70 font-bold tracking-widest uppercase whitespace-nowrap leading-none mt-1 group-hover:text-foreground/90 transition-colors">
+                {config.secondarySiteName}
+              </span>
+            )}
+          </div>
+        </>
+      )}
+    </div>
+  );
+
   const UserMenu = () => {
     return (
       <div className="flex items-center gap-4">
-        <Link href={dashboardHref}>
-          <Button className="font-bold shadow-lg shadow-primary/20 bg-primary text-primary-foreground hover:scale-[1.02] active:scale-95 transition-all px-8 rounded-xl h-11 gap-2 dark:text-white">
-            <LayoutDashboard className="h-4 w-4" />
-            Dashboard
-          </Button>
-        </Link>
-
         <DropdownMenu>
           <DropdownMenuTrigger className="outline-none">
             <div className="flex items-center gap-3 cursor-pointer group">
@@ -141,7 +185,7 @@ export function LandingNavbar({ settings, user, isHome }: { settings?: any, user
               </DropdownMenuItem>
             </Link>
             <DropdownMenuSeparator className="my-2 bg-slate-50 dark:bg-zinc-900" />
-            <DropdownMenuItem 
+            <DropdownMenuItem
               onClick={() => signOut({ callbackUrl: "/" })}
               className="rounded-xl h-11 gap-3 font-bold text-xs uppercase tracking-widest cursor-pointer text-red-500 focus:bg-red-500 focus:text-white"
             >
@@ -156,12 +200,12 @@ export function LandingNavbar({ settings, user, isHome }: { settings?: any, user
   if (config.showNavbar === false) return null;
 
   return (
-    <>
+    <div className="absolute top-0 left-0 w-full z-[100] flex flex-col">
       <CustomThemeStyle primaryColor={settings?.primaryColor} accentColor={settings?.accentColor} />
 
       {/* TIER 1: Top Bar (Icons, Theme) - Absolute (Scrolls away) */}
       {config.showTopBar !== false && (
-        <div className="absolute top-0 left-0 w-full z-50 hidden lg:flex bg-primary/95 dark:bg-zinc-950/90 dark:border-b dark:border-white/5 backdrop-blur-md py-2 px-6 justify-between items-center text-xs text-primary-foreground dark:text-zinc-400 transition-all duration-300">
+        <div className="hidden lg:flex w-full bg-primary/95 dark:bg-zinc-950/90 dark:border-b dark:border-white/5 backdrop-blur-md py-1 px-6 justify-between items-center text-xs text-primary-foreground dark:text-zinc-400 transition-all duration-300">
           {/* Top Left: Social Logos only */}
           <div className="flex items-center gap-4">
             {settings?.socialLinks?.youtube && <Link href={settings.socialLinks.youtube} target="_blank" aria-label="Youtube" className="hover:text-muted transition-colors"><Youtube className="w-4 h-4" /></Link>}
@@ -193,89 +237,139 @@ export function LandingNavbar({ settings, user, isHome }: { settings?: any, user
         </div>
       )}
 
-      {/* TIER 2: Main Navigation - Fixed (Sticky) */}
-      <div className={`fixed left-0 w-full z-50 transition-all duration-300 bg-background/95 backdrop-blur-md shadow-sm border-b/50 ${isScrolled ? 'top-0 shadow-md' : (config.showTopBar !== false ? 'top-0 lg:top-[42px]' : 'top-0')}`}>
-        <div className="w-full px-6 py-4 flex justify-between items-center max-w-7xl mx-auto">
-
-          {/* Left: Branding */}
-          <Link href="/" className="flex items-center gap-3 shrink-0 group">
-            <div className="relative w-10 h-10 flex items-center justify-center shrink-0 bg-primary/10 rounded-lg overflow-hidden border border-primary/20">
-              <Image
-                src={logoUrl}
-                alt={`${siteName} Logo`}
-                fill
-                className="object-contain p-1"
-                onError={(e) => {
-                  e.currentTarget.style.display = 'none';
-                  const fallback = e.currentTarget.parentElement?.querySelector('.logo-fallback');
-                  if (fallback) fallback.classList.remove('hidden');
-                }}
-              />
-              <div className="logo-fallback hidden w-full h-full bg-primary text-black dark:text-white flex items-center justify-center font-black text-lg">
-                {siteName.charAt(0)}
-              </div>
-            </div>
-            <span className="text-lg sm:text-2xl font-bold tracking-tight whitespace-nowrap font-heading text-foreground group-hover:text-primary transition-colors">
-              {siteName}
-            </span>
+      {/* TIER 2: Branding Bar */}
+      <div className={cn(
+        "w-full bg-background/95 backdrop-blur-xl border-b border-border/50 py-1 overflow-hidden transition-all duration-500 mb-2",
+        isScrolled ? "lg:hidden fixed left-0 top-0 shadow-md z-[150]" : "relative"
+      )}>
+        <div className="max-w-7xl mx-auto px-4 lg:px-6 flex items-center justify-between gap-2 lg:gap-4">
+          <Link href="/" className="min-w-0 flex-1">
+            <Logo />
           </Link>
 
-          {/* Middle: Desktop Menus */}
-          {config.showMenus !== false && (
-            <nav className="hidden lg:flex items-center gap-6 text-[15px] font-bold text-foreground/70">
-              {navLinks.map((link: any) => {
-                const currentPath = pathname || "/";
-                // Robust matching: exact match or sub-path match (excluding root)
-                const isActive = currentPath === link.href ||
-                  (link.href !== "/" && currentPath.startsWith(link.href));
-
-                return (
-                  <Link
-                    key={link.id}
-                    href={link.href}
-                    className={`transition-all duration-300 pt-2 pb-0.5 px-1 font-bold border-b-2 ${isActive
-                      ? 'text-primary dark:text-white font-bold border-primary dark:border-white'
-                      : 'text-foreground/70 border-transparent hover:border-primary/50'
-                      }`}
-                  >
-                    {link.name}
-                  </Link>
-                );
-              })}
-            </nav>
-          )}
-
-          {/* Right: CTAs */}
-          <div className="hidden lg:flex items-center gap-4 shrink-0">
-            {user ? (
-              <UserMenu />
-            ) : (
-              <>
-                <Link href={`tel:${contactPhone}`}>
-                  <Button variant="outline" className="border-primary/20 text-foreground hover:bg-primary/5 hover:border-primary/40 font-bold px-6 rounded-xl transition-all h-11 gap-2">
-                    <Phone className="h-4 w-4 text-primary dark:text-white" />
-                    Call Now
-                  </Button>
-                </Link>
-                <Link href="/login">
-                  <Button className="font-bold shadow-lg shadow-primary/20 bg-primary text-primary-foreground hover:scale-[1.02] active:scale-95 transition-all px-8 rounded-xl h-11">
-                    Login
-                  </Button>
-                </Link>
-              </>
+          <div className="flex items-center gap-2 lg:gap-4 shrink-0">
+            {config?.secondaryLogoUrl && (
+              <div className="hidden lg:flex items-center border-r-2 border-foreground/20 dark:border-foreground/30 pr-3 mr-1">
+                <div className="relative w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20 shrink-0">
+                  <Image src={config.secondaryLogoUrl} alt="Secondary Logo" fill className="object-contain" />
+                </div>
+              </div>
             )}
+            <div className="flex items-center gap-2 lg:gap-3">
+              {user ? (
+                <div className="flex items-center gap-3 lg:gap-5">
+                  <Link href={dashboardHref} className="hidden lg:block">
+                    <Button className="hidden lg:flex text-[12px] font-bold uppercase tracking-wide bg-primary hover:bg-primary/90 text-primary-foreground h-10 px-6 rounded-xl items-center gap-2 group/dash shadow-lg shadow-primary/20 border-none transition-all">
+                      <LayoutDashboard className="w-3.5 h-3.5 group-hover/dash:rotate-12 transition-transform" />
+                      Dashboard
+                    </Button>
+                  </Link>
+                  <UserMenu />
+                </div>
+              ) : (
+                <div className="hidden lg:flex items-center gap-3">
+                  <Link href={config.ctaSecondary.link}>
+                    <Button variant="outline" className="border-primary/20 text-foreground hover:bg-primary/5 hover:border-primary/40 font-bold px-4 lg:px-5 h-10 rounded-xl transition-all text-xs lg:text-sm flex items-center gap-2">
+                      <Phone className="h-4 w-4 shrink-0" />
+                      {config.ctaSecondary.text}
+                    </Button>
+                  </Link>
+                  <Link href={config.ctaPrimary.link}>
+                    <Button className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold px-4 lg:px-5 h-10 rounded-xl text-xs lg:text-sm shadow-xl shadow-primary/20 flex items-center gap-2">
+                      <LogIn className="h-4 w-4 shrink-0" />
+                      {config.ctaPrimary.text}
+                    </Button>
+                  </Link>
+                </div>
+              )}
+              {!user && (
+                <Link href={config.ctaPrimary.link} className="lg:hidden">
+                  <Button className="bg-primary hover:bg-primary/90 text-primary-foreground font-black px-4 h-9 rounded-lg text-[10px] tracking-widest shadow-xl shadow-primary/20 uppercase">
+                    {config.ctaPrimary.text}
+                  </Button>
+                </Link>
+              )}
+              <Button variant="ghost" size="icon" className="lg:hidden text-foreground shrink-0 -mr-2" onClick={() => setIsOpen(!isOpen)}>
+                {isOpen ? <CloseIcon className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+              </Button>
+            </div>
           </div>
-
-          {/* Mobile Hamburger Toggle */}
-          <button
-            className="lg:hidden p-2 text-foreground hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg transition-colors relative z-50"
-            onClick={() => setIsOpen(!isOpen)}
-            aria-label="Toggle Menu"
-          >
-            {isOpen ? <CloseIcon className="w-7 h-7" /> : <Menu className="w-7 h-7" />}
-          </button>
         </div>
       </div>
+
+      {/* TIER 3: Navigation Bar (Sticky when scrolled) */}
+      {config.showMenus !== false && (
+        <nav className={cn(
+          "hidden lg:flex w-full transition-all duration-500 z-[90] py-1",
+          isScrolled
+            ? "fixed top-0 left-0 bg-background/95 backdrop-blur-2xl border-b border-border shadow-md"
+            : "bg-transparent"
+        )}>
+          <div className="max-w-7xl mx-auto px-6 w-full grid grid-cols-3 items-center">
+            {/* Left: Logo (Only when scrolled) */}
+            <div className="flex justify-start">
+              {isScrolled && (
+                <Link href="/">
+                  <Logo size="w-16 h-16" showName={false} />
+                </Link>
+              )}
+            </div>
+
+            {/* Center: Nav Items */}
+            <div className="flex justify-center">
+              <div className="flex items-center gap-8">
+                {navLinks.map((link: any) => {
+                  const currentPath = pathname || "/";
+                  const isActive = currentPath === link.href || (link.href !== "/" && currentPath.startsWith(link.href));
+                  return (
+                    <Link
+                      key={link.id}
+                      href={link.href}
+                      className={cn(
+                        "text-[14px] font-bold transition-all relative group uppercase",
+                        isActive
+                          ? "text-primary"
+                          : (isScrolled ? "text-foreground/70 hover:text-foreground" : "text-white/80 hover:text-white")
+                      )}
+                    >
+                      {link.name}
+                      <span className={cn(
+                        "absolute -bottom-2 left-1/2 -translate-x-1/2 h-1.5 bg-primary rounded-full transition-all duration-300",
+                        isActive ? "w-6 opacity-100" : "w-0 opacity-0 group-hover:w-4 group-hover:opacity-50"
+                      )} />
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Right: Auth / Dashboard */}
+            <div className="flex justify-end">
+              {isScrolled && (
+                <div className="flex items-center gap-4">
+                  {user ? (
+                    <div className="flex items-center gap-4">
+                      <Link href={dashboardHref}>
+                        <Button size="icon" className="w-9 h-9 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl shadow-lg shadow-primary/20 border-none transition-all group/dash-scroll">
+                          <LayoutDashboard className="w-4 h-4 group-hover/dash-scroll:rotate-12 transition-transform" />
+                        </Button>
+                      </Link>
+                      <UserMenu />
+                    </div>
+                  ) : (
+                    <Link href={config.ctaPrimary.link}>
+                      <Button className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold px-4 lg:px-5 h-10 rounded-xl text-xs lg:text-sm shadow-xl shadow-primary/20 flex items-center gap-2">
+                        <LogIn className="h-4 w-4 shrink-0" />
+                        {config.ctaPrimary.text}
+                      </Button>
+                    </Link>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        </nav>
+      )}
 
       {/* Mobile Menu Dropdown & Overlay */}
       <div className={`lg:hidden fixed inset-0 z-40 transition-all duration-300 ${isOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
@@ -316,14 +410,14 @@ export function LandingNavbar({ settings, user, isHome }: { settings?: any, user
                       <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">{user.role}</p>
                     </div>
                   </div>
-                  
+
                   <Link href={dashboardHref} onClick={() => setIsOpen(false)}>
                     <Button className="w-full h-14 rounded-2xl bg-primary text-primary-foreground font-bold gap-3 shadow-xl shadow-primary/20 dark:text-white">
                       <LayoutDashboard className="h-5 w-5" />
                       Go to Dashboard
                     </Button>
                   </Link>
-                  
+
                   <div className="grid grid-cols-2 gap-3 pt-2">
                     <Link href={user?.role === "SUPER_ADMIN" ? "/super-admin/profile" : "/profile"} onClick={() => setIsOpen(false)}>
                       <Button variant="outline" className="w-full h-12 rounded-xl font-bold gap-2">
@@ -358,13 +452,13 @@ export function LandingNavbar({ settings, user, isHome }: { settings?: any, user
                 <Link href={`tel:${contactPhone}`}><Phone className="w-5 h-5 cursor-pointer hover:text-primary" /></Link>
                 <Link href={`mailto:${settings?.contactEmail || "sb.abcd321@gmail.com"}`}><Mail className="w-5 h-5 cursor-pointer hover:text-primary" /></Link>
               </div>
-              <button onClick={toggleTheme} className="px-4 py-2 bg-zinc-100 dark:bg-zinc-800 rounded-full text-foreground flex items-center gap-2 text-sm font-bold shadow-sm">
+              <button suppressHydrationWarning onClick={toggleTheme} className="px-4 py-2 bg-zinc-100 dark:bg-zinc-800 rounded-full text-foreground flex items-center gap-2 text-sm font-bold shadow-sm">
                 {mounted ? (theme === "light" ? <><Moon className="w-4 h-4" /> Dark</> : <><Sun className="w-4 h-4" /> Light</>) : <div className="w-4 h-4" />}
               </button>
             </div>
           </div>
         </div>
       </div>
-    </>
+    </div>
   );
 }

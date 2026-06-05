@@ -14,7 +14,6 @@ interface ImageUploadProps {
   onRemove?: () => void;
   folder?: string;
   label?: string;
-  workspaceName?: string;
   maxSizeK?: number; // In KB
 }
 
@@ -22,9 +21,8 @@ export function ImageUpload({
   value, 
   onChange, 
   onRemove, 
-  folder = "ABCDEdutHub/super-admin", 
-  label, 
-  workspaceName,
+  folder = "RGYCSP/Uncategorized", 
+  label,
   maxSizeK = 10240 // Default 10MB
 }: ImageUploadProps) {
   const [isUploading, setIsUploading] = useState(false);
@@ -74,7 +72,7 @@ export function ImageUpload({
           else if (targetSizeK <= 500) quality = 0.6;
           else if (targetSizeK <= 1024) quality = 0.7;
 
-          const compressedBase64 = canvas.toDataURL("image/jpeg", quality);
+          const compressedBase64 = canvas.toDataURL("image/webp", quality);
           resolve(compressedBase64);
         };
       };
@@ -106,7 +104,7 @@ export function ImageUpload({
         return;
       }
 
-      const result = await uploadImage(compressedBase64, folder, workspaceName);
+      const result = await uploadImage(compressedBase64, folder);
       
       if (result.success && result.url) {
         onChange(result.url);

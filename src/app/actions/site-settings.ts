@@ -137,6 +137,15 @@ export async function syncAllSections(settingsId: string, sectionTypes: string[]
             { title: "Cultural Festival", date: "22 May, 2026", time: "11:30 AM", location: "Campus Ground", image: "https://images.unsplash.com/photo-1514525253361-bee8718a74a2?q=80&w=2070" }
           ]
         };
+      } else if (type === 'quick-links') {
+        defaultContent = {
+          links: [
+            { title: "Franchises Enquiry", description: "Join our network", url: "/contact", icon: "Building2" },
+            { title: "Students Admission", description: "Apply online now", url: "/students", icon: "GraduationCap" },
+            { title: "Certificate Verification", description: "Verify documents", url: "/verify", icon: "FileCheck" },
+            { title: "News & Announcements", description: "Latest updates", url: "/news", icon: "Newspaper" }
+          ]
+        };
       }
 
       return db.landingSection.create({

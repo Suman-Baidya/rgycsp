@@ -621,7 +621,7 @@ export default function DocumentDesigner() {
           <Card className="border-2 border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-sm">
             <CardHeader><CardTitle className="text-lg font-bold flex items-center gap-2"><Layout className="h-5 w-5 text-primary" />Layout</CardTitle></CardHeader>
             <CardContent className="space-y-6">
-              <ImageUpload value={backgroundUrl} onChange={setBackgroundUrl} label="Background" folder="ABCDEduHub/SuperAdmin/Documents" />
+              <ImageUpload value={backgroundUrl} onChange={setBackgroundUrl} label="Background" folder="RGYCSP/SuperAdmin/Documents" />
               
               <div className="space-y-2">
                 <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Preferred Unit</Label>

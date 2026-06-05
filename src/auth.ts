@@ -15,7 +15,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       name: "Student Login",
       credentials: {
         username: { label: "Username", type: "text" },
-        password: { label: "Password", type: "password" }
+        password: { label: "Password", type: "password" },
+        tenantSlug: { label: "Tenant Slug", type: "text" }
       },
       async authorize(credentials) {
         try {
@@ -46,6 +47,33 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           if (!isPasswordValid) {
             console.log("AUTH: Invalid password for user:", username);
             return null;
+          }
+
+          // Strict Tenant Verification
+          if (credentials?.tenantSlug && credentials.tenantSlug !== "undefined" && credentials.tenantSlug !== "null") {
+            const tenant = credentials.tenantSlug as string;
+            if (tenant !== 'super-admin') {
+              const workspace = await db.workspace.findUnique({
+                where: { subdomain: tenant }
+              });
+
+              if (!workspace) {
+                throw new Error("Invalid franchise workspace.");
+              }
+
+              const hasRole = await db.workspaceRole.findFirst({
+                where: { userId: user.id, workspaceId: workspace.id }
+              });
+
+              const hasProfile = await db.studentProfile.findFirst({
+                where: { userId: user.id, workspaceId: workspace.id }
+              });
+
+              if (!hasRole && !hasProfile) {
+                console.log("AUTH: User does not belong to tenant", tenant);
+                throw new Error("You do not have access to this franchise portal.");
+              }
+            }
           }
 
           console.log("AUTH: Successfully authorized user:", user.email || user.username);

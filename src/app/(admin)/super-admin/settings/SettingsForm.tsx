@@ -52,8 +52,8 @@ export function SettingsForm({ settings, isSuperAdmin = true }: { settings: any,
   ]);
   const [isSaving, setIsSaving] = useState(false);
   const mediaFolderBase = settings.workspaceId && settings.workspace?.subdomain 
-    ? `ABCDEduHub/Workspaces/${settings.workspace.subdomain}` 
-    : "ABCDEduHub/SuperAdmin";
+    ? `RGYCSP/Workspaces/${settings.workspace.subdomain}` 
+    : "RGYCSP/SuperAdmin";
 
   useEffect(() => {
     setSiteName(settings.siteName);
@@ -234,9 +234,15 @@ export function SettingsForm({ settings, isSuperAdmin = true }: { settings: any,
                     </div>
                   </div>
 
-                  <div className="space-y-3 pt-4">
-                    <Label htmlFor="siteName" className="text-sm font-semibold text-foreground/80">Site Name</Label>
-                    <Input id="siteName" value={siteName || ""} onChange={(e) => setSiteName(e.target.value)} placeholder="Enter site name" className="h-12 bg-background border-border/40 rounded-2xl" />
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-4">
+                    <div className="space-y-3">
+                      <Label htmlFor="siteName" className="text-sm font-semibold text-foreground/80">Primary Site Name</Label>
+                      <Input id="siteName" value={siteName || ""} onChange={(e) => setSiteName(e.target.value)} placeholder="Enter primary site name" className="h-12 bg-background border-border/40 rounded-2xl" />
+                    </div>
+                    <div className="space-y-3">
+                      <Label htmlFor="secondarySiteName" className="text-sm font-semibold text-foreground/80">Secondary Name</Label>
+                      <Input id="secondarySiteName" value={navbarConfig.secondarySiteName || ""} onChange={(e) => setNavbarConfig({...navbarConfig, secondarySiteName: e.target.value})} placeholder="e.g. Other Language" className="h-12 bg-background border-border/40 rounded-2xl" />
+                    </div>
                   </div>
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -294,11 +300,27 @@ export function SettingsForm({ settings, isSuperAdmin = true }: { settings: any,
                     </div>
                   </div>
 
-                  <ImageUpload value={logoUrl} onChange={setLogoUrl} label="Logo" folder={`${mediaFolderBase}/branding`} />
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <ImageUpload value={logoUrl} onChange={setLogoUrl} label="Main Logo" folder={`${mediaFolderBase}/branding`} />
+                    <ImageUpload value={navbarConfig.secondaryLogoUrl || ""} onChange={(url) => setNavbarConfig({...navbarConfig, secondaryLogoUrl: url})} label="Secondary Logo (Optional)" folder={`${mediaFolderBase}/branding`} />
+                  </div>
                   
-                  <div className="space-y-3">
-                    <Label htmlFor="brandDescription" className="text-sm font-semibold text-foreground/80">Brand Description (Footer)</Label>
-                    <Textarea id="brandDescription" value={brandDescription || ""} onChange={(e) => setBrandDescription(e.target.value)} placeholder="Rendering at footer..." className="min-h-[100px] bg-background border-border/40 rounded-2xl" />
+                  <div className="pt-8 mt-4 border-t border-border/40">
+                    <h4 className="font-bold text-lg mb-6">Footer Branding Configuration</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                      <div className="space-y-3">
+                        <Label htmlFor="footerBrandName" className="text-sm font-semibold text-foreground/80">Footer Branding Name</Label>
+                        <Input id="footerBrandName" value={navbarConfig.footerBrandName || ""} onChange={(e) => setNavbarConfig({...navbarConfig, footerBrandName: e.target.value})} placeholder="e.g. Short Brand Name" className="h-12 bg-background border-border/40 rounded-2xl" />
+                      </div>
+                      <div className="space-y-3">
+                        <Label htmlFor="footerTagline" className="text-sm font-semibold text-foreground/80">Footer Branding Tag Name</Label>
+                        <Input id="footerTagline" value={navbarConfig.footerTagline || ""} onChange={(e) => setNavbarConfig({...navbarConfig, footerTagline: e.target.value})} placeholder="e.g. Empowering Education" className="h-12 bg-background border-border/40 rounded-2xl" />
+                      </div>
+                      <div className="space-y-3 md:col-span-2">
+                        <Label htmlFor="brandDescription" className="text-sm font-semibold text-foreground/80">Footer Description</Label>
+                        <Textarea id="brandDescription" value={brandDescription || ""} onChange={(e) => setBrandDescription(e.target.value)} placeholder="Rendering at footer..." className="min-h-[48px] bg-background border-border/40 rounded-2xl" />
+                      </div>
+                    </div>
                   </div>
                   
                   <div className="pt-4 flex justify-end">
@@ -584,7 +606,7 @@ export function SettingsForm({ settings, isSuperAdmin = true }: { settings: any,
                  variant="outline" 
                  size="sm" 
                  onClick={async () => {
-                   const types = ['hero', 'about', 'why-choose-us', 'achievements', 'partners', 'our-message', 'mission', 'vision', 'services', 'guide-steps', 'guide-resources', 'ready-to-modernize', 'custom-solution', 'pricing', 'testimonials', 'faq', 'contact', 'page-header-about', 'page-header-services', 'page-header-guide', 'page-header-pricing', 'page-header-support', 'legal-privacy-policy', 'legal-terms-conditions', 'legal-cookie-policy', 'legal-refund-policy', 'legal-sitemap'];
+                   const types = ['hero', 'quick-links', 'about', 'why-choose-us', 'achievements', 'partners', 'our-message', 'mission', 'vision', 'services', 'guide-steps', 'guide-resources', 'ready-to-modernize', 'custom-solution', 'pricing', 'testimonials', 'faq', 'contact', 'page-header-about', 'page-header-services', 'page-header-guide', 'page-header-pricing', 'page-header-support', 'legal-privacy-policy', 'legal-terms-conditions', 'legal-cookie-policy', 'legal-refund-policy', 'legal-sitemap'];
                    const res = await syncAllSections(settings.id, types);
                    if (res.success) {
                      toast.success(res.created ? `Initialized ${res.created} new sections!` : "All sections are already synced.");
@@ -598,7 +620,7 @@ export function SettingsForm({ settings, isSuperAdmin = true }: { settings: any,
              </div>
             <div className="space-y-4">
                 {settings.sections?.filter((s: any) => !s.type.startsWith('page-header-') && !s.type.startsWith('legal-')).map((section: any) => (
-                  <SectionEditor key={section.id} section={section} settings={settings} mediaFolderBase={mediaFolderBase} />
+                  <SectionEditor key={section.id} section={section} settings={settings} mediaFolderBase={mediaFolderBase} isSuperAdmin={isSuperAdmin} />
                 ))}
             </div>
           </TabsContent>
@@ -613,7 +635,7 @@ export function SettingsForm({ settings, isSuperAdmin = true }: { settings: any,
                  variant="outline" 
                  size="sm" 
                  onClick={async () => {
-                   const types = ['hero', 'about', 'why-choose-us', 'achievements', 'partners', 'our-message', 'mission', 'vision', 'services', 'guide-steps', 'guide-resources', 'ready-to-modernize', 'custom-solution', 'pricing', 'testimonials', 'faq', 'contact', 'page-header-about', 'page-header-services', 'page-header-guide', 'page-header-pricing', 'page-header-support', 'legal-privacy-policy', 'legal-terms-conditions', 'legal-cookie-policy', 'legal-refund-policy', 'legal-sitemap'];
+                   const types = ['hero', 'quick-links', 'about', 'why-choose-us', 'achievements', 'partners', 'our-message', 'mission', 'vision', 'services', 'guide-steps', 'guide-resources', 'ready-to-modernize', 'custom-solution', 'pricing', 'testimonials', 'faq', 'contact', 'page-header-about', 'page-header-services', 'page-header-guide', 'page-header-pricing', 'page-header-support', 'legal-privacy-policy', 'legal-terms-conditions', 'legal-cookie-policy', 'legal-refund-policy', 'legal-sitemap'];
                    const res = await syncAllSections(settings.id, types);
                    if (res.success) {
                      toast.success(res.created ? `Initialized ${res.created} new sections!` : "All sections are already synced.");
@@ -627,7 +649,7 @@ export function SettingsForm({ settings, isSuperAdmin = true }: { settings: any,
              </div>
             <div className="space-y-4">
                 {settings.sections?.filter((s: any) => s.type.startsWith('page-header-') && !s.type.includes('privacy') && !s.type.includes('terms') && !s.type.includes('cookie') && !s.type.includes('refund') && !s.type.includes('sitemap')).map((section: any) => (
-                  <SectionEditor key={section.id} section={section} settings={settings} mediaFolderBase={mediaFolderBase} />
+                  <SectionEditor key={section.id} section={section} settings={settings} mediaFolderBase={mediaFolderBase} isSuperAdmin={isSuperAdmin} />
                 ))}
             </div>
           </TabsContent>
@@ -643,7 +665,7 @@ export function SettingsForm({ settings, isSuperAdmin = true }: { settings: any,
                  variant="outline" 
                  size="sm" 
                  onClick={async () => {
-                   const types = ['hero', 'about', 'why-choose-us', 'achievements', 'partners', 'our-message', 'mission', 'vision', 'services', 'guide-steps', 'guide-resources', 'ready-to-modernize', 'custom-solution', 'pricing', 'testimonials', 'faq', 'contact', 'page-header-about', 'page-header-services', 'page-header-guide', 'page-header-pricing', 'page-header-support', 'legal-privacy-policy', 'legal-terms-conditions', 'legal-cookie-policy', 'legal-refund-policy', 'legal-sitemap', 'page-header-privacy-policy', 'page-header-terms-conditions', 'page-header-cookie-policy', 'page-header-refund-policy', 'page-header-sitemap'];
+                   const types = ['hero', 'quick-links', 'about', 'why-choose-us', 'achievements', 'partners', 'our-message', 'mission', 'vision', 'services', 'guide-steps', 'guide-resources', 'ready-to-modernize', 'custom-solution', 'pricing', 'testimonials', 'faq', 'contact', 'page-header-about', 'page-header-services', 'page-header-guide', 'page-header-pricing', 'page-header-support', 'legal-privacy-policy', 'legal-terms-conditions', 'legal-cookie-policy', 'legal-refund-policy', 'legal-sitemap', 'page-header-privacy-policy', 'page-header-terms-conditions', 'page-header-cookie-policy', 'page-header-refund-policy', 'page-header-sitemap'];
                    const res = await syncAllSections(settings.id, types);
                    if (res.success) {
                      toast.success(res.created ? `Initialized ${res.created} new sections!` : "All sections are already synced.");
@@ -658,7 +680,7 @@ export function SettingsForm({ settings, isSuperAdmin = true }: { settings: any,
              </div>
             <div className="space-y-4">
                 {settings.sections?.filter((s: any) => s.type.startsWith('legal-')).map((section: any) => (
-                  <SectionEditor key={section.id} section={section} settings={settings} mediaFolderBase={mediaFolderBase} />
+                  <SectionEditor key={section.id} section={section} settings={settings} mediaFolderBase={mediaFolderBase} isSuperAdmin={isSuperAdmin} />
                 ))}
             </div>
           </TabsContent>
@@ -669,7 +691,7 @@ export function SettingsForm({ settings, isSuperAdmin = true }: { settings: any,
   );
 }
 
-function SectionEditor({ section, settings, mediaFolderBase }: { section: any, settings: any, mediaFolderBase: string }) {
+function SectionEditor({ section, settings, mediaFolderBase, isSuperAdmin }: { section: any, settings: any, mediaFolderBase: string, isSuperAdmin?: boolean }) {
   const [isActive, setIsActive] = useState(section.isActive);
   const [title, setTitle] = useState(section.title);
   const [subtitle, setSubtitle] = useState(section.subtitle);
@@ -753,7 +775,8 @@ function SectionEditor({ section, settings, mediaFolderBase }: { section: any, s
             {/* Specialized Content Editors */}
             <div className="bg-muted/5 p-6 rounded-[2rem] border border-border/20 shadow-inner">
                {section.type === 'hero' && <HeroContentEditor content={content} setContent={setContent} mediaFolderBase={mediaFolderBase} />}
-               {section.type === 'about' && <AboutNoticeContentEditor content={content} setContent={setContent} mediaFolderBase={mediaFolderBase} />}
+               {section.type === 'quick-links' && <QuickLinksContentEditor content={content} setContent={setContent} />}
+               {section.type === 'about' && <AboutNoticeContentEditor content={content} setContent={setContent} mediaFolderBase={mediaFolderBase} isSuperAdmin={isSuperAdmin} />}
                {section.type === 'counters' && <CountersContentEditor content={content} setContent={setContent} mediaFolderBase={mediaFolderBase} />}
                {section.type === 'courses' && <CoursesContentEditor content={content} setContent={setContent} mediaFolderBase={mediaFolderBase} />}
                {section.type === 'why-choose-us' && <WhyChooseUsContentEditor content={content} setContent={setContent} mediaFolderBase={mediaFolderBase} />}
@@ -876,14 +899,66 @@ function HeroContentEditor({ content, setContent, mediaFolderBase }: any) {
   );
 }
 
-function AboutNoticeContentEditor({ content, setContent, mediaFolderBase }: any) {
+function AboutNoticeContentEditor({ content, setContent, mediaFolderBase, isSuperAdmin }: any) {
   return (
     <div className="space-y-10">
+       <div className="space-y-3">
+          <ImageUpload 
+            value={content.image || ""} 
+            onChange={(url) => setContent({ ...content, image: url })} 
+            label="About Section Image" 
+            folder={`${mediaFolderBase}/about`}
+          />
+       </div>
+
+       <div className="space-y-4 p-6 bg-muted/5 rounded-[2rem] border border-border/20">
+          <Label className="text-sm font-bold uppercase tracking-widest text-primary">Floating Metric Card</Label>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+               <Label className="text-[10px] font-bold uppercase text-muted-foreground">Title</Label>
+               <Input value={content.metricTitle || ""} onChange={(e) => setContent({ ...content, metricTitle: e.target.value })} placeholder="e.g. Global Reach" className="h-10 bg-background" />
+            </div>
+            <div className="space-y-2">
+               <Label className="text-[10px] font-bold uppercase text-muted-foreground">Value</Label>
+               <Input value={content.metricValue || ""} onChange={(e) => setContent({ ...content, metricValue: e.target.value })} placeholder="e.g. 500+" className="h-10 bg-background" />
+            </div>
+            <div className="space-y-2">
+               <Label className="text-[10px] font-bold uppercase text-muted-foreground">Suffix</Label>
+               <Input value={content.metricSuffix || ""} onChange={(e) => setContent({ ...content, metricSuffix: e.target.value })} placeholder="e.g. Inst." className="h-10 bg-background" />
+            </div>
+            <div className="space-y-2">
+               <Label className="text-[10px] font-bold uppercase text-muted-foreground">Icon Name</Label>
+               <Input value={content.metricIcon || ""} onChange={(e) => setContent({ ...content, metricIcon: e.target.value })} placeholder="e.g. Globe, Users, CheckCircle2" className="h-10 bg-background" />
+            </div>
+          </div>
+          <p className="text-[10px] text-muted-foreground italic px-2">Available Icons: CheckCircle2, Globe, Users, Building2, TrendingUp, Award, Zap</p>
+       </div>
+
        <div className="space-y-3">
           <Label className="text-xs font-bold uppercase">Institute Description (About Us)</Label>
           <Textarea value={content.description || ""} onChange={(e) => setContent({ ...content, description: e.target.value })} className="min-h-[120px] bg-background" />
        </div>
 
+       <div className="pt-8 border-t border-border/30">
+          <ListContentEditor 
+            title="About Features" 
+            content={{ items: (content.features || []).map((f: string) => ({ text: f })) }} 
+            setContent={(newContent: any) => setContent({ ...content, features: newContent.items.map((i: any) => i.text) })} 
+            itemFields={['text']} 
+          />
+       </div>
+
+       <div className="pt-8 border-t border-border/30">
+          <ListContentEditor 
+            title="Statistical Counters" 
+            content={{ items: content.stats || [] }} 
+            setContent={(newContent: any) => setContent({ ...content, stats: newContent.items })} 
+            itemFields={['label', 'value', 'suffix', 'color']} 
+          />
+       </div>
+
+       {/* Only show Notice Board for franchise instance, not for the main landing page */}
+       {!isSuperAdmin && (
        <div className="pt-8 border-t border-border/30">
           <ListContentEditor 
             title="Notice Board Items" 
@@ -893,6 +968,7 @@ function AboutNoticeContentEditor({ content, setContent, mediaFolderBase }: any)
             mediaFolderBase={mediaFolderBase}
           />
        </div>
+       )}
     </div>
   );
 }
@@ -1265,7 +1341,7 @@ function LegalContentEditor({ content, setContent, mediaFolderBase }: any) {
             />
          </div>
          <div className="space-y-3">
-            <Label className="text-[10px] uppercase font-bold text-muted-foreground">Page Content (HTML supported)</Label>
+            <Label className="text-[10px] uppercase font-bold text-muted-foreground">Page Content</Label>
             <Textarea 
               value={content.html || ""} 
               onChange={(e) => setContent({ ...content, html: e.target.value })} 
@@ -1739,6 +1815,54 @@ function ListContentEditor({ title, content, setContent, itemFields, mediaFolder
              </div>
           ))}
        </div>
+    </div>
+  );
+}
+
+function QuickLinksContentEditor({ content, setContent }: any) {
+  return (
+    <div className="space-y-8">
+      <div className="flex items-center justify-between">
+        <Label className="text-sm font-black uppercase text-primary tracking-widest">Quick Links</Label>
+        <Button variant="outline" size="sm" className="rounded-lg h-8 text-xs font-bold" onClick={() => {
+          const newLinks = [...(content.links || []), { title: "New Link", description: "Description", url: "#", icon: "Link" }];
+          setContent({ ...content, links: newLinks });
+        }}>Add Link</Button>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {(content.links || []).map((link: any, idx: number) => (
+          <div key={idx} className="p-6 bg-background border border-border/40 rounded-2xl space-y-4 shadow-sm relative group">
+            <div className="flex justify-between items-center">
+              <span className="text-[10px] font-black text-primary/60">LINK #{idx + 1}</span>
+              <Button variant="ghost" size="icon" className="h-6 w-6 text-red-500 rounded-lg" onClick={() => {
+                const newLinks = content.links.filter((_: any, i: number) => i !== idx);
+                setContent({ ...content, links: newLinks });
+              }}><Trash2 className="h-4 w-4" /></Button>
+            </div>
+            <div className="space-y-2">
+              <Label className="text-[10px] uppercase font-bold">Title</Label>
+              <Input value={link.title || ""} onChange={(e) => { const n = [...content.links]; n[idx].title = e.target.value; setContent({ ...content, links: n }); }} className="h-9 bg-muted/5 text-sm" />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-[10px] uppercase font-bold">Description</Label>
+              <Input value={link.description || ""} onChange={(e) => { const n = [...content.links]; n[idx].description = e.target.value; setContent({ ...content, links: n }); }} className="h-9 bg-muted/5 text-sm" />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label className="text-[10px] uppercase font-bold text-primary">URL</Label>
+                <Input value={link.url || ""} onChange={(e) => { const n = [...content.links]; n[idx].url = e.target.value; setContent({ ...content, links: n }); }} className="h-9 bg-muted/5 text-sm" placeholder="/student/dashboard" />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-[10px] uppercase font-bold text-primary">Icon Name</Label>
+                <Input value={link.icon || ""} onChange={(e) => { const n = [...content.links]; n[idx].icon = e.target.value; setContent({ ...content, links: n }); }} className="h-9 bg-muted/5 text-sm" placeholder="e.g. Building2" />
+                <p className="text-[9px] text-muted-foreground mt-1">
+                  Popular icons: <span className="font-bold">Building2, GraduationCap, FileCheck, Newspaper, User, Mail, Phone, Shield, Globe, BookOpen, Users</span>
+                </p>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
