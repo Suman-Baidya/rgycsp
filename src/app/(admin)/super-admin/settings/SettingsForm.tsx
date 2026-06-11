@@ -46,7 +46,11 @@ export function SettingsForm({ settings, isSuperAdmin = true }: { settings: any,
     { name: "Home", href: "/", id: "home", isActive: true },
     { name: "About", href: "/about", id: "about", isActive: true },
     { name: "Services", href: "/services", id: "services", isActive: true },
-    { name: "Guide", href: "/guide", id: "guide", isActive: true },
+    { name: "Students", href: "/students", id: "students", isActive: true },
+    { name: "Courses", href: "/courses", id: "courses", isActive: true },
+    { name: "Franchises", href: "/franchises", id: "franchises", isActive: true },
+    { name: "Events", href: "/events", id: "events", isActive: true },
+    { name: "Placement", href: "/placement", id: "placement", isActive: true },
     { name: "Pricing", href: "/pricing", id: "pricing", isActive: true },
     { name: "Support", href: "/support", id: "support", isActive: true }
   ]);
@@ -78,7 +82,11 @@ export function SettingsForm({ settings, isSuperAdmin = true }: { settings: any,
       { name: "Home", href: "/", id: "home", isActive: true },
       { name: "About", href: "/about", id: "about", isActive: true },
       { name: "Services", href: "/services", id: "services", isActive: true },
-      { name: "Guide", href: "/guide", id: "guide", isActive: true },
+      { name: "Students", href: "/students", id: "students", isActive: true },
+      { name: "Courses", href: "/courses", id: "courses", isActive: true },
+      { name: "Franchises", href: "/franchises", id: "franchises", isActive: true },
+      { name: "Events", href: "/events", id: "events", isActive: true },
+      { name: "Placement", href: "/placement", id: "placement", isActive: true },
       { name: "Pricing", href: "/pricing", id: "pricing", isActive: true },
       { name: "Support", href: "/support", id: "support", isActive: true }
     ] : [
@@ -475,9 +483,43 @@ export function SettingsForm({ settings, isSuperAdmin = true }: { settings: any,
 
           <TabsContent value="navigation" className="mt-0 w-full focus-visible:outline-none">
             <div className="space-y-10">
-              <div className="flex flex-col gap-2">
-                <h2 className="text-2xl font-bold tracking-tight">Menu Ecosystem</h2>
-                <p className="text-muted-foreground text-sm">Add, remove, or toggle visibility of navigation links.</p>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="flex flex-col gap-2">
+                  <h2 className="text-2xl font-bold tracking-tight">Menu Ecosystem</h2>
+                  <p className="text-muted-foreground text-sm">Add, remove, or toggle visibility of navigation links.</p>
+                </div>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => {
+                    const defaultGlobalNav = [
+                      { name: "Home", href: "/", id: "home", isActive: true },
+                      { name: "About", href: "/about", id: "about", isActive: true },
+                      { name: "Services", href: "/services", id: "services", isActive: true },
+                      { name: "Students", href: "/students", id: "students", isActive: true },
+                      { name: "Courses", href: "/courses", id: "courses", isActive: true },
+                      { name: "Franchises", href: "/franchises", id: "franchises", isActive: true },
+                      { name: "Events", href: "/events", id: "events", isActive: true },
+                      { name: "Placement", href: "/placement", id: "placement", isActive: true },
+                      { name: "Pricing", href: "/pricing", id: "pricing", isActive: true },
+                      { name: "Support", href: "/support", id: "support", isActive: true }
+                    ];
+                    const defaultWorkspaceNav = [
+                      { name: "Home", href: "/", id: "home", isActive: true },
+                      { name: "About", href: "/about", id: "about", isActive: true },
+                      { name: "Courses", href: "/courses", id: "courses", isActive: true },
+                      { name: "Learners", href: "/learners", id: "learners", isActive: true },
+                      { name: "Notice", href: "/notice", id: "notice", isActive: true },
+                      { name: "Franchise", href: "/franchise", id: "franchise", isActive: true },
+                      { name: "Contact", href: "/contact", id: "contact", isActive: true },
+                    ];
+                    setNavigation(isSuperAdmin ? defaultGlobalNav : defaultWorkspaceNav);
+                    toast.success("Default menus loaded! Click 'Save Navigation' to apply.");
+                  }}
+                  className="rounded-2xl h-12 px-6 gap-3 border-primary/20 text-primary hover:bg-primary/5 font-black shadow-lg shadow-primary/5 active:scale-95 transition-all"
+                >
+                  <Plus className="h-5 w-5" /> Sync Default Menus
+                </Button>
               </div>
 
               <div className="grid grid-cols-1 gap-4">
@@ -606,7 +648,7 @@ export function SettingsForm({ settings, isSuperAdmin = true }: { settings: any,
                  variant="outline" 
                  size="sm" 
                  onClick={async () => {
-                   const types = ['hero', 'quick-links', 'about', 'why-choose-us', 'achievements', 'partners', 'our-message', 'mission', 'vision', 'services', 'guide-steps', 'guide-resources', 'ready-to-modernize', 'custom-solution', 'pricing', 'testimonials', 'faq', 'contact', 'page-header-about', 'page-header-services', 'page-header-guide', 'page-header-pricing', 'page-header-support', 'legal-privacy-policy', 'legal-terms-conditions', 'legal-cookie-policy', 'legal-refund-policy', 'legal-sitemap'];
+                   const types = ['hero', 'quick-links', 'about', 'why-choose-us', 'achievements', 'partners', 'our-message', 'mission', 'vision', 'services', 'guide-steps', 'guide-resources', 'ready-to-modernize', 'custom-solution', 'pricing', 'testimonials', 'faq', 'contact', 'page-header-about', 'page-header-services', 'page-header-guide', 'page-header-pricing', 'page-header-support', 'page-header-students', 'page-header-courses', 'page-header-franchises', 'page-header-events', 'page-header-placement', 'franchises-offer-banner', 'franchises-rules', 'franchises-guidelines', 'legal-privacy-policy', 'legal-terms-conditions', 'legal-cookie-policy', 'legal-refund-policy', 'legal-sitemap'];
                    const res = await syncAllSections(settings.id, types);
                    if (res.success) {
                      toast.success(res.created ? `Initialized ${res.created} new sections!` : "All sections are already synced.");
@@ -635,7 +677,7 @@ export function SettingsForm({ settings, isSuperAdmin = true }: { settings: any,
                  variant="outline" 
                  size="sm" 
                  onClick={async () => {
-                   const types = ['hero', 'quick-links', 'about', 'why-choose-us', 'achievements', 'partners', 'our-message', 'mission', 'vision', 'services', 'guide-steps', 'guide-resources', 'ready-to-modernize', 'custom-solution', 'pricing', 'testimonials', 'faq', 'contact', 'page-header-about', 'page-header-services', 'page-header-guide', 'page-header-pricing', 'page-header-support', 'legal-privacy-policy', 'legal-terms-conditions', 'legal-cookie-policy', 'legal-refund-policy', 'legal-sitemap'];
+                   const types = ['hero', 'quick-links', 'about', 'why-choose-us', 'achievements', 'partners', 'our-message', 'mission', 'vision', 'services', 'guide-steps', 'guide-resources', 'ready-to-modernize', 'custom-solution', 'pricing', 'testimonials', 'faq', 'contact', 'page-header-about', 'page-header-services', 'page-header-guide', 'page-header-pricing', 'page-header-support', 'page-header-students', 'page-header-courses', 'page-header-franchises', 'page-header-events', 'page-header-placement', 'franchises-offer-banner', 'franchises-rules', 'franchises-guidelines', 'legal-privacy-policy', 'legal-terms-conditions', 'legal-cookie-policy', 'legal-refund-policy', 'legal-sitemap'];
                    const res = await syncAllSections(settings.id, types);
                    if (res.success) {
                      toast.success(res.created ? `Initialized ${res.created} new sections!` : "All sections are already synced.");
@@ -665,7 +707,7 @@ export function SettingsForm({ settings, isSuperAdmin = true }: { settings: any,
                  variant="outline" 
                  size="sm" 
                  onClick={async () => {
-                   const types = ['hero', 'quick-links', 'about', 'why-choose-us', 'achievements', 'partners', 'our-message', 'mission', 'vision', 'services', 'guide-steps', 'guide-resources', 'ready-to-modernize', 'custom-solution', 'pricing', 'testimonials', 'faq', 'contact', 'page-header-about', 'page-header-services', 'page-header-guide', 'page-header-pricing', 'page-header-support', 'legal-privacy-policy', 'legal-terms-conditions', 'legal-cookie-policy', 'legal-refund-policy', 'legal-sitemap', 'page-header-privacy-policy', 'page-header-terms-conditions', 'page-header-cookie-policy', 'page-header-refund-policy', 'page-header-sitemap'];
+                   const types = ['hero', 'quick-links', 'about', 'why-choose-us', 'achievements', 'partners', 'our-message', 'mission', 'vision', 'services', 'guide-steps', 'guide-resources', 'ready-to-modernize', 'custom-solution', 'pricing', 'testimonials', 'faq', 'contact', 'page-header-about', 'page-header-services', 'page-header-guide', 'page-header-pricing', 'page-header-support', 'page-header-students', 'page-header-courses', 'page-header-franchises', 'page-header-events', 'page-header-placement', 'franchises-offer-banner', 'franchises-rules', 'franchises-guidelines', 'legal-privacy-policy', 'legal-terms-conditions', 'legal-cookie-policy', 'legal-refund-policy', 'legal-sitemap', 'page-header-privacy-policy', 'page-header-terms-conditions', 'page-header-cookie-policy', 'page-header-refund-policy', 'page-header-sitemap'];
                    const res = await syncAllSections(settings.id, types);
                    if (res.success) {
                      toast.success(res.created ? `Initialized ${res.created} new sections!` : "All sections are already synced.");
@@ -794,6 +836,9 @@ function SectionEditor({ section, settings, mediaFolderBase, isSuperAdmin }: { s
                {section.type === 'custom-solution' && <CustomSolutionContentEditor content={content} setContent={setContent} mediaFolderBase={mediaFolderBase} />}
                {section.type === 'pricing' && <PricingContentEditor content={content} setContent={setContent} mediaFolderBase={mediaFolderBase} />}
                {section.type === 'contact' && <ContactContentEditor content={content} setContent={setContent} settings={settings} mediaFolderBase={mediaFolderBase} />}
+               {section.type === 'franchises-offer-banner' && <FranchisesOfferBannerEditor content={content} setContent={setContent} mediaFolderBase={mediaFolderBase} />}
+               {section.type === 'franchises-rules' && <FranchisesRulesEditor content={content} setContent={setContent} mediaFolderBase={mediaFolderBase} />}
+               {section.type === 'franchises-guidelines' && <FranchisesGuidelinesEditor content={content} setContent={setContent} />}
                {section.type.startsWith('page-header-') && <PageHeaderContentEditor content={content} setContent={setContent} mediaFolderBase={mediaFolderBase} />}
                {section.type.startsWith('legal-') && <LegalContentEditor content={content} setContent={setContent} mediaFolderBase={mediaFolderBase} />}
             </div>
@@ -1859,6 +1904,95 @@ function QuickLinksContentEditor({ content, setContent }: any) {
                   Popular icons: <span className="font-bold">Building2, GraduationCap, FileCheck, Newspaper, User, Mail, Phone, Shield, Globe, BookOpen, Users</span>
                 </p>
               </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function FranchisesOfferBannerEditor({ content, setContent, mediaFolderBase }: any) {
+  return (
+    <div className="space-y-6">
+      <div className="space-y-2">
+        <Label className="text-[10px] uppercase font-bold text-muted-foreground">Banner Title</Label>
+        <Input value={content.title || ""} onChange={(e) => setContent({ ...content, title: e.target.value })} className="h-10 bg-muted/5" />
+      </div>
+      <div className="space-y-2">
+        <Label className="text-[10px] uppercase font-bold text-muted-foreground">Banner Subtitle</Label>
+        <Input value={content.subtitle || ""} onChange={(e) => setContent({ ...content, subtitle: e.target.value })} className="h-10 bg-muted/5" />
+      </div>
+      <div className="space-y-2">
+        <Label className="text-[10px] uppercase font-bold text-muted-foreground">Button Link</Label>
+        <Input value={content.link || ""} onChange={(e) => setContent({ ...content, link: e.target.value })} className="h-10 bg-muted/5" />
+      </div>
+      <div className="space-y-2">
+        <ImageUpload value={content.bannerUrl || ""} onChange={(url) => setContent({ ...content, bannerUrl: url })} label="Offer Banner Image" folder={`${mediaFolderBase}/franchise-settings`} />
+      </div>
+    </div>
+  );
+}
+
+function FranchisesRulesEditor({ content, setContent, mediaFolderBase }: any) {
+  const rules = content.rules || [];
+  return (
+    <div className="space-y-6">
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <Label className="text-[10px] uppercase font-bold text-muted-foreground">Franchise Rules List</Label>
+          <Button variant="outline" size="sm" onClick={() => setContent({ ...content, rules: [...rules, { title: "New Rule", description: "Rule details here..." }] })}>Add Rule</Button>
+        </div>
+        {rules.map((r: any, idx: number) => {
+          const title = typeof r === 'string' ? r : (r.title || "");
+          const desc = typeof r === 'string' ? "" : (r.description || "");
+          return (
+            <div key={idx} className="p-4 border rounded-xl space-y-4 bg-background relative shadow-sm">
+              <Button variant="ghost" size="icon" className="absolute top-2 right-2 h-8 w-8 text-red-500" onClick={() => { const n = rules.filter((_: any, i: number) => i !== idx); setContent({ ...content, rules: n }); }}><Trash2 className="h-4 w-4" /></Button>
+              <div className="space-y-1 pr-10">
+                <Label className="text-[10px] uppercase font-bold text-primary">Rule {idx + 1} Title</Label>
+                <Input value={title} onChange={(e) => { const n = [...rules]; n[idx] = { title: e.target.value, description: desc }; setContent({ ...content, rules: n }); }} className="h-9 font-medium" />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-[10px] uppercase font-bold text-muted-foreground">Description</Label>
+                <Input value={desc} onChange={(e) => { const n = [...rules]; n[idx] = { title, description: e.target.value }; setContent({ ...content, rules: n }); }} className="h-9 bg-muted/5 text-muted-foreground" placeholder="Optional detailed description..." />
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      <div className="space-y-2 pt-4 border-t">
+        <Label className="text-[10px] uppercase font-bold text-muted-foreground">PDF Download Link (Optional)</Label>
+        <Input value={content.downloadUrl || ""} onChange={(e) => setContent({ ...content, downloadUrl: e.target.value })} className="h-10 bg-muted/5" placeholder="https://..." />
+      </div>
+    </div>
+  );
+}
+
+function FranchisesGuidelinesEditor({ content, setContent }: any) {
+  const steps = content.steps || [];
+  return (
+    <div className="space-y-8">
+      <div className="space-y-2">
+        <Label className="text-[10px] uppercase font-bold text-muted-foreground">YouTube Video URL</Label>
+        <Input value={content.videoUrl || ""} onChange={(e) => setContent({ ...content, videoUrl: e.target.value })} className="h-10 bg-muted/5" placeholder="https://www.youtube.com/embed/..." />
+      </div>
+      
+      <div className="space-y-4 pt-4 border-t">
+        <div className="flex items-center justify-between">
+          <Label className="text-[10px] uppercase font-bold text-muted-foreground">Verification Steps</Label>
+          <Button variant="outline" size="sm" onClick={() => setContent({ ...content, steps: [...steps, { title: "New Step", description: "Step detail" }] })}>Add Step</Button>
+        </div>
+        {steps.map((step: any, idx: number) => (
+          <div key={idx} className="p-4 border rounded-xl space-y-4 bg-background relative">
+            <Button variant="ghost" size="icon" className="absolute top-2 right-2 h-8 w-8 text-red-500" onClick={() => { const n = steps.filter((_: any, i: number) => i !== idx); setContent({ ...content, steps: n }); }}><Trash2 className="h-4 w-4" /></Button>
+            <div className="space-y-1 pr-10">
+              <Label className="text-[10px] uppercase font-bold text-primary">Step {idx + 1} Title</Label>
+              <Input value={step.title || ""} onChange={(e) => { const n = [...steps]; n[idx].title = e.target.value; setContent({ ...content, steps: n }); }} className="h-9" />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-[10px] uppercase font-bold text-muted-foreground">Description</Label>
+              <Textarea value={step.description || ""} onChange={(e) => { const n = [...steps]; n[idx].description = e.target.value; setContent({ ...content, steps: n }); }} className="min-h-[60px]" />
             </div>
           </div>
         ))}

@@ -44,8 +44,10 @@ model Workspace {
   id        String  @id @default(cuid())
   name      String
   subdomain String  @unique
-  logoUrl   String?
-  isActive  Boolean @default(true)
+  logoUrl      String?
+  signatureUrl String?
+  idProofUrl   String?
+  isActive     Boolean @default(true)
 
   tokensBalance Int @default(0) // Custom Token Economy
 
@@ -445,7 +447,7 @@ enum ApplicationStatus {
 
 model Notification {
   id          String  @id @default(cuid())
-  workspaceId String
+  workspaceId String?
   userId      String? // If null, it's a broadcast to all workspace admins
 
   title   String
@@ -454,8 +456,8 @@ model Notification {
   link    String? // Actionable link (e.g., /admin/students/applications/123)
   isRead  Boolean @default(false)
 
-  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-  user      User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workspace Workspace? @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  user      User?      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -475,4 +477,31 @@ model DocumentTemplate {
   updatedAt   DateTime @updatedAt
 
   @@index([workspaceId])
+}
+
+model FranchiseApplication {
+  id              String            @id @default(cuid())
+  fullName        String
+  mobile          String
+  whatsapp        String
+  email           String            @unique
+  dob             DateTime
+  centerName      String
+  pinCode         String
+  state           String
+  district        String
+  addressDetail   String            // vill/word etc.
+  computerCount   Int
+  teacherCount    Int
+  roomCount       Int?
+  spaceSqFt       Float?
+  photoUrl        String
+  signatureUrl    String
+  idProofUrl      String
+  passwordHash    String            // to create user later
+  status          ApplicationStatus @default(PENDING)
+  username        String?           @unique // WB-002 once approved
+  rejectionReason String?           @db.Text
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
 }

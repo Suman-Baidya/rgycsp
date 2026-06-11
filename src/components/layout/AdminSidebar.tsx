@@ -19,16 +19,18 @@ import {
   Activity,
   FileText,
   User,
-  MoreHorizontal
+  MoreHorizontal,
+  Building2
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { signOut } from "next-auth/react";
 import { isActivePath, getTenantLink, detectTenant } from "@/lib/routing";
+import { getPendingFranchiseCount } from "@/app/actions/franchise";
 
 const navItems = [
   { name: "Overview", href: "/", icon: LayoutDashboard },
-  { name: "Workspaces", href: "/workspaces", icon: Globe },
+  { name: "Franchises", href: "/franchises", icon: Building2 },
   { name: "Users", href: "/users", icon: Users },
   { name: "Documents", href: "/documents", icon: FileText },
   { name: "Token Economy", href: "/token-economy", icon: Coins },
@@ -41,11 +43,27 @@ export function AdminSidebar() {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMoreOpen, setIsMoreOpen] = useState(false);
   const pathname = usePathname();
+  const [pendingApplications, setPendingApplications] = useState(0);
 
   // Close mobile drawer on navigation
   useEffect(() => {
     setIsMoreOpen(false);
   }, [pathname]);
+
+  // Fetch pending applications count periodically
+  useEffect(() => {
+    const fetchPendingCount = async () => {
+      try {
+        const count = await getPendingFranchiseCount();
+        setPendingApplications(count);
+      } catch (e) {
+        console.error(e);
+      }
+    };
+    fetchPendingCount();
+    const intervalId = setInterval(fetchPendingCount, 30000); // refresh every 30s
+    return () => clearInterval(intervalId);
+  }, []);
 
   const toggleSidebar = () => setIsCollapsed(!isCollapsed);
   const toggleMore = () => setIsMoreOpen(!isMoreOpen);
@@ -128,9 +146,14 @@ export function AdminSidebar() {
                     <motion.span
                       initial={{ opacity: 0, x: -10 }}
                       animate={{ opacity: 1, x: 0 }}
-                      className="font-medium whitespace-nowrap"
+                      className="font-medium whitespace-nowrap flex-1 flex justify-between items-center pr-2"
                     >
-                      {item.name}
+                      <span>{item.name}</span>
+                      {item.name === "Franchises" && pendingApplications > 0 && (
+                        <span className="h-5 min-w-5 px-1.5 bg-amber-500 text-white text-[10px] font-black rounded flex items-center justify-center animate-pulse shadow-[0_0_10px_rgba(245,158,11,0.5)]">
+                          {pendingApplications}
+                        </span>
+                      )}
                     </motion.span>
                   )}
 
@@ -141,9 +164,18 @@ export function AdminSidebar() {
                     />
                   )}
 
+                  {isCollapsed && item.name === "Franchises" && pendingApplications > 0 && (
+                    <div className="absolute top-2 right-2 w-2.5 h-2.5 bg-amber-500 rounded-full animate-pulse shadow-[0_0_10px_rgba(245,158,11,0.5)] border-2 border-zinc-950"></div>
+                  )}
+
                   {isCollapsed && (
-                    <div className="absolute left-full ml-4 px-2 py-1 bg-zinc-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50 whitespace-nowrap border border-white/10 shadow-xl">
+                    <div className="absolute left-full ml-4 px-2 py-1 bg-zinc-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50 whitespace-nowrap border border-white/10 shadow-xl flex items-center gap-2">
                       {item.name}
+                      {item.name === "Franchises" && pendingApplications > 0 && (
+                        <span className="h-4 min-w-4 px-1 bg-amber-500 text-white text-[9px] font-black rounded flex items-center justify-center">
+                          {pendingApplications}
+                        </span>
+                      )}
                     </div>
                   )}
                 </div>
@@ -195,6 +227,9 @@ export function AdminSidebar() {
                   isActive ? "bg-primary text-primary-foreground shadow-[0_4px_12px_-4px_rgba(var(--primary),0.5)]" : "text-zinc-400"
                 )}>
                   <item.icon className="h-5 w-5" />
+                  {item.name === "Franchises" && pendingApplications > 0 && (
+                    <div className="absolute top-1 right-1 w-2.5 h-2.5 bg-amber-500 rounded-full animate-pulse shadow-[0_0_10px_rgba(245,158,11,0.5)] border border-zinc-950"></div>
+                  )}
                 </div>
                 <span className={cn(
                   "text-[10px] font-medium transition-colors text-center w-full truncate px-1",

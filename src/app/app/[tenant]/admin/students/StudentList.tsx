@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Plus, Search, MoreVertical, UserPlus, Phone, Mail, GraduationCap, FileText, Eye, Pencil } from "lucide-react";
+import { Plus, Search, MoreVertical, UserPlus, Phone, Mail, GraduationCap, FileText, Eye, Pencil, Database, Download, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -14,10 +14,12 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { createStudent, updateStudent } from "@/app/actions/students";
+import { importStudentsCSV } from "@/app/actions/students-import";
 import { toast } from "sonner";
 import { useRouter, usePathname, useParams } from "next/navigation";
 import Link from "next/link";
@@ -36,6 +38,9 @@ export default function StudentList({
   const [editOpen, setEditOpen] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState<any>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
+  const [csvFile, setCsvFile] = useState<File | null>(null);
+  const [importing, setImporting] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
   const params = useParams();
@@ -57,6 +62,95 @@ export default function StudentList({
     parentPhone: "",
     batchId: "",
   });
+
+  const handleCSVUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setCsvFile(file);
+  };
+
+  const handleImportCSVSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!csvFile) {
+      toast.error("Please select a CSV file.");
+      return;
+    }
+
+    setImporting(true);
+    const reader = new FileReader();
+    reader.readAsText(csvFile);
+    reader.onload = async (event) => {
+      try {
+        const text = event.target?.result as string;
+        const lines = text.split(/\r?\n/);
+        if (lines.length < 2) {
+          toast.error("CSV file is empty or has no header row.");
+          setImporting(false);
+          return;
+        }
+
+        // Parse headers
+        const headers = lines[0].split(",").map(h => h.trim().replace(/^["']|["']$/g, ""));
+        const parsedRecords: any[] = [];
+
+        for (let i = 1; i < lines.length; i++) {
+          const line = lines[i].trim();
+          if (!line) continue;
+
+          // Simple CSV line splitter (handling basic quotes)
+          const cols: string[] = [];
+          let current = "";
+          let inQuotes = false;
+          for (let c = 0; c < line.length; c++) {
+            const char = line[c];
+            if (char === '"' || char === "'") {
+              inQuotes = !inQuotes;
+            } else if (char === ',' && !inQuotes) {
+              cols.push(current.trim());
+              current = "";
+            } else {
+              current += char;
+            }
+          }
+          cols.push(current.trim());
+
+          const record: any = {};
+          headers.forEach((header, index) => {
+            const val = cols[index] ? cols[index].replace(/^["']|["']$/g, "") : "";
+            record[header] = val;
+          });
+
+          if (record.fullName || record.FullName) {
+            parsedRecords.push(record);
+          }
+        }
+
+        if (parsedRecords.length === 0) {
+          toast.error("No valid student records found (Full Name is required).");
+          setImporting(false);
+          return;
+        }
+
+        const res = await importStudentsCSV(workspaceId, parsedRecords);
+        if (res.success) {
+          toast.success(`Imported ${res.importedCount} students successfully!`);
+          if (res.errors) {
+            console.warn("Import warnings:", res.errors);
+            toast.warning(`Some rows failed to import. Check console logs.`);
+          }
+          setImportOpen(false);
+          setCsvFile(null);
+          router.refresh();
+        } else {
+          toast.error(res.error || "Failed to import CSV.");
+        }
+      } catch (err) {
+        toast.error("Error reading or parsing CSV file.");
+      } finally {
+        setImporting(false);
+      }
+    };
+  };
 
   const handleEditClick = (student: any) => {
     setSelectedStudent(student);
@@ -184,13 +278,75 @@ export default function StudentList({
           />
         </div>
         
-        <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger render={
-            <Button className="gap-2 rounded-xl font-bold h-11 px-6 shadow-sm hover:shadow-md transition-all">
-              <UserPlus className="h-4 w-4" />
-              Enroll New Student
-            </Button>
-          } />
+        <div className="flex items-center gap-3">
+          <Dialog open={importOpen} onOpenChange={setImportOpen}>
+            <DialogTrigger render={
+              <Button variant="outline" className="gap-2 rounded-xl font-bold h-11 px-5 border-2 border-slate-100 hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800 transition-all shadow-sm">
+                <Database className="h-4 w-4 text-primary" />
+                Import CSV
+              </Button>
+            } />
+            <DialogContent className="max-w-md rounded-3xl p-6 bg-white dark:bg-slate-900 border-none">
+              <DialogHeader>
+                <DialogTitle className="font-bold text-lg">Bulk Student Import</DialogTitle>
+                <p className="text-xs text-muted-foreground mt-1">Upload a CSV file containing student records. System generates user logins automatically.</p>
+              </DialogHeader>
+              <form onSubmit={handleImportCSVSubmit} className="space-y-6 pt-4">
+                <div className="space-y-2">
+                  <Label className="font-bold text-xs text-slate-500">Select CSV File</Label>
+                  <Input 
+                    type="file" 
+                    required
+                    accept=".csv"
+                    onChange={handleCSVUpload}
+                    className="rounded-xl cursor-pointer"
+                  />
+                </div>
+
+                <div className="p-4 bg-muted/20 border rounded-2xl space-y-2 text-xs">
+                  <p className="font-bold flex items-center gap-1.5"><Download className="w-3.5 h-3.5 text-primary" /> Download Template:</p>
+                  <p className="text-muted-foreground">Use our pre-configured header formatting to ensure successful processing.</p>
+                  <a 
+                    href="data:text/csv;charset=utf-8,fullName,enrollmentNo,dob,gender,phone,email,whatsapp,address,religion,caste,bloodGroup,parentName,parentPhone%0AJohn Doe,,15/08/2005,Male,9876543210,john@example.com,9876543210,%22123 Main St, Kolkata%22,Hindu,General,O+,Robert Doe,9876543211%0AJane Smith,,22/10/2004,Female,9876543220,jane@example.com,9876543220,%22456 Park Rd, Kolkata%22,Christian,OBC,A+,Sarah Smith,9876543221"
+                    download="student_import_template.csv"
+                    className="text-primary font-bold hover:underline inline-block mt-1"
+                  >
+                    student_import_template.csv
+                  </a>
+                </div>
+
+                <DialogFooter className="flex gap-2">
+                  <Button 
+                    type="button"
+                    variant="outline" 
+                    onClick={() => setImportOpen(false)}
+                    className="rounded-xl font-bold"
+                  >
+                    Cancel
+                  </Button>
+                  <Button 
+                    type="submit"
+                    disabled={importing}
+                    className="rounded-xl font-bold shadow-lg shadow-primary/20"
+                  >
+                    {importing ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" /> Importing...
+                      </>
+                    ) : "Start Import"}
+                  </Button>
+                </DialogFooter>
+              </form>
+            </DialogContent>
+          </Dialog>
+
+          <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger render={
+              <Button className="gap-2 rounded-xl font-bold h-11 px-6 shadow-sm hover:shadow-md transition-all">
+                <UserPlus className="h-4 w-4" />
+                Enroll New Student
+              </Button>
+            } />
           <DialogContent className="max-w-4xl rounded-[2rem] border-none shadow-2xl p-0 overflow-hidden">
             <DialogHeader className="bg-slate-900 dark:bg-black p-8 text-white">
               <DialogTitle className="font-bold text-2xl">Enroll New Student</DialogTitle>
@@ -306,6 +462,7 @@ export default function StudentList({
             </form>
           </DialogContent>
         </Dialog>
+        </div>
       </div>
 
       {/* Modern Vertical List */}

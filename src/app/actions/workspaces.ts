@@ -70,7 +70,8 @@ export async function createWorkspace(data: any) {
       },
     });
 
-    revalidatePath("/(admin)/super-admin/workspaces", "page");
+    revalidatePath("/(admin)/super-admin", "page");
+    revalidatePath("/(admin)/super-admin/franchises", "page");
     return { success: true, workspaceId: workspace.id };
   } catch (error: any) {
     console.error("Failed to create workspace:", error);
@@ -93,6 +94,7 @@ export async function getWorkspaces() {
             batches: true
           },
         },
+        siteSettings: true,
       },
       orderBy: { createdAt: "desc" },
     });
@@ -101,5 +103,109 @@ export async function getWorkspaces() {
   } catch (error: any) {
     console.error("Failed to fetch workspaces:", error);
     return { success: false, error: error.message || "Failed to fetch workspaces" };
+  }
+}
+
+export async function updateCenterConfig(workspaceId: string, data: any) {
+  try {
+    const {
+      name,
+      subdomain,
+      centerCode, // username of the admin
+      ownerName,
+      ownerEmail,
+      contactPhone,
+      address,
+      logoUrl,
+      signatureUrl,
+      idProofUrl
+    } = data;
+
+    // Check if new subdomain is taken by another workspace
+    if (subdomain) {
+      const existingSubdomain = await db.workspace.findFirst({
+        where: { 
+          subdomain,
+          id: { not: workspaceId }
+        }
+      });
+      if (existingSubdomain) {
+        return { success: false, error: "Subdomain is already in use by another franchise." };
+      }
+    }
+
+    // Check if new centerCode is taken by another user
+    if (centerCode) {
+      const existingUserCode = await db.user.findFirst({
+        where: {
+          username: centerCode,
+          workspaceRoles: { none: { workspaceId } } // check if another user has this username
+        }
+      });
+      if (existingUserCode) {
+        return { success: false, error: "Center Code (username) is already in use." };
+      }
+    }
+
+    // Update Workspace
+    const workspace = await db.workspace.update({
+      where: { id: workspaceId },
+      data: {
+        name,
+        subdomain,
+        logoUrl,
+        signatureUrl,
+        idProofUrl
+      },
+      include: { roles: { include: { user: true } } }
+    });
+
+    // Update SiteSettings
+    await db.siteSettings.upsert({
+      where: { workspaceId },
+      create: {
+        workspaceId,
+        siteName: name,
+        contactEmail: ownerEmail,
+        contactPhone,
+        address
+      },
+      update: {
+        siteName: name,
+        contactEmail: ownerEmail,
+        contactPhone,
+        address
+      }
+    });
+
+    // Update Admin User
+    const adminRole = workspace.roles.find(r => r.role === "ADMIN");
+    if (adminRole?.user) {
+      // Ensure email doesn't conflict
+      if (ownerEmail && ownerEmail !== adminRole.user.email) {
+        const existingEmail = await db.user.findFirst({
+          where: { email: ownerEmail, id: { not: adminRole.userId } }
+        });
+        if (existingEmail) {
+          return { success: false, error: "Email is already in use by another user." };
+        }
+      }
+
+      await db.user.update({
+        where: { id: adminRole.userId },
+        data: {
+          name: ownerName,
+          email: ownerEmail,
+          username: centerCode
+        }
+      });
+    }
+
+    revalidatePath("/(admin)/super-admin", "page");
+    revalidatePath("/(admin)/super-admin/franchises", "page");
+    return { success: true };
+  } catch (error: any) {
+    console.error("Failed to update center config:", error);
+    return { success: false, error: error.message || "Failed to update center configuration." };
   }
 }

@@ -96,7 +96,11 @@ export function LandingNavbar({ settings, user, isHome }: { settings?: any, user
     { name: "Home", href: "/", id: "home", isActive: true },
     { name: "About", href: "/about", id: "about", isActive: true },
     { name: "Services", href: "/services", id: "services", isActive: true },
-    { name: "Guide", href: "/guide", id: "guide", isActive: true },
+    { name: "Students", href: "/students", id: "students", isActive: true },
+    { name: "Courses", href: "/courses", id: "courses", isActive: true },
+    { name: "Franchises", href: "/franchises", id: "franchises", isActive: true },
+    { name: "Events", href: "/events", id: "events", isActive: true },
+    { name: "Placement", href: "/placement", id: "placement", isActive: true },
     { name: "Pricing", href: "/pricing", id: "pricing", isActive: true },
     { name: "Support", href: "/support", id: "support", isActive: true }
   ]).filter((link: any) => link.isActive !== false);

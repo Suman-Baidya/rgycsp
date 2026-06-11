@@ -146,6 +146,38 @@ export async function syncAllSections(settingsId: string, sectionTypes: string[]
             { title: "News & Announcements", description: "Latest updates", url: "/news", icon: "Newspaper" }
           ]
         };
+      } else if (type === 'franchises-offer-banner') {
+        defaultContent = {
+          bannerUrl: "https://images.unsplash.com/photo-1557426272-fc759fdf7a8d?q=80&w=2070",
+          link: "#apply",
+          title: "Special Offer: 50% Off Registration",
+          subtitle: "Valid until end of the month"
+        };
+      } else if (type === 'franchises-rules') {
+        defaultContent = {
+          rules: [
+            "Minimum of 5 operational computer nodes.",
+            "High-speed broadband internet line.",
+            "Standard printer/scanner hardware.",
+            "Clean drinking water and washroom facilities.",
+            "Minimum 300 sq.ft of carpet area."
+          ],
+          downloadUrl: ""
+        };
+      } else if (type === 'franchises-guidelines') {
+        defaultContent = {
+          videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ",
+          steps: [
+            { title: "Apply Online", description: "Submit details" },
+            { title: "Verification", description: "Wait for review" },
+            { title: "Approval", description: "Get your center code" }
+          ]
+        };
+      } else if (type.startsWith('page-header-')) {
+        let pageTitle = title.replace('Page Header ', '');
+        defaultContent = {
+          html: `<h1>Welcome to ${pageTitle}</h1><p>Discover everything you need to know about our ${pageTitle.toLowerCase()}.</p>`,
+        };
       }
 
       return db.landingSection.create({
