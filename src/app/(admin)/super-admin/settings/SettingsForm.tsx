@@ -648,7 +648,7 @@ export function SettingsForm({ settings, isSuperAdmin = true }: { settings: any,
                  variant="outline" 
                  size="sm" 
                  onClick={async () => {
-                   const types = ['hero', 'quick-links', 'about', 'why-choose-us', 'achievements', 'partners', 'our-message', 'mission', 'vision', 'services', 'guide-steps', 'guide-resources', 'ready-to-modernize', 'custom-solution', 'pricing', 'testimonials', 'faq', 'contact', 'page-header-about', 'page-header-services', 'page-header-guide', 'page-header-pricing', 'page-header-support', 'page-header-students', 'page-header-courses', 'page-header-franchises', 'page-header-events', 'page-header-placement', 'franchises-offer-banner', 'franchises-rules', 'franchises-guidelines', 'legal-privacy-policy', 'legal-terms-conditions', 'legal-cookie-policy', 'legal-refund-policy', 'legal-sitemap'];
+                   const types = ['hero', 'quick-links', 'about', 'why-choose-us', 'achievements', 'partners', 'our-message', 'mission', 'vision', 'services', 'guide-steps', 'guide-resources', 'ready-to-modernize', 'custom-solution', 'pricing', 'testimonials', 'faq', 'contact', 'page-header-about', 'page-header-services', 'page-header-guide', 'page-header-pricing', 'page-header-support', 'page-header-students', 'page-header-courses', 'page-header-franchises', 'page-header-events', 'page-header-placement', 'franchises-offer-banner', 'franchises-rules', 'franchises-guidelines', 'franchises-verification', 'legal-privacy-policy', 'legal-terms-conditions', 'legal-cookie-policy', 'legal-refund-policy', 'legal-sitemap'];
                    const res = await syncAllSections(settings.id, types);
                    if (res.success) {
                      toast.success(res.created ? `Initialized ${res.created} new sections!` : "All sections are already synced.");
@@ -677,7 +677,7 @@ export function SettingsForm({ settings, isSuperAdmin = true }: { settings: any,
                  variant="outline" 
                  size="sm" 
                  onClick={async () => {
-                   const types = ['hero', 'quick-links', 'about', 'why-choose-us', 'achievements', 'partners', 'our-message', 'mission', 'vision', 'services', 'guide-steps', 'guide-resources', 'ready-to-modernize', 'custom-solution', 'pricing', 'testimonials', 'faq', 'contact', 'page-header-about', 'page-header-services', 'page-header-guide', 'page-header-pricing', 'page-header-support', 'page-header-students', 'page-header-courses', 'page-header-franchises', 'page-header-events', 'page-header-placement', 'franchises-offer-banner', 'franchises-rules', 'franchises-guidelines', 'legal-privacy-policy', 'legal-terms-conditions', 'legal-cookie-policy', 'legal-refund-policy', 'legal-sitemap'];
+                   const types = ['hero', 'quick-links', 'about', 'why-choose-us', 'achievements', 'partners', 'our-message', 'mission', 'vision', 'services', 'guide-steps', 'guide-resources', 'ready-to-modernize', 'custom-solution', 'pricing', 'testimonials', 'faq', 'contact', 'page-header-about', 'page-header-services', 'page-header-guide', 'page-header-pricing', 'page-header-support', 'page-header-students', 'page-header-courses', 'page-header-franchises', 'page-header-events', 'page-header-placement', 'franchises-offer-banner', 'franchises-rules', 'franchises-guidelines', 'franchises-verification', 'legal-privacy-policy', 'legal-terms-conditions', 'legal-cookie-policy', 'legal-refund-policy', 'legal-sitemap'];
                    const res = await syncAllSections(settings.id, types);
                    if (res.success) {
                      toast.success(res.created ? `Initialized ${res.created} new sections!` : "All sections are already synced.");
@@ -839,6 +839,7 @@ function SectionEditor({ section, settings, mediaFolderBase, isSuperAdmin }: { s
                {section.type === 'franchises-offer-banner' && <FranchisesOfferBannerEditor content={content} setContent={setContent} mediaFolderBase={mediaFolderBase} />}
                {section.type === 'franchises-rules' && <FranchisesRulesEditor content={content} setContent={setContent} mediaFolderBase={mediaFolderBase} />}
                {section.type === 'franchises-guidelines' && <FranchisesGuidelinesEditor content={content} setContent={setContent} />}
+               {section.type === 'franchises-verification' && <FranchisesVerificationEditor content={content} setContent={setContent} mediaFolderBase={mediaFolderBase} />}
                {section.type.startsWith('page-header-') && <PageHeaderContentEditor content={content} setContent={setContent} mediaFolderBase={mediaFolderBase} />}
                {section.type.startsWith('legal-') && <LegalContentEditor content={content} setContent={setContent} mediaFolderBase={mediaFolderBase} />}
             </div>
@@ -1996,6 +1997,30 @@ function FranchisesGuidelinesEditor({ content, setContent }: any) {
             </div>
           </div>
         ))}
+      </div>
+    </div>
+  );
+}
+
+function FranchisesVerificationEditor({ content, setContent, mediaFolderBase }: any) {
+  return (
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="space-y-2">
+          <Label className="text-[10px] uppercase font-bold text-muted-foreground">Button Text</Label>
+          <Input value={content.buttonText || ""} onChange={(e) => setContent({ ...content, buttonText: e.target.value })} className="h-10 bg-muted/5" placeholder="e.g. Run Official Verification" />
+        </div>
+        <div className="space-y-2">
+          <Label className="text-[10px] uppercase font-bold text-muted-foreground">Loading Button Text</Label>
+          <Input value={content.loadingButtonText || ""} onChange={(e) => setContent({ ...content, loadingButtonText: e.target.value })} className="h-10 bg-muted/5" placeholder="e.g. Authenticating Record..." />
+        </div>
+      </div>
+      <div className="space-y-2">
+        <Label className="text-[10px] uppercase font-bold text-muted-foreground">Watermark Text</Label>
+        <Input value={content.watermarkText || ""} onChange={(e) => setContent({ ...content, watermarkText: e.target.value })} className="h-10 bg-muted/5" placeholder="e.g. VERIFIED" />
+      </div>
+      <div className="space-y-2">
+        <ImageUpload value={content.backgroundUrl || ""} onChange={(url) => setContent({ ...content, backgroundUrl: url })} label="Background Image" folder={`${mediaFolderBase}/franchise-settings`} />
       </div>
     </div>
   );

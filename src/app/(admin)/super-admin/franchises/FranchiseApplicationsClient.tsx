@@ -1404,11 +1404,11 @@ export default function FranchiseApplicationsClient({
       {/* Details View Application Dialog */}
       {selectedApp && (
         <Dialog open={detailsOpen} onOpenChange={setDetailsOpen}>
-          <DialogContent className="max-w-4xl rounded-[2.5rem] border-none shadow-2xl p-0 overflow-hidden bg-white dark:bg-slate-900">
-            <DialogHeader className="bg-slate-950 p-8 text-white">
-              <div className="flex justify-between items-start">
+          <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col rounded-[2.5rem] border-none shadow-2xl p-0 overflow-hidden bg-white dark:bg-slate-900">
+            <DialogHeader className="bg-slate-950 p-6 sm:p-8 text-white shrink-0 relative">
+              <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 pr-6">
                 <div className="space-y-1">
-                  <DialogTitle className="font-bold text-2xl">{selectedApp.centerName}</DialogTitle>
+                  <DialogTitle className="font-bold text-xl sm:text-2xl leading-tight text-white">{selectedApp.centerName}</DialogTitle>
                   <DialogDescription className="text-slate-400 text-sm">
                     Franchise Application review portal
                   </DialogDescription>
@@ -1423,7 +1423,7 @@ export default function FranchiseApplicationsClient({
               </div>
             </DialogHeader>
 
-            <div className="p-8 max-h-[75vh] overflow-y-auto custom-scrollbar bg-slate-50/30 dark:bg-slate-950/20">
+            <div className="p-6 sm:p-8 flex-1 overflow-y-auto custom-scrollbar bg-slate-50/30 dark:bg-slate-950/20">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 {/* Director Profile */}
                 <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 border shadow-sm space-y-5">
@@ -1493,52 +1493,76 @@ export default function FranchiseApplicationsClient({
               </div>
 
               {/* Document Previews */}
-              <div className="mt-8 bg-white dark:bg-slate-900 rounded-3xl p-6 border shadow-sm space-y-5">
-                <div className="flex items-center gap-3 border-b pb-3 border-slate-100 dark:border-slate-800">
-                  <div className="h-8 w-8 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-600">
-                    <FileText className="h-4 w-4" />
+              <div className="mt-8 bg-white dark:bg-slate-900 rounded-3xl p-6 border shadow-sm space-y-6">
+                <div className="flex items-center gap-3 border-b pb-4 border-slate-100 dark:border-slate-800">
+                  <div className="h-10 w-10 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-600">
+                    <FileText className="h-5 w-5" />
                   </div>
-                  <h4 className="text-xs font-black uppercase tracking-widest text-slate-800 dark:text-slate-200">Document Previews</h4>
+                  <div className="flex flex-col">
+                    <h4 className="text-sm font-black uppercase tracking-widest text-slate-800 dark:text-slate-200">Document Previews</h4>
+                    <span className="text-[10px] text-slate-500 font-medium">Verify the submitted credentials</span>
+                  </div>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <div className="space-y-3">
-                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block text-center">Profile Photo</span>
-                    <div className="h-48 w-full rounded-2xl border-2 overflow-hidden bg-slate-50 dark:bg-slate-800/50 flex items-center justify-center relative group">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+                  <div className="space-y-3 group/card">
+                    <span className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-widest block text-center">Profile Photo</span>
+                    <div className="h-48 w-full rounded-2xl border border-slate-200 dark:border-slate-700 shadow-inner overflow-hidden bg-slate-50/80 dark:bg-slate-800/80 flex items-center justify-center relative group transition-all duration-300 hover:shadow-lg hover:border-emerald-500/30">
                       {selectedApp.photoUrl ? (
                         <>
-                          <img src={selectedApp.photoUrl} alt="Photo" className="w-full h-full object-contain p-2" />
-                          <a href={selectedApp.photoUrl} target="_blank" className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white font-bold gap-2 backdrop-blur-sm"><ExternalLink className="w-5 h-5" /> View Full</a>
+                          <img src={selectedApp.photoUrl} alt="Photo" className="w-full h-full object-contain p-2 transition-transform duration-500 group-hover:scale-105" />
+                          <a href={selectedApp.photoUrl} target="_blank" className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center text-white font-bold gap-2 backdrop-blur-[2px]">
+                            <div className="bg-white/20 p-3 rounded-full flex items-center gap-2 hover:bg-white/30 transition-colors">
+                              <ExternalLink className="w-5 h-5" /> <span>View Full</span>
+                            </div>
+                          </a>
                         </>
                       ) : (
-                        <span className="text-xs font-bold text-slate-400">Not uploaded</span>
+                        <div className="flex flex-col items-center gap-2 opacity-50">
+                          <FileText className="w-8 h-8 text-slate-400" />
+                          <span className="text-xs font-bold text-slate-400">Not uploaded</span>
+                        </div>
                       )}
                     </div>
                   </div>
 
-                  <div className="space-y-3">
-                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block text-center">Signature Specimen</span>
-                    <div className="h-48 w-full rounded-2xl border-2 overflow-hidden bg-slate-50 dark:bg-slate-800/50 flex items-center justify-center relative group">
+                  <div className="space-y-3 group/card">
+                    <span className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-widest block text-center">Signature Specimen</span>
+                    <div className="h-48 w-full rounded-2xl border border-slate-200 dark:border-slate-700 shadow-inner overflow-hidden bg-slate-50/80 dark:bg-slate-800/80 flex items-center justify-center relative group transition-all duration-300 hover:shadow-lg hover:border-emerald-500/30">
                       {selectedApp.signatureUrl ? (
                         <>
-                          <img src={selectedApp.signatureUrl} alt="Signature" className="w-full h-full object-contain p-2" />
-                          <a href={selectedApp.signatureUrl} target="_blank" className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white font-bold gap-2 backdrop-blur-sm"><ExternalLink className="w-5 h-5" /> View Full</a>
+                          <img src={selectedApp.signatureUrl} alt="Signature" className="w-full h-full object-contain p-2 transition-transform duration-500 group-hover:scale-105" />
+                          <a href={selectedApp.signatureUrl} target="_blank" className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center text-white font-bold gap-2 backdrop-blur-[2px]">
+                            <div className="bg-white/20 p-3 rounded-full flex items-center gap-2 hover:bg-white/30 transition-colors">
+                              <ExternalLink className="w-5 h-5" /> <span>View Full</span>
+                            </div>
+                          </a>
                         </>
                       ) : (
-                        <span className="text-xs font-bold text-slate-400">Not uploaded</span>
+                        <div className="flex flex-col items-center gap-2 opacity-50">
+                          <FileText className="w-8 h-8 text-slate-400" />
+                          <span className="text-xs font-bold text-slate-400">Not uploaded</span>
+                        </div>
                       )}
                     </div>
                   </div>
 
-                  <div className="space-y-3">
-                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block text-center">ID Proof Document</span>
-                    <div className="h-48 w-full rounded-2xl border-2 overflow-hidden bg-slate-50 dark:bg-slate-800/50 flex items-center justify-center relative group">
+                  <div className="space-y-3 group/card">
+                    <span className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-widest block text-center">ID Proof Document</span>
+                    <div className="h-48 w-full rounded-2xl border border-slate-200 dark:border-slate-700 shadow-inner overflow-hidden bg-slate-50/80 dark:bg-slate-800/80 flex items-center justify-center relative group transition-all duration-300 hover:shadow-lg hover:border-emerald-500/30">
                       {selectedApp.idProofUrl ? (
                         <>
-                          <img src={selectedApp.idProofUrl} alt="ID Proof" className="w-full h-full object-contain p-2" />
-                          <a href={selectedApp.idProofUrl} target="_blank" className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white font-bold gap-2 backdrop-blur-sm"><ExternalLink className="w-5 h-5" /> View Full</a>
+                          <img src={selectedApp.idProofUrl} alt="ID Proof" className="w-full h-full object-contain p-2 transition-transform duration-500 group-hover:scale-105" />
+                          <a href={selectedApp.idProofUrl} target="_blank" className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center text-white font-bold gap-2 backdrop-blur-[2px]">
+                            <div className="bg-white/20 p-3 rounded-full flex items-center gap-2 hover:bg-white/30 transition-colors">
+                              <ExternalLink className="w-5 h-5" /> <span>View Full</span>
+                            </div>
+                          </a>
                         </>
                       ) : (
-                        <span className="text-xs font-bold text-slate-400">Not uploaded</span>
+                        <div className="flex flex-col items-center gap-2 opacity-50">
+                          <FileText className="w-8 h-8 text-slate-400" />
+                          <span className="text-xs font-bold text-slate-400">Not uploaded</span>
+                        </div>
                       )}
                     </div>
                   </div>
@@ -1546,32 +1570,34 @@ export default function FranchiseApplicationsClient({
               </div>
             </div>
 
-            <DialogFooter className="bg-slate-50 dark:bg-slate-800/40 p-6 flex gap-3 border-t">
-              <Button 
-                onClick={() => setDetailsOpen(false)}
-                variant="outline" 
-                className="rounded-xl font-bold h-11 px-6 border-2"
-              >
-                Close
-              </Button>
+            <DialogFooter className="bg-slate-50 dark:bg-slate-800/40 p-4 sm:p-6 flex flex-col sm:flex-row items-center justify-center sm:justify-center sm:items-center gap-3 sm:space-x-0 border-t border-slate-200 dark:border-slate-700 shrink-0 w-full">
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-3 w-full">
+                <Button 
+                  onClick={() => setDetailsOpen(false)}
+                  variant="outline" 
+                  className="rounded-xl font-bold h-11 px-6 border-2 w-full sm:w-auto"
+                >
+                  Close
+                </Button>
 
-              {selectedApp.status === "PENDING" && (
-                <>
-                  <Button 
-                    onClick={() => setRejectOpen(true)}
-                    variant="destructive" 
-                    className="rounded-xl font-bold h-11 gap-1.5 px-6"
-                  >
-                    <X className="w-4 h-4" /> Reject Request
-                  </Button>
-                  <Button 
-                    onClick={handleOpenApprove}
-                    className="rounded-xl font-bold h-11 gap-1.5 px-6 shadow-lg shadow-primary/20"
-                  >
-                    <Check className="w-4 h-4" /> Approve Application
-                  </Button>
-                </>
-              )}
+                {selectedApp.status === "PENDING" && (
+                  <>
+                    <Button 
+                      onClick={() => setRejectOpen(true)}
+                      variant="destructive" 
+                      className="rounded-xl font-bold h-11 gap-1.5 px-6 w-full sm:w-auto"
+                    >
+                      <X className="w-4 h-4" /> Reject Request
+                    </Button>
+                    <Button 
+                      onClick={handleOpenApprove}
+                      className="rounded-xl font-bold h-11 gap-1.5 px-6 shadow-lg shadow-primary/20 w-full sm:w-auto"
+                    >
+                      <Check className="w-4 h-4" /> Approve Application
+                    </Button>
+                  </>
+                )}
+              </div>
             </DialogFooter>
           </DialogContent>
         </Dialog>

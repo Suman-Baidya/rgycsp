@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { 
   Building2, 
   Search, 
@@ -28,6 +28,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { ImageUpload } from "@/components/ui/ImageUpload";
 import { submitFranchiseApplication, checkFranchiseStatus, verifyCenterCode } from "@/app/actions/franchise";
+import { ContactSection } from "@/components/landing/ContactSection";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
@@ -55,10 +56,33 @@ export function FranchisePageClient({ settings, initialWorkspaces }: FranchisePa
   const rulesSection = getSection('franchises-rules');
   const guideSection = getSection('franchises-guidelines');
   const contactSection = getSection('contact');
+  const verificationSection = getSection('franchises-verification');
+
+  // Captcha State
+  const [captchaNum1, setCaptchaNum1] = useState(0);
+  const [captchaNum2, setCaptchaNum2] = useState(0);
+  const [captchaAnswer, setCaptchaAnswer] = useState("");
+
+  const generateCaptcha = () => {
+    setCaptchaNum1(Math.floor(Math.random() * 10) + 1);
+    setCaptchaNum2(Math.floor(Math.random() * 10) + 1);
+    setCaptchaAnswer("");
+  };
+
+  useEffect(() => {
+    generateCaptcha();
+  }, []);
 
   const handleVerifyCenter = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!verifySearch.trim()) return;
+    
+    if (parseInt(captchaAnswer) !== captchaNum1 + captchaNum2) {
+      toast.error("Incorrect math answer. Please verify you are human.");
+      generateCaptcha();
+      return;
+    }
+
     setIsVerifyLoading(true);
     setVerifyResult(null);
     try {
@@ -155,7 +179,7 @@ export function FranchisePageClient({ settings, initialWorkspaces }: FranchisePa
 
               {rulesSection?.content?.rules && rulesSection.content.rules.length > 0 && (
                 <div className="mt-10">
-                  <Accordion type="single" defaultValue="rule-0" className="w-full">
+                  <Accordion defaultValue={["rule-0"]} className="w-full">
                     {rulesSection.content.rules.map((rule: any, idx: number) => {
                       // Support both old string arrays and new object arrays
                       let title = "";
@@ -276,47 +300,126 @@ export function FranchisePageClient({ settings, initialWorkspaces }: FranchisePa
       </section>
 
       {/* SECTION 3: Verification Card */}
-      <section className="py-20 lg:py-32 relative">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-           <Card className="rounded-[3rem] border-2 border-border/40 overflow-hidden shadow-2xl relative bg-card">
-              <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 blur-3xl rounded-full translate-x-1/2 -translate-y-1/2 pointer-events-none"></div>
-              <CardHeader className="text-center space-y-4 p-10 lg:p-14 border-b border-border/50">
-                <div className="w-16 h-16 bg-primary/10 rounded-3xl flex items-center justify-center mx-auto text-primary">
+      <section className="py-8 lg:py-12 relative flex items-center justify-center overflow-hidden min-h-[80vh]">
+        {/* Static Background Image with Overlay */}
+        <div className="absolute inset-0 z-0">
+          <img src={verificationSection?.content?.backgroundUrl || "https://cdn.pixabay.com/photo/2021/01/05/11/24/india-5890889_1280.jpg"} alt="Network Background" className="w-full h-full object-cover object-center" />
+          {/* Deep professional overlay - a mix of dark blue/slate to make the image look premium and not overpowering */}
+          <div className="absolute inset-0 bg-slate-900/80 mix-blend-multiply"></div>
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-900/60 to-transparent"></div>
+        </div>
+
+        {/* Huge Watermark Background */}
+        <div className="absolute inset-0 z-0 flex items-center justify-center pointer-events-none overflow-hidden select-none opacity-[0.03]">
+          <h1 className="text-[25vw] font-black uppercase text-white whitespace-nowrap -rotate-12 font-serif tracking-tighter">
+            {verificationSection?.content?.watermarkText || "VERIFIED"}
+          </h1>
+        </div>
+
+        <div className="w-full max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+           {/* The Main Verification Card - Crisp, official, white */}
+           <Card className="rounded-3xl border-0 overflow-hidden shadow-[0_20px_60px_-15px_rgba(0,0,0,0.5)] bg-white/95 backdrop-blur-md relative">
+              {/* Subtle top brand color accent line */}
+              <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-primary via-blue-500 to-primary"></div>
+
+              {/* Internal Watermark */}
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-[0.03] overflow-hidden">
+                <div className="w-96 h-96 border-[8px] border-slate-900 rounded-full flex items-center justify-center -rotate-12">
+                  <span className="text-6xl font-black text-slate-900 uppercase tracking-widest font-serif">{verificationSection?.content?.watermarkText || "VERIFIED"}</span>
+                </div>
+              </div>
+              
+              <CardHeader className="text-center space-y-4 p-6 lg:p-10 pb-6 relative z-10">
+                <div className="w-16 h-16 bg-blue-50 rounded-2xl flex items-center justify-center mx-auto text-blue-600 border border-blue-100 shadow-sm rotate-3 hover:rotate-0 transition-transform">
                   <ShieldCheck className="w-8 h-8" />
                 </div>
-                <CardTitle className="text-3xl font-black uppercase italic tracking-tight">Verify <span className="text-primary">Registration</span></CardTitle>
-                <CardDescription className="text-base font-medium max-w-xl mx-auto">Verify the legitimacy and registration status of any computer training center using their unique affiliation code.</CardDescription>
+                <div className="space-y-2">
+                  <CardTitle className="text-3xl lg:text-4xl font-black uppercase tracking-tight text-slate-900 font-serif">
+                    {verificationSection?.title ? (
+                      <span dangerouslySetInnerHTML={{ __html: verificationSection.title.replace('Verification', '<span class="text-blue-600 font-serif">Verification</span>') }} />
+                    ) : (
+                      <>Official <span className="text-blue-600 font-serif">Verification</span></>
+                    )}
+                  </CardTitle>
+                  <CardDescription className="text-sm font-medium text-slate-500 max-w-xl mx-auto">
+                    {verificationSection?.subtitle || "Access the national registry. Enter the authorized center code to instantly validate franchise credentials and secure against fraudulent entities."}
+                  </CardDescription>
+                </div>
               </CardHeader>
-              <CardContent className="p-8 lg:p-14">
-                <form onSubmit={handleVerifyCenter} className="flex flex-col sm:flex-row gap-4 max-w-2xl mx-auto">
-                  <Input required value={verifySearch} onChange={(e) => setVerifySearch(e.target.value)} placeholder="Enter Center Code (e.g. WB-002)" className="rounded-2xl h-16 border-2 uppercase font-bold text-center sm:text-left text-lg shadow-inner" />
-                  <Button type="submit" disabled={isVerifyLoading} className="rounded-2xl h-16 font-black px-10 shadow-xl shadow-primary/20 hover:scale-105 transition-all text-lg shrink-0">
-                    {isVerifyLoading ? "Verifying..." : "Verify Now"}
+              
+              <div className="px-10 lg:px-14">
+                <div className="h-px w-full bg-gradient-to-r from-transparent via-slate-200 to-transparent"></div>
+              </div>
+
+              <CardContent className="p-6 lg:p-10 pt-6">
+                <form onSubmit={handleVerifyCenter} className="flex flex-col gap-5 max-w-2xl mx-auto">
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Registration Code</Label>
+                    <Input required value={verifySearch} onChange={(e) => setVerifySearch(e.target.value)} placeholder="e.g. WB-002" className="rounded-xl h-14 border-slate-200 bg-slate-50 text-slate-900 uppercase font-bold text-center sm:text-left text-lg shadow-inner placeholder:text-slate-400 focus-visible:ring-blue-500/50 focus-visible:border-blue-500 transition-all w-full" />
+                  </div>
+                  
+                  {/* Captcha Section */}
+                  <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-white border border-slate-200 rounded-lg text-slate-700 shadow-sm">
+                        <ShieldCheck className="w-4 h-4" />
+                      </div>
+                      <div className="text-left">
+                        <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-0.5">Security Check</p>
+                        <p className="text-xs font-semibold text-slate-700">Solve to verify human identity</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="h-10 px-4 bg-white border border-slate-200 rounded-lg flex items-center justify-center font-black text-lg tracking-wider text-slate-800 shadow-sm">
+                        {captchaNum1} + {captchaNum2} =
+                      </div>
+                      <Input 
+                        required 
+                        value={captchaAnswer} 
+                        onChange={(e) => setCaptchaAnswer(e.target.value)} 
+                        placeholder="?" 
+                        className="w-16 h-10 rounded-lg border-slate-200 bg-white text-slate-900 font-black text-center text-lg shadow-inner focus-visible:ring-blue-500/50" 
+                      />
+                    </div>
+                  </div>
+
+                  <Button type="submit" disabled={isVerifyLoading} className="w-full rounded-xl h-14 font-extrabold text-lg shadow-lg shadow-blue-500/20 hover:-translate-y-0.5 transition-all bg-blue-600 hover:bg-blue-700 text-white mt-1">
+                    {isVerifyLoading ? (verificationSection?.content?.loadingButtonText || "Authenticating Record...") : (verificationSection?.content?.buttonText || "Run Official Verification")}
                   </Button>
                 </form>
 
                 {verifyResult && (
-                  <div className="mt-12 animate-in fade-in slide-in-from-bottom-4 max-w-2xl mx-auto">
-                    <div className="bg-slate-900 rounded-3xl p-8 text-white space-y-6 relative overflow-hidden shadow-2xl shadow-slate-900/20">
-                       <div className="absolute top-0 right-0 p-6">
-                         {verifyResult.isActive ? <span className="px-4 py-1.5 bg-emerald-500/20 text-emerald-400 text-xs font-black uppercase tracking-wider rounded-xl border border-emerald-500/40">Active Partner</span> : <span className="px-4 py-1.5 bg-red-500/20 text-red-400 text-xs font-black uppercase tracking-wider rounded-xl border border-red-500/40">Inactive</span>}
+                  <div className="mt-10 animate-in fade-in slide-in-from-bottom-4 max-w-2xl mx-auto">
+                    <div className="bg-slate-900 rounded-2xl p-8 sm:p-10 text-white space-y-8 relative overflow-hidden shadow-2xl border border-slate-800">
+                       {/* Subtle tech background inside result */}
+                       <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/10 blur-[80px] rounded-full pointer-events-none"></div>
+                       
+                       <div className="absolute top-0 right-0 p-6 z-10">
+                         {verifyResult.isActive ? <span className="px-4 py-1.5 bg-emerald-500/10 text-emerald-400 text-[10px] font-black uppercase tracking-widest rounded-lg border border-emerald-500/20 flex items-center gap-1.5"><CheckCircle2 className="w-3.5 h-3.5" /> Active Record</span> : <span className="px-4 py-1.5 bg-red-500/10 text-red-400 text-[10px] font-black uppercase tracking-widest rounded-lg border border-red-500/20 flex items-center gap-1.5"><AlertTriangle className="w-3.5 h-3.5" /> Inactive Record</span>}
                        </div>
-                       <div className="space-y-1 max-w-[80%]">
-                         <h4 className="text-2xl font-black">{verifyResult.centerName}</h4>
-                         <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">Code: {verifyResult.code}</p>
+                       
+                       <div className="space-y-2 max-w-[80%] relative z-10">
+                         <p className="text-[10px] font-bold text-blue-400 uppercase tracking-widest">Verified Credentials</p>
+                         <h4 className="text-2xl font-black text-white">{verifyResult.centerName}</h4>
+                         <div className="inline-flex items-center gap-2 mt-3 bg-white/5 border border-white/10 px-4 py-2 rounded-md">
+                           <ShieldCheck className="w-4 h-4 text-slate-400" />
+                           <span className="text-xs font-bold text-slate-300 uppercase tracking-widest">Registration Code:</span>
+                           <span className="text-sm font-black text-white">{verifyResult.code}</span>
+                         </div>
                        </div>
-                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm pt-4 border-t border-slate-800">
+                       
+                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 text-sm pt-6 border-t border-white/10 relative z-10">
                          <div>
-                           <p className="text-slate-500 text-xs font-bold uppercase tracking-wider mb-1">Director</p>
-                           <p className="font-bold">{verifyResult.ownerName}</p>
+                           <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest mb-1.5 flex items-center gap-1.5"><Building2 className="w-3 h-3" /> Center Director</p>
+                           <p className="font-bold text-base text-slate-200">{verifyResult.ownerName}</p>
                          </div>
                          <div>
-                           <p className="text-slate-500 text-xs font-bold uppercase tracking-wider mb-1">Affiliated Since</p>
-                           <p className="font-bold">{new Date(verifyResult.joinedAt).toLocaleDateString('en-GB')}</p>
+                           <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest mb-1.5 flex items-center gap-1.5"><Clock className="w-3 h-3" /> Authorized Since</p>
+                           <p className="font-bold text-base text-slate-200">{new Date(verifyResult.joinedAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
                          </div>
                          <div className="sm:col-span-2">
-                           <p className="text-slate-500 text-xs font-bold uppercase tracking-wider mb-1">Location</p>
-                           <p className="font-bold">{verifyResult.address}, {verifyResult.district}, {verifyResult.state}</p>
+                           <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest mb-1.5 flex items-center gap-1.5"><MapPin className="w-3 h-3" /> Registered Location</p>
+                           <p className="font-medium text-base leading-relaxed text-slate-300">{verifyResult.address}, {verifyResult.district}, {verifyResult.state}</p>
                          </div>
                        </div>
                     </div>
@@ -329,31 +432,48 @@ export function FranchisePageClient({ settings, initialWorkspaces }: FranchisePa
 
       {/* SECTION 4: Guidelines & Process */}
       {guideSection && (
-        <section className="py-20 lg:py-32 bg-muted/5 relative border-t border-border/40">
+        <section className="py-20 lg:py-32 bg-slate-50 dark:bg-slate-900/20 relative border-t border-slate-200 dark:border-slate-800">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center space-y-4 mb-16">
-              <h2 className="text-3xl lg:text-4xl font-black italic tracking-tight">{guideSection.title || "Registration Process"}</h2>
-              <p className="text-muted-foreground font-medium text-lg max-w-2xl mx-auto">{guideSection.subtitle || "Simple steps to become our verified partner"}</p>
+            <div className="text-center space-y-4 mb-16 flex flex-col items-center">
+              <div className="flex items-center gap-3 justify-center mb-2">
+                <div className="px-3 py-1.5 rounded-full border border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-black dark:bg-white animate-pulse"></span>
+                  <span className="text-[10px] font-black uppercase tracking-[0.2em] text-black/70 dark:text-white/70">Step-by-Step Guide</span>
+                </div>
+              </div>
+              <h2 className="text-4xl lg:text-5xl font-extrabold tracking-tight leading-tight">
+                {guideSection.title || "Registration Process"}
+              </h2>
+              <p className="text-lg text-muted-foreground leading-relaxed max-w-2xl mx-auto">
+                {guideSection.subtitle || "Simple steps to become our verified partner"}
+              </p>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-24 items-center">
               {/* Left: Video */}
-              {guideSection.content?.videoUrl && (
-                <div className="rounded-[2.5rem] overflow-hidden border-8 border-background shadow-2xl aspect-video relative bg-slate-900">
+              {guideSection.content?.videoUrl ? (
+                <div className="rounded-[2.5rem] overflow-hidden border-[12px] border-white shadow-2xl shadow-blue-900/10 aspect-video relative bg-slate-900 transform lg:-rotate-2 transition-transform hover:rotate-0">
                   <iframe src={guideSection.content.videoUrl} title="Guidelines Video" className="absolute inset-0 w-full h-full border-0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen></iframe>
+                </div>
+              ) : (
+                <div className="rounded-[2.5rem] overflow-hidden border-[12px] border-white shadow-2xl shadow-blue-900/10 aspect-video relative bg-slate-100 flex flex-col items-center justify-center transform lg:-rotate-2">
+                   <div className="w-16 h-16 rounded-full bg-slate-200 flex items-center justify-center mb-4">
+                     <span className="text-slate-400 font-black">?</span>
+                   </div>
+                   <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">No Video Provided</p>
                 </div>
               )}
 
               {/* Right: Steps */}
-              <div className="space-y-8 relative before:absolute before:left-6 before:top-4 before:bottom-4 before:w-1 before:bg-border/60">
+              <div className="space-y-10 relative before:absolute before:left-[1.35rem] before:top-4 before:bottom-4 before:w-1 before:bg-blue-100 before:rounded-full">
                 {(guideSection.content?.steps || []).map((step: any, idx: number) => (
-                  <div key={idx} className="flex gap-6 relative items-start group">
-                    <div className="w-12 h-12 rounded-2xl bg-background border-2 border-border flex items-center justify-center font-black shrink-0 relative z-10 group-hover:bg-primary group-hover:border-primary group-hover:text-primary-foreground group-hover:scale-110 transition-all shadow-sm text-sm">
+                  <div key={idx} className="flex gap-8 relative items-start group">
+                    <div className="w-12 h-12 rounded-full bg-white border-[3px] border-blue-100 flex items-center justify-center font-black shrink-0 relative z-10 group-hover:bg-blue-600 group-hover:border-blue-600 group-hover:text-white transition-all shadow-md shadow-blue-900/5 text-lg text-slate-400">
                       {idx + 1}
                     </div>
-                    <div className="space-y-2 pt-1">
-                      <h3 className="font-bold text-lg">{step.title}</h3>
-                      <p className="text-sm text-muted-foreground leading-relaxed font-medium">{step.description}</p>
+                    <div className="space-y-3 pt-1">
+                      <h3 className="font-bold text-xl text-slate-900 group-hover:text-blue-700 transition-colors">{step.title}</h3>
+                      <p className="text-sm text-slate-500 leading-relaxed font-medium">{step.description}</p>
                     </div>
                   </div>
                 ))}
@@ -366,26 +486,7 @@ export function FranchisePageClient({ settings, initialWorkspaces }: FranchisePa
 
       {/* SECTION 6: Contact */}
       {contactSection && (
-        <section className="py-20 lg:py-32 bg-slate-900 dark:bg-slate-950 text-white relative">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-8">
-            <div className="space-y-4">
-              <h2 className="text-3xl lg:text-5xl font-black italic tracking-tight">{contactSection.title || "Need Assistance?"}</h2>
-              <p className="text-white/70 font-medium text-lg max-w-2xl mx-auto">{contactSection.subtitle || "Contact our support desk for any affiliation queries."}</p>
-            </div>
-            <div className="flex flex-col sm:flex-row justify-center gap-6 pt-8">
-              <a href={`tel:${settings?.contactPhone}`}>
-                <Button size="lg" variant="outline" className="h-14 px-8 rounded-2xl font-bold bg-white/5 border-white/20 hover:bg-white hover:text-slate-900 gap-3 text-white w-full sm:w-auto text-lg border-2">
-                  <PhoneCall className="w-5 h-5" /> Call {settings?.contactPhone}
-                </Button>
-              </a>
-              <a href={`mailto:${settings?.contactEmail}`}>
-                <Button size="lg" className="h-14 px-8 rounded-2xl font-bold gap-3 w-full sm:w-auto text-lg shadow-xl shadow-primary/20">
-                  Email Us Now
-                </Button>
-              </a>
-            </div>
-          </div>
-        </section>
+        <ContactSection data={contactSection} settings={settings} />
       )}
 
     </div>
