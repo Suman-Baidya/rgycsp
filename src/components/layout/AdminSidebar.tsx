@@ -20,7 +20,8 @@ import {
   FileText,
   User,
   MoreHorizontal,
-  Building2
+  Building2,
+  BookOpen
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -32,6 +33,7 @@ const navItems = [
   { name: "Overview", href: "/", icon: LayoutDashboard },
   { name: "Franchises", href: "/franchises", icon: Building2 },
   { name: "Users", href: "/users", icon: Users },
+  { name: "Courses", href: "/courses", icon: BookOpen },
   { name: "Documents", href: "/documents", icon: FileText },
   { name: "Token Economy", href: "/token-economy", icon: Coins },
   { name: "System Logs", href: "/logs", icon: Activity },

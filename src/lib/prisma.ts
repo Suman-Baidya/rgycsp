@@ -26,7 +26,7 @@ if (connectionString) {
   console.warn("PRISMA: DATABASE_URL is not set. Prisma will likely fail unless provided via config.");
 }
 
-if (globalThis.prisma && !('franchiseApplication' in globalThis.prisma)) {
+if (globalThis.prisma && (!('franchiseApplication' in globalThis.prisma) || !('globalCourse' in globalThis.prisma))) {
   console.log("PRISMA: Schema changed, clearing globalThis.prisma cache");
   globalThis.prisma = undefined;
 }
@@ -40,5 +40,5 @@ export const db =
 
 if (process.env.NODE_ENV !== "production") globalThis.prisma = db;
 
-// Trigger Next.js recompile to load the updated Prisma Client (DocumentTemplate added)
-// Last Updated: 2026-05-06T16:45:00Z
+// Trigger Next.js recompile to load the updated Prisma Client (Discount fields added)
+// Last Updated: 2026-06-12T11:50:00Z

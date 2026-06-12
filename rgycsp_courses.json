@@ -1,0 +1,2229 @@
+{
+  "catalog": {
+    "institute": "RGYCSP Computer Center",
+    "total_courses": 35,
+    "categories": 8,
+    "duration_range": "3 months – 18 months",
+    "price_range": "₹2,000 – ₹60,000"
+  },
+  "groups": {
+    "diploma": "Diploma Courses",
+    "office": "Office & Computer Operation",
+    "kids": "Kids Computer",
+    "ai": "AI Courses",
+    "programming": "Programming & Web Development",
+    "design": "Designing Courses",
+    "degree": "Degree Courses",
+    "special": "Special / Short Courses"
+  },
+  "courses": [
+    {
+      "id": "dca",
+      "group": "diploma",
+      "short": "DCA",
+      "name": "Diploma in Computer Application",
+      "description": "A foundational 6-month diploma covering MS Office suite, internet browsing, email communication, and essential computer skills for daily office and personal use.",
+      "duration": "6 months",
+      "price": 5000,
+      "price_display": "₹5,000",
+      "rating": 3.8,
+      "demand": "Beginner friendly",
+      "popular": false,
+      "banner": "https://cdn.pixabay.com/photo/2019/04/25/14/43/workplace-4155023_1280.jpg",
+      "syllabus": {
+        "semester_1": [
+          {
+            "unit": 1,
+            "title": "Introduction to Computers & OS",
+            "detail": "Hardware basics, Windows OS navigation, file management"
+          },
+          {
+            "unit": 2,
+            "title": "MS Word",
+            "detail": "Document creation, formatting, mail merge, templates"
+          },
+          {
+            "unit": 3,
+            "title": "MS Excel – Basics",
+            "detail": "Spreadsheet creation, basic formulas, data entry"
+          },
+          {
+            "unit": 4,
+            "title": "MS PowerPoint",
+            "detail": "Slide design, animations, presentations"
+          },
+          {
+            "unit": 5,
+            "title": "Lab – I (Practical)",
+            "detail": "Hands-on practice on all covered topics"
+          },
+          {
+            "unit": 6,
+            "title": "Project Work",
+            "detail": "Create a complete office document set"
+          }
+        ]
+      }
+    },
+    {
+      "id": "dwt",
+      "group": "diploma",
+      "short": "DWT",
+      "name": "Diploma in Web Technology",
+      "description": "A 9-month program exploring website fundamentals, HTML/CSS basics, Google Workspace tools, and online collaboration for modern digital work.",
+      "duration": "9 months",
+      "price": 8000,
+      "price_display": "₹8,000",
+      "rating": 3.9,
+      "demand": "High",
+      "popular": false,
+      "banner": "https://cdn.pixabay.com/photo/2016/11/23/14/45/coding-1853305_1280.jpg",
+      "syllabus": {
+        "semester_1": [
+          {
+            "unit": 1,
+            "title": "Internet & Web Basics",
+            "detail": "How the web works, browsers, URLs, domains"
+          },
+          {
+            "unit": 2,
+            "title": "HTML Fundamentals",
+            "detail": "Tags, structure, forms, tables, media embedding"
+          },
+          {
+            "unit": 3,
+            "title": "CSS Styling",
+            "detail": "Selectors, box model, fonts, responsive basics"
+          },
+          {
+            "unit": 4,
+            "title": "Google Workspace",
+            "detail": "Gmail, Drive, Docs, Sheets, Meet, Forms"
+          },
+          {
+            "unit": 5,
+            "title": "Lab – I (Practical)",
+            "detail": "Build a static webpage using HTML & CSS"
+          },
+          {
+            "unit": 6,
+            "title": "Project Work – I",
+            "detail": "Create a personal portfolio website"
+          }
+        ],
+        "semester_2": [
+          {
+            "unit": 1,
+            "title": "Advanced HTML & CSS",
+            "detail": "Flexbox, CSS Grid, media queries"
+          },
+          {
+            "unit": 2,
+            "title": "Google Sites & Forms",
+            "detail": "Building no-code sites, form integrations"
+          },
+          {
+            "unit": 3,
+            "title": "Online Communication Tools",
+            "detail": "Zoom, Meet, collaborative docs"
+          },
+          {
+            "unit": 4,
+            "title": "Web Publishing",
+            "detail": "Domain, hosting, file upload via FTP"
+          },
+          {
+            "unit": 5,
+            "title": "Lab – II (Practical)",
+            "detail": "Full responsive static website project"
+          },
+          {
+            "unit": 6,
+            "title": "Final Project Work",
+            "detail": "Deploy a complete website online"
+          }
+        ]
+      }
+    },
+    {
+      "id": "dcawd",
+      "group": "diploma",
+      "short": "DCA-WD",
+      "name": "Diploma in Computer Application & Web Design",
+      "description": "A comprehensive 12-month course starting from computer basics and progressing through web design fundamentals, making you job-ready in web and office roles.",
+      "duration": "12 months",
+      "price": 12000,
+      "price_display": "₹12,000",
+      "rating": 4.1,
+      "demand": "High",
+      "popular": true,
+      "banner": "https://cdn.pixabay.com/photo/2019/10/03/12/12/programmer-4523101_1280.jpg",
+      "syllabus": {
+        "semester_1": [
+          {
+            "unit": 1,
+            "title": "Computer Fundamentals & MS Office",
+            "detail": "Hardware, Windows, Word, Excel, PowerPoint basics"
+          },
+          {
+            "unit": 2,
+            "title": "Internet & Email",
+            "detail": "Web browsing, Gmail, cloud storage"
+          },
+          {
+            "unit": 3,
+            "title": "HTML5 & CSS3",
+            "detail": "Web page structure, styling, forms"
+          },
+          {
+            "unit": 4,
+            "title": "Responsive Web Design",
+            "detail": "Flexbox, Grid, mobile-first design"
+          },
+          {
+            "unit": 5,
+            "title": "Lab – I (Practical)",
+            "detail": "Build styled responsive web pages"
+          },
+          {
+            "unit": 6,
+            "title": "Project Work – I",
+            "detail": "Design a 5-page website layout"
+          }
+        ],
+        "semester_2": [
+          {
+            "unit": 1,
+            "title": "JavaScript Basics",
+            "detail": "Variables, functions, DOM manipulation"
+          },
+          {
+            "unit": 2,
+            "title": "Bootstrap Framework",
+            "detail": "Grid system, components, utilities"
+          },
+          {
+            "unit": 3,
+            "title": "Graphic Tools for Web",
+            "detail": "Canva, basic Photoshop for web images"
+          },
+          {
+            "unit": 4,
+            "title": "Web Hosting & Deployment",
+            "detail": "Domain setup, cPanel, FTP, going live"
+          },
+          {
+            "unit": 5,
+            "title": "Lab – II (Practical)",
+            "detail": "Interactive web pages with JS"
+          },
+          {
+            "unit": 6,
+            "title": "Final Project Work",
+            "detail": "Complete dynamic website with hosting"
+          }
+        ]
+      }
+    },
+    {
+      "id": "doaep",
+      "group": "diploma",
+      "short": "DOAEP",
+      "name": "Diploma in Office Expert & Publishing",
+      "description": "The most demanded course at RGYCSP. Covers computer basics to semi-advanced level with deep focus on MS Office, DTP, and professional publishing tools used in offices daily.",
+      "duration": "12 months",
+      "price": 8000,
+      "price_display": "₹8,000",
+      "rating": 4.6,
+      "demand": "★ Most Demanded",
+      "popular": true,
+      "banner": "https://cdn.pixabay.com/photo/2019/04/25/14/43/workplace-4155023_1280.jpg",
+      "syllabus": {
+        "semester_1": [
+          {
+            "unit": 1,
+            "title": "Computer Basics & Windows",
+            "detail": "Hardware, OS, file management, keyboard shortcuts"
+          },
+          {
+            "unit": 2,
+            "title": "MS Word – Advanced",
+            "detail": "Mail merge, macros, long document formatting, styles"
+          },
+          {
+            "unit": 3,
+            "title": "MS Excel – Intermediate",
+            "detail": "VLOOKUP, pivot tables, charts, conditional formatting"
+          },
+          {
+            "unit": 4,
+            "title": "MS PowerPoint – Pro",
+            "detail": "Master slides, custom animations, transitions"
+          },
+          {
+            "unit": 5,
+            "title": "Lab – I (Practical)",
+            "detail": "Office document production practicals"
+          },
+          {
+            "unit": 6,
+            "title": "Project Work – I",
+            "detail": "Complete office task simulation"
+          }
+        ],
+        "semester_2": [
+          {
+            "unit": 1,
+            "title": "MS Access Basics",
+            "detail": "Database creation, queries, forms, reports"
+          },
+          {
+            "unit": 2,
+            "title": "Desk Top Publishing (DTP)",
+            "detail": "PageMaker/Publisher – brochures, newsletters, flyers"
+          },
+          {
+            "unit": 3,
+            "title": "Tally & Accounting Basics",
+            "detail": "Voucher entry, balance sheet, GST basics"
+          },
+          {
+            "unit": 4,
+            "title": "Internet & Email Professionalism",
+            "detail": "Business email writing, cloud tools, Zoom"
+          },
+          {
+            "unit": 5,
+            "title": "Lab – II (Practical)",
+            "detail": "DTP and advanced Excel projects"
+          },
+          {
+            "unit": 6,
+            "title": "Final Project Work",
+            "detail": "Full office management simulation"
+          }
+        ]
+      }
+    },
+    {
+      "id": "adoap",
+      "group": "diploma",
+      "short": "ADOAP",
+      "name": "Advance Diploma in Office Accounting Power",
+      "description": "An advanced 12-month program for professionals seeking mastery in MS Office, accounting software (Tally), and business data management.",
+      "duration": "12 months",
+      "price": 15000,
+      "price_display": "₹15,000",
+      "rating": 4.2,
+      "demand": "High",
+      "popular": false,
+      "banner": "https://cdn.pixabay.com/photo/2017/10/10/21/47/laptop-2838921_1280.jpg",
+      "syllabus": {
+        "semester_1": [
+          {
+            "unit": 1,
+            "title": "Advanced MS Word & Excel",
+            "detail": "Complex formulas, nested functions, data analysis"
+          },
+          {
+            "unit": 2,
+            "title": "Tally Prime – Core",
+            "detail": "Company creation, ledger, vouchers, inventory"
+          },
+          {
+            "unit": 3,
+            "title": "GST & Tax Accounting",
+            "detail": "GST returns, e-filing, TDS basics"
+          },
+          {
+            "unit": 4,
+            "title": "MS Access – Advanced",
+            "detail": "Relational databases, complex queries, VBA intro"
+          },
+          {
+            "unit": 5,
+            "title": "Lab – I (Practical)",
+            "detail": "Real accounting entries and report generation"
+          },
+          {
+            "unit": 6,
+            "title": "Project Work – I",
+            "detail": "Simulate full business accounting cycle"
+          }
+        ],
+        "semester_2": [
+          {
+            "unit": 1,
+            "title": "Business Data Analysis",
+            "detail": "Excel dashboard, Power Query, pivot reports"
+          },
+          {
+            "unit": 2,
+            "title": "Payroll Management",
+            "detail": "Salary structure, PF, ESI in Tally"
+          },
+          {
+            "unit": 3,
+            "title": "Financial Reporting",
+            "detail": "Balance sheet, P&L, cash flow statements"
+          },
+          {
+            "unit": 4,
+            "title": "Presentation & Communication",
+            "detail": "Business reporting, PowerPoint dashboards"
+          },
+          {
+            "unit": 5,
+            "title": "Lab – II (Practical)",
+            "detail": "End-to-end company accounting project"
+          },
+          {
+            "unit": 6,
+            "title": "Final Project Work",
+            "detail": "Full business financial report submission"
+          }
+        ]
+      }
+    },
+    {
+      "id": "ddme",
+      "group": "diploma",
+      "short": "DDME",
+      "name": "Diploma in Digital Marketing Education",
+      "description": "A 12-month hands-on diploma covering SEO, social media marketing, Google Ads, content creation, email marketing, and analytics for a career in digital marketing.",
+      "duration": "12 months",
+      "price": 18000,
+      "price_display": "₹18,000",
+      "rating": 4.3,
+      "demand": "High",
+      "popular": false,
+      "banner": "https://cdn.pixabay.com/photo/2017/03/23/09/34/artificial-intelligence-2167835_1280.jpg",
+      "syllabus": {
+        "semester_1": [
+          {
+            "unit": 1,
+            "title": "Digital Marketing Fundamentals",
+            "detail": "Channels, funnels, brand building online"
+          },
+          {
+            "unit": 2,
+            "title": "SEO – Search Engine Optimisation",
+            "detail": "On-page, off-page, technical SEO, keyword research"
+          },
+          {
+            "unit": 3,
+            "title": "Social Media Marketing",
+            "detail": "Facebook, Instagram, YouTube strategy and content"
+          },
+          {
+            "unit": 4,
+            "title": "Content Creation & Blogging",
+            "detail": "Blog writing, video scripting, Canva graphics"
+          },
+          {
+            "unit": 5,
+            "title": "Lab – I (Practical)",
+            "detail": "Live campaign setup on social platforms"
+          },
+          {
+            "unit": 6,
+            "title": "Project Work – I",
+            "detail": "Build and promote a brand page"
+          }
+        ],
+        "semester_2": [
+          {
+            "unit": 1,
+            "title": "Google Ads & PPC",
+            "detail": "Search ads, display ads, remarketing"
+          },
+          {
+            "unit": 2,
+            "title": "Email Marketing",
+            "detail": "Mailchimp, automation, A/B testing"
+          },
+          {
+            "unit": 3,
+            "title": "Analytics & Reporting",
+            "detail": "Google Analytics, Search Console, insights"
+          },
+          {
+            "unit": 4,
+            "title": "Affiliate & Influencer Marketing",
+            "detail": "Monetisation strategies, brand collaborations"
+          },
+          {
+            "unit": 5,
+            "title": "Lab – II (Practical)",
+            "detail": "Live Google Ads campaign management"
+          },
+          {
+            "unit": 6,
+            "title": "Final Project Work",
+            "detail": "Complete digital marketing campaign report"
+          }
+        ]
+      }
+    },
+    {
+      "id": "adita",
+      "group": "diploma",
+      "short": "ADITA",
+      "name": "Advance Diploma in IT & Application",
+      "description": "An 18-month comprehensive program from computer basics to advanced programming, covering networking, database, web development, and real-world application development.",
+      "duration": "18 months",
+      "price": 25000,
+      "price_display": "₹25,000",
+      "rating": 4.4,
+      "demand": "High",
+      "popular": false,
+      "banner": "https://cdn.pixabay.com/photo/2019/10/03/12/12/programmer-4523101_1280.jpg",
+      "syllabus": {
+        "semester_1": [
+          {
+            "unit": 1,
+            "title": "Computer Science Fundamentals",
+            "detail": "OS, hardware, networking basics, binary system"
+          },
+          {
+            "unit": 2,
+            "title": "Programming with Python / C",
+            "detail": "Syntax, data types, loops, functions, OOP intro"
+          },
+          {
+            "unit": 3,
+            "title": "Database Management (SQL)",
+            "detail": "MySQL basics, CRUD, joins, relationships"
+          },
+          {
+            "unit": 4,
+            "title": "Web Fundamentals (HTML, CSS, JS)",
+            "detail": "Front-end basics, DOM, events"
+          },
+          {
+            "unit": 5,
+            "title": "Lab – I",
+            "detail": "Programming assignments and database design"
+          },
+          {
+            "unit": 6,
+            "title": "Project Work – I",
+            "detail": "CLI-based application"
+          }
+        ],
+        "semester_2": [
+          {
+            "unit": 1,
+            "title": "Advanced Python / Java",
+            "detail": "File handling, modules, APIs, error handling"
+          },
+          {
+            "unit": 2,
+            "title": "Web Application Development",
+            "detail": "Flask/Django basics or Node.js intro"
+          },
+          {
+            "unit": 3,
+            "title": "Networking & Cybersecurity Basics",
+            "detail": "LAN, WAN, IP, firewalls, safe practices"
+          },
+          {
+            "unit": 4,
+            "title": "Cloud & Deployment",
+            "detail": "Hosting apps on cloud (Heroku/Vercel), Git basics"
+          },
+          {
+            "unit": 5,
+            "title": "Lab – II",
+            "detail": "Full web application development"
+          },
+          {
+            "unit": 6,
+            "title": "Final Project Work",
+            "detail": "Build and deploy a web app with backend"
+          }
+        ]
+      }
+    },
+    {
+      "id": "dgaia",
+      "group": "diploma",
+      "short": "DGAIA & PPE",
+      "name": "Diploma in Generative AI Architecture & Professional Prompt Engineering",
+      "description": "The most popular course at RGYCSP. Explore the world of Generative AI — learn ChatGPT, image AI, prompt engineering, AI workflows, and build real AI-powered solutions.",
+      "duration": "12 months",
+      "price": 24000,
+      "price_display": "₹24,000",
+      "rating": 4.8,
+      "demand": "★ Most Popular",
+      "popular": true,
+      "banner": "https://cdn.pixabay.com/photo/2017/03/23/09/34/artificial-intelligence-2167835_1280.jpg",
+      "syllabus": {
+        "semester_1": [
+          {
+            "unit": 1,
+            "title": "Introduction to AI & GenAI",
+            "detail": "History of AI, LLMs, ChatGPT, Gemini, Claude overview"
+          },
+          {
+            "unit": 2,
+            "title": "Prompt Engineering Fundamentals",
+            "detail": "Zero-shot, few-shot, chain-of-thought prompting"
+          },
+          {
+            "unit": 3,
+            "title": "Text AI & Content Creation",
+            "detail": "Writing, summarising, coding with AI assistance"
+          },
+          {
+            "unit": 4,
+            "title": "Image Generation AI",
+            "detail": "Midjourney, DALL-E, Stable Diffusion basics"
+          },
+          {
+            "unit": 5,
+            "title": "Lab – I",
+            "detail": "Prompt experiments, content generation projects"
+          },
+          {
+            "unit": 6,
+            "title": "Project Work – I",
+            "detail": "Build an AI-powered content workflow"
+          }
+        ],
+        "semester_2": [
+          {
+            "unit": 1,
+            "title": "Voice & Video AI",
+            "detail": "ElevenLabs, Runway, HeyGen, AI video creation"
+          },
+          {
+            "unit": 2,
+            "title": "AI for Business & Automation",
+            "detail": "Zapier AI, Make.com, AI agents and tools"
+          },
+          {
+            "unit": 3,
+            "title": "Advanced Prompt Architecture",
+            "detail": "System prompts, custom GPTs, RAG basics"
+          },
+          {
+            "unit": 4,
+            "title": "AI Ethics & Responsible Use",
+            "detail": "Bias, misinformation, copyright, safe use"
+          },
+          {
+            "unit": 5,
+            "title": "Lab – II",
+            "detail": "Multi-modal AI project with text, image, voice"
+          },
+          {
+            "unit": 6,
+            "title": "Final Project Work",
+            "detail": "Complete AI-powered product or business use case"
+          }
+        ]
+      }
+    },
+    {
+      "id": "ccco",
+      "group": "office",
+      "short": "CCCO",
+      "name": "Certificate Course for Computer Operation",
+      "description": "A 3-month fast-track certificate for beginners learning MS Office tools for office work, data entry, and basic computer operation.",
+      "duration": "3 months",
+      "price": 3000,
+      "price_display": "₹3,000",
+      "rating": 3.7,
+      "demand": "Beginner",
+      "popular": false,
+      "banner": "https://cdn.pixabay.com/photo/2019/04/25/14/43/workplace-4155023_1280.jpg",
+      "syllabus": {
+        "semester_1": [
+          {
+            "unit": 1,
+            "title": "Computer Basics & Windows",
+            "detail": "Hardware, booting, file explorer, shortcuts"
+          },
+          {
+            "unit": 2,
+            "title": "MS Word Essentials",
+            "detail": "Typing, formatting, printing, templates"
+          },
+          {
+            "unit": 3,
+            "title": "MS Excel Basics",
+            "detail": "Data entry, simple formulas, tables"
+          },
+          {
+            "unit": 4,
+            "title": "Internet & Email",
+            "detail": "Browsing, Gmail, attachments, cloud storage"
+          },
+          {
+            "unit": 5,
+            "title": "Lab – I",
+            "detail": "Office task practicals"
+          },
+          {
+            "unit": 6,
+            "title": "Project Work",
+            "detail": "Submit a complete formatted document set"
+          }
+        ]
+      }
+    },
+    {
+      "id": "ddtp",
+      "group": "office",
+      "short": "DDTP",
+      "name": "Diploma in Desk Top Publication",
+      "description": "A 6-month DTP-focused diploma covering MS Office plus professional publishing tools like PageMaker and CorelDraw for creating print-ready layouts.",
+      "duration": "6 months",
+      "price": 5000,
+      "price_display": "₹5,000",
+      "rating": 3.9,
+      "demand": "Moderate",
+      "popular": false,
+      "banner": "https://cdn.pixabay.com/photo/2015/07/31/14/59/creative-869200_1280.jpg",
+      "syllabus": {
+        "semester_1": [
+          {
+            "unit": 1,
+            "title": "Computer Basics & MS Word",
+            "detail": "Document formatting, styles, professional layouts"
+          },
+          {
+            "unit": 2,
+            "title": "MS Excel for Data",
+            "detail": "Tables, basic charts for publications"
+          },
+          {
+            "unit": 3,
+            "title": "CorelDraw Basics",
+            "detail": "Vector design, logo, typography"
+          },
+          {
+            "unit": 4,
+            "title": "PageMaker / Publisher",
+            "detail": "Multi-page layout, newsletter, brochure design"
+          },
+          {
+            "unit": 5,
+            "title": "Lab – I",
+            "detail": "Design and print practical exercises"
+          },
+          {
+            "unit": 6,
+            "title": "Project Work",
+            "detail": "Design and submit a complete publication layout"
+          }
+        ]
+      }
+    },
+    {
+      "id": "ccba",
+      "group": "office",
+      "short": "CCBA",
+      "name": "Certificate in Computer Basic Application",
+      "description": "A 6-month course starting from OS basics, covering MS Office, internet, and data entry — ideal for students entering the computer field for the first time.",
+      "duration": "6 months",
+      "price": 5000,
+      "price_display": "₹5,000",
+      "rating": 3.8,
+      "demand": "Beginner",
+      "popular": false,
+      "banner": "https://cdn.pixabay.com/photo/2016/05/05/11/22/computer-1373684_1280.jpg",
+      "syllabus": {
+        "semester_1": [
+          {
+            "unit": 1,
+            "title": "Operating System Basics",
+            "detail": "Windows navigation, file management, settings"
+          },
+          {
+            "unit": 2,
+            "title": "MS Word & Typing",
+            "detail": "Document creation, formatting, typing practice"
+          },
+          {
+            "unit": 3,
+            "title": "MS Excel",
+            "detail": "Data entry, formulas, tables"
+          },
+          {
+            "unit": 4,
+            "title": "Internet & Email",
+            "detail": "Web browsing, Gmail, safety"
+          },
+          {
+            "unit": 5,
+            "title": "Lab – I",
+            "detail": "Hands-on tasks on all tools"
+          },
+          {
+            "unit": 6,
+            "title": "Project Work",
+            "detail": "A full data entry and document management task"
+          }
+        ]
+      }
+    },
+    {
+      "id": "cdee",
+      "group": "office",
+      "short": "CDEE",
+      "name": "Certificate in Data Entry Expert",
+      "description": "A 6-month specialised certificate course building fast, accurate data entry skills with typing, spreadsheet management, and online form tools.",
+      "duration": "6 months",
+      "price": 5000,
+      "price_display": "₹5,000",
+      "rating": 3.6,
+      "demand": "Moderate",
+      "popular": false,
+      "banner": "https://cdn.pixabay.com/photo/2017/10/10/21/47/laptop-2838921_1280.jpg",
+      "syllabus": {
+        "semester_1": [
+          {
+            "unit": 1,
+            "title": "Typing & Speed Building",
+            "detail": "Touch typing, WPM goals, accuracy drills"
+          },
+          {
+            "unit": 2,
+            "title": "MS Excel – Data Entry",
+            "detail": "Large dataset entry, sorting, filtering, validation"
+          },
+          {
+            "unit": 3,
+            "title": "Google Sheets & Forms",
+            "detail": "Online data collection, shared spreadsheets"
+          },
+          {
+            "unit": 4,
+            "title": "Data Formatting & Cleaning",
+            "detail": "Removing duplicates, formatting, data consistency"
+          },
+          {
+            "unit": 5,
+            "title": "Lab – I",
+            "detail": "Speed and accuracy tests, timed exercises"
+          },
+          {
+            "unit": 6,
+            "title": "Project Work",
+            "detail": "Enter, clean, and report a 1000-row dataset"
+          }
+        ]
+      }
+    },
+    {
+      "id": "kidsprog",
+      "group": "kids",
+      "short": "Kids Prog",
+      "name": "Kids Programming",
+      "description": "An engaging introductory programming course for kids, using visual block coding (Scratch) and basic Python to develop logical thinking and creativity.",
+      "duration": "Flexible",
+      "price": 5000,
+      "price_display": "₹5,000",
+      "rating": 4.5,
+      "demand": "Popular",
+      "popular": false,
+      "banner": "https://cdn.pixabay.com/photo/2022/01/18/21/22/laptop-6948268_1280.jpg",
+      "syllabus": {
+        "semester_1": [
+          {
+            "unit": 1,
+            "title": "Introduction to Computers for Kids",
+            "detail": "What is a computer, keyboard, mouse practice"
+          },
+          {
+            "unit": 2,
+            "title": "Scratch – Visual Programming",
+            "detail": "Block coding, animations, basic games"
+          },
+          {
+            "unit": 3,
+            "title": "Logical Thinking & Puzzles",
+            "detail": "Problem-solving activities, pattern recognition"
+          },
+          {
+            "unit": 4,
+            "title": "Python Basics for Kids",
+            "detail": "Print, variables, simple loops"
+          },
+          {
+            "unit": 5,
+            "title": "Lab – I",
+            "detail": "Build a Scratch animation project"
+          },
+          {
+            "unit": 6,
+            "title": "Project Work",
+            "detail": "Complete an interactive Scratch story or game"
+          }
+        ]
+      }
+    },
+    {
+      "id": "smartkids",
+      "group": "kids",
+      "short": "Smart Kids",
+      "name": "Smart Kids Programme",
+      "description": "A 3-year structured computer education programme for children aged 10 and above, covering digital literacy, MS Office, internet safety, and creativity tools.",
+      "duration": "3 years",
+      "price": 4000,
+      "price_display": "₹4,000/year",
+      "rating": 4.4,
+      "demand": "High",
+      "popular": false,
+      "banner": "https://cdn.pixabay.com/photo/2015/07/31/14/59/creative-869200_1280.jpg",
+      "syllabus": {
+        "semester_1": [
+          {
+            "unit": 1,
+            "title": "Year 1 – Digital Basics",
+            "detail": "Computer parts, Windows, typing, MS Word basics"
+          },
+          {
+            "unit": 2,
+            "title": "MS Excel for Kids",
+            "detail": "Simple tables, charts, data"
+          },
+          {
+            "unit": 3,
+            "title": "Internet Safety & Usage",
+            "detail": "Safe browsing, social media awareness"
+          },
+          {
+            "unit": 4,
+            "title": "Creative Tools",
+            "detail": "Canva basics, drawing apps"
+          },
+          {
+            "unit": 5,
+            "title": "Lab – I",
+            "detail": "Practical typing and document projects"
+          },
+          {
+            "unit": 6,
+            "title": "Year 1 Project",
+            "detail": "Create a digital scrapbook"
+          }
+        ]
+      }
+    },
+    {
+      "id": "icgs",
+      "group": "kids",
+      "short": "ICGS Kids",
+      "name": "Intensive Computer Guidance for Smart Kids",
+      "description": "A 3-year intensive computer programme for children below 10, using play-based learning to teach typing, basic coding, and digital creativity.",
+      "duration": "3 years",
+      "price": 4000,
+      "price_display": "₹4,000/year",
+      "rating": 4.6,
+      "demand": "Very High",
+      "popular": false,
+      "banner": "https://cdn.pixabay.com/photo/2015/07/31/14/59/creative-869200_1280.jpg",
+      "syllabus": {
+        "semester_1": [
+          {
+            "unit": 1,
+            "title": "Mouse & Keyboard Fun",
+            "detail": "Dragging, clicking, basic typing with fun games"
+          },
+          {
+            "unit": 2,
+            "title": "MS Paint & Drawing Tools",
+            "detail": "Digital art, coloring, shapes"
+          },
+          {
+            "unit": 3,
+            "title": "Scratch Jr / Tynker",
+            "detail": "Visual block programming for young kids"
+          },
+          {
+            "unit": 4,
+            "title": "Typing Tutor",
+            "detail": "Keyboard awareness, home row, speed building"
+          },
+          {
+            "unit": 5,
+            "title": "Lab – I",
+            "detail": "Hands-on creative projects"
+          },
+          {
+            "unit": 6,
+            "title": "Year 1 Project",
+            "detail": "Digital art exhibition and typing test"
+          }
+        ]
+      }
+    },
+    {
+      "id": "dgaia-ai",
+      "group": "ai",
+      "short": "DGAIA & PPE",
+      "name": "Diploma in Generative AI Architecture & Professional Prompt Engineering",
+      "description": "Most popular AI course. Deep dive into generative AI tools — ChatGPT, image AI, voice AI — with professional prompt engineering and AI workflow design.",
+      "duration": "12 months",
+      "price": 40000,
+      "price_display": "₹40,000",
+      "rating": 4.9,
+      "demand": "★ Most Popular",
+      "popular": true,
+      "banner": "https://cdn.pixabay.com/photo/2017/03/23/09/34/artificial-intelligence-2167835_1280.jpg",
+      "syllabus": {
+        "semester_1": [
+          {
+            "unit": 1,
+            "title": "Foundations of Generative AI",
+            "detail": "LLM architecture, tokenisation, transformer basics"
+          },
+          {
+            "unit": 2,
+            "title": "Advanced Prompt Engineering",
+            "detail": "System prompts, structured outputs, few-shot mastery"
+          },
+          {
+            "unit": 3,
+            "title": "Text AI Tools",
+            "detail": "ChatGPT, Claude, Gemini – professional use"
+          },
+          {
+            "unit": 4,
+            "title": "Image Generation & Editing",
+            "detail": "Midjourney, DALL-E 3, Adobe Firefly"
+          },
+          {
+            "unit": 5,
+            "title": "Lab – I",
+            "detail": "Multi-tool AI workflow projects"
+          },
+          {
+            "unit": 6,
+            "title": "Project Work – I",
+            "detail": "Build an AI content pipeline for a business"
+          }
+        ],
+        "semester_2": [
+          {
+            "unit": 1,
+            "title": "Voice & Video AI",
+            "detail": "ElevenLabs, HeyGen, Runway, Sora overview"
+          },
+          {
+            "unit": 2,
+            "title": "AI Agents & Automation",
+            "detail": "Custom GPTs, Make.com, Zapier AI agents"
+          },
+          {
+            "unit": 3,
+            "title": "RAG & Knowledge Bases",
+            "detail": "Retrieval-augmented generation, AI memory"
+          },
+          {
+            "unit": 4,
+            "title": "AI Ethics, IP & Safety",
+            "detail": "Bias, misinformation, responsible deployment"
+          },
+          {
+            "unit": 5,
+            "title": "Lab – II",
+            "detail": "Build a custom GPT or AI agent"
+          },
+          {
+            "unit": 6,
+            "title": "Final Project Work",
+            "detail": "AI product with full documentation and demo"
+          }
+        ]
+      }
+    },
+    {
+      "id": "adaobm",
+      "group": "ai",
+      "short": "ADAOBM",
+      "name": "Advanced Diploma in AI Operations for Business & Media",
+      "description": "A 12-month programme on applying AI tools in business operations, social media, content creation, and professional media production workflows.",
+      "duration": "12 months",
+      "price": 25000,
+      "price_display": "₹25,000",
+      "rating": 4.5,
+      "demand": "High",
+      "popular": false,
+      "banner": "https://cdn.pixabay.com/photo/2017/03/23/09/34/artificial-intelligence-2167835_1280.jpg",
+      "syllabus": {
+        "semester_1": [
+          {
+            "unit": 1,
+            "title": "AI for Business Operations",
+            "detail": "AI tools for productivity, scheduling, reporting"
+          },
+          {
+            "unit": 2,
+            "title": "AI in Marketing & Media",
+            "detail": "Social media AI, content automation, ad creation"
+          },
+          {
+            "unit": 3,
+            "title": "AI Writing & Copywriting",
+            "detail": "ChatGPT for blogs, emails, scripts, proposals"
+          },
+          {
+            "unit": 4,
+            "title": "AI Graphics for Business",
+            "detail": "Canva AI, Adobe Firefly, brand visuals"
+          },
+          {
+            "unit": 5,
+            "title": "Lab – I",
+            "detail": "Build AI-powered business content"
+          },
+          {
+            "unit": 6,
+            "title": "Project Work – I",
+            "detail": "AI-driven social media campaign"
+          }
+        ],
+        "semester_2": [
+          {
+            "unit": 1,
+            "title": "AI Video Production",
+            "detail": "Script-to-video AI, avatar tools, HeyGen"
+          },
+          {
+            "unit": 2,
+            "title": "AI Analytics & Insights",
+            "detail": "Data summarisation, trend analysis with AI"
+          },
+          {
+            "unit": 3,
+            "title": "Business AI Automation",
+            "detail": "Zapier, Make.com, CRM AI integrations"
+          },
+          {
+            "unit": 4,
+            "title": "Presentation & Reporting AI",
+            "detail": "AI slide creation, report summarisation"
+          },
+          {
+            "unit": 5,
+            "title": "Lab – II",
+            "detail": "End-to-end AI media production"
+          },
+          {
+            "unit": 6,
+            "title": "Final Project Work",
+            "detail": "AI-powered business media portfolio"
+          }
+        ]
+      }
+    },
+    {
+      "id": "mmmgai",
+      "group": "ai",
+      "short": "MMMGAI",
+      "name": "Mastery in Multi-Modal Gen-AI: Text, Image, Voice & Video",
+      "description": "A 12-month mastery programme on creating content across all AI modalities — text, image, voice, and video — for professional content creators and marketers.",
+      "duration": "12 months",
+      "price": 35000,
+      "price_display": "₹35,000",
+      "rating": 4.7,
+      "demand": "Very High",
+      "popular": false,
+      "banner": "https://cdn.pixabay.com/photo/2017/03/23/09/34/artificial-intelligence-2167835_1280.jpg",
+      "syllabus": {
+        "semester_1": [
+          {
+            "unit": 1,
+            "title": "Generative AI Overview",
+            "detail": "Text, image, voice, video AI landscape"
+          },
+          {
+            "unit": 2,
+            "title": "Text AI Mastery",
+            "detail": "Long-form content, creative writing, summarisation"
+          },
+          {
+            "unit": 3,
+            "title": "Image AI – Advanced",
+            "detail": "Stable Diffusion, ComfyUI, ControlNet basics"
+          },
+          {
+            "unit": 4,
+            "title": "Voice AI",
+            "detail": "Text-to-speech, voice cloning, podcasting with AI"
+          },
+          {
+            "unit": 5,
+            "title": "Lab – I",
+            "detail": "Multi-modal content production project"
+          },
+          {
+            "unit": 6,
+            "title": "Project Work – I",
+            "detail": "AI content package: text + image + voice"
+          }
+        ],
+        "semester_2": [
+          {
+            "unit": 1,
+            "title": "Video AI – Production",
+            "detail": "Runway, Pika, Sora, AI video editing"
+          },
+          {
+            "unit": 2,
+            "title": "Multi-Modal Workflow Integration",
+            "detail": "Combine text, image, voice, video in one pipeline"
+          },
+          {
+            "unit": 3,
+            "title": "Content Strategy with AI",
+            "detail": "Planning AI-assisted content calendars"
+          },
+          {
+            "unit": 4,
+            "title": "Monetisation & Publishing",
+            "detail": "YouTube, podcasting, freelance with AI tools"
+          },
+          {
+            "unit": 5,
+            "title": "Lab – II",
+            "detail": "Full multi-modal content campaign"
+          },
+          {
+            "unit": 6,
+            "title": "Final Project Work",
+            "detail": "Complete AI-powered content series (text + image + video)"
+          }
+        ]
+      }
+    },
+    {
+      "id": "cpai",
+      "group": "ai",
+      "short": "CPAI",
+      "name": "Certificate in Professional AI",
+      "description": "A 6-month certificate giving solid AI knowledge — how AI tools work, practical usage across domains, and understanding AI's role in professional settings.",
+      "duration": "6 months",
+      "price": 15000,
+      "price_display": "₹15,000",
+      "rating": 4.3,
+      "demand": "High",
+      "popular": false,
+      "banner": "https://cdn.pixabay.com/photo/2017/03/23/09/34/artificial-intelligence-2167835_1280.jpg",
+      "syllabus": {
+        "semester_1": [
+          {
+            "unit": 1,
+            "title": "What is AI – Concepts",
+            "detail": "ML, deep learning, LLMs, AI categories"
+          },
+          {
+            "unit": 2,
+            "title": "AI Tools Survey",
+            "detail": "ChatGPT, Gemini, Copilot, Claude, Perplexity"
+          },
+          {
+            "unit": 3,
+            "title": "AI for Professional Work",
+            "detail": "Emails, reports, data analysis, summaries"
+          },
+          {
+            "unit": 4,
+            "title": "AI in Specific Domains",
+            "detail": "AI in education, healthcare, marketing, law"
+          },
+          {
+            "unit": 5,
+            "title": "Lab – I",
+            "detail": "AI tool comparison and task automation"
+          },
+          {
+            "unit": 6,
+            "title": "Project Work",
+            "detail": "AI tool implementation plan for a specific domain"
+          }
+        ]
+      }
+    },
+    {
+      "id": "aiwork",
+      "group": "ai",
+      "short": "AI-WORK",
+      "name": "AI for Official & Routine Knowledge",
+      "description": "A practical 6-month course teaching daily AI tool usage at work — automating repetitive tasks, drafting documents, and using AI for routine office activities.",
+      "duration": "6 months",
+      "price": 15000,
+      "price_display": "₹15,000",
+      "rating": 4.2,
+      "demand": "Moderate",
+      "popular": false,
+      "banner": "https://cdn.pixabay.com/photo/2023/01/14/17/54/computer-7718730_1280.jpg",
+      "syllabus": {
+        "semester_1": [
+          {
+            "unit": 1,
+            "title": "AI Basics for Office Workers",
+            "detail": "Introduction to ChatGPT, Copilot, Gemini"
+          },
+          {
+            "unit": 2,
+            "title": "AI for Document Creation",
+            "detail": "Writing emails, reports, meeting minutes with AI"
+          },
+          {
+            "unit": 3,
+            "title": "AI for Data & Spreadsheets",
+            "detail": "Excel Copilot, formula generation, data summaries"
+          },
+          {
+            "unit": 4,
+            "title": "AI for Communication",
+            "detail": "Translating, proofreading, language improvement"
+          },
+          {
+            "unit": 5,
+            "title": "Lab – I",
+            "detail": "Daily task simulation using AI tools"
+          },
+          {
+            "unit": 6,
+            "title": "Project Work",
+            "detail": "Automate a real-world office workflow using AI"
+          }
+        ]
+      }
+    },
+    {
+      "id": "aiewsm",
+      "group": "ai",
+      "short": "AI-EWSM",
+      "name": "AI Essentials for Work & Social Media",
+      "description": "A 6-month course combining AI tool usage with social media content creation — for professionals, influencers, and SME owners wanting AI-powered social presence.",
+      "duration": "6 months",
+      "price": 15000,
+      "price_display": "₹15,000",
+      "rating": 4.1,
+      "demand": "Moderate",
+      "popular": false,
+      "banner": "https://cdn.pixabay.com/photo/2017/03/23/09/34/artificial-intelligence-2167835_1280.jpg",
+      "syllabus": {
+        "semester_1": [
+          {
+            "unit": 1,
+            "title": "AI Tools for Social Media",
+            "detail": "ChatGPT for captions, hashtags, content ideas"
+          },
+          {
+            "unit": 2,
+            "title": "AI Image Creation for Social",
+            "detail": "Canva AI, DALL-E for post graphics"
+          },
+          {
+            "unit": 3,
+            "title": "Video AI for Reels & Shorts",
+            "detail": "AI video tools for short-form content"
+          },
+          {
+            "unit": 4,
+            "title": "Scheduling & Automation",
+            "detail": "Buffer, Later + AI for content scheduling"
+          },
+          {
+            "unit": 5,
+            "title": "Lab – I",
+            "detail": "Create a full social media content set using AI"
+          },
+          {
+            "unit": 6,
+            "title": "Project Work",
+            "detail": "30-day AI-powered social media content calendar"
+          }
+        ]
+      }
+    },
+    {
+      "id": "adpal",
+      "group": "ai",
+      "short": "AD-PAL",
+      "name": "Advanced Diploma in Python for AI & LLM Engineering",
+      "description": "A premium 12-month advanced programme for building AI systems — Python programming, machine learning, LLM fine-tuning, and deploying AI applications.",
+      "duration": "12 months",
+      "price": 60000,
+      "price_display": "₹60,000",
+      "rating": 4.8,
+      "demand": "Premium",
+      "popular": false,
+      "banner": "https://cdn.pixabay.com/photo/2019/10/03/12/12/programmer-4523101_1280.jpg",
+      "syllabus": {
+        "semester_1": [
+          {
+            "unit": 1,
+            "title": "Python for AI – Foundations",
+            "detail": "Python OOP, data structures, NumPy, Pandas"
+          },
+          {
+            "unit": 2,
+            "title": "Machine Learning Fundamentals",
+            "detail": "Scikit-learn, supervised/unsupervised ML"
+          },
+          {
+            "unit": 3,
+            "title": "Deep Learning Basics",
+            "detail": "TensorFlow/PyTorch, neural networks, CNNs"
+          },
+          {
+            "unit": 4,
+            "title": "Working with LLMs",
+            "detail": "OpenAI API, HuggingFace, prompt engineering programmatically"
+          },
+          {
+            "unit": 5,
+            "title": "Lab – I",
+            "detail": "ML model training and evaluation projects"
+          },
+          {
+            "unit": 6,
+            "title": "Project Work – I",
+            "detail": "Build a classification or regression ML model"
+          }
+        ],
+        "semester_2": [
+          {
+            "unit": 1,
+            "title": "LLM Fine-Tuning",
+            "detail": "LoRA, PEFT, fine-tuning open source models"
+          },
+          {
+            "unit": 2,
+            "title": "RAG & Vector Databases",
+            "detail": "LangChain, ChromaDB, building knowledge bases"
+          },
+          {
+            "unit": 3,
+            "title": "AI App Development",
+            "detail": "Streamlit/FastAPI AI app deployment"
+          },
+          {
+            "unit": 4,
+            "title": "MLOps Basics",
+            "detail": "Model versioning, monitoring, CI/CD for AI"
+          },
+          {
+            "unit": 5,
+            "title": "Lab – II",
+            "detail": "Build and deploy a full AI application"
+          },
+          {
+            "unit": 6,
+            "title": "Final Project Work",
+            "detail": "Production-ready AI application with documentation"
+          }
+        ]
+      }
+    },
+    {
+      "id": "daiac",
+      "group": "ai",
+      "short": "DAIAC",
+      "name": "Diploma in AI App Creation",
+      "description": "A 12-month practical diploma on creating AI-powered chatbots, assistants, and automation apps without heavy coding, using platforms like Flowise, Botpress, and APIs.",
+      "duration": "12 months",
+      "price": 35000,
+      "price_display": "₹35,000",
+      "rating": 4.6,
+      "demand": "Very High",
+      "popular": false,
+      "banner": "https://cdn.pixabay.com/photo/2017/03/23/09/34/artificial-intelligence-2167835_1280.jpg",
+      "syllabus": {
+        "semester_1": [
+          {
+            "unit": 1,
+            "title": "AI App Landscape",
+            "detail": "Types of AI apps, tools overview, no-code vs code"
+          },
+          {
+            "unit": 2,
+            "title": "Chatbot Building – No Code",
+            "detail": "Flowise, Botpress, Tidio, custom chatbots"
+          },
+          {
+            "unit": 3,
+            "title": "API Integration Basics",
+            "detail": "OpenAI API, REST APIs, JSON data handling"
+          },
+          {
+            "unit": 4,
+            "title": "Automation with AI",
+            "detail": "Make.com, Zapier, n8n – workflow automation"
+          },
+          {
+            "unit": 5,
+            "title": "Lab – I",
+            "detail": "Build a functioning chatbot for a use case"
+          },
+          {
+            "unit": 6,
+            "title": "Project Work – I",
+            "detail": "Deploy a chatbot for a business scenario"
+          }
+        ],
+        "semester_2": [
+          {
+            "unit": 1,
+            "title": "Advanced AI App Features",
+            "detail": "Memory, context, multi-turn conversations"
+          },
+          {
+            "unit": 2,
+            "title": "Voice & Multimodal Apps",
+            "detail": "Voice AI integration, image processing apps"
+          },
+          {
+            "unit": 3,
+            "title": "Publishing & Monetising AI Apps",
+            "detail": "Web deployment, pricing, selling AI tools"
+          },
+          {
+            "unit": 4,
+            "title": "Testing & Improving AI Apps",
+            "detail": "Feedback loops, prompt tuning, performance"
+          },
+          {
+            "unit": 5,
+            "title": "Lab – II",
+            "detail": "Full AI application with multiple features"
+          },
+          {
+            "unit": 6,
+            "title": "Final Project Work",
+            "detail": "Complete AI app with documentation, pitch, and demo"
+          }
+        ]
+      }
+    },
+    {
+      "id": "dipwd",
+      "group": "programming",
+      "short": "DIPWD",
+      "name": "Diploma in Internet Programming & Web Design",
+      "description": "A 6-month foundation course introducing coding through HTML, CSS, JavaScript, and basic web design — perfect for beginners stepping into web development.",
+      "duration": "6 months",
+      "price": 13000,
+      "price_display": "₹13,000",
+      "rating": 4.0,
+      "demand": "High",
+      "popular": false,
+      "banner": "https://cdn.pixabay.com/photo/2016/11/23/14/45/coding-1853305_1280.jpg",
+      "syllabus": {
+        "semester_1": [
+          {
+            "unit": 1,
+            "title": "HTML5 Fundamentals",
+            "detail": "Document structure, tags, semantic HTML, forms"
+          },
+          {
+            "unit": 2,
+            "title": "CSS3 Styling",
+            "detail": "Box model, flexbox, typography, colours"
+          },
+          {
+            "unit": 3,
+            "title": "JavaScript Basics",
+            "detail": "Variables, functions, DOM events, conditions"
+          },
+          {
+            "unit": 4,
+            "title": "Responsive Design",
+            "detail": "Media queries, mobile-first, viewport"
+          },
+          {
+            "unit": 5,
+            "title": "Lab – I",
+            "detail": "Build 3 static responsive web pages"
+          },
+          {
+            "unit": 6,
+            "title": "Project Work",
+            "detail": "Design a personal or business landing page"
+          }
+        ]
+      }
+    },
+    {
+      "id": "adwdwde",
+      "group": "programming",
+      "short": "ADWDWDE",
+      "name": "Advance Diploma in Web Designing & Web Development Expert",
+      "description": "A 12-month advanced programme covering full front-end and back-end web development — from HTML/CSS to Node.js, databases, and deployment.",
+      "duration": "12 months",
+      "price": 25000,
+      "price_display": "₹25,000",
+      "rating": 4.5,
+      "demand": "Very High",
+      "popular": true,
+      "banner": "https://cdn.pixabay.com/photo/2019/10/03/12/12/programmer-4523101_1280.jpg",
+      "syllabus": {
+        "semester_1": [
+          {
+            "unit": 1,
+            "title": "Advanced HTML & CSS",
+            "detail": "Animations, custom properties, grid, SASS"
+          },
+          {
+            "unit": 2,
+            "title": "JavaScript – Intermediate",
+            "detail": "ES6+, asynchronous JS, fetch API, modules"
+          },
+          {
+            "unit": 3,
+            "title": "React.js Basics",
+            "detail": "Components, state, props, hooks"
+          },
+          {
+            "unit": 4,
+            "title": "Version Control with Git",
+            "detail": "GitHub, branching, pull requests, collaboration"
+          },
+          {
+            "unit": 5,
+            "title": "Lab – I",
+            "detail": "Build a React front-end application"
+          },
+          {
+            "unit": 6,
+            "title": "Project Work – I",
+            "detail": "Complete React SPA with routing and API calls"
+          }
+        ],
+        "semester_2": [
+          {
+            "unit": 1,
+            "title": "Node.js & Express",
+            "detail": "Server-side JS, REST APIs, middleware"
+          },
+          {
+            "unit": 2,
+            "title": "Database – SQL & MongoDB",
+            "detail": "MySQL basics, MongoDB CRUD, Mongoose"
+          },
+          {
+            "unit": 3,
+            "title": "Authentication & Security",
+            "detail": "JWT, bcrypt, CORS, secure API design"
+          },
+          {
+            "unit": 4,
+            "title": "Deployment & DevOps Basics",
+            "detail": "Vercel, Netlify, Render, environment configs"
+          },
+          {
+            "unit": 5,
+            "title": "Lab – II",
+            "detail": "Full-stack MERN application"
+          },
+          {
+            "unit": 6,
+            "title": "Final Project Work",
+            "detail": "Deploy a complete full-stack web application"
+          }
+        ]
+      }
+    },
+    {
+      "id": "dcep",
+      "group": "programming",
+      "short": "DCEP",
+      "name": "Diploma in Computer Programming Expert",
+      "description": "A 12-month deep dive into one programming language (Python or Java or C++) — covering OOP, data structures, algorithms, and real-world application development.",
+      "duration": "12 months",
+      "price": 25000,
+      "price_display": "₹25,000",
+      "rating": 4.3,
+      "demand": "High",
+      "popular": false,
+      "banner": "https://cdn.pixabay.com/photo/2016/05/05/11/22/computer-1373684_1280.jpg",
+      "syllabus": {
+        "semester_1": [
+          {
+            "unit": 1,
+            "title": "Programming Foundations",
+            "detail": "Syntax, data types, operators, control flow"
+          },
+          {
+            "unit": 2,
+            "title": "Functions & Modules",
+            "detail": "Modular programming, libraries, code reuse"
+          },
+          {
+            "unit": 3,
+            "title": "OOP – Object Oriented Programming",
+            "detail": "Classes, objects, inheritance, polymorphism"
+          },
+          {
+            "unit": 4,
+            "title": "Data Structures",
+            "detail": "Lists, stacks, queues, trees, dictionaries"
+          },
+          {
+            "unit": 5,
+            "title": "Lab – I",
+            "detail": "Algorithm challenges and OOP projects"
+          },
+          {
+            "unit": 6,
+            "title": "Project Work – I",
+            "detail": "Build a command-line application"
+          }
+        ],
+        "semester_2": [
+          {
+            "unit": 1,
+            "title": "File Handling & I/O",
+            "detail": "Reading/writing files, CSV, JSON parsing"
+          },
+          {
+            "unit": 2,
+            "title": "Database Integration",
+            "detail": "SQLite/MySQL – connect, query, update from code"
+          },
+          {
+            "unit": 3,
+            "title": "Error Handling & Testing",
+            "detail": "Try-catch, unit testing, debugging"
+          },
+          {
+            "unit": 4,
+            "title": "GUI / Web App Introduction",
+            "detail": "Tkinter (Python) or basic web API (Java/Node)"
+          },
+          {
+            "unit": 5,
+            "title": "Lab – II",
+            "detail": "Full application with DB and GUI/web interface"
+          },
+          {
+            "unit": 6,
+            "title": "Final Project Work",
+            "detail": "Complete software application with documentation"
+          }
+        ]
+      }
+    },
+    {
+      "id": "adwdswde",
+      "group": "programming",
+      "short": "ADWDSWDE",
+      "name": "Advance Diploma in Web Design Solution & Web Development",
+      "description": "A 12-month advanced web design and development course focusing on UI/UX, modern design systems, JavaScript frameworks, and CMS development.",
+      "duration": "12 months",
+      "price": 27000,
+      "price_display": "₹27,000",
+      "rating": 4.4,
+      "demand": "High",
+      "popular": false,
+      "banner": "https://cdn.pixabay.com/photo/2015/07/31/14/59/creative-869200_1280.jpg",
+      "syllabus": {
+        "semester_1": [
+          {
+            "unit": 1,
+            "title": "UI/UX Design Principles",
+            "detail": "User research, wireframing, design systems, Figma"
+          },
+          {
+            "unit": 2,
+            "title": "Advanced CSS & Animations",
+            "detail": "GSAP, CSS animations, micro-interactions"
+          },
+          {
+            "unit": 3,
+            "title": "JavaScript Frameworks",
+            "detail": "React.js or Vue.js – components, state management"
+          },
+          {
+            "unit": 4,
+            "title": "WordPress Development",
+            "detail": "Theme customisation, custom post types, plugins"
+          },
+          {
+            "unit": 5,
+            "title": "Lab – I",
+            "detail": "Design and build a pixel-perfect UI from Figma"
+          },
+          {
+            "unit": 6,
+            "title": "Project Work – I",
+            "detail": "Custom WordPress or React website"
+          }
+        ],
+        "semester_2": [
+          {
+            "unit": 1,
+            "title": "E-Commerce Development",
+            "detail": "WooCommerce or Shopify customisation"
+          },
+          {
+            "unit": 2,
+            "title": "Performance & SEO",
+            "detail": "Page speed, Core Web Vitals, technical SEO"
+          },
+          {
+            "unit": 3,
+            "title": "API Integration",
+            "detail": "REST API, JSON, third-party integrations"
+          },
+          {
+            "unit": 4,
+            "title": "Deployment & Client Handover",
+            "detail": "Live deployment, documentation, client training"
+          },
+          {
+            "unit": 5,
+            "title": "Lab – II",
+            "detail": "Full e-commerce or portfolio site build"
+          },
+          {
+            "unit": 6,
+            "title": "Final Project Work",
+            "detail": "Client-grade website with full design documentation"
+          }
+        ]
+      }
+    },
+    {
+      "id": "pdgdu",
+      "group": "design",
+      "short": "PDGDU",
+      "name": "Professional Diploma in Graphic Design & UI/UX",
+      "description": "A 12-month professional diploma mastering Photoshop, Illustrator, CorelDraw, Figma, and Canva — building a complete graphic and UI/UX design career portfolio.",
+      "duration": "12 months",
+      "price": 20000,
+      "price_display": "₹20,000",
+      "rating": 4.6,
+      "demand": "Very High",
+      "popular": true,
+      "banner": "https://cdn.pixabay.com/photo/2015/07/31/14/59/creative-869200_1280.jpg",
+      "syllabus": {
+        "semester_1": [
+          {
+            "unit": 1,
+            "title": "Design Principles & Colour Theory",
+            "detail": "Typography, layout, colour, contrast, spacing"
+          },
+          {
+            "unit": 2,
+            "title": "Adobe Photoshop",
+            "detail": "Photo editing, compositing, retouching, effects"
+          },
+          {
+            "unit": 3,
+            "title": "Adobe Illustrator",
+            "detail": "Vector art, logo design, icon creation"
+          },
+          {
+            "unit": 4,
+            "title": "CorelDraw",
+            "detail": "Print design, brochures, banners, packaging"
+          },
+          {
+            "unit": 5,
+            "title": "Lab – I",
+            "detail": "Design 5 real-world graphic projects"
+          },
+          {
+            "unit": 6,
+            "title": "Project Work – I",
+            "detail": "Complete brand identity design package"
+          }
+        ],
+        "semester_2": [
+          {
+            "unit": 1,
+            "title": "Canva – Advanced",
+            "detail": "Social media design, presentations, marketing kits"
+          },
+          {
+            "unit": 2,
+            "title": "Figma – UI/UX Design",
+            "detail": "Wireframing, prototyping, design systems, handoff"
+          },
+          {
+            "unit": 3,
+            "title": "UX Research & Usability",
+            "detail": "User journeys, testing, accessibility"
+          },
+          {
+            "unit": 4,
+            "title": "Portfolio Building",
+            "detail": "Behance, Dribbble, PDF portfolio creation"
+          },
+          {
+            "unit": 5,
+            "title": "Lab – II",
+            "detail": "UI/UX prototype for a mobile/web app"
+          },
+          {
+            "unit": 6,
+            "title": "Final Project Work",
+            "detail": "Full UI/UX case study with research and prototype"
+          }
+        ]
+      }
+    },
+    {
+      "id": "cdmvc",
+      "group": "design",
+      "short": "CDMVC",
+      "name": "Certification in Digital Media & Visual Communication",
+      "description": "A 12-month course on web and app UI prototyping, visual storytelling, motion graphics, and digital media production for modern digital designers.",
+      "duration": "12 months",
+      "price": 20000,
+      "price_display": "₹20,000",
+      "rating": 4.4,
+      "demand": "High",
+      "popular": false,
+      "banner": "https://cdn.pixabay.com/photo/2015/07/31/14/59/creative-869200_1280.jpg",
+      "syllabus": {
+        "semester_1": [
+          {
+            "unit": 1,
+            "title": "Visual Communication Basics",
+            "detail": "Design thinking, visual hierarchy, messaging"
+          },
+          {
+            "unit": 2,
+            "title": "Photography & Image Editing",
+            "detail": "Composition, Lightroom, Photoshop retouching"
+          },
+          {
+            "unit": 3,
+            "title": "Motion Graphics Intro",
+            "detail": "Adobe After Effects basics, kinetic typography"
+          },
+          {
+            "unit": 4,
+            "title": "UI Prototyping",
+            "detail": "Figma – wireframes, clickable prototypes, user flows"
+          },
+          {
+            "unit": 5,
+            "title": "Lab – I",
+            "detail": "Photo story and motion graphics project"
+          },
+          {
+            "unit": 6,
+            "title": "Project Work – I",
+            "detail": "App prototype with visual communication case"
+          }
+        ],
+        "semester_2": [
+          {
+            "unit": 1,
+            "title": "Digital Video Production",
+            "detail": "DaVinci Resolve, Premiere basics, colour grading"
+          },
+          {
+            "unit": 2,
+            "title": "Social Media Visual Content",
+            "detail": "Reels design, thumbnail creation, brand kits"
+          },
+          {
+            "unit": 3,
+            "title": "Brand Visual Identity",
+            "detail": "Logo, colour palette, style guide creation"
+          },
+          {
+            "unit": 4,
+            "title": "Publishing & Delivery",
+            "detail": "Print-ready files, web export, media hand-off"
+          },
+          {
+            "unit": 5,
+            "title": "Lab – II",
+            "detail": "Full media production project"
+          },
+          {
+            "unit": 6,
+            "title": "Final Project Work",
+            "detail": "Complete digital media campaign (video + graphic + web)"
+          }
+        ]
+      }
+    },
+    {
+      "id": "ccdt",
+      "group": "design",
+      "short": "CCDT",
+      "name": "Certificate in Creative Design Tools",
+      "description": "A 6-month certificate course covering Photoshop, CorelDraw, and Figma — enabling students to design logos, social media posts, banners, and basic UI layouts.",
+      "duration": "6 months",
+      "price": 8000,
+      "price_display": "₹8,000",
+      "rating": 4.0,
+      "demand": "Moderate",
+      "popular": false,
+      "banner": "https://cdn.pixabay.com/photo/2015/07/31/14/59/creative-869200_1280.jpg",
+      "syllabus": {
+        "semester_1": [
+          {
+            "unit": 1,
+            "title": "Design Basics & Colour Theory",
+            "detail": "Typography, layout grid, colour psychology"
+          },
+          {
+            "unit": 2,
+            "title": "Adobe Photoshop",
+            "detail": "Photo editing, layers, masks, effects, banners"
+          },
+          {
+            "unit": 3,
+            "title": "CorelDraw",
+            "detail": "Vector design, logos, business cards, certificates"
+          },
+          {
+            "unit": 4,
+            "title": "Figma Basics",
+            "detail": "Frames, components, basic UI screens"
+          },
+          {
+            "unit": 5,
+            "title": "Lab – I",
+            "detail": "Create 3 real-world design projects"
+          },
+          {
+            "unit": 6,
+            "title": "Project Work",
+            "detail": "Complete a branding kit: logo + banner + social post"
+          }
+        ]
+      }
+    },
+    {
+      "id": "advexcel",
+      "group": "special",
+      "short": "Adv. Excel",
+      "name": "Advance Excel",
+      "description": "A focused 3-month course on advanced Excel features — pivot tables, VLOOKUP, dashboards, macros, Power Query, and data visualisation for office professionals.",
+      "duration": "3 months",
+      "price": 4000,
+      "price_display": "₹4,000",
+      "rating": 4.3,
+      "demand": "High",
+      "popular": false,
+      "banner": "https://cdn.pixabay.com/photo/2019/04/25/14/43/workplace-4155023_1280.jpg",
+      "syllabus": {
+        "semester_1": [
+          {
+            "unit": 1,
+            "title": "Advanced Formulas",
+            "detail": "VLOOKUP, HLOOKUP, INDEX-MATCH, IF nesting, array"
+          },
+          {
+            "unit": 2,
+            "title": "Pivot Tables & Charts",
+            "detail": "Dynamic reports, slicers, pivot charts"
+          },
+          {
+            "unit": 3,
+            "title": "Dashboard Design",
+            "detail": "KPI cards, conditional formatting, visual reports"
+          },
+          {
+            "unit": 4,
+            "title": "Power Query & Macros",
+            "detail": "Data import, transformation, basic VBA automation"
+          },
+          {
+            "unit": 5,
+            "title": "Lab – I",
+            "detail": "Build an interactive Excel dashboard"
+          },
+          {
+            "unit": 6,
+            "title": "Project Work",
+            "detail": "Submit a business analysis dashboard with data"
+          }
+        ]
+      }
+    },
+    {
+      "id": "mkd",
+      "group": "special",
+      "short": "MKD",
+      "name": "Master Key Depression – Typing Course",
+      "description": "A 3-month specialised typing programme using the MKD method to dramatically increase typing speed and accuracy in both English and regional languages.",
+      "duration": "3 months",
+      "price": 2000,
+      "price_display": "₹2,000",
+      "rating": 3.8,
+      "demand": "Moderate",
+      "popular": false,
+      "banner": "https://cdn.pixabay.com/photo/2019/04/25/14/43/workplace-4155023_1280.jpg",
+      "syllabus": {
+        "semester_1": [
+          {
+            "unit": 1,
+            "title": "Keyboard Awareness",
+            "detail": "Key layout, finger positioning, posture"
+          },
+          {
+            "unit": 2,
+            "title": "Home Row & Basics",
+            "detail": "Core key drills, muscle memory building"
+          },
+          {
+            "unit": 3,
+            "title": "Speed Building Exercises",
+            "detail": "Timed typing sessions, WPM tracking"
+          },
+          {
+            "unit": 4,
+            "title": "Accuracy & Error Reduction",
+            "detail": "Common mistake patterns, correction techniques"
+          },
+          {
+            "unit": 5,
+            "title": "Lab – I",
+            "detail": "Speed tests and accuracy evaluations"
+          },
+          {
+            "unit": 6,
+            "title": "Project Work",
+            "detail": "Achieve target WPM with certified typing test"
+          }
+        ]
+      }
+    },
+    {
+      "id": "adms",
+      "group": "special",
+      "short": "ADMS",
+      "name": "Advance Digital Marketing Solution",
+      "description": "A 6-month intensive digital marketing course covering SEO, Google Ads, social media strategy, content marketing, analytics, and email campaigns.",
+      "duration": "6 months",
+      "price": 15000,
+      "price_display": "₹15,000",
+      "rating": 4.3,
+      "demand": "High",
+      "popular": false,
+      "banner": "https://cdn.pixabay.com/photo/2017/03/23/09/34/artificial-intelligence-2167835_1280.jpg",
+      "syllabus": {
+        "semester_1": [
+          {
+            "unit": 1,
+            "title": "Digital Marketing Strategy",
+            "detail": "Funnels, buyer personas, channel selection"
+          },
+          {
+            "unit": 2,
+            "title": "SEO – Advanced",
+            "detail": "Technical SEO, backlinks, local SEO, schema"
+          },
+          {
+            "unit": 3,
+            "title": "Google Ads & Meta Ads",
+            "detail": "Campaign setup, bidding, audience targeting"
+          },
+          {
+            "unit": 4,
+            "title": "Content & Social Media",
+            "detail": "Content calendar, reels, YouTube SEO"
+          },
+          {
+            "unit": 5,
+            "title": "Lab – I",
+            "detail": "Live campaign setup and optimisation"
+          },
+          {
+            "unit": 6,
+            "title": "Project Work",
+            "detail": "Full digital marketing campaign with performance report"
+          }
+        ]
+      }
+    },
+    {
+      "id": "ddme-special",
+      "group": "special",
+      "short": "DDME",
+      "name": "Diploma in Digital Marketing Education",
+      "description": "A 12-month hands-on diploma covering SEO, social media marketing, Google Ads, content creation, email marketing, and analytics for a career in digital marketing.",
+      "duration": "12 months",
+      "price": 24000,
+      "price_display": "₹24,000",
+      "rating": 4.3,
+      "demand": "High",
+      "popular": false,
+      "banner": "https://cdn.pixabay.com/photo/2017/03/23/09/34/artificial-intelligence-2167835_1280.jpg",
+      "syllabus": {
+        "semester_1": [
+          {
+            "unit": 1,
+            "title": "Digital Marketing Fundamentals",
+            "detail": "Channels, funnels, brand building online"
+          },
+          {
+            "unit": 2,
+            "title": "SEO – Search Engine Optimisation",
+            "detail": "On-page, off-page, technical SEO, keyword research"
+          },
+          {
+            "unit": 3,
+            "title": "Social Media Marketing",
+            "detail": "Facebook, Instagram, YouTube strategy and content"
+          },
+          {
+            "unit": 4,
+            "title": "Content Creation & Blogging",
+            "detail": "Blog writing, video scripting, Canva graphics"
+          },
+          {
+            "unit": 5,
+            "title": "Lab – I (Practical)",
+            "detail": "Live campaign setup on social platforms"
+          },
+          {
+            "unit": 6,
+            "title": "Project Work – I",
+            "detail": "Build and promote a brand page"
+          }
+        ],
+        "semester_2": [
+          {
+            "unit": 1,
+            "title": "Google Ads & PPC",
+            "detail": "Search ads, display ads, remarketing"
+          },
+          {
+            "unit": 2,
+            "title": "Email Marketing",
+            "detail": "Mailchimp, automation, A/B testing"
+          },
+          {
+            "unit": 3,
+            "title": "Analytics & Reporting",
+            "detail": "Google Analytics, Search Console, insights"
+          },
+          {
+            "unit": 4,
+            "title": "Affiliate & Influencer Marketing",
+            "detail": "Monetisation strategies, brand collaborations"
+          },
+          {
+            "unit": 5,
+            "title": "Lab – II (Practical)",
+            "detail": "Live Google Ads campaign management"
+          },
+          {
+            "unit": 6,
+            "title": "Final Project Work",
+            "detail": "Complete digital marketing campaign report"
+          }
+        ]
+      }
+    }
+  ]
+}

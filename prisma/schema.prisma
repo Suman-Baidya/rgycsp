@@ -505,3 +505,39 @@ model FranchiseApplication {
   createdAt       DateTime          @default(now())
   updatedAt       DateTime          @updatedAt
 }
+
+// ============================================
+// Global Course Management
+// ============================================
+
+model GlobalCourse {
+  id          String   @id @default(cuid())
+  groupId     String?  // e.g. "diploma"
+  short       String?  // e.g. "DCA"
+  name        String
+  description String?  @db.Text
+  duration    String?
+  price       Float    @default(0)
+  priceDisplay String?
+  discountText String?
+  showFee     Boolean  @default(true)
+  rating      Float    @default(0)
+  demand      String?
+  popular     Boolean  @default(false)
+  banner      String?
+  syllabus    Json?
+  isActive    Boolean  @default(true)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model GlobalCourseGroup {
+  id          String   @id @default(cuid())
+  value       String   @unique // Internal ID, e.g., "diploma"
+  label       String   // Display name, e.g., "Diploma Courses"
+  isActive    Boolean  @default(true)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}

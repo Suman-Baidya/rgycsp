@@ -9,6 +9,7 @@ import { PartnersMarquee } from "@/components/landing/PartnersMarquee";
 import { Testimonials } from "@/components/landing/Testimonials";
 import { FaqSection } from "@/components/landing/FaqSection";
 import { ContactSection } from "@/components/landing/ContactSection";
+import { CoursesSection } from "@/components/landing/CoursesSection";
 import { db } from "@/lib/prisma";
 import { CustomThemeStyle } from "@/components/providers/CustomThemeStyle";
 
@@ -47,6 +48,8 @@ export default async function RootLandingPage() {
         {isSectionActive("hero") && <HeroSection data={getSectionData("hero")} />}
         
         {isSectionActive("quick-links") && <QuickLinksSection data={getSectionData("quick-links")} />}
+
+        <CoursesSection />
 
         {isSectionActive("about") && <AboutSection data={getSectionData("about")} />}
 
