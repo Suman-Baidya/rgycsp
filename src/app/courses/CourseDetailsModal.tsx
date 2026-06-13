@@ -20,7 +20,7 @@ export default function CourseDetailsModal({ isOpen, onClose, course }: { isOpen
         <div className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-slate-200 dark:[&::-webkit-scrollbar-thumb]:bg-zinc-800 [&::-webkit-scrollbar-thumb]:rounded-full">
           <div className="relative w-full h-64 sm:h-[22rem] bg-slate-100 dark:bg-zinc-800 shrink-0">
           {course.banner ? (
-            <Image src={course.banner} alt={course.name} fill className="object-cover" />
+            <Image src={course.banner} alt={course.name} fill sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" className="object-cover" />
           ) : (
             <div className="w-full h-full flex items-center justify-center">
               <BookOpen className="h-16 w-16 text-slate-300 dark:text-zinc-700" />

@@ -146,6 +146,10 @@ export async function syncAllSections(settingsId: string, sectionTypes: string[]
             { title: "News & Announcements", description: "Latest updates", url: "/news", icon: "Newspaper" }
           ]
         };
+      } else if (type === 'courses') {
+        defaultContent = {
+          description: "Explore our most sought-after programs designed to build your skills and advance your career in the digital world."
+        };
       } else if (type === 'franchises-offer-banner') {
         defaultContent = {
           bannerUrl: "https://images.unsplash.com/photo-1557426272-fc759fdf7a8d?q=80&w=2070",

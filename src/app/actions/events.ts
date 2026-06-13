@@ -16,18 +16,37 @@ export async function getEvents(workspaceId: string) {
   }
 }
 
+export async function getAllEvents() {
+  try {
+    const events = await db.event.findMany({
+      include: {
+        workspace: { select: { name: true } }
+      },
+      orderBy: { date: 'desc' },
+    });
+    return { success: true, events };
+  } catch (error) {
+    console.error("Failed to get all events:", error);
+    return { success: false, error: "Failed to fetch all events" };
+  }
+}
+
 export async function createEvent(data: any) {
   try {
     const event = await db.event.create({
       data: {
-        workspaceId: data.workspaceId,
+        workspaceId: data.workspaceId === "main" ? null : data.workspaceId,
         title: data.title,
         description: data.description,
         date: new Date(data.date),
         time: data.time,
         location: data.location,
         image: data.image,
+        videoUrl: data.videoUrl,
         category: data.category,
+        guests: data.guests || [],
+        programDetails: data.programDetails || [],
+        galleryImages: data.galleryImages || [],
         isFeatured: data.isFeatured || false,
         isActive: data.isActive !== false,
       },
@@ -35,6 +54,7 @@ export async function createEvent(data: any) {
 
     revalidatePath("/app/[tenant]", "layout");
     revalidatePath("/app/[tenant]/events");
+    revalidatePath("/events");
     return { success: true, event };
   } catch (error: any) {
     console.error("Failed to create event:", error);
@@ -47,13 +67,18 @@ export async function updateEvent(eventId: string, data: any) {
     await db.event.update({
       where: { id: eventId },
       data: {
+        workspaceId: data.workspaceId === "main" ? null : data.workspaceId,
         title: data.title,
         description: data.description,
         date: new Date(data.date),
         time: data.time,
         location: data.location,
         image: data.image,
+        videoUrl: data.videoUrl,
         category: data.category,
+        guests: data.guests || [],
+        programDetails: data.programDetails || [],
+        galleryImages: data.galleryImages || [],
         isFeatured: data.isFeatured,
         isActive: data.isActive,
       },
@@ -61,6 +86,7 @@ export async function updateEvent(eventId: string, data: any) {
 
     revalidatePath("/app/[tenant]", "layout");
     revalidatePath("/app/[tenant]/events");
+    revalidatePath("/events");
     return { success: true };
   } catch (error: any) {
     console.error("Failed to update event:", error);
@@ -76,6 +102,7 @@ export async function deleteEvent(eventId: string) {
 
     revalidatePath("/app/[tenant]", "layout");
     revalidatePath("/app/[tenant]/events");
+    revalidatePath("/events");
     return { success: true };
   } catch (error) {
     console.error("Failed to delete event:", error);

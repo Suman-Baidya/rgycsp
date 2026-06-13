@@ -65,7 +65,7 @@ export function AdmissionStatusClient({ workspaceId, workspaceName, logoUrl }: a
            <div className="flex items-center gap-4">
               {logoUrl && (
                 <div className="relative w-12 h-12 rounded-xl overflow-hidden">
-                  <Image src={logoUrl} alt="Logo" fill className="object-contain" />
+                  <Image src={logoUrl} alt="Logo" fill sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" className="object-contain" />
                 </div>
               )}
               <div>
@@ -104,7 +104,7 @@ export function AdmissionStatusClient({ workspaceId, workspaceName, logoUrl }: a
                  <div className="space-y-8">
                     <div className="flex items-center gap-6">
                        <div className="relative w-24 h-24 rounded-2xl overflow-hidden border-4 border-white shadow-xl">
-                          <Image src={application.photoUrl} alt="Photo" fill className="object-cover" />
+                          <Image src={application.photoUrl} alt="Photo" fill sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" className="object-cover" />
                        </div>
                        <div>
                           <h3 className="text-2xl font-bold text-slate-900 leading-tight">{application.fullName}</h3>
@@ -185,7 +185,7 @@ export function AdmissionStatusClient({ workspaceId, workspaceName, logoUrl }: a
       <CardHeader className="text-center pb-8 pt-10">
         {logoUrl && (
            <div className="relative w-16 h-16 mx-auto mb-4 rounded-2xl overflow-hidden shadow-lg border border-slate-50">
-             <Image src={logoUrl} alt="Logo" fill className="object-contain" />
+             <Image src={logoUrl} alt="Logo" fill sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" className="object-contain" />
            </div>
         )}
         <CardTitle className="text-3xl font-bold tracking-tight text-slate-900">Admission Status</CardTitle>

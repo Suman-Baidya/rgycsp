@@ -255,7 +255,7 @@ export function LandingNavbar({ settings, user, isHome }: { settings?: any, user
             {config?.secondaryLogoUrl && (
               <div className="hidden lg:flex items-center border-r-2 border-foreground/20 dark:border-foreground/30 pr-3 mr-1">
                 <div className="relative w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20 shrink-0">
-                  <Image src={config.secondaryLogoUrl} alt="Secondary Logo" fill className="object-contain" />
+                  <Image src={config.secondaryLogoUrl} alt="Secondary Logo" fill sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" className="object-contain" />
                 </div>
               </div>
             )}

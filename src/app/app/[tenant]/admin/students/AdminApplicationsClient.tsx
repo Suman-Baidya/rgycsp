@@ -146,7 +146,7 @@ export function AdminApplicationsClient({ workspaceId, initialData }: any) {
                   <div className="flex items-center gap-5">
                      <div className="relative w-16 h-16 rounded-2xl overflow-hidden bg-slate-50 dark:bg-slate-800 border-2 border-slate-50 dark:border-slate-800 shadow-sm group-hover:scale-105 transition-transform duration-300">
                         {app.photoUrl ? (
-                          <Image src={app.photoUrl} alt={app.fullName} fill className="object-cover" />
+                          <Image src={app.photoUrl} alt={app.fullName} fill sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" className="object-cover" />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center bg-slate-100 dark:bg-slate-800 text-slate-300">
                             <FileText className="w-6 h-6" />

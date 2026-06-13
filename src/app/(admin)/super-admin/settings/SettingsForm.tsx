@@ -8,11 +8,12 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
-import { Globe, Layout, Palette, Phone, Save, Settings2, Trash2, ChevronDown, Cpu, LayoutDashboard, FileText, Play, Rocket, Mail, ShieldCheck, UserCheck, BookOpenCheck, Menu, MousePointer2, ExternalLink, Plus, Check, X, Zap, Bell } from "lucide-react";
+import { Globe, Layout, Palette, Phone, Save, Settings2, Trash2, ChevronDown, Cpu, LayoutDashboard, FileText, Play, Rocket, Mail, ShieldCheck, UserCheck, BookOpenCheck, Menu, MousePointer2, ExternalLink, Plus, Check, X, Zap, Bell, Calendar } from "lucide-react";
 import { updateSiteSettings, updateLandingSection, syncAllSections } from "@/app/actions/site-settings";
 import { toast } from "sonner";
 import { ImageUpload } from "@/components/ui/ImageUpload";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { SuperAdminEventsTab } from "./SuperAdminEventsTab";
 import { cn } from "@/lib/utils";
 
 const THEME_PRESETS = [
@@ -161,6 +162,7 @@ export function SettingsForm({ settings, isSuperAdmin = true }: { settings: any,
               { value: "sections", label: "Sections", icon: Layout },
               ...(!isSuperAdmin ? [{ value: "notices", label: "Notices", icon: Bell }] : []),
               { value: "page-headers", label: "Page Headers", icon: LayoutDashboard },
+              { value: "events", label: "Events", icon: Calendar },
               { value: "legal-pages", label: "Legal Pages", icon: ShieldCheck },
             ].map((tab) => (
               <TabsTrigger
@@ -648,7 +650,7 @@ export function SettingsForm({ settings, isSuperAdmin = true }: { settings: any,
                  variant="outline" 
                  size="sm" 
                  onClick={async () => {
-                   const types = ['hero', 'quick-links', 'about', 'why-choose-us', 'achievements', 'partners', 'our-message', 'mission', 'vision', 'services', 'guide-steps', 'guide-resources', 'ready-to-modernize', 'custom-solution', 'pricing', 'testimonials', 'faq', 'contact', 'page-header-about', 'page-header-services', 'page-header-guide', 'page-header-pricing', 'page-header-support', 'page-header-students', 'page-header-courses', 'page-header-franchises', 'page-header-events', 'page-header-placement', 'franchises-offer-banner', 'franchises-rules', 'franchises-guidelines', 'franchises-verification', 'legal-privacy-policy', 'legal-terms-conditions', 'legal-cookie-policy', 'legal-refund-policy', 'legal-sitemap'];
+                   const types = ['hero', 'quick-links', 'courses', 'about', 'why-choose-us', 'achievements', 'partners', 'our-message', 'mission', 'vision', 'services', 'guide-steps', 'guide-resources', 'ready-to-modernize', 'custom-solution', 'pricing', 'testimonials', 'faq', 'contact', 'page-header-about', 'page-header-services', 'page-header-guide', 'page-header-pricing', 'page-header-support', 'page-header-students', 'page-header-courses', 'page-header-franchises', 'page-header-events', 'page-header-placement', 'franchises-offer-banner', 'franchises-rules', 'franchises-guidelines', 'franchises-verification', 'legal-privacy-policy', 'legal-terms-conditions', 'legal-cookie-policy', 'legal-refund-policy', 'legal-sitemap'];
                    const res = await syncAllSections(settings.id, types);
                    if (res.success) {
                      toast.success(res.created ? `Initialized ${res.created} new sections!` : "All sections are already synced.");
@@ -677,7 +679,7 @@ export function SettingsForm({ settings, isSuperAdmin = true }: { settings: any,
                  variant="outline" 
                  size="sm" 
                  onClick={async () => {
-                   const types = ['hero', 'quick-links', 'about', 'why-choose-us', 'achievements', 'partners', 'our-message', 'mission', 'vision', 'services', 'guide-steps', 'guide-resources', 'ready-to-modernize', 'custom-solution', 'pricing', 'testimonials', 'faq', 'contact', 'page-header-about', 'page-header-services', 'page-header-guide', 'page-header-pricing', 'page-header-support', 'page-header-students', 'page-header-courses', 'page-header-franchises', 'page-header-events', 'page-header-placement', 'franchises-offer-banner', 'franchises-rules', 'franchises-guidelines', 'franchises-verification', 'legal-privacy-policy', 'legal-terms-conditions', 'legal-cookie-policy', 'legal-refund-policy', 'legal-sitemap'];
+                   const types = ['hero', 'quick-links', 'courses', 'about', 'why-choose-us', 'achievements', 'partners', 'our-message', 'mission', 'vision', 'services', 'guide-steps', 'guide-resources', 'ready-to-modernize', 'custom-solution', 'pricing', 'testimonials', 'faq', 'contact', 'page-header-about', 'page-header-services', 'page-header-guide', 'page-header-pricing', 'page-header-support', 'page-header-students', 'page-header-courses', 'page-header-franchises', 'page-header-events', 'page-header-placement', 'franchises-offer-banner', 'franchises-rules', 'franchises-guidelines', 'franchises-verification', 'legal-privacy-policy', 'legal-terms-conditions', 'legal-cookie-policy', 'legal-refund-policy', 'legal-sitemap'];
                    const res = await syncAllSections(settings.id, types);
                    if (res.success) {
                      toast.success(res.created ? `Initialized ${res.created} new sections!` : "All sections are already synced.");
@@ -696,6 +698,10 @@ export function SettingsForm({ settings, isSuperAdmin = true }: { settings: any,
             </div>
           </TabsContent>
 
+          <TabsContent value="events" className="mt-0 w-full space-y-8 focus-visible:outline-none">
+            <SuperAdminEventsTab />
+          </TabsContent>
+
           <TabsContent value="legal-pages" className="mt-0 w-full space-y-8 focus-visible:outline-none">
              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
                <div className="flex flex-col gap-1">
@@ -707,7 +713,7 @@ export function SettingsForm({ settings, isSuperAdmin = true }: { settings: any,
                  variant="outline" 
                  size="sm" 
                  onClick={async () => {
-                   const types = ['hero', 'quick-links', 'about', 'why-choose-us', 'achievements', 'partners', 'our-message', 'mission', 'vision', 'services', 'guide-steps', 'guide-resources', 'ready-to-modernize', 'custom-solution', 'pricing', 'testimonials', 'faq', 'contact', 'page-header-about', 'page-header-services', 'page-header-guide', 'page-header-pricing', 'page-header-support', 'page-header-students', 'page-header-courses', 'page-header-franchises', 'page-header-events', 'page-header-placement', 'franchises-offer-banner', 'franchises-rules', 'franchises-guidelines', 'legal-privacy-policy', 'legal-terms-conditions', 'legal-cookie-policy', 'legal-refund-policy', 'legal-sitemap', 'page-header-privacy-policy', 'page-header-terms-conditions', 'page-header-cookie-policy', 'page-header-refund-policy', 'page-header-sitemap'];
+                   const types = ['hero', 'quick-links', 'courses', 'about', 'why-choose-us', 'achievements', 'partners', 'our-message', 'mission', 'vision', 'services', 'guide-steps', 'guide-resources', 'ready-to-modernize', 'custom-solution', 'pricing', 'testimonials', 'faq', 'contact', 'page-header-about', 'page-header-services', 'page-header-guide', 'page-header-pricing', 'page-header-support', 'page-header-students', 'page-header-courses', 'page-header-franchises', 'page-header-events', 'page-header-placement', 'franchises-offer-banner', 'franchises-rules', 'franchises-guidelines', 'legal-privacy-policy', 'legal-terms-conditions', 'legal-cookie-policy', 'legal-refund-policy', 'legal-sitemap', 'page-header-privacy-policy', 'page-header-terms-conditions', 'page-header-cookie-policy', 'page-header-refund-policy', 'page-header-sitemap'];
                    const res = await syncAllSections(settings.id, types);
                    if (res.success) {
                      toast.success(res.created ? `Initialized ${res.created} new sections!` : "All sections are already synced.");
@@ -1034,16 +1040,18 @@ function CountersContentEditor({ content, setContent, mediaFolderBase }: any) {
   );
 }
 
-function CoursesContentEditor({ content, setContent, mediaFolderBase }: any) {
+function CoursesContentEditor({ content, setContent }: any) {
   return (
-    <div className="space-y-6">
-       <ListContentEditor 
-         title="Featured Courses" 
-         content={{ items: content.courses || [] }} 
-         setContent={(newContent: any) => setContent({ ...content, courses: newContent.items })} 
-         itemFields={['title', 'category', 'fee', 'duration', 'image']} 
-         mediaFolderBase={mediaFolderBase}
-       />
+    <div className="space-y-4">
+      <div className="space-y-2">
+        <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Courses Section Description</Label>
+        <Textarea 
+          value={content.description || ""} 
+          onChange={(e) => setContent({ ...content, description: e.target.value })} 
+          className="min-h-[100px] rounded-2xl bg-muted/5 border-none resize-none" 
+          placeholder="Enter the description to show below the courses title..."
+        />
+      </div>
     </div>
   );
 }

@@ -105,7 +105,7 @@ export function WorkspaceTestimonials({ data }: { data?: any }) {
                 <div className="pt-8 border-t border-border/50 flex items-center gap-4">
                   <div className="w-14 h-14 rounded-2xl overflow-hidden relative border-2 border-primary/20 bg-slate-100">
                     {t.avatar ? (
-                      <Image src={t.avatar} alt={t.name || "Testimonial Avatar"} fill className="object-cover" />
+                      <Image src={t.avatar} alt={t.name || "Testimonial Avatar"} fill sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" className="object-cover" />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-primary font-black">{t.name?.charAt(0)}</div>
                     )}

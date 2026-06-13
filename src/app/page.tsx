@@ -49,7 +49,7 @@ export default async function RootLandingPage() {
         
         {isSectionActive("quick-links") && <QuickLinksSection data={getSectionData("quick-links")} />}
 
-        <CoursesSection />
+        {isSectionActive("courses") && <CoursesSection data={getSectionData("courses")} />}
 
         {isSectionActive("about") && <AboutSection data={getSectionData("about")} />}
 

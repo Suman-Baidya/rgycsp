@@ -5,8 +5,9 @@ import Link from "next/link";
 import { ArrowRight, BookOpen, Clock, IndianRupee, Star } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { SectionHeader } from "@/components/ui/SectionHeader";
 
-export async function CoursesSection() {
+export async function CoursesSection({ data }: { data?: any }) {
   const popularCourses = await db.globalCourse.findMany({
     where: { 
       isActive: true,
@@ -18,20 +19,25 @@ export async function CoursesSection() {
 
   if (popularCourses.length === 0) return null;
 
+  const title = data?.title || "Popular Courses";
+  const subtitle = data?.subtitle || "OUR PROGRAMS";
+  const description = data?.content?.description || "Explore our most sought-after programs designed to build your skills and advance your career in the digital world.";
+
+  const titleWords = title.split(' ');
+  const lastWord = titleWords.length > 1 ? titleWords.pop() : '';
+  const firstPart = titleWords.join(' ');
+
   return (
     <section className="py-24 bg-slate-50 dark:bg-zinc-950 relative overflow-hidden" id="courses">
       <div className="absolute top-0 right-0 -translate-y-12 translate-x-1/3 w-[800px] h-[800px] bg-primary/5 rounded-full blur-3xl pointer-events-none" />
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-        <div className="text-center max-w-3xl mx-auto mb-16">
-          <span className="text-primary font-bold tracking-wider uppercase text-sm mb-4 block">Our Programs</span>
-          <h2 className="text-4xl md:text-5xl font-black text-slate-900 dark:text-white tracking-tight mb-6">
-            Popular <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-primary/60">Courses</span>
-          </h2>
-          <p className="text-lg text-slate-600 dark:text-slate-400">
-            Explore our most sought-after programs designed to build your skills and advance your career in the digital world.
-          </p>
-        </div>
+        <SectionHeader 
+          subtitle={subtitle}
+          title={title}
+          description={description}
+          highlightStyle="primary"
+        />
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {popularCourses.map((course) => (

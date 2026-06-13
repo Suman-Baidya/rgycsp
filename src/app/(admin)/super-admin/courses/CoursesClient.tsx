@@ -202,7 +202,7 @@ export default function CoursesClient({ initialData, initialGroups = [] }: { ini
                       <td className="px-6 py-4">
                         <div className="h-12 w-20 relative rounded-lg overflow-hidden bg-slate-100 flex items-center justify-center border">
                           {course.banner ? (
-                            <Image src={course.banner} alt={course.name} fill className="object-cover" />
+                            <Image src={course.banner} alt={course.name} fill sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" className="object-cover" />
                           ) : (
                             <ImageIcon className="h-5 w-5 text-slate-300" />
                           )}
