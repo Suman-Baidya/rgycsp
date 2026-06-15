@@ -35,7 +35,8 @@ export async function createEvent(data: any) {
   try {
     const event = await db.event.create({
       data: {
-        workspaceId: data.workspaceId === "main" ? null : data.workspaceId,
+        workspaceId: null, // Super admin events are always global
+        hostName: data.hostName,
         title: data.title,
         description: data.description,
         date: new Date(data.date),
@@ -67,7 +68,8 @@ export async function updateEvent(eventId: string, data: any) {
     await db.event.update({
       where: { id: eventId },
       data: {
-        workspaceId: data.workspaceId === "main" ? null : data.workspaceId,
+        workspaceId: null,
+        hostName: data.hostName,
         title: data.title,
         description: data.description,
         date: new Date(data.date),

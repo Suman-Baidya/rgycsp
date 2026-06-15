@@ -18,11 +18,11 @@ import { ImageUpload } from "@/components/ui/ImageUpload";
 import { cn } from "@/lib/utils";
 
 const TABS = [
-  { id: "basic", label: "Basic Info", icon: LayoutDashboard, desc: "Title, date, and location" },
-  { id: "media", label: "Media & Bio", icon: Video, desc: "Banner, description, video" },
-  { id: "guests", label: "Special Guests", icon: Users, desc: "VIPs and speakers" },
-  { id: "schedule", label: "Itinerary", icon: ListTodo, desc: "Event timeline" },
-  { id: "gallery", label: "Photo Gallery", icon: Images, desc: "Event memories" },
+  { id: "basic", label: "Basic Info", icon: LayoutDashboard, desc: "Title, Date" },
+  { id: "media", label: "Media & Bio", icon: Video, desc: "Banner, Video" },
+  { id: "guests", label: "Special Guests", icon: Users, desc: "Speakers" },
+  { id: "schedule", label: "Itinerary", icon: ListTodo, desc: "Event Timeline" },
+  { id: "gallery", label: "Photo Gallery", icon: Images, desc: "Event Memories" },
 ];
 
 export function SuperAdminEventsTab() {
@@ -34,6 +34,7 @@ export function SuperAdminEventsTab() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("basic");
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [isCreatingCategory, setIsCreatingCategory] = useState(false);
   const [formData, setFormData] = useState<any>({
     title: "",
     description: "",
@@ -43,7 +44,7 @@ export function SuperAdminEventsTab() {
     image: "",
     videoUrl: "",
     category: "",
-    workspaceId: "main",
+    hostName: "",
     isActive: true,
     isFeatured: false,
     guests: [],
@@ -85,13 +86,14 @@ export function SuperAdminEventsTab() {
       image: "",
       videoUrl: "",
       category: "",
-      workspaceId: "main",
+      hostName: "",
       isActive: true,
       isFeatured: false,
       guests: [],
       programDetails: [],
       galleryImages: []
     });
+    setIsCreatingCategory(false);
     setIsDialogOpen(true);
   };
 
@@ -115,19 +117,20 @@ export function SuperAdminEventsTab() {
       image: event.image || "",
       videoUrl: event.videoUrl || "",
       category: event.category || "",
-      workspaceId: event.workspaceId || "main",
+      hostName: event.hostName || "",
       isActive: event.isActive ?? true,
       isFeatured: event.isFeatured ?? false,
       guests: parsedGuests,
       programDetails: parsedProgram,
       galleryImages: parsedGallery
     });
+    setIsCreatingCategory(false);
     setIsDialogOpen(true);
   };
 
   const handleSave = async () => {
-    if (!formData.title || !formData.date || !formData.workspaceId) {
-      toast.error("Title, date, and workspace are required.");
+    if (!formData.title || !formData.date) {
+      toast.error("Title and date are required.");
       return;
     }
 
@@ -209,7 +212,7 @@ export function SuperAdminEventsTab() {
               <TableRow>
                 <TableHead className="font-bold py-4">Event Name</TableHead>
                 <TableHead className="font-bold">Date & Time</TableHead>
-                <TableHead className="font-bold">Host Workspace</TableHead>
+                <TableHead className="font-bold">Host Name</TableHead>
                 <TableHead className="font-bold">Status</TableHead>
                 <TableHead className="text-right font-bold">Actions</TableHead>
               </TableRow>
@@ -221,33 +224,40 @@ export function SuperAdminEventsTab() {
                   <TableRow key={event.id} className="group">
                     <TableCell className="py-4">
                       <div className="flex flex-col">
-                        <span className="font-bold text-slate-900 dark:text-slate-100">{event.title}</span>
-                        <span className="text-xs text-muted-foreground mt-0.5">{event.category || "General"}</span>
+                        <span className="font-bold text-slate-900 dark:text-slate-100 max-w-[200px] sm:max-w-[300px] truncate" title={event.title}>{event.title}</span>
+                        <span className="text-xs text-muted-foreground mt-0.5 truncate max-w-[200px]">{event.category || "General"}</span>
                       </div>
                     </TableCell>
                     <TableCell>
-                      <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400 font-medium">
-                        <Calendar className="h-4 w-4 text-primary/60" /> {new Date(event.date).toLocaleDateString('en-GB')}
+                      <div className="flex flex-col gap-0.5 text-sm">
+                        <span className="font-medium text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                          <Calendar className="h-3.5 w-3.5 text-primary/60" /> {new Date(event.date).toLocaleDateString('en-GB')}
+                        </span>
+                        {event.time && <span className="text-xs text-muted-foreground ml-5">{event.time}</span>}
                       </div>
                     </TableCell>
                     <TableCell>
-                      <span className="text-sm font-medium bg-slate-100 dark:bg-zinc-800 px-3 py-1 rounded-lg">
-                        {event.workspaceId ? event.workspace?.name : "Main Institute"}
+                      <span className="text-sm font-medium bg-slate-100 dark:bg-zinc-800 px-3 py-1 rounded-lg max-w-[150px] sm:max-w-[200px] truncate inline-block align-middle" title={event.hostName || "Global Event"}>
+                        {event.hostName || "Global Event"}
                       </span>
                     </TableCell>
                     <TableCell>
                       <div className="flex flex-wrap gap-2">
+                        {event.isActive ? (
+                          <Badge variant="default" className="bg-emerald-500/10 text-emerald-600 font-bold border-0">Active</Badge>
+                        ) : (
+                          <Badge variant="destructive" className="opacity-80 font-bold border-0">Inactive</Badge>
+                        )}
                         {isPast ? (
                           <Badge variant="secondary" className="bg-slate-100 dark:bg-zinc-800 text-slate-500 font-bold border-0">Past</Badge>
                         ) : (
-                          <Badge variant="default" className="bg-green-500/10 text-green-600 hover:bg-green-500/20 font-bold border-0">Upcoming</Badge>
+                          <Badge variant="default" className="bg-blue-500/10 text-blue-600 font-bold border-0">Upcoming</Badge>
                         )}
-                        {event.isFeatured && <Badge variant="default" className="bg-amber-500/10 text-amber-600 hover:bg-amber-500/20 font-bold border-0">Featured</Badge>}
-                        {!event.isActive && <Badge variant="destructive" className="opacity-80 font-bold border-0">Hidden</Badge>}
+                        {event.isFeatured && <Badge variant="default" className="bg-amber-500/10 text-amber-600 font-bold border-0">Featured</Badge>}
                       </div>
                     </TableCell>
                     <TableCell className="text-right">
-                      <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="flex items-center justify-end gap-2">
                         <Button variant="ghost" size="icon" onClick={() => handleEdit(event)} className="h-9 w-9 text-blue-500 hover:bg-blue-500/10 rounded-xl"><Edit2 className="h-4 w-4" /></Button>
                         <Button variant="ghost" size="icon" onClick={() => handleDelete(event.id)} className="h-9 w-9 text-red-500 hover:bg-red-500/10 rounded-xl"><Trash2 className="h-4 w-4" /></Button>
                       </div>
@@ -266,21 +276,21 @@ export function SuperAdminEventsTab() {
           <DialogTitle className="sr-only">{editingId ? "Edit Event" : "Create Event"}</DialogTitle>
           
           {/* Header */}
-          <div className="flex-none flex items-center justify-between px-8 py-4 bg-white dark:bg-zinc-900 border-b border-slate-200 dark:border-zinc-800 z-10">
+          <div className="flex-none flex items-center justify-between p-4 sm:px-8 sm:py-4 bg-white dark:bg-zinc-900 border-b border-slate-200 dark:border-zinc-800 z-10 gap-2">
             <div className="flex flex-col">
-              <h2 className="text-xl font-bold tracking-tight">{editingId ? "Edit Event" : "Create Event"}</h2>
-              <span className="text-sm text-muted-foreground">Setup your event details step by step.</span>
+              <h2 className="text-lg sm:text-xl font-bold tracking-tight">{editingId ? "Edit Event" : "Create Event"}</h2>
+              <span className="text-xs sm:text-sm text-muted-foreground hidden sm:block">Setup your event details step by step.</span>
             </div>
-            <div className="flex items-center gap-3">
-              <Button variant="ghost" onClick={() => setIsDialogOpen(false)} className="rounded-xl font-medium">Cancel</Button>
-              <Button onClick={handleSave} disabled={isSaving} className="rounded-xl font-bold bg-primary text-white px-8 shadow-md shadow-primary/20">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <Button variant="ghost" onClick={() => setIsDialogOpen(false)} className="rounded-xl font-medium h-10 sm:h-11 px-3 sm:px-4">Cancel</Button>
+              <Button onClick={handleSave} disabled={isSaving} className="rounded-xl font-bold bg-primary text-white h-10 sm:h-11 px-4 sm:px-8 shadow-md shadow-primary/20">
                 {isSaving ? "Saving..." : (editingId ? "Save Changes" : "Create Event")}
               </Button>
             </div>
           </div>
 
           {/* Body */}
-          <div className="flex-1 flex overflow-hidden">
+          <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
             {/* Sidebar Navigation */}
             <div className="w-64 flex-none bg-white dark:bg-zinc-900 border-r border-slate-200 dark:border-zinc-800 p-6 overflow-y-auto hidden md:block space-y-2">
               {TABS.map((tab) => {
@@ -313,7 +323,7 @@ export function SuperAdminEventsTab() {
             </div>
 
             {/* Mobile Tab Selector */}
-            <div className="md:hidden flex-none bg-white dark:bg-zinc-900 border-b border-slate-200 dark:border-zinc-800 p-4 flex overflow-x-auto gap-2">
+            <div className="md:hidden flex-none bg-white dark:bg-zinc-900 border-b border-slate-200 dark:border-zinc-800 p-3 sm:p-4 flex overflow-x-auto gap-2 no-scrollbar">
               {TABS.map((tab) => (
                 <button
                   key={tab.id}
@@ -330,12 +340,12 @@ export function SuperAdminEventsTab() {
             </div>
 
             {/* Content Area */}
-            <div className="flex-1 overflow-y-auto p-6 md:p-10 relative bg-slate-50/50 dark:bg-zinc-950/50">
+            <div className="flex-1 overflow-y-auto p-4 sm:p-6 md:p-10 relative bg-slate-50/50 dark:bg-zinc-950/50">
               <div className="max-w-3xl mx-auto">
                 
                 {activeTab === "basic" && (
                   <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                    <div className="bg-white dark:bg-zinc-900 rounded-[2rem] p-8 border border-slate-200 dark:border-zinc-800 shadow-sm space-y-8">
+                    <div className="bg-white dark:bg-zinc-900 rounded-[1.5rem] sm:rounded-[2rem] p-5 sm:p-8 border border-slate-200 dark:border-zinc-800 shadow-sm space-y-6 sm:space-y-8">
                       <div>
                         <h3 className="text-xl font-bold mb-1">Essential Information</h3>
                         <p className="text-sm text-muted-foreground mb-6">The core details that identify your event.</p>
@@ -371,42 +381,76 @@ export function SuperAdminEventsTab() {
                                 <Input value={formData.location} onChange={e => setFormData({...formData, location: e.target.value})} className="h-14 rounded-2xl bg-slate-50 dark:bg-zinc-950 border-slate-200 dark:border-zinc-800 pl-12 pr-5 font-medium" placeholder="e.g. Grand Auditorium" />
                               </div>
                             </div>
-                            <div className="space-y-2">
+                            <div className="space-y-2 relative">
                               <Label className="text-xs uppercase font-bold text-slate-500 ml-1">Category</Label>
-                              <div className="relative">
-                                <Badge className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 p-0 flex items-center justify-center bg-transparent text-slate-400 hover:bg-transparent"><Plus className="w-4 h-4"/></Badge>
-                                <Input value={formData.category} onChange={e => setFormData({...formData, category: e.target.value})} className="h-14 rounded-2xl bg-slate-50 dark:bg-zinc-950 border-slate-200 dark:border-zinc-800 pl-12 pr-5 font-medium" placeholder="e.g. Workshop" />
-                              </div>
+                              {!isCreatingCategory ? (
+                                <Select 
+                                  value={formData.category} 
+                                  onValueChange={(val) => {
+                                    if (val === "CREATE_NEW") {
+                                      setIsCreatingCategory(true);
+                                      setFormData({ ...formData, category: "" });
+                                    } else {
+                                      setFormData({ ...formData, category: val });
+                                    }
+                                  }}
+                                >
+                                  <SelectTrigger className="h-14 rounded-2xl bg-slate-50 dark:bg-zinc-950 border-slate-200 dark:border-zinc-800 px-5 font-medium">
+                                    <SelectValue placeholder="Select a category" />
+                                  </SelectTrigger>
+                                  <SelectContent className="rounded-xl border-slate-200 dark:border-zinc-800 shadow-xl">
+                                    {Array.from(new Set(events.map(e => e.category).filter(Boolean))).map((cat: any) => (
+                                      <SelectItem key={cat} value={cat} className="rounded-lg cursor-pointer font-medium">{cat}</SelectItem>
+                                    ))}
+                                    <SelectItem value="CREATE_NEW" className="rounded-lg cursor-pointer text-primary font-bold bg-primary/5 mt-1 border-t border-primary/10">
+                                      + Create New Category
+                                    </SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              ) : (
+                                <div className="flex items-center gap-2">
+                                  <Input 
+                                    autoFocus
+                                    value={formData.category}
+                                    onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                                    placeholder="Enter new category name..."
+                                    className="h-14 rounded-2xl bg-slate-50 dark:bg-zinc-950 border-slate-200 dark:border-zinc-800 px-5 font-medium flex-1"
+                                  />
+                                  <Button 
+                                    type="button"
+                                    variant="ghost" 
+                                    onClick={() => {
+                                      setIsCreatingCategory(false);
+                                      if (!Array.from(new Set(events.map(e => e.category).filter(Boolean))).includes(formData.category)) {
+                                        setFormData({ ...formData, category: "" });
+                                      }
+                                    }}
+                                    className="h-14 px-4 rounded-2xl text-slate-500 hover:text-slate-700 bg-slate-100 hover:bg-slate-200 dark:bg-zinc-800 dark:hover:bg-zinc-700"
+                                  >
+                                    Cancel
+                                  </Button>
+                                </div>
+                              )}
                             </div>
                           </div>
 
                           <div className="space-y-2">
-                            <Label className="text-xs uppercase font-bold text-slate-500 ml-1">Host Workspace <span className="text-red-500">*</span></Label>
-                            <Select value={formData.workspaceId} onValueChange={(val) => setFormData({...formData, workspaceId: val})}>
-                              <SelectTrigger className="h-14 rounded-2xl bg-slate-50 dark:bg-zinc-950 border-slate-200 dark:border-zinc-800 px-5 font-medium">
-                                <SelectValue placeholder="Select Workspace" />
-                              </SelectTrigger>
-                              <SelectContent className="rounded-xl max-h-60">
-                                <SelectItem value="main" className="font-bold text-primary bg-primary/5 focus:bg-primary/10 py-3">✨ Main Institute</SelectItem>
-                                {workspaces.map(w => (
-                                  <SelectItem key={w.id} value={w.id} className="rounded-lg py-2.5 cursor-pointer">{w.name}</SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
+                            <Label className="text-xs uppercase font-bold text-slate-500 ml-1">Host Name</Label>
+                            <Input value={formData.hostName} onChange={e => setFormData({...formData, hostName: e.target.value})} className="h-14 rounded-2xl bg-slate-50 dark:bg-zinc-950 border-slate-200 dark:border-zinc-800 px-5 font-medium" placeholder="e.g. Google, John Doe, Main Institute" />
                           </div>
                         </div>
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div className="bg-white dark:bg-zinc-900 rounded-[2rem] p-6 border border-slate-200 dark:border-zinc-800 shadow-sm flex items-center justify-between cursor-pointer group" onClick={() => setFormData({...formData, isActive: !formData.isActive})}>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+                      <div className="bg-white dark:bg-zinc-900 rounded-[1.5rem] sm:rounded-[2rem] p-5 sm:p-6 border border-slate-200 dark:border-zinc-800 shadow-sm flex items-center justify-between cursor-pointer group" onClick={() => setFormData({...formData, isActive: !formData.isActive})}>
                         <div className="flex flex-col">
                           <span className="font-bold text-lg">Public Status</span>
                           <span className="text-xs text-muted-foreground">Visible on public pages</span>
                         </div>
                         <Switch checked={formData.isActive} />
                       </div>
-                      <div className="bg-white dark:bg-zinc-900 rounded-[2rem] p-6 border border-slate-200 dark:border-zinc-800 shadow-sm flex items-center justify-between cursor-pointer group" onClick={() => setFormData({...formData, isFeatured: !formData.isFeatured})}>
+                      <div className="bg-white dark:bg-zinc-900 rounded-[1.5rem] sm:rounded-[2rem] p-5 sm:p-6 border border-slate-200 dark:border-zinc-800 shadow-sm flex items-center justify-between cursor-pointer group" onClick={() => setFormData({...formData, isFeatured: !formData.isFeatured})}>
                         <div className="flex flex-col">
                           <span className="font-bold text-lg text-amber-500">Featured Event</span>
                           <span className="text-xs text-muted-foreground">Show as big hero banner</span>
@@ -419,7 +463,7 @@ export function SuperAdminEventsTab() {
 
                 {activeTab === "media" && (
                   <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                    <div className="bg-white dark:bg-zinc-900 rounded-[2rem] p-8 border border-slate-200 dark:border-zinc-800 shadow-sm space-y-8">
+                    <div className="bg-white dark:bg-zinc-900 rounded-[1.5rem] sm:rounded-[2rem] p-5 sm:p-8 border border-slate-200 dark:border-zinc-800 shadow-sm space-y-6 sm:space-y-8">
                       <div>
                         <h3 className="text-xl font-bold mb-1">Media & Bio</h3>
                         <p className="text-sm text-muted-foreground mb-6">Visuals and detailed description to attract attendees.</p>

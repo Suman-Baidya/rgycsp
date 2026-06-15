@@ -331,6 +331,7 @@ model VerificationToken {
 model Event {
   id             String   @id @default(cuid())
   workspaceId    String?
+  hostName       String?
   title          String
   description    String?  @db.Text
   date           DateTime

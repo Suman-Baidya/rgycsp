@@ -12,6 +12,7 @@ export default {
     ] : []),
   ],
   trustHost: true,
+  basePath: '/api/auth',
   pages: {
     signIn: '/login',
   },

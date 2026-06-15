@@ -40,5 +40,5 @@ export const db =
 
 if (process.env.NODE_ENV !== "production") globalThis.prisma = db;
 
-// Trigger Next.js recompile to load the updated Prisma Client (Discount fields added)
-// Last Updated: 2026-06-12T11:50:00Z
+// Trigger Next.js recompile to load the updated Prisma Client (hostName field added)
+// Last Updated: 2026-06-14T03:07:00Z
