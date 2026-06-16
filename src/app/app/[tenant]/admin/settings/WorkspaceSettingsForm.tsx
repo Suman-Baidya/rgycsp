@@ -50,26 +50,36 @@ export function WorkspaceSettingsForm({ settings }: { settings: any }) {
   const DEFAULT_NAV = [
     { name: "Home", href: "/", id: "home", isActive: true },
     { name: "About", href: "/about", id: "about", isActive: true },
+    { name: "Admission", href: "/admission", id: "admission", isActive: false },
+    { name: "Learners", href: "/learners", id: "learners", isActive: false },
     { name: "Courses", href: "/courses", id: "courses", isActive: true },
-    { name: "Learners", href: "/learners", id: "learners", isActive: true },
-    { name: "Enquery", href: "/enquiry", id: "enquiry", isActive: true },
-    { name: "Gallery", href: "/gallery", id: "gallery", isActive: true },
-    { name: "Events", href: "/events", id: "events", isActive: true },
     { name: "Guidance", href: "/guidance", id: "guidance", isActive: true },
     { name: "Notice", href: "/notice", id: "notice", isActive: true },
+    { name: "Events", href: "/events", id: "events", isActive: true },
+    { name: "Gallery", href: "/gallery", id: "gallery", isActive: true },
+    { name: "Enquiry", href: "/enquiry", id: "enquiry", isActive: false },
     { name: "Contact", href: "/contact", id: "contact", isActive: true },
   ];
 
   const [navigation, setNavigation] = useState(() => {
     if (!settings.navigation || settings.navigation.length === 0) return DEFAULT_NAV;
-    // Merge: ensure all defaults exist
     const current = [...settings.navigation];
-    DEFAULT_NAV.forEach(def => {
-      const exists = current.some(item => item.id === def.id);
-      if (!exists) current.push(def);
+    
+    // Build strict serial ordered array
+    const merged = DEFAULT_NAV.map(def => {
+      // Find matching item by ID or href (to handle legacy 'learners-public' vs 'learners')
+      const existing = current.find(item => item.id === def.id || item.href === def.href);
+      return existing ? { ...def, ...existing, id: def.id } : def;
     });
-    // Remove franchise if present
-    return current.filter(item => item.id !== 'franchise' && item.name?.toLowerCase() !== 'franchise');
+
+    // Append any custom links the user created
+    const customLinks = current.filter(item => 
+      !DEFAULT_NAV.some(def => def.id === item.id || def.href === item.href) &&
+      item.id !== 'franchise' && item.name?.toLowerCase() !== 'franchise' &&
+      item.name?.toLowerCase() !== 'learner' // Filter out duplicated learner links
+    );
+
+    return [...merged, ...customLinks];
   });
 
   const [isSaving, setIsSaving] = useState(false);
@@ -93,20 +103,23 @@ export function WorkspaceSettingsForm({ settings }: { settings: any }) {
     setSocialLinks(settings.socialLinks || {});
     setPageHeaderBanner(settings.pageHeaderBanner);
     
-    // Update navigation with defaults if needed
-    const nav = settings.navigation && settings.navigation.length > 0 
+    // Update navigation with strict serial logic
+    const current = settings.navigation && settings.navigation.length > 0 
       ? [...settings.navigation] 
       : [...DEFAULT_NAV];
     
-    const filteredNav = nav.filter(item => item.id !== 'franchise' && item.name?.toLowerCase() !== 'franchise');
-    
-    // Ensure all required are there
-    DEFAULT_NAV.forEach(def => {
-      if (!filteredNav.some(item => item.id === def.id)) {
-        filteredNav.push(def);
-      }
+    const merged = DEFAULT_NAV.map(def => {
+      const existing = current.find(item => item.id === def.id || item.href === def.href);
+      return existing ? { ...def, ...existing, id: def.id } : def;
     });
-    setNavigation(filteredNav);
+
+    const customLinks = current.filter(item => 
+      !DEFAULT_NAV.some(def => def.id === item.id || def.href === item.href) &&
+      item.id !== 'franchise' && item.name?.toLowerCase() !== 'franchise' &&
+      item.name?.toLowerCase() !== 'learner' // Filter out duplicated learner links
+    );
+
+    setNavigation([...merged, ...customLinks]);
 
     // --- Load Fonts for Preview ---
     const fontsToLoad = [

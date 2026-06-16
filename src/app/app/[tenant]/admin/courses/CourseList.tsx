@@ -1,15 +1,16 @@
 "use client";
 
 import React, { useState, useMemo, useEffect } from "react";
-import { 
-  Plus, Search, MoreVertical, BookOpen, Layers, 
-  Tag, Trash2, Edit3, ChevronDown, ChevronRight,
-  Filter, ArrowUpDown, CheckSquare, Square,
-  CheckCircle2, XCircle, MoreHorizontal, GraduationCap
+import {
+  Search, BookOpen, Layers, Users, Eye,
+  ChevronRight, Filter, ArrowUpDown,
+  CheckCircle2, XCircle, MoreHorizontal, GraduationCap, Edit3, Power, Loader2, IndianRupee
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import {
   Dialog,
   DialogContent,
@@ -25,15 +26,13 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { 
-  deleteCourse, 
-  deleteMultipleCourses, 
+  toggleCourseActivation,
+  updateFranchiseCoursePricing,
   createBatch 
 } from "@/app/actions/courses";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-import { CourseForm } from "./CourseForm";
 import { cn } from "@/lib/utils";
-import { motion, AnimatePresence } from "framer-motion";
 
 export default function CourseList({ 
   workspaceId, 
@@ -45,18 +44,30 @@ export default function CourseList({
   tenant: string;
 }) {
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' } | null>(null);
   const [expandedIds, setExpandedIds] = useState<string[]>([]);
   
-  const [courseFormOpen, setCourseFormOpen] = useState(false);
-  const [editingCourse, setEditingCourse] = useState<any>(null);
+  const [pricingOpen, setPricingOpen] = useState(false);
+  const [selectedCourse, setSelectedCourse] = useState<any>(null);
+  const [pricingForm, setPricingForm] = useState({ feeAmount: 0, priceDisplay: "", discountText: "", showFee: true });
+  const [isUpdating, setIsUpdating] = useState(false);
+  
   const [batchOpen, setBatchOpen] = useState(false);
-  const [selectedCourseId, setSelectedCourseId] = useState("");
-  const [isDeleting, setIsDeleting] = useState(false);
-
+  
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+  
+  const [adminDetailsOpen, setAdminDetailsOpen] = useState(false);
+  const [adminDetailsCourse, setAdminDetailsCourse] = useState<any>(null);
+  
+  const [selectedCategory, setSelectedCategory] = useState<string>("All");
+
+  const categories = useMemo(() => {
+    const cats = new Set(initialCourses.map(c => c.groupId).filter(Boolean));
+    return ["All", ...Array.from(cats)];
+  }, [initialCourses]);
 
   useEffect(() => {
     setMounted(true);
@@ -64,11 +75,18 @@ export default function CourseList({
 
   // Filter & Sort Logic
   const processedCourses = useMemo(() => {
-    let result = initialCourses.filter(c => 
-      (c.title?.toLowerCase().includes(searchTerm.toLowerCase()) || false) ||
-      (c.code?.toLowerCase().includes(searchTerm.toLowerCase()) || false) ||
-      (c.category?.toLowerCase().includes(searchTerm.toLowerCase()) || false)
-    );
+    let result = [...initialCourses];
+    
+    if (selectedCategory !== "All") {
+      result = result.filter(c => c.groupId === selectedCategory);
+    }
+    
+    if (searchTerm) {
+      result = result.filter(c => 
+        (c.name?.toLowerCase().includes(searchTerm.toLowerCase()) || false) ||
+        (c.short?.toLowerCase().includes(searchTerm.toLowerCase()) || false)
+      );
+    }
 
     if (sortConfig) {
       result.sort((a, b) => {
@@ -81,7 +99,12 @@ export default function CourseList({
     }
 
     return result;
-  }, [initialCourses, searchTerm, sortConfig]);
+  }, [initialCourses, searchTerm, sortConfig, selectedCategory]);
+
+  const totalPages = Math.max(1, Math.ceil(processedCourses.length / itemsPerPage));
+  const paginatedCourses = useMemo(() => {
+    return processedCourses.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+  }, [processedCourses, currentPage, itemsPerPage]);
 
   if (!mounted) return null;
 
@@ -94,50 +117,53 @@ export default function CourseList({
     });
   };
 
-  const toggleSelectAll = () => {
-    if (selectedIds.length === processedCourses.length) {
-      setSelectedIds([]);
+  const openAdminDetails = (course: any) => {
+    setAdminDetailsCourse(course);
+    setAdminDetailsOpen(true);
+  };
+
+  const handleToggleActivation = async (globalCourseId: string, currentlyActive: boolean) => {
+    const toastId = toast.loading(currentlyActive ? "Disabling course..." : "Enabling course...");
+    const res = await toggleCourseActivation(workspaceId, globalCourseId, !currentlyActive);
+    if (res.success) {
+      toast.success(currentlyActive ? "Course hidden from landing page" : "Course enabled on landing page", { id: toastId });
+      router.refresh();
     } else {
-      setSelectedIds(processedCourses.map(c => c.id));
+      toast.error(res.error || "Failed to update status", { id: toastId });
     }
   };
 
-  const toggleSelect = (id: string) => {
-    setSelectedIds(prev => 
-      prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
-    );
+  const openPricingModal = (course: any, localOverride: any) => {
+    setSelectedCourse({ globalCourse: course, localOverride });
+    setPricingForm({
+      feeAmount: localOverride?.feeAmount ?? course.price ?? 0,
+      priceDisplay: localOverride?.priceDisplay ?? course.priceDisplay ?? "",
+      discountText: localOverride?.discountText ?? course.discountText ?? "",
+      showFee: localOverride?.showFee ?? course.showFee ?? true,
+    });
+    setPricingOpen(true);
   };
 
-  const toggleExpand = (id: string) => {
-    setExpandedIds(prev => 
-      prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
-    );
-  };
-
-  const handleDelete = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this course? All associated batches will be removed.")) return;
-    setIsDeleting(true);
-    const result = await deleteCourse(id);
-    setIsDeleting(false);
-    if (result.success) {
-      toast.success("Course deleted");
-      router.refresh();
-    } else {
-      toast.error(result.error);
+  const handleUpdatePricing = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedCourse?.localOverride?.id) {
+      toast.error("Please enable the course first before editing local pricing.");
+      return;
     }
-  };
 
-  const handleBulkDelete = async () => {
-    if (!confirm(`Are you sure you want to delete ${selectedIds.length} courses?`)) return;
-    setIsDeleting(true);
-    const result = await deleteMultipleCourses(selectedIds);
-    setIsDeleting(false);
-    if (result.success) {
-      toast.success(`${selectedIds.length} courses deleted`);
-      setSelectedIds([]);
+    setIsUpdating(true);
+    const res = await updateFranchiseCoursePricing(selectedCourse.localOverride.id, {
+      ...pricingForm,
+      feeAmount: Number(pricingForm.feeAmount)
+    });
+    setIsUpdating(false);
+
+    if (res.success) {
+      toast.success("Pricing updated for your franchise!");
+      setPricingOpen(false);
       router.refresh();
     } else {
-      toast.error(result.error);
+      toast.error(res.error || "Failed to update pricing");
     }
   };
 
@@ -145,37 +171,32 @@ export default function CourseList({
     <div className="space-y-6">
       {/* Action Bar */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 p-6 bg-white dark:bg-zinc-900 border border-border/40 rounded-[2.5rem] shadow-sm">
-        <div className="flex flex-1 items-center gap-4">
-          <div className="relative w-full max-w-md group">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
-            <Input 
-              placeholder="Search by title, code or category..." 
-              className="pl-12 h-14 bg-slate-50 dark:bg-zinc-800 border-none rounded-2xl font-bold focus:ring-2 focus:ring-primary/20"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
-          <Button variant="outline" className="h-14 w-14 rounded-2xl border-border/40 hover:bg-primary/5 hover:text-primary">
-            <Filter className="w-5 h-5" />
-          </Button>
-        </div>
-
-        <div className="flex items-center gap-3">
-          {selectedIds.length > 0 && (
-            <Button 
-              variant="destructive" 
-              onClick={handleBulkDelete}
-              disabled={isDeleting}
-              className="h-14 px-6 rounded-2xl font-black gap-2 animate-in fade-in slide-in-from-right-4 transition-all"
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 w-full">
+          <div className="flex items-center gap-4 w-full sm:w-auto">
+            <div className="relative w-full sm:w-64">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <input
+                type="text"
+                placeholder="Search courses..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 bg-white dark:bg-zinc-900 border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+              />
+            </div>
+            
+            <select
+              value={selectedCategory}
+              onChange={(e) => {
+                setSelectedCategory(e.target.value);
+                setCurrentPage(1);
+              }}
+              className="w-full sm:w-48 px-4 py-2 bg-white dark:bg-zinc-900 border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all appearance-none cursor-pointer capitalize"
             >
-              <Trash2 className="w-5 h-5" />
-              Delete ({selectedIds.length})
-            </Button>
-          )}
-          <Button onClick={() => { setEditingCourse(null); setCourseFormOpen(true); }} className="h-14 px-10 rounded-2xl font-black gap-3 bg-primary shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all">
-            <Plus className="w-5 h-5" />
-            Create Course
-          </Button>
+              {categories.map(cat => (
+                <option key={cat} value={cat}>{cat}</option>
+              ))}
+            </select>
+          </div>
         </div>
       </div>
 
@@ -185,29 +206,28 @@ export default function CourseList({
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="border-b border-border/40 bg-slate-50/50 dark:bg-zinc-950/20">
-                <th className="p-6 w-14">
-                  <Button variant="ghost" size="icon" onClick={toggleSelectAll} className="h-8 w-8 rounded-lg hover:bg-primary/10 hover:text-primary transition-colors">
-                    {selectedIds.length === processedCourses.length && processedCourses.length > 0 ? (
-                      <CheckSquare className="w-5 h-5" />
-                    ) : (
-                      <Square className="w-5 h-5" />
-                    )}
-                  </Button>
+                <th className="p-6 w-16">
+                  <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Sl No.</span>
                 </th>
                 <th className="p-6">
-                  <button onClick={() => toggleSort('title')} className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground hover:text-primary transition-colors">
-                    Course Details <ArrowUpDown className="w-3 h-3" />
+                  <button onClick={() => toggleSort('name')} className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground hover:text-primary transition-colors">
+                    Course Info <ArrowUpDown className="w-3 h-3" />
                   </button>
                 </th>
                 <th className="p-6 hidden md:table-cell">
-                   <button onClick={() => toggleSort('category')} className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground hover:text-primary transition-colors">
-                    Category <ArrowUpDown className="w-3 h-3" />
-                  </button>
+                   <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                    Duration
+                  </span>
                 </th>
                 <th className="p-6 hidden lg:table-cell">
-                   <button onClick={() => toggleSort('feeAmount')} className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground hover:text-primary transition-colors">
-                    Standard Fee <ArrowUpDown className="w-3 h-3" />
+                   <button onClick={() => toggleSort('price')} className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground hover:text-primary transition-colors">
+                    Pricing <ArrowUpDown className="w-3 h-3" />
                   </button>
+                </th>
+                <th className="p-6 text-center">
+                   <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                    Status
+                  </span>
                 </th>
                 <th className="p-6 text-right">
                   <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Actions</span>
@@ -215,152 +235,124 @@ export default function CourseList({
               </tr>
             </thead>
             <tbody className="divide-y divide-border/20">
-              {processedCourses.map((course) => (
-                <React.Fragment key={course.id}>
-                  <tr className={cn(
-                    "group transition-all hover:bg-slate-50/50 dark:hover:bg-zinc-950/20",
-                    selectedIds.includes(course.id) && "bg-primary/5"
-                  )}>
-                    <td className="p-6">
-                       <Button variant="ghost" size="icon" onClick={() => toggleSelect(course.id)} className={cn(
-                         "h-8 w-8 rounded-lg transition-colors",
-                         selectedIds.includes(course.id) ? "text-primary bg-primary/10" : "text-muted-foreground hover:bg-primary/5"
-                       )}>
-                        {selectedIds.includes(course.id) ? <CheckSquare className="w-5 h-5" /> : <Square className="w-5 h-5" />}
-                      </Button>
-                    </td>
-                    <td className="p-6">
-                      <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary shrink-0 overflow-hidden">
-                          {course.image ? (
-                            <img src={course.image} alt={course.title} className="w-full h-full object-cover" />
+              {paginatedCourses.map((globalCourse, index) => {
+                const localOverride = globalCourse.courses?.[0];
+                const isActive = localOverride?.isActive === true;
+                const activePrice = localOverride?.feeAmount ?? globalCourse.price;
+                const totalStudents = localOverride?._count?.admissionApps || 0;
+                
+                const serialNumber = (currentPage - 1) * itemsPerPage + index + 1;
+
+                return (
+                  <React.Fragment key={globalCourse.id}>
+                    <tr className="group transition-all hover:bg-slate-50/50 dark:hover:bg-zinc-950/20">
+                      <td className="p-6 text-slate-500 font-black">{serialNumber}</td>
+                      <td className="p-6">
+                        <div className="flex items-center gap-4">
+                          <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center text-primary shrink-0 overflow-hidden shadow-sm border border-border/50">
+                            {globalCourse.banner ? (
+                              <img src={globalCourse.banner} alt={globalCourse.name} className="w-full h-full object-cover" />
+                            ) : (
+                              <BookOpen className="w-8 h-8" />
+                            )}
+                          </div>
+                          <div className="flex flex-col gap-1">
+                             <h4 className="text-2xl font-black text-primary leading-tight uppercase tracking-tight">{globalCourse.short || "COURSE"}</h4>
+                             <span className="text-sm font-bold text-slate-600 dark:text-slate-300">{globalCourse.name}</span>
+                             <span className="text-xs text-muted-foreground font-medium mt-1">
+                               <Users className="w-3 h-3 inline mr-1" />
+                               {totalStudents} Enrolled
+                             </span>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="p-6 hidden md:table-cell">
+                        <span className="text-sm font-bold text-slate-700 dark:text-slate-300">{globalCourse.duration || "N/A"}</span>
+                      </td>
+                      <td className="p-6 hidden lg:table-cell">
+                        <div className="flex flex-col gap-1">
+                          <span className="text-lg font-black text-primary">₹{activePrice.toLocaleString()}</span>
+                          {localOverride ? (
+                            <span className="text-[10px] text-green-600 font-bold bg-green-50 dark:bg-green-500/10 px-2 py-0.5 rounded-full w-max">Custom Pricing</span>
                           ) : (
-                            <BookOpen className="w-6 h-6" />
+                            <span className="text-[10px] text-muted-foreground font-bold">Global Pricing</span>
                           )}
                         </div>
-                        <div>
-                          <div className="flex items-center gap-2">
-                             <h4 className="font-black text-slate-900 dark:text-white leading-tight">{course.title}</h4>
-                             {course.isActive === false && <Badge variant="secondary" className="text-[8px] h-4">Inactive</Badge>}
-                          </div>
-                          <div className="flex items-center gap-2 mt-1">
-                            <span className="text-[10px] font-mono font-bold text-muted-foreground uppercase tracking-tighter bg-muted px-1.5 py-0.5 rounded leading-none">
-                              {course.code}
-                            </span>
-                            <span className="text-[10px] text-muted-foreground font-medium">• {course.batches.length} Batches</span>
-                          </div>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="p-6 hidden md:table-cell">
-                      <div className="flex flex-col gap-1">
-                        <span className="text-sm font-bold">{course.category || "General"}</span>
-                        <span className="text-[10px] text-muted-foreground font-black uppercase tracking-widest">{course.level || "Beginner"}</span>
-                      </div>
-                    </td>
-                    <td className="p-6 hidden lg:table-cell">
-                      <div className="flex flex-col gap-1">
-                        <span className="text-lg font-black text-primary">₹{course.feeAmount.toLocaleString()}</span>
-                        <span className="text-[10px] text-muted-foreground font-bold">{course.duration || "N/A"} Duration</span>
-                      </div>
-                    </td>
-                    <td className="p-6 text-right">
-                       <div className="flex items-center justify-end gap-2">
-                          <Button variant="ghost" size="icon" onClick={() => toggleExpand(course.id)} className={cn(
-                            "h-10 w-10 rounded-xl transition-all",
-                            expandedIds.includes(course.id) ? "bg-primary/10 text-primary rotate-90" : "text-muted-foreground"
-                          )}>
-                             <ChevronRight className="w-5 h-5" />
-                          </Button>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger render={
-                              <Button variant="ghost" size="icon" className="h-10 w-10 rounded-xl">
-                                <MoreHorizontal className="w-5 h-5 text-muted-foreground" />
-                              </Button>
-                            } />
-                            <DropdownMenuContent align="end" className="w-48 rounded-2xl p-2 shadow-2xl">
-                              <DropdownMenuLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-3 py-2">Management</DropdownMenuLabel>
-                              <DropdownMenuItem onClick={() => { setEditingCourse(course); setCourseFormOpen(true); }} className="rounded-xl px-3 py-2 gap-3 cursor-pointer focus:bg-primary/5 focus:text-primary font-bold">
-                                <Edit3 className="w-4 h-4" /> Edit Details
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => { setSelectedCourseId(course.id); setBatchOpen(true); }} className="rounded-xl px-3 py-2 gap-3 cursor-pointer focus:bg-primary/5 focus:text-primary font-bold">
-                                <Plus className="w-4 h-4" /> Add Batch
-                              </DropdownMenuItem>
-                              <DropdownMenuSeparator className="my-2" />
-                              <DropdownMenuItem onClick={() => handleDelete(course.id)} className="rounded-xl px-3 py-2 gap-3 cursor-pointer focus:bg-red-50 focus:text-red-600 font-bold text-red-500">
-                                <Trash2 className="w-4 h-4" /> Delete Course
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                       </div>
-                    </td>
-                  </tr>
-
-                  {/* Expanded Syllabus View */}
-                  <AnimatePresence>
-                    {expandedIds.includes(course.id) && (
-                      <motion.tr 
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: "auto" }}
-                        exit={{ opacity: 0, height: 0 }}
-                        className="bg-slate-50/30 dark:bg-zinc-950/10"
-                      >
-                        <td colSpan={5} className="p-0 border-b border-border/20">
-                          <div className="p-10 pl-24 grid grid-cols-1 lg:grid-cols-2 gap-12">
-                             <div className="space-y-6">
-                                <div className="flex items-center gap-3 text-primary">
-                                   <GraduationCap className="w-5 h-5" />
-                                   <h5 className="text-xs font-black uppercase tracking-widest">Course Syllabus / Modules</h5>
-                                </div>
-                                <div className="space-y-4">
-                                  {(course.topics as any[] || []).map((topic, idx) => (
-                                    <div key={idx} className="p-6 bg-white dark:bg-zinc-900 rounded-3xl border border-border/40 shadow-sm space-y-4">
-                                       <h6 className="font-black text-slate-900 dark:text-white flex items-center gap-3">
-                                          <div className="w-6 h-6 rounded-lg bg-primary/10 text-primary flex items-center justify-center text-[10px]">{idx + 1}</div>
-                                          {topic.title}
-                                       </h6>
-                                       <div className="flex flex-wrap gap-2">
-                                          {(topic.items as string[]).map((item, iIdx) => (
-                                            <Badge key={iIdx} variant="secondary" className="bg-slate-100 dark:bg-zinc-800 text-muted-foreground font-medium rounded-lg text-[10px] px-2 py-1">
-                                               {item}
-                                            </Badge>
-                                          ))}
-                                       </div>
-                                    </div>
-                                  ))}
-                                  {(!course.topics || course.topics.length === 0) && (
-                                    <p className="text-xs italic text-muted-foreground pl-4">No syllabus modules defined yet.</p>
-                                  )}
-                                </div>
-                             </div>
-
-                             <div className="space-y-6">
-                                <div className="flex items-center gap-3 text-primary">
-                                   <Layers className="w-5 h-5" />
-                                   <h5 className="text-xs font-black uppercase tracking-widest">Active Batches</h5>
-                                </div>
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                  {course.batches.map((batch: any) => (
-                                    <div key={batch.id} className="p-4 rounded-2xl bg-white dark:bg-zinc-900 border border-border/40 flex items-center gap-3">
-                                       <div className="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.4)]" />
-                                       <span className="text-sm font-black text-slate-700 dark:text-slate-300">{batch.name}</span>
-                                    </div>
-                                  ))}
-                                  <Button onClick={() => { setSelectedCourseId(course.id); setBatchOpen(true); }} variant="outline" className="h-12 rounded-2xl border-dashed border-border/60 text-muted-foreground hover:bg-primary/5 hover:text-primary text-xs font-bold gap-2">
-                                    <Plus className="w-4 h-4" /> Add Batch
-                                  </Button>
-                                </div>
-                             </div>
-                          </div>
-                        </td>
-                      </motion.tr>
-                    )}
-                  </AnimatePresence>
-                </React.Fragment>
-              ))}
+                      </td>
+                      <td className="p-6 text-center">
+                        <button 
+                          onClick={() => handleToggleActivation(globalCourse.id, isActive)}
+                          className={cn(
+                            "inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-black uppercase tracking-wider transition-all shadow-sm active:scale-95",
+                            isActive ? "bg-green-500 text-white shadow-green-500/20" : "bg-slate-100 text-slate-500 dark:bg-zinc-800 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-zinc-700"
+                          )}
+                        >
+                          <Power className="w-3.5 h-3.5" />
+                          {isActive ? "Enabled" : "Disabled"}
+                        </button>
+                      </td>
+                      <td className="p-6 text-right">
+                         <div className="flex items-center justify-end gap-2">
+                            <Button variant="ghost" size="icon" onClick={() => openAdminDetails(globalCourse)} className="w-10 h-10 rounded-xl hover:bg-primary/10 hover:text-primary transition-all text-slate-500">
+                               <Eye className="w-5 h-5" />
+                            </Button>
+                            <Button variant="ghost" size="icon" onClick={() => openPricingModal(globalCourse, localOverride)} className="w-10 h-10 rounded-xl hover:bg-green-500/10 hover:text-green-600 transition-all text-slate-500">
+                               <Edit3 className="w-5 h-5" />
+                            </Button>
+                         </div>
+                      </td>
+                    </tr>
+                  </React.Fragment>
+                );
+              })}
             </tbody>
           </table>
         </div>
+        
+        {/* Pagination Controls */}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between px-6 py-4 border-t border-border/40 bg-slate-50/30 dark:bg-zinc-950/20">
+            <div className="text-sm text-muted-foreground font-medium">
+              Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, processedCourses.length)} of {processedCourses.length} courses
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                className="h-9 rounded-xl font-bold"
+              >
+                Previous
+              </Button>
+              <div className="flex items-center gap-1">
+                {Array.from({ length: totalPages }).map((_, i) => (
+                  <Button
+                    key={i}
+                    variant={currentPage === i + 1 ? "default" : "ghost"}
+                    size="icon"
+                    onClick={() => setCurrentPage(i + 1)}
+                    className={cn(
+                      "h-9 w-9 rounded-xl font-bold transition-all",
+                      currentPage === i + 1 ? "bg-primary text-white shadow-md shadow-primary/20" : ""
+                    )}
+                  >
+                    {i + 1}
+                  </Button>
+                ))}
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+                className="h-9 rounded-xl font-bold"
+              >
+                Next
+              </Button>
+            </div>
+          </div>
+        )}
       </div>
 
       {processedCourses.length === 0 && (
@@ -369,33 +361,123 @@ export default function CourseList({
             <BookOpen className="w-12 h-12" />
           </div>
           <div className="space-y-2">
-            <h3 className="text-2xl font-black text-slate-900 dark:text-white">No programs found</h3>
-            <p className="text-slate-600 dark:text-slate-400 font-medium max-w-xs mx-auto">Try matching with another keyword or create a new course to begin.</p>
+            <h3 className="text-2xl font-black text-slate-900 dark:text-white">No courses available</h3>
+            <p className="text-slate-600 dark:text-slate-400 font-medium max-w-xs mx-auto">The Super Admin hasn't created any global courses yet.</p>
           </div>
-          <Button onClick={() => { setEditingCourse(null); setCourseFormOpen(true); }} className="rounded-2xl h-12 px-8 font-black gap-2">
-            <Plus className="w-5 h-5" /> Start Designing
-          </Button>
         </div>
       )}
 
-      {/* Main Course Form Dialog */}
-      <Dialog open={courseFormOpen} onOpenChange={setCourseFormOpen}>
-        <DialogContent className="sm:max-w-[800px] rounded-[3rem] p-0 overflow-hidden border-none shadow-2xl">
-          <div className="p-10 bg-slate-950 text-white flex items-center justify-between">
-            <div className="space-y-1">
-              <DialogTitle className="text-3xl font-black">{editingCourse ? "Edit Course" : "New Program"}</DialogTitle>
-              <p className="text-zinc-400 text-sm font-medium">Define your curriculum and topic-wise details.</p>
+      {/* Pricing Override Modal */}
+      <Dialog open={pricingOpen} onOpenChange={setPricingOpen}>
+        <DialogContent className="sm:max-w-[500px] rounded-[2rem] p-8 border-none shadow-2xl">
+          <DialogHeader className="mb-6">
+            <DialogTitle className="text-2xl font-black text-slate-900 dark:text-white">Edit Local Pricing</DialogTitle>
+            <p className="text-sm text-muted-foreground">Override the pricing details for your franchise landing page.</p>
+          </DialogHeader>
+
+          <form onSubmit={handleUpdatePricing} className="space-y-6">
+            <div className="space-y-2">
+              <Label>Custom Price (₹)</Label>
+              <Input 
+                type="number" 
+                value={pricingForm.feeAmount}
+                onChange={e => setPricingForm({...pricingForm, feeAmount: Number(e.target.value)})}
+                className="h-12 rounded-xl"
+              />
             </div>
-            <div className="p-3 bg-white/10 rounded-2xl">
-              <BookOpen className="w-8 h-8 text-primary" />
+            
+            <div className="space-y-2">
+              <Label>Price Display Text (e.g. ₹5,000 / month)</Label>
+              <Input 
+                value={pricingForm.priceDisplay}
+                onChange={e => setPricingForm({...pricingForm, priceDisplay: e.target.value})}
+                className="h-12 rounded-xl"
+              />
             </div>
-          </div>
-          <div className="p-10 bg-white dark:bg-slate-950">
-            <CourseForm 
-              workspaceId={workspaceId} 
-              course={editingCourse} 
-              onSuccess={() => setCourseFormOpen(false)} 
-            />
+
+            <div className="space-y-2">
+              <Label>Discount Offer Text (e.g. 50% Off!)</Label>
+              <Input 
+                value={pricingForm.discountText}
+                onChange={e => setPricingForm({...pricingForm, discountText: e.target.value})}
+                className="h-12 rounded-xl"
+              />
+            </div>
+
+            <div className="flex items-center gap-3 p-4 bg-slate-50 dark:bg-zinc-900/50 rounded-xl border border-border">
+              <Switch 
+                checked={pricingForm.showFee}
+                onCheckedChange={v => setPricingForm({...pricingForm, showFee: v})}
+              />
+              <div>
+                <Label className="font-bold block">Show Course Fee</Label>
+                <span className="text-xs text-muted-foreground">Toggle public visibility of the price.</span>
+              </div>
+            </div>
+
+            <div className="flex gap-3 pt-4">
+              <Button type="button" variant="outline" onClick={() => setPricingOpen(false)} className="flex-1 h-12 rounded-xl">Cancel</Button>
+              <Button type="submit" disabled={isUpdating} className="flex-1 h-12 rounded-xl font-bold">
+                {isUpdating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Save Pricing
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Admin View Details Modal */}
+      <Dialog open={adminDetailsOpen} onOpenChange={setAdminDetailsOpen}>
+        <DialogContent className="max-w-2xl rounded-[2rem] p-8 border-none shadow-2xl">
+          <DialogHeader className="mb-6">
+            <DialogTitle className="text-2xl font-black text-slate-900 dark:text-white flex items-center gap-3">
+              <BookOpen className="w-6 h-6 text-primary" />
+              {adminDetailsCourse?.name} Details
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-6 max-h-[60vh] overflow-y-auto pr-2">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="p-5 bg-slate-50 dark:bg-zinc-900/50 rounded-2xl border border-border/40">
+                <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest mb-1">Duration</p>
+                <p className="font-bold text-slate-900 dark:text-white">{adminDetailsCourse?.duration || "N/A"}</p>
+              </div>
+              <div className="p-5 bg-slate-50 dark:bg-zinc-900/50 rounded-2xl border border-border/40">
+                <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest mb-1">Global Price</p>
+                <p className="font-bold text-slate-900 dark:text-white">₹{adminDetailsCourse?.price || 0}</p>
+              </div>
+            </div>
+            
+            <div>
+              <h4 className="font-black text-sm uppercase tracking-widest text-primary mb-4 flex items-center gap-2">
+                <Layers className="w-4 h-4" /> Syllabus Structure
+              </h4>
+              <div className="space-y-4">
+                {adminDetailsCourse?.syllabus && Object.keys(adminDetailsCourse.syllabus).length > 0 ? (
+                  Object.entries(adminDetailsCourse.syllabus as Record<string, any[]>).map(([term, units]) => (
+                    <div key={term} className="p-5 border border-border/60 rounded-2xl bg-white dark:bg-zinc-950 shadow-sm">
+                      <h5 className="font-black text-slate-900 dark:text-white mb-3 uppercase tracking-tight">{term}</h5>
+                      <div className="space-y-3">
+                        {units.map((u, idx) => (
+                          <div key={idx} className="flex flex-col gap-1 p-3 bg-slate-50 dark:bg-zinc-900/50 rounded-xl">
+                            <div className="flex gap-3 items-center">
+                              <Badge variant="secondary" className="text-[9px] shrink-0">U{u.unit}</Badge>
+                              <span className="font-bold text-slate-700 dark:text-slate-300 text-sm">{u.title}</span>
+                            </div>
+                            {u.detail && (
+                              <p className="text-xs text-muted-foreground pl-[3.25rem] leading-relaxed">{u.detail}</p>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="p-6 text-center border border-dashed rounded-2xl bg-slate-50 dark:bg-zinc-900/50">
+                    <p className="text-sm text-muted-foreground font-medium">No syllabus mapped globally.</p>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         </DialogContent>
       </Dialog>

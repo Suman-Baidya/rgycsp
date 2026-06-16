@@ -3,6 +3,94 @@
 import { db } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 
+export async function getGlobalCoursesForFranchise(workspaceId: string) {
+  try {
+    const globalCourses = await db.globalCourse.findMany({
+      where: { isActive: true },
+      include: {
+        courses: {
+          where: { workspaceId },
+          include: {
+            batches: {
+              select: { id: true, name: true }
+            },
+            _count: {
+              select: { admissionApps: true }
+            }
+          }
+        }
+      },
+      orderBy: { createdAt: "desc" }
+    });
+    return { success: true, data: globalCourses };
+  } catch (error: any) {
+    console.error("Failed to fetch global courses:", error);
+    return { success: false, error: error.message || "Failed to fetch global courses" };
+  }
+}
+
+export async function toggleCourseActivation(workspaceId: string, globalCourseId: string, isActive: boolean) {
+  try {
+    let course = await db.course.findFirst({
+      where: { workspaceId, globalCourseId }
+    });
+
+    if (course) {
+      course = await db.course.update({
+        where: { id: course.id },
+        data: { isActive }
+      });
+    } else {
+      const gc = await db.globalCourse.findUnique({ where: { id: globalCourseId } });
+      if (!gc) throw new Error("Global Course not found");
+
+      course = await db.course.create({
+        data: {
+          workspaceId,
+          globalCourseId,
+          title: gc.name,
+          code: gc.short || "",
+          description: gc.description || "",
+          image: gc.banner || "",
+          feeAmount: gc.price,
+          priceDisplay: gc.priceDisplay,
+          discountText: gc.discountText,
+          showFee: gc.showFee,
+          duration: gc.duration || "",
+          topics: gc.syllabus || [],
+          isActive: isActive
+        }
+      });
+    }
+
+    revalidatePath(`/app/[tenant]/admin/courses`, "page");
+    return { success: true, data: course };
+  } catch (error: any) {
+    console.error("Failed to toggle course activation:", error);
+    return { success: false, error: error.message || "Failed to toggle activation" };
+  }
+}
+
+export async function updateFranchiseCoursePricing(courseId: string, data: { feeAmount: number, priceDisplay: string, discountText: string, showFee: boolean }) {
+  try {
+    const course = await db.course.update({
+      where: { id: courseId },
+      data: {
+        feeAmount: data.feeAmount,
+        priceDisplay: data.priceDisplay,
+        discountText: data.discountText,
+        showFee: data.showFee
+      }
+    });
+
+    revalidatePath(`/app/[tenant]/admin/courses`, "page");
+    return { success: true, data: course };
+  } catch (error: any) {
+    console.error("Failed to update franchise course pricing:", error);
+    return { success: false, error: error.message || "Failed to update pricing" };
+  }
+}
+
 export async function getCourses(workspaceId: string) {
   try {
     const courses = await db.course.findMany({

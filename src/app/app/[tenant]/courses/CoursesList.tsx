@@ -12,6 +12,7 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import CourseDetailsModal from "@/app/courses/CourseDetailsModal";
 
 interface Course {
   title: string;
@@ -23,12 +24,17 @@ interface Course {
   rating?: string;
   description: string;
   lessons?: string;
+  discountText?: string | null;
+  showFee?: boolean;
 }
 
 export function CoursesList({ initialCourses }: { initialCourses: Course[] }) {
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  
+  const [detailsOpen, setDetailsOpen] = useState(false);
+  const [detailsCourse, setDetailsCourse] = useState<any>(null);
 
   const categories = ["All", ...Array.from(new Set(initialCourses.map(c => c.category).filter(Boolean)))];
 
@@ -131,10 +137,16 @@ export function CoursesList({ initialCourses }: { initialCourses: Course[] }) {
                         {course.category}
                       </span>
                     </div>
-                    <div className="absolute bottom-6 right-6">
-                      <div className="bg-primary text-primary-foreground px-5 py-2 rounded-2xl font-black text-lg shadow-2xl shadow-primary/40 flex items-center gap-2">
-                        <span className="text-[10px] opacity-70">Price:</span> {course.fee}
-                      </div>
+                    <div className="absolute bottom-6 right-6 flex flex-col gap-1 items-end">
+                      {course.showFee !== false ? (
+                        <div className="bg-primary text-primary-foreground px-5 py-2 rounded-2xl font-black text-lg shadow-2xl shadow-primary/40 flex items-center gap-2">
+                          <span>{course.fee}</span>
+                        </div>
+                      ) : course.discountText ? (
+                        <div className="bg-primary text-primary-foreground px-5 py-2 rounded-2xl font-black text-lg shadow-2xl shadow-primary/40 text-green-300">
+                          {course.discountText}
+                        </div>
+                      ) : null}
                     </div>
                   </div>
                   <CardContent className="p-6 space-y-4 flex-1 flex flex-col">
@@ -173,10 +185,32 @@ export function CoursesList({ initialCourses }: { initialCourses: Course[] }) {
                       </div>
                     </div>
                     
-                    <Button className="w-full rounded-xl h-12 font-black text-xs bg-primary/10 text-primary hover:bg-primary hover:text-white border-none shadow-none transition-all mt-6 group/btn">
-                      Enroll This Program
-                      <ArrowRight className="w-4 h-4 ml-2 group-hover/btn:translate-x-1 transition-transform" />
-                    </Button>
+                    <div className="flex gap-2 mt-6">
+                      <Button 
+                        variant="outline"
+                        onClick={() => {
+                          setDetailsCourse({
+                            name: course.title,
+                            banner: course.image,
+                            category: course.category,
+                            duration: course.duration,
+                            priceDisplay: course.fee,
+                            discountText: course.discountText,
+                            showFee: course.showFee,
+                            description: course.description,
+                            syllabus: (course as any).topics // Assuming topics maps back to syllabus
+                          });
+                          setDetailsOpen(true);
+                        }}
+                        className="flex-1 rounded-xl h-12 font-bold text-xs border-primary/20 hover:bg-primary/5 text-primary transition-all"
+                      >
+                        View Details
+                      </Button>
+                      <Button className="flex-1 rounded-xl h-12 font-black text-xs bg-primary/10 text-primary hover:bg-primary hover:text-white border-none shadow-none transition-all group/btn">
+                        Enroll
+                        <ArrowRight className="w-4 h-4 ml-2 group-hover/btn:translate-x-1 transition-transform" />
+                      </Button>
+                    </div>
                   </CardContent>
                 </Card>
               ) : (
@@ -200,7 +234,17 @@ export function CoursesList({ initialCourses }: { initialCourses: Course[] }) {
                           <Star className="h-3.5 w-3.5 fill-current" />
                           <span className="text-[10px] font-black">{course.rating || "4.9"}</span>
                         </div>
-                        <div className="text-xs font-black text-primary">{course.fee}</div>
+                        <div className="flex flex-col gap-1">
+                          {course.showFee !== false ? (
+                            <div className="text-xs font-black text-primary flex items-center gap-2">
+                              <span>{course.fee}</span>
+                            </div>
+                          ) : course.discountText ? (
+                            <div className="text-xs font-black text-green-600">
+                              {course.discountText}
+                            </div>
+                          ) : null}
+                        </div>
                       </div>
                       <h3 className="text-xl md:text-2xl font-black tracking-tight group-hover:text-primary transition-colors leading-tight">
                         {course.title}
@@ -224,7 +268,27 @@ export function CoursesList({ initialCourses }: { initialCourses: Course[] }) {
                       </div>
                     </div>
                     
-                    <div className="w-full md:w-auto">
+                    <div className="w-full md:w-auto flex flex-col gap-2">
+                      <Button 
+                        variant="outline"
+                        onClick={() => {
+                          setDetailsCourse({
+                            name: course.title,
+                            banner: course.image,
+                            category: course.category,
+                            duration: course.duration,
+                            priceDisplay: course.fee,
+                            discountText: course.discountText,
+                            showFee: course.showFee,
+                            description: course.description,
+                            syllabus: (course as any).topics
+                          });
+                          setDetailsOpen(true);
+                        }}
+                        className="w-full md:w-auto px-8 rounded-xl h-12 font-bold text-xs border-primary/20 hover:bg-primary/5 text-primary transition-all"
+                      >
+                        View Details
+                      </Button>
                       <Button className="w-full md:w-auto px-8 rounded-xl h-12 font-black text-xs bg-primary text-primary-foreground hover:scale-105 transition-all shadow-xl shadow-primary/20">
                         Enroll Now
                       </Button>
@@ -248,6 +312,12 @@ export function CoursesList({ initialCourses }: { initialCourses: Course[] }) {
           </div>
         </div>
       )}
+
+      <CourseDetailsModal 
+        isOpen={detailsOpen} 
+        onClose={() => setDetailsOpen(false)} 
+        course={detailsCourse} 
+      />
     </div>
   );
 }

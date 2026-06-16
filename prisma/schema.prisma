@@ -166,6 +166,13 @@ model Course {
   topics   Json? // [{ title: '...', items: ['...', '...'] }, ...]
   isActive Boolean @default(true)
 
+  globalCourseId String?
+  globalCourse   GlobalCourse? @relation(fields: [globalCourseId], references: [id], onDelete: SetNull)
+  
+  priceDisplay   String?
+  discountText   String?
+  showFee        Boolean @default(true)
+
   workspace     Workspace              @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   batches       Batch[]
   admissionApps AdmissionApplication[]
@@ -532,6 +539,8 @@ model GlobalCourse {
   banner      String?
   syllabus    Json?
   isActive    Boolean  @default(true)
+
+  courses     Course[]
 
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt

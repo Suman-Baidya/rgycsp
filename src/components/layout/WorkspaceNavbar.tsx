@@ -74,35 +74,34 @@ export function WorkspaceNavbar({ settings, user, tenant: propTenant }: { settin
   const defaultItems = [
     { name: "Home", href: "/", id: "home", isActive: true },
     { name: "About", href: "/about", id: "about", isActive: true },
-    { name: "Learner", href: "/learners", id: "learners-public", isActive: true },
+    { name: "Admission", href: "/admission", id: "admission", isActive: false },
+    { name: "Learners", href: "/learners", id: "learners", isActive: false },
     { name: "Courses", href: "/courses", id: "courses", isActive: true },
+    { name: "Guidance", href: "/guidance", id: "guidance", isActive: true },
+    { name: "Notice", href: "/notice", id: "notice", isActive: true },
+    { name: "Events", href: "/events", id: "events", isActive: true },
     { name: "Gallery", href: "/gallery", id: "gallery", isActive: true },
+    { name: "Enquiry", href: "/enquiry", id: "enquiry", isActive: false },
     { name: "Contact", href: "/contact", id: "contact", isActive: true },
   ];
 
-  let navItems = settings.navigation && settings.navigation.length > 0
-    ? [...settings.navigation]
-    : [...defaultItems];
+  // Map user's navigation onto the strict serial order
+  let navItems = defaultItems.map(def => {
+    const existing = settings.navigation?.find((item: any) => item.id === def.id || item.href === def.href);
+    return existing ? { ...def, ...existing, id: def.id } : def;
+  });
 
-  // Force include 'Learner' if missing (for existing workspaces)
-  const hasLearner = navItems.some((item: any) =>
-    item.href === '/learners' || item.name.toLowerCase() === 'learner' || item.id === 'learners-public'
-  );
-
-  if (!hasLearner && settings.navigation && settings.navigation.length > 0) {
-    // Add it after About if possible, else at the end
-    const aboutIndex = navItems.findIndex((item: any) => item.name.toLowerCase() === 'about');
-    if (aboutIndex !== -1) {
-      navItems.splice(aboutIndex + 1, 0, { name: "Learner", href: "/learners", id: "learners-public", isActive: true });
-    } else {
-      navItems.push({ name: "Learner", href: "/learners", id: "learners-public", isActive: true });
-    }
+  // Append any custom links they added, while skipping legacy duplicates
+  if (settings.navigation) {
+    const customLinks = settings.navigation.filter((item: any) => 
+      !defaultItems.some(def => def.id === item.id || def.href === item.href) &&
+      item.id !== 'franchise' && item.name?.toLowerCase() !== 'franchise' &&
+      item.name?.toLowerCase() !== 'students' &&
+      item.name?.toLowerCase() !== 'learner' &&
+      item.href !== '/students'
+    );
+    navItems = [...navItems, ...customLinks];
   }
-
-  // Explicitly remove any 'Students' menu item
-  navItems = navItems.filter((item: any) =>
-    item.name.toLowerCase() !== 'students' && item.href !== '/students'
-  );
 
   const visibleNavItems = navItems.filter((item: any) => item.isActive !== false);
 

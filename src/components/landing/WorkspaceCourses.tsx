@@ -4,11 +4,12 @@ import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Star, Clock, BookOpen, Users } from "lucide-react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
 import { getTenantLink, detectTenant } from "@/lib/routing";
 import { usePathname } from "next/navigation";
+import CourseDetailsModal from "@/app/courses/CourseDetailsModal";
 
 export function WorkspaceCourses({ data, dbCourses }: { data: any, dbCourses?: any[] }) {
   const pathname = usePathname();
@@ -17,11 +18,16 @@ export function WorkspaceCourses({ data, dbCourses }: { data: any, dbCourses?: a
   
   const hasDbCourses = dbCourses && dbCourses.length > 0;
   
+  const [detailsOpen, setDetailsOpen] = React.useState(false);
+  const [detailsCourse, setDetailsCourse] = React.useState<any>(null);
+  
   const courses = hasDbCourses
     ? dbCourses.map(c => ({
         ...c,
-        fee: `₹${c.feeAmount}`,
-        lessons: (c as any).topics ? ((c as any).topics as any[]).reduce((acc: number, t: any) => acc + (t.items?.length || 0), 0) : "12"
+        originalFee: c.priceDisplay || `₹${c.feeAmount}`,
+        discountText: c.discountText,
+        showFee: c.showFee !== false,
+        lessons: (c as any).topics ? Object.values((c as any).topics).reduce((acc: number, val: any) => acc + (val?.length || 0), 0) : "12"
       }))
     : [
     { 
@@ -105,10 +111,16 @@ export function WorkspaceCourses({ data, dbCourses }: { data: any, dbCourses?: a
                       {course.category}
                     </span>
                   </div>
-                  <div className="absolute bottom-4 right-4">
-                    <div className="bg-white/90 dark:bg-zinc-900/90 backdrop-blur-sm text-primary px-3 py-1 rounded-lg font-black text-sm shadow-xl">
-                      {course.fee}
-                    </div>
+                  <div className="absolute bottom-4 right-4 flex flex-col gap-1 items-end">
+                    {course.showFee ? (
+                      <div className="bg-white/95 dark:bg-zinc-900/95 backdrop-blur-sm px-3 py-1.5 rounded-xl font-black text-sm shadow-xl border border-white/20">
+                        <span className="text-primary">{course.originalFee || course.fee}</span>
+                      </div>
+                    ) : course.discountText ? (
+                      <div className="bg-white/95 dark:bg-zinc-900/95 backdrop-blur-sm text-green-600 dark:text-green-400 px-3 py-1.5 rounded-xl font-black text-sm shadow-xl border border-white/20">
+                        {course.discountText}
+                      </div>
+                    ) : null}
                   </div>
                 </div>
                 <CardContent className="p-6 space-y-4 flex-1 flex flex-col">
@@ -143,15 +155,43 @@ export function WorkspaceCourses({ data, dbCourses }: { data: any, dbCourses?: a
                     </div>
                   </div>
                   
-                  <Button className="w-full rounded-2xl h-11 font-bold group-hover:bg-primary group-hover:text-primary-foreground transition-all mt-4 border-none shadow-sm">
-                    Enroll Now
-                  </Button>
+                  <div className="flex gap-2 mt-4">
+                    <Button 
+                      variant="outline"
+                      onClick={() => {
+                        setDetailsCourse({
+                          name: course.title,
+                          banner: course.image,
+                          category: course.category,
+                          duration: course.duration,
+                          priceDisplay: course.originalFee || course.fee,
+                          discountText: course.discountText,
+                          showFee: course.showFee,
+                          description: course.description,
+                          syllabus: course.topics || course.syllabus
+                        });
+                        setDetailsOpen(true);
+                      }}
+                      className="w-full rounded-2xl h-11 font-bold transition-all border-border shadow-sm text-xs px-2"
+                    >
+                      View Details
+                    </Button>
+                    <Button className="w-full rounded-2xl h-11 font-bold group-hover:bg-primary group-hover:text-primary-foreground transition-all border-none shadow-sm text-xs px-2">
+                      Enroll Now
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
             </motion.div>
           ))}
         </div>
       </div>
+
+      <CourseDetailsModal 
+        isOpen={detailsOpen} 
+        onClose={() => setDetailsOpen(false)} 
+        course={detailsCourse} 
+      />
     </section>
   );
 }

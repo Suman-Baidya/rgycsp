@@ -32,24 +32,32 @@ export default async function WorkspaceCoursesPage({
   // Find the courses section in landing sections
   const coursesSection = workspace.siteSettings.sections.find(s => s.type === "courses");
 
-  // Fetch all courses from the LMS Course model
-  const allDbCourses = await db.course.findMany({
-    where: { workspaceId: workspace.id },
+  // Fetch all local courses from the LMS Course model and include the GlobalCourse
+  const allDbCourses = await (db.course as any).findMany({
+    where: { workspaceId: workspace.id, isActive: true },
+    include: { globalCourse: true },
     orderBy: { createdAt: 'desc' }
   });
 
-  const dbCourses = allDbCourses.filter(c => (c as any).isActive !== false);
+  const dbCourses = allDbCourses;
 
   // Map db courses to the format expected by CoursesList
-  const initialCourses = dbCourses.map((c: any) => ({
-    ...c,
-    category: c.category || "General",
-    duration: c.duration || "Self-paced",
-    image: c.image || null,
-    fee: `₹${c.feeAmount}`,
-    description: c.description || "",
-    lessons: (c as any).topics ? ((c as any).topics as any[]).reduce((acc: number, t: any) => acc + (t.items?.length || 0), 0).toString() : "12"
-  }));
+  const initialCourses = dbCourses.map((c: any) => {
+    const gc = c.globalCourse || {};
+    return {
+      ...c,
+      title: gc.name || c.title,
+      category: gc.category || c.category || "General",
+      duration: gc.duration || c.duration || "Self-paced",
+      image: gc.banner || c.image || null,
+      fee: c.priceDisplay || gc.priceDisplay || `₹${c.feeAmount || gc.price || 0}`,
+      description: gc.description || c.description || "",
+      discountText: c.discountText || gc.discountText || null,
+      showFee: c.showFee,
+      topics: gc.syllabus || c.topics || [],
+      lessons: gc.syllabus ? Object.values(gc.syllabus).reduce((acc: number, val: any) => acc + (val?.length || 0), 0).toString() : "12"
+    };
+  });
 
   return (
     <div className="flex flex-col min-h-screen font-sans bg-background selection:bg-primary/30">

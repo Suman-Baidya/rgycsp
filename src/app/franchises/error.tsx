@@ -35,11 +35,11 @@ export default function FranchisesError({
         <Button onClick={() => reset()} variant="default">
           Try again
         </Button>
-        <Button asChild variant="outline">
-          <Link href="/">
+        <Link href="/">
+          <Button variant="outline">
             Return to Main Page
-          </Link>
-        </Button>
+          </Button>
+        </Link>
       </div>
     </div>
   );

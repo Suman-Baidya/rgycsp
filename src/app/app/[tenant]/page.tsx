@@ -127,13 +127,28 @@ export default async function InstituteLandingPage({
 
   const session = await auth();
   
-  // Fetch courses and events from the LMS model
-  // We filter isActive in JS to avoid Prisma synchronization issues with the new schema fields
-  const allCourses = await db.course.findMany({
-    where: { workspaceId: workspace.id },
+  // Fetch courses and events from the LMS model (Types updated)
+  const allCourses = await (db.course as any).findMany({
+    where: { workspaceId: workspace.id, isActive: true },
+    include: { globalCourse: true },
     orderBy: { createdAt: 'desc' }
   });
-  const top3Courses = (allCourses as any[]).filter(c => c.isActive !== false).slice(0, 3);
+  const top3Courses = allCourses.map((c: any) => {
+    const gc = (c.globalCourse as any) || {};
+    return {
+      ...c,
+      title: gc.name || c.title,
+      category: gc.category || c.category || "General",
+      duration: gc.duration || c.duration || "Self-paced",
+      image: gc.banner || c.image || null,
+      description: gc.description || c.description || "",
+      topics: gc.syllabus || c.topics || [],
+      priceDisplay: c.priceDisplay || gc.priceDisplay || null,
+      feeAmount: c.feeAmount || gc.price || 0,
+      discountText: c.discountText || gc.discountText || null,
+      showFee: c.showFee
+    };
+  }).slice(0, 3);
 
   const allEvents = await db.event.findMany({
     where: { workspaceId: workspace.id },
