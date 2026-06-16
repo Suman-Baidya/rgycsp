@@ -62,18 +62,19 @@ export function WorkspaceSettingsForm({ settings }: { settings: any }) {
   ];
 
   const [navigation, setNavigation] = useState(() => {
-    if (!settings.navigation || settings.navigation.length === 0) return DEFAULT_NAV;
+    if (!settings.navigation || !Array.isArray(settings.navigation) || settings.navigation.length === 0) return DEFAULT_NAV;
     const current = [...settings.navigation];
     
     // Build strict serial ordered array
     const merged = DEFAULT_NAV.map(def => {
       // Find matching item by ID or href (to handle legacy 'learners-public' vs 'learners')
-      const existing = current.find(item => item.id === def.id || item.href === def.href);
+      const existing = current.find(item => item && (item.id === def.id || item.href === def.href));
       return existing ? { ...def, ...existing, id: def.id } : def;
     });
 
     // Append any custom links the user created
     const customLinks = current.filter(item => 
+      item &&
       !DEFAULT_NAV.some(def => def.id === item.id || def.href === item.href) &&
       item.id !== 'franchise' && item.name?.toLowerCase() !== 'franchise' &&
       item.name?.toLowerCase() !== 'learner' // Filter out duplicated learner links
@@ -104,16 +105,17 @@ export function WorkspaceSettingsForm({ settings }: { settings: any }) {
     setPageHeaderBanner(settings.pageHeaderBanner);
     
     // Update navigation with strict serial logic
-    const current = settings.navigation && settings.navigation.length > 0 
+    const current = settings.navigation && Array.isArray(settings.navigation) && settings.navigation.length > 0 
       ? [...settings.navigation] 
       : [...DEFAULT_NAV];
     
     const merged = DEFAULT_NAV.map(def => {
-      const existing = current.find(item => item.id === def.id || item.href === def.href);
+      const existing = current.find(item => item && (item.id === def.id || item.href === def.href));
       return existing ? { ...def, ...existing, id: def.id } : def;
     });
 
     const customLinks = current.filter(item => 
+      item &&
       !DEFAULT_NAV.some(def => def.id === item.id || def.href === item.href) &&
       item.id !== 'franchise' && item.name?.toLowerCase() !== 'franchise' &&
       item.name?.toLowerCase() !== 'learner' // Filter out duplicated learner links

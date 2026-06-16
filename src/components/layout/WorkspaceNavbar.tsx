@@ -87,13 +87,14 @@ export function WorkspaceNavbar({ settings, user, tenant: propTenant }: { settin
 
   // Map user's navigation onto the strict serial order
   let navItems = defaultItems.map(def => {
-    const existing = settings.navigation?.find((item: any) => item.id === def.id || item.href === def.href);
+    const existing = settings.navigation?.find((item: any) => item && (item.id === def.id || item.href === def.href));
     return existing ? { ...def, ...existing, id: def.id } : def;
   });
 
   // Append any custom links they added, while skipping legacy duplicates
-  if (settings.navigation) {
+  if (settings.navigation && Array.isArray(settings.navigation)) {
     const customLinks = settings.navigation.filter((item: any) => 
+      item &&
       !defaultItems.some(def => def.id === item.id || def.href === item.href) &&
       item.id !== 'franchise' && item.name?.toLowerCase() !== 'franchise' &&
       item.name?.toLowerCase() !== 'students' &&
