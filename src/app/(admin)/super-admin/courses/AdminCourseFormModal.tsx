@@ -13,6 +13,46 @@ import { createGlobalCourse, updateGlobalCourse } from "@/app/actions/globalCour
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 
+const romanNumerals = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X"];
+
+const generateSyllabusScaffold = (duration: string) => {
+  let semestersCount = 0;
+  if (duration === "6 Month") semestersCount = 1;
+  else if (duration === "12 Month") semestersCount = 2;
+  else if (duration === "18 Month") semestersCount = 3;
+  else if (duration === "24 Month") semestersCount = 4;
+  else if (duration === "36 Month") semestersCount = 6;
+  
+  const newSyllabus: Record<string, any[]> = {};
+  
+  if (duration === "3 Month") {
+    newSyllabus["Modules"] = [
+      { unit: "1", title: "", detail: "" },
+      { unit: "2", title: "", detail: "" },
+      { unit: "3", title: "", detail: "" }
+    ];
+  } else if (semestersCount > 0) {
+    for (let i = 0; i < semestersCount; i++) {
+      const termName = `Semester ${i + 1}`;
+      const numeral = romanNumerals[i] || `${i + 1}`;
+      newSyllabus[termName] = [
+        { unit: "1", title: "", detail: "" },
+        { unit: "2", title: "", detail: "" },
+        { unit: "3", title: "", detail: "" },
+        { unit: "4", title: "", detail: "" },
+        { unit: "5", title: `Lab - ${numeral}`, detail: "Practical lab sessions and assignments." },
+        { unit: "6", title: `Project Work - ${numeral}`, detail: "End of semester project work and viva." }
+      ];
+    }
+  } else {
+    newSyllabus["Term 1"] = [
+      { unit: "1", title: "", detail: "" }
+    ];
+  }
+  
+  return newSyllabus;
+};
+
 export default function AdminCourseFormModal({ 
   isOpen, 
   onClose, 
@@ -40,7 +80,11 @@ export default function AdminCourseFormModal({
     banner: "",
     isActive: true,
     popular: false,
+    syllabus: null as any,
   });
+  const [syllabusMode, setSyllabusMode] = useState<"visual" | "json">("visual");
+  const [syllabusData, setSyllabusData] = useState<Record<string, any[]>>({});
+  const [syllabusStr, setSyllabusStr] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
@@ -61,7 +105,11 @@ export default function AdminCourseFormModal({
         banner: course.banner || "",
         isActive: course.isActive ?? true,
         popular: course.popular ?? false,
+        syllabus: course.syllabus || null,
       });
+      const initialSyllabus = course.syllabus || {};
+      setSyllabusData(initialSyllabus);
+      setSyllabusStr(Object.keys(initialSyllabus).length > 0 ? JSON.stringify(initialSyllabus, null, 2) : "");
     } else {
       setFormData({
         name: "",
@@ -77,16 +125,52 @@ export default function AdminCourseFormModal({
         banner: "",
         isActive: true,
         popular: false,
+        syllabus: null,
       });
+      setSyllabusData({});
+      setSyllabusStr("");
     }
+    setSyllabusMode("visual");
   }, [course, isOpen]);
+
+  const handleGenerateTemplate = () => {
+    if (!formData.duration) {
+      toast.error("Please select a duration first");
+      return;
+    }
+    const scaffold = generateSyllabusScaffold(formData.duration);
+    setSyllabusData(scaffold);
+    setSyllabusStr(JSON.stringify(scaffold, null, 2));
+    toast.success("Syllabus template generated!");
+  };
+
+  const updateUnit = (term: string, unitIndex: number, field: string, value: string) => {
+    const newData = { ...syllabusData };
+    newData[term][unitIndex][field] = value;
+    setSyllabusData(newData);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     
     try {
-      const dataToSave = { ...formData, price: Number(formData.price) };
+      let parsedSyllabus = null;
+      if (syllabusMode === "visual") {
+        parsedSyllabus = Object.keys(syllabusData).length > 0 ? syllabusData : null;
+      } else {
+        if (syllabusStr.trim()) {
+          try {
+            parsedSyllabus = JSON.parse(syllabusStr);
+          } catch (e) {
+            toast.error("Invalid Syllabus JSON format. Please correct it.");
+            setIsLoading(false);
+            return;
+          }
+        }
+      }
+
+      const dataToSave = { ...formData, price: Number(formData.price), syllabus: parsedSyllabus };
       
       let res;
       if (course) {
@@ -166,12 +250,19 @@ export default function AdminCourseFormModal({
 
               <div className="space-y-2">
                 <Label>Duration</Label>
-                <Input 
-                  placeholder="e.g. 6 Months"
-                  value={formData.duration}
-                  onChange={e => setFormData({...formData, duration: e.target.value})}
-                  className="rounded-xl border-2 h-11"
-                />
+                <select 
+                  value={formData.duration} 
+                  onChange={(e) => setFormData({...formData, duration: e.target.value})}
+                  className="w-full h-11 bg-white dark:bg-zinc-950 border-2 border-border rounded-xl px-3 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                >
+                  <option value="" disabled>Select Duration</option>
+                  <option value="3 Month">3 Month</option>
+                  <option value="6 Month">6 Month</option>
+                  <option value="12 Month">12 Month</option>
+                  <option value="18 Month">18 Month</option>
+                  <option value="24 Month">24 Month</option>
+                  <option value="36 Month">36 Month</option>
+                </select>
               </div>
             </div>
           </div>
@@ -275,6 +366,102 @@ export default function AdminCourseFormModal({
                     onChange={e => setFormData({...formData, banner: e.target.value})}
                     className="rounded-xl border-2 h-11"
                   />
+                )}
+              </div>
+
+              <div className="space-y-2 bg-slate-50 p-4 rounded-2xl border border-slate-100 dark:bg-zinc-900/50 dark:border-zinc-800">
+                <div className="flex justify-between items-center mb-4">
+                  <Label className="text-base font-bold">Course Syllabus</Label>
+                  
+                  <div className="flex bg-slate-200 dark:bg-zinc-800 p-1 rounded-lg">
+                    <button 
+                      type="button" 
+                      onClick={() => {
+                        try {
+                          const parsed = syllabusStr.trim() ? JSON.parse(syllabusStr) : {};
+                          setSyllabusData(parsed);
+                          setSyllabusMode("visual");
+                        } catch(e) {
+                          toast.error("Invalid JSON. Fix errors before switching.");
+                        }
+                      }} 
+                      className={`px-3 py-1.5 text-xs font-bold rounded-md transition-colors ${syllabusMode === "visual" ? "bg-white dark:bg-zinc-950 shadow-sm text-primary" : "text-slate-500"}`}
+                    >
+                      Visual Builder
+                    </button>
+                    <button 
+                      type="button" 
+                      onClick={() => {
+                        setSyllabusStr(JSON.stringify(syllabusData, null, 2));
+                        setSyllabusMode("json");
+                      }} 
+                      className={`px-3 py-1.5 text-xs font-bold rounded-md transition-colors ${syllabusMode === "json" ? "bg-white dark:bg-zinc-950 shadow-sm text-primary" : "text-slate-500"}`}
+                    >
+                      JSON Editor
+                    </button>
+                  </div>
+                </div>
+
+                {syllabusMode === "visual" ? (
+                  <div className="space-y-6">
+                    <div className="flex justify-between items-center border-b border-slate-200 dark:border-zinc-800 pb-3">
+                      <p className="text-sm text-slate-500">Easily manage semesters and units.</p>
+                      <Button 
+                        type="button" 
+                        variant="default" 
+                        size="sm" 
+                        onClick={handleGenerateTemplate}
+                        className="h-8 text-xs font-bold bg-primary/10 text-primary hover:bg-primary/20 hover:text-primary shadow-none border-0"
+                      >
+                        Auto-Generate from Duration
+                      </Button>
+                    </div>
+                    
+                    {Object.keys(syllabusData).length === 0 ? (
+                      <div className="text-center p-8 border-2 border-dashed border-slate-200 dark:border-zinc-800 rounded-xl text-slate-400">
+                        No syllabus defined yet. Click "Auto-Generate from Duration" or switch to JSON editor.
+                      </div>
+                    ) : (
+                      Object.entries(syllabusData).map(([term, units]) => (
+                        <div key={term} className="p-4 border border-slate-200 dark:border-zinc-800 rounded-xl bg-white dark:bg-zinc-950 space-y-4 shadow-sm">
+                          <div className="font-black text-lg text-slate-900 dark:text-white uppercase">{term}</div>
+                          <div className="space-y-4 pl-2 sm:pl-4 border-l-2 border-slate-100 dark:border-zinc-800">
+                            {units.map((u: any, idx: number) => (
+                              <div key={idx} className="flex flex-col gap-3 p-3 bg-slate-50 dark:bg-zinc-900/50 rounded-lg border border-slate-100 dark:border-zinc-800">
+                                <div className="flex items-center gap-3">
+                                  <div className="bg-primary text-white px-2 py-1 rounded text-[10px] font-black uppercase tracking-wider whitespace-nowrap shadow-sm">
+                                    UNIT {u.unit}
+                                  </div>
+                                  <Input 
+                                    value={u.title} 
+                                    onChange={e => updateUnit(term, idx, "title", e.target.value)}
+                                    placeholder="Unit Title (e.g. Computer Fundamentals)"
+                                    className="h-9 border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-950 font-bold"
+                                  />
+                                </div>
+                                <Textarea 
+                                  value={u.detail}
+                                  onChange={e => updateUnit(term, idx, "detail", e.target.value)}
+                                  placeholder="Unit details and topics (e.g. Hardware, Software, OS...)"
+                                  className="h-16 border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-950 text-sm resize-none"
+                                />
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                ) : (
+                  <div>
+                    <p className="text-xs text-slate-500 mb-2">Structure: <code>{`{"Term Name": [{"unit": "1", "title": "...", "detail": "..."}]}`}</code></p>
+                    <Textarea 
+                      placeholder='{"Semester 1": [{"unit": "1", "title": "Intro", "detail": "..."}]}'
+                      value={syllabusStr}
+                      onChange={e => setSyllabusStr(e.target.value)}
+                      className="rounded-xl border-2 min-h-[300px] font-mono text-sm bg-white dark:bg-zinc-950"
+                    />
+                  </div>
                 )}
               </div>
             </div>
