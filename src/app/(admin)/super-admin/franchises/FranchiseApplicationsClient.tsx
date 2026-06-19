@@ -89,6 +89,22 @@ export default function FranchiseApplicationsClient({
     }
   }, []);
 
+  const getExternalTenantUrl = (subdomain: string, path: string) => {
+    if (typeof window === 'undefined') return path;
+    const protocol = window.location.protocol;
+    const host = window.location.host;
+    const cleanHost = host.split(':')[0];
+    const cleanRoot = rootDomain.split(':')[0];
+    
+    // If we are on the root domain or localhost (Subdirectory mode)
+    if (cleanHost === cleanRoot || cleanHost === 'localhost' || cleanHost === '127.0.0.1') {
+      return `${protocol}//${host}/app/${subdomain}${path}`;
+    }
+    
+    // Otherwise, we are in Subdomain mode
+    return `${protocol}//${subdomain}.${rootDomain}${path}`;
+  };
+
   // Workspace / Active Centers State
   const [searchWorkspace, setSearchWorkspace] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
@@ -1198,8 +1214,7 @@ export default function FranchiseApplicationsClient({
                               size="icon" 
                               className="h-10 w-10 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800"
                               onClick={() => {
-                                const protocol = window.location.protocol;
-                                const url = `${protocol}//${ws.subdomain}.${rootDomain}`;
+                                const url = getExternalTenantUrl(ws.subdomain, "");
                                 window.open(url, "_blank");
                               }}
                             >
@@ -1219,8 +1234,7 @@ export default function FranchiseApplicationsClient({
                                 <DropdownMenuItem 
                                   className="gap-3 rounded-xl py-3 font-bold cursor-pointer"
                                   onClick={() => {
-                                    const protocol = window.location.protocol;
-                                    const url = `${protocol}//${ws.subdomain}.${rootDomain}/admin`;
+                                    const url = getExternalTenantUrl(ws.subdomain, "/admin");
                                     window.open(url, "_blank");
                                   }}
                                 >

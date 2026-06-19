@@ -1,7 +1,7 @@
 import { Resend } from 'resend';
 
-// Initialize Resend with the provided API key
-export const resend = new Resend(process.env.RESEND_API_KEY);
+// Initialize Resend with the provided API key (or a dummy key to prevent runtime errors on startup)
+export const resend = new Resend(process.env.RESEND_API_KEY || 're_dummy_key_to_bypass_init_error_123');
 
 const fromEmail = process.env.SMTP_FROM || 'onboarding@resend.dev'; // Use verified domain string in production
 
@@ -13,12 +13,16 @@ export async function sendSystemAlertEmail(subject: string, htmlContent: string)
     const developerEmail = process.env.DEVELOPER_EMAIL;
     if (!developerEmail) return { error: "Developer email not set." };
 
-    const data = await resend.emails.send({
+    const { data, error } = await resend.emails.send({
       from: fromEmail,
       to: developerEmail,
       subject: `[ABCD Edu Hub Alert] ${subject}`,
       html: htmlContent,
     });
+    if (error) {
+      console.error("Resend API Error:", error);
+      return { success: false, error: error.message };
+    }
     return { success: true, data };
   } catch (error) {
     console.error("Failed to send system alert email", error);
@@ -36,12 +40,16 @@ export async function sendStudentNotification(
   htmlContent: string
 ) {
   try {
-    const data = await resend.emails.send({
+    const { data, error } = await resend.emails.send({
       from: fromEmail, // Needs to be an authenticated domain associated with Resend
       to: studentEmail,
       subject: `[${workspaceName}] ${subject}`,
       html: htmlContent,
     });
+    if (error) {
+      console.error("Resend API Error:", error);
+      return { success: false, error: error.message };
+    }
     return { success: true, data };
   } catch (error) {
     console.error("Failed to send student email", error);
@@ -53,7 +61,7 @@ export async function sendStudentNotification(
  */
 export async function sendOTPEmail(email: string, otp: string) {
   try {
-    const data = await resend.emails.send({
+    const { data, error } = await resend.emails.send({
       from: fromEmail,
       to: email,
       subject: "Verification Code for Admission",
@@ -68,6 +76,10 @@ export async function sendOTPEmail(email: string, otp: string) {
         </div>
       `,
     });
+    if (error) {
+      console.error("Resend API Error:", error);
+      return { success: false, error: error.message };
+    }
     return { success: true, data };
   } catch (error) {
     console.error("Failed to send OTP email", error);

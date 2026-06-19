@@ -32,6 +32,7 @@ export default function StudentList({
   workspaceId: string; 
   initialStudents: any[];
   batches: any[];
+  status?: string;
 }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [open, setOpen] = useState(false);
@@ -60,6 +61,9 @@ export default function StudentList({
     address: "",
     parentName: "",
     parentPhone: "",
+    fatherName: "",
+    motherName: "",
+    guardianPhone: "",
     batchId: "",
   });
 
@@ -168,6 +172,9 @@ export default function StudentList({
       address: student.address || "",
       parentName: student.parentName || "",
       parentPhone: student.parentPhone || "",
+      fatherName: student.fatherName || "",
+      motherName: student.motherName || "",
+      guardianPhone: student.guardianPhone || "",
       batchId: student.batchId || "",
     });
     setEditOpen(true);
@@ -209,6 +216,9 @@ export default function StudentList({
     address: "",
     parentName: "",
     parentPhone: "",
+    fatherName: "",
+    motherName: "",
+    guardianPhone: "",
     batchId: "",
   });
 
@@ -220,10 +230,12 @@ export default function StudentList({
     }));
   }, []);
 
-  const filteredStudents = initialStudents.filter(s => 
-    s.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    s.enrollmentNo.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredStudents = initialStudents.filter(s => {
+    const matchesSearch = s.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          s.enrollmentNo.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = !status || s.status === status;
+    return matchesSearch && matchesStatus;
+  });
 
   const totalPages = Math.ceil(filteredStudents.length / itemsPerPage);
   const paginatedStudents = filteredStudents.slice(
@@ -255,6 +267,9 @@ export default function StudentList({
         address: "",
         parentName: "",
         parentPhone: "",
+        fatherName: "",
+        motherName: "",
+        guardianPhone: "",
         batchId: "",
       });
     } else {
@@ -276,192 +291,6 @@ export default function StudentList({
               setCurrentPage(1);
             }}
           />
-        </div>
-        
-        <div className="flex items-center gap-3">
-          <Dialog open={importOpen} onOpenChange={setImportOpen}>
-            <DialogTrigger render={
-              <Button variant="outline" className="gap-2 rounded-xl font-bold h-11 px-5 border-2 border-slate-100 hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800 transition-all shadow-sm">
-                <Database className="h-4 w-4 text-primary" />
-                Import CSV
-              </Button>
-            } />
-            <DialogContent className="max-w-md rounded-3xl p-6 bg-white dark:bg-slate-900 border-none">
-              <DialogHeader>
-                <DialogTitle className="font-bold text-lg">Bulk Student Import</DialogTitle>
-                <p className="text-xs text-muted-foreground mt-1">Upload a CSV file containing student records. System generates user logins automatically.</p>
-              </DialogHeader>
-              <form onSubmit={handleImportCSVSubmit} className="space-y-6 pt-4">
-                <div className="space-y-2">
-                  <Label className="font-bold text-xs text-slate-500">Select CSV File</Label>
-                  <Input 
-                    type="file" 
-                    required
-                    accept=".csv"
-                    onChange={handleCSVUpload}
-                    className="rounded-xl cursor-pointer"
-                  />
-                </div>
-
-                <div className="p-4 bg-muted/20 border rounded-2xl space-y-2 text-xs">
-                  <p className="font-bold flex items-center gap-1.5"><Download className="w-3.5 h-3.5 text-primary" /> Download Template:</p>
-                  <p className="text-muted-foreground">Use our pre-configured header formatting to ensure successful processing.</p>
-                  <a 
-                    href="data:text/csv;charset=utf-8,fullName,enrollmentNo,dob,gender,phone,email,whatsapp,address,religion,caste,bloodGroup,parentName,parentPhone%0AJohn Doe,,15/08/2005,Male,9876543210,john@example.com,9876543210,%22123 Main St, Kolkata%22,Hindu,General,O+,Robert Doe,9876543211%0AJane Smith,,22/10/2004,Female,9876543220,jane@example.com,9876543220,%22456 Park Rd, Kolkata%22,Christian,OBC,A+,Sarah Smith,9876543221"
-                    download="student_import_template.csv"
-                    className="text-primary font-bold hover:underline inline-block mt-1"
-                  >
-                    student_import_template.csv
-                  </a>
-                </div>
-
-                <DialogFooter className="flex gap-2">
-                  <Button 
-                    type="button"
-                    variant="outline" 
-                    onClick={() => setImportOpen(false)}
-                    className="rounded-xl font-bold"
-                  >
-                    Cancel
-                  </Button>
-                  <Button 
-                    type="submit"
-                    disabled={importing}
-                    className="rounded-xl font-bold shadow-lg shadow-primary/20"
-                  >
-                    {importing ? (
-                      <>
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" /> Importing...
-                      </>
-                    ) : "Start Import"}
-                  </Button>
-                </DialogFooter>
-              </form>
-            </DialogContent>
-          </Dialog>
-
-          <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger render={
-              <Button className="gap-2 rounded-xl font-bold h-11 px-6 shadow-sm hover:shadow-md transition-all">
-                <UserPlus className="h-4 w-4" />
-                Enroll New Student
-              </Button>
-            } />
-          <DialogContent className="max-w-4xl rounded-[2rem] border-none shadow-2xl p-0 overflow-hidden">
-            <DialogHeader className="bg-slate-900 dark:bg-black p-8 text-white">
-              <DialogTitle className="font-bold text-2xl">Enroll New Student</DialogTitle>
-              <p className="text-slate-400 text-sm mt-1">Fill in all details to create a new student record.</p>
-            </DialogHeader>
-            <form onSubmit={handleSubmit} className="p-8 space-y-8 max-h-[80vh] overflow-y-auto custom-scrollbar bg-white dark:bg-slate-900">
-              {/* Section 1: Personal Information */}
-              <div className="space-y-4">
-                <div className="flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-2">
-                  <div className="h-1.5 w-1.5 rounded-full bg-primary" />
-                  <h3 className="text-[10px] font-bold text-slate-900 dark:text-slate-200 tracking-widest">1. Personal Information</h3>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label className="font-bold text-xs text-slate-500">Full Name</Label>
-                    <Input required value={formData.fullName} onChange={e => setFormData({...formData, fullName: e.target.value})} placeholder="Student Name" className="rounded-xl h-11" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="font-bold text-xs text-slate-500">Enrollment No</Label>
-                    <Input required value={formData.enrollmentNo} onChange={e => setFormData({...formData, enrollmentNo: e.target.value})} placeholder="STU-XXXX" className="rounded-xl h-11" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="font-bold text-xs text-slate-500">Date of Birth</Label>
-                    <Input type="date" value={formData.dob} onChange={e => setFormData({...formData, dob: e.target.value})} className="rounded-xl h-11" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="font-bold text-xs text-slate-500">Gender</Label>
-                    <Select value={(formData.gender as string) || ""} onValueChange={(val: any) => setFormData({...formData, gender: val})}>
-                      <SelectTrigger className="rounded-xl h-11">
-                        <SelectValue placeholder="Select Gender" />
-                      </SelectTrigger>
-                      <SelectContent className="rounded-xl">
-                        <SelectItem value="MALE">Male</SelectItem>
-                        <SelectItem value="FEMALE">Female</SelectItem>
-                        <SelectItem value="OTHER">Other</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="font-bold text-xs text-slate-500">Blood Group</Label>
-                    <Input value={formData.bloodGroup} onChange={e => setFormData({...formData, bloodGroup: e.target.value})} placeholder="e.g. O+" className="rounded-xl h-11" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="font-bold text-xs text-slate-500">Religion</Label>
-                    <Input value={formData.religion} onChange={e => setFormData({...formData, religion: e.target.value})} placeholder="e.g. Hindu" className="rounded-xl h-11" />
-                  </div>
-                </div>
-              </div>
-
-              {/* Section 2: Contact & Address */}
-              <div className="space-y-4">
-                <div className="flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-2">
-                  <div className="h-1.5 w-1.5 rounded-full bg-primary" />
-                  <h3 className="text-[10px] font-bold text-slate-900 dark:text-slate-200 tracking-widest">2. Contact & Address</h3>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label className="font-bold text-xs text-slate-500">Phone Number</Label>
-                    <Input value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} placeholder="+91 XXXXX XXXXX" className="rounded-xl h-11" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="font-bold text-xs text-slate-500">Whatsapp Number</Label>
-                    <Input value={formData.whatsapp} onChange={e => setFormData({...formData, whatsapp: e.target.value})} placeholder="+91 XXXXX XXXXX" className="rounded-xl h-11" />
-                  </div>
-                  <div className="space-y-2 md:col-span-2">
-                    <Label className="font-bold text-xs text-slate-500">Email Address</Label>
-                    <Input type="email" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} placeholder="student@example.com" className="rounded-xl h-11" />
-                  </div>
-                  <div className="space-y-2 md:col-span-2">
-                    <Label className="font-bold text-xs text-slate-500">Full Address</Label>
-                    <Input value={formData.address} onChange={e => setFormData({...formData, address: e.target.value})} placeholder="Village, P.O, P.S, Dist, Pin" className="rounded-xl h-11" />
-                  </div>
-                </div>
-              </div>
-
-              {/* Section 3: Guardian & Academic */}
-              <div className="space-y-4">
-                <div className="flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-2">
-                  <div className="h-1.5 w-1.5 rounded-full bg-primary" />
-                  <h3 className="text-[10px] font-bold text-slate-900 dark:text-slate-200 tracking-widest">3. Guardian & Academic</h3>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label className="font-bold text-xs text-slate-500">Parent/Guardian Name</Label>
-                    <Input value={formData.parentName} onChange={e => setFormData({...formData, parentName: e.target.value})} placeholder="Father/Mother Name" className="rounded-xl h-11" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="font-bold text-xs text-slate-500">Parent Phone</Label>
-                    <Input value={formData.parentPhone} onChange={e => setFormData({...formData, parentPhone: e.target.value})} placeholder="+91 XXXXX XXXXX" className="rounded-xl h-11" />
-                  </div>
-                  <div className="space-y-2 md:col-span-2">
-                    <Label className="font-bold text-xs text-slate-500">Assign Batch</Label>
-                    <Select value={(formData.batchId as string) || ""} onValueChange={(val: any) => setFormData({...formData, batchId: val})}>
-                      <SelectTrigger className="rounded-xl h-11">
-                        <SelectValue placeholder="Select a batch" />
-                      </SelectTrigger>
-                      <SelectContent className="rounded-xl">
-                        {batches.map(batch => (
-                          <SelectItem key={batch.id} value={batch.id}>{batch.name}</SelectItem>
-                        ))}
-                        <SelectItem value="none">No Batch</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-              </div>
-
-              <div className="pt-6">
-                <Button type="submit" disabled={isSubmitting} className="w-full rounded-2xl font-bold py-7 text-lg shadow-xl shadow-primary/20 hover:shadow-primary/30 transition-all">
-                  {isSubmitting ? "Processing..." : "Complete Enrollment"}
-                </Button>
-              </div>
-            </form>
-          </DialogContent>
-        </Dialog>
         </div>
       </div>
 
@@ -738,12 +567,20 @@ export default function StudentList({
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label className="font-bold text-xs text-slate-500">Parent/Guardian Name</Label>
-                  <Input value={editFormData.parentName} onChange={e => setEditFormData({...editFormData, parentName: e.target.value})} placeholder="Father/Mother Name" className="rounded-xl h-11" />
+                  <Label className="font-bold text-xs text-slate-500">Father's Name</Label>
+                  <Input value={editFormData.fatherName} onChange={e => setEditFormData({...editFormData, fatherName: e.target.value})} placeholder="Father's Name" className="rounded-xl h-11" />
                 </div>
                 <div className="space-y-2">
-                  <Label className="font-bold text-xs text-slate-500">Parent Phone</Label>
-                  <Input value={editFormData.parentPhone} onChange={e => setEditFormData({...editFormData, parentPhone: e.target.value})} placeholder="+91 XXXXX XXXXX" className="rounded-xl h-11" />
+                  <Label className="font-bold text-xs text-slate-500">Mother's Name</Label>
+                  <Input value={editFormData.motherName} onChange={e => setEditFormData({...editFormData, motherName: e.target.value})} placeholder="Mother's Name" className="rounded-xl h-11" />
+                </div>
+                <div className="space-y-2">
+                  <Label className="font-bold text-xs text-slate-500">Guardian Phone</Label>
+                  <Input value={editFormData.guardianPhone} onChange={e => setEditFormData({...editFormData, guardianPhone: e.target.value})} placeholder="+91 XXXXX XXXXX" className="rounded-xl h-11" />
+                </div>
+                <div className="space-y-2">
+                  <Label className="font-bold text-xs text-slate-500">Other Guardian Name</Label>
+                  <Input value={editFormData.parentName} onChange={e => setEditFormData({...editFormData, parentName: e.target.value})} placeholder="Other Guardian Name" className="rounded-xl h-11" />
                 </div>
                 <div className="space-y-2 md:col-span-2">
                   <Label className="font-bold text-xs text-slate-500">Assign Batch</Label>

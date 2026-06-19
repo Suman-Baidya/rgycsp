@@ -5,6 +5,7 @@ import { Dialog, DialogContent, DialogTitle, DialogClose } from "@/components/ui
 import Image from "next/image";
 import { Clock, IndianRupee, BookOpen, Layers, Target, GraduationCap, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import Link from "next/link";
 
 export default function CourseDetailsModal({ isOpen, onClose, course }: { isOpen: boolean, onClose: () => void, course: any }) {
   if (!course) return null;
@@ -169,9 +170,11 @@ export default function CourseDetailsModal({ isOpen, onClose, course }: { isOpen
               </>
             ) : null}
           </div>
-          <Button className="w-full sm:w-auto px-10 h-14 rounded-2xl bg-primary hover:bg-primary/90 text-white font-bold shadow-lg shadow-primary/20 text-lg transition-transform active:scale-95">
-            Enroll Now
-          </Button>
+          <Link href={`/nearest-center?courseId=${course.id}`} className="w-full sm:w-auto">
+            <Button className="w-full px-10 h-14 rounded-2xl bg-primary hover:bg-primary/90 text-white font-bold shadow-lg shadow-primary/20 text-lg transition-transform active:scale-95">
+              Enroll Now
+            </Button>
+          </Link>
         </div>
       </DialogContent>
     </Dialog>

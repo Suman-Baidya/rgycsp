@@ -91,15 +91,41 @@ export default function AdmissionConfigClient({ workspaceId, config }: { workspa
   };
 
   const optionalFields = [
-    { id: "guardianName", label: "Guardian Name" },
+    { id: "dob", label: "Date of Birth" },
+    { id: "gender", label: "Gender" },
+    { id: "bloodGroup", label: "Blood Group" },
     { id: "religion", label: "Religion" },
     { id: "caste", label: "Caste" },
     { id: "whatsapp", label: "WhatsApp Number" },
+    { id: "fatherName", label: "Father's Name" },
+    { id: "motherName", label: "Mother's Name" },
+    { id: "guardianPhone", label: "Guardian Phone Number" },
     { id: "qualification", label: "Last Qualification Details" },
   ];
 
   return (
-    <div className="space-y-8 max-w-5xl">
+    <div className="space-y-8 w-full">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 p-6 rounded-[2rem] shadow-sm">
+        <div>
+          <h2 className="text-xl font-bold text-slate-900 dark:text-white">Admission Configuration</h2>
+          <p className="text-sm font-medium text-slate-500 mt-1">Configure public admission portal settings, form fields, and required documents.</p>
+        </div>
+        <Button 
+          onClick={handleSave} 
+          disabled={isSaving} 
+          className="h-12 px-6 rounded-2xl font-bold gap-2 shadow-xl shadow-primary/20 shrink-0"
+        >
+          {isSaving ? (
+            <div className="w-5 h-5 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+          ) : (
+            <>
+              <Save className="w-4 h-4" />
+              Save Configuration
+            </>
+          )}
+        </Button>
+      </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         {/* Left Column: Settings */}
         <div className="lg:col-span-7 space-y-8">
@@ -117,6 +143,18 @@ export default function AdmissionConfigClient({ workspaceId, config }: { workspa
                 <Switch 
                   checked={isActive} 
                   onCheckedChange={setIsActive} 
+                  className="data-[state=checked]:bg-primary"
+                />
+              </div>
+
+              <div className="flex items-center justify-between p-6 rounded-3xl bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-800 group transition-all hover:shadow-md">
+                <div className="space-y-1">
+                  <Label className="text-base font-bold text-slate-900 dark:text-white">Email Verification (OTP)</Label>
+                  <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Require students to verify their email address before applying.</p>
+                </div>
+                <Switch 
+                  checked={enableEmailVerification} 
+                  onCheckedChange={setEnableEmailVerification} 
                   className="data-[state=checked]:bg-primary"
                 />
               </div>
@@ -155,84 +193,7 @@ export default function AdmissionConfigClient({ workspaceId, config }: { workspa
               </div>
             </CardContent>
           </Card>
-        </div>
-
-        {/* Right Column: Field Toggles & Checklist */}
-        <div className="lg:col-span-5 space-y-8">
-          <Card className="rounded-[2rem] border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden">
-            <CardHeader className="bg-slate-50/50 dark:bg-slate-900/50 border-b border-slate-100 dark:border-slate-800 px-8 py-6">
-              <CardTitle className="text-xl font-bold text-slate-900 dark:text-white">Document Checklist</CardTitle>
-              <CardDescription className="font-medium text-slate-400">List of documents required for submission.</CardDescription>
-            </CardHeader>
-            <CardContent className="p-8 space-y-6">
-              <div className="flex gap-2">
-                <Input 
-                  value={newDoc} 
-                  onChange={e => setNewDoc(e.target.value)} 
-                  placeholder="e.g. Aadhaar Card" 
-                  className="rounded-xl font-medium"
-                  onKeyDown={e => e.key === 'Enter' && addDoc()}
-                />
-                <Button onClick={addDoc} size="icon" className="rounded-xl shrink-0"><Plus className="w-4 h-4" /></Button>
-              </div>
-
-              <div className="space-y-2 max-h-[200px] overflow-y-auto pr-2">
-                {requiredDocs.map((doc, index) => (
-                  <div key={index} className="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 group animate-in fade-in slide-in-from-right-2">
-                    <span className="text-xs font-bold text-slate-600 dark:text-slate-300 flex items-center gap-2">
-                      <CheckCircle2 className="w-3 h-3 text-primary" /> {doc}
-                    </span>
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      onClick={() => removeDoc(index)} 
-                      className="h-6 w-6 text-slate-300 hover:text-red-500"
-                    >
-                      <Trash2 className="w-3 h-3" />
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="rounded-[2rem] border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden">
-            <CardHeader className="bg-slate-50/50 dark:bg-slate-900/50 border-b border-slate-100 dark:border-slate-800 px-8 py-6">
-              <CardTitle className="text-xl font-bold text-slate-900 dark:text-white">Field Visibility</CardTitle>
-            </CardHeader>
-            <CardContent className="p-8 space-y-4">
-              {optionalFields.map((field) => (
-                <div key={field.id} className="flex items-center justify-between p-4 rounded-2xl border border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-900/50 transition-colors">
-                  <Label htmlFor={`field-${field.id}`} className="text-sm font-bold text-slate-700 dark:text-slate-200 cursor-pointer">{field.label}</Label>
-                  <Switch 
-                    id={`field-${field.id}`}
-                    checked={!disabledFields.includes(field.id)} 
-                    onCheckedChange={() => toggleField(field.id)} 
-                    className="data-[state=checked]:bg-primary"
-                  />
-                </div>
-              ))}
-              
-              <Button 
-                onClick={handleSave} 
-                disabled={isSaving} 
-                className="w-full h-14 rounded-2xl font-bold text-base gap-3 shadow-xl shadow-primary/20 mt-6"
-              >
-                {isSaving ? (
-                  <div className="w-5 h-5 rounded-full border-2 border-white/30 border-t-white animate-spin" />
-                ) : (
-                  <>
-                    <Save className="w-5 h-5" />
-                    Save Configuration
-                  </>
-                )}
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-
-      <Card className="rounded-[2rem] border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden mt-8">
+        <Card className="rounded-[2rem] border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden mt-8">
         <CardHeader className="bg-slate-50/50 dark:bg-slate-900/50 border-b border-slate-100 dark:border-slate-800 px-8 py-6 flex flex-row items-center justify-between">
           <div>
             <CardTitle className="text-xl font-bold text-slate-900 dark:text-white">Custom Application Fields</CardTitle>
@@ -317,6 +278,84 @@ export default function AdmissionConfigClient({ workspaceId, config }: { workspa
           )}
         </CardContent>
       </Card>
+        </div>
+
+        {/* Right Column: Field Toggles & Checklist */}
+        <div className="lg:col-span-5 space-y-8">
+          <Card className="rounded-[2rem] border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden">
+            <CardHeader className="bg-slate-50/50 dark:bg-slate-900/50 border-b border-slate-100 dark:border-slate-800 px-8 py-6">
+              <CardTitle className="text-xl font-bold text-slate-900 dark:text-white">Document Checklist</CardTitle>
+              <CardDescription className="font-medium text-slate-400">List of documents required for submission.</CardDescription>
+            </CardHeader>
+            <CardContent className="p-8 space-y-6">
+              <div className="flex gap-2">
+                <Input 
+                  value={newDoc} 
+                  onChange={e => setNewDoc(e.target.value)} 
+                  placeholder="e.g. Aadhaar Card" 
+                  className="rounded-xl font-medium"
+                  onKeyDown={e => e.key === 'Enter' && addDoc()}
+                />
+                <Button onClick={addDoc} size="icon" className="rounded-xl shrink-0"><Plus className="w-4 h-4" /></Button>
+              </div>
+
+              <div className="space-y-2 max-h-[200px] overflow-y-auto pr-2">
+                {requiredDocs.map((doc, index) => (
+                  <div key={index} className="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 group animate-in fade-in slide-in-from-right-2">
+                    <span className="text-xs font-bold text-slate-600 dark:text-slate-300 flex items-center gap-2">
+                      <CheckCircle2 className="w-3 h-3 text-primary" /> {doc}
+                    </span>
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      onClick={() => removeDoc(index)} 
+                      className="h-6 w-6 text-slate-300 hover:text-red-500"
+                    >
+                      <Trash2 className="w-3 h-3" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="rounded-[2rem] border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden">
+            <CardHeader className="bg-slate-50/50 dark:bg-slate-900/50 border-b border-slate-100 dark:border-slate-800 px-8 py-6">
+              <CardTitle className="text-xl font-bold text-slate-900 dark:text-white">Field Visibility</CardTitle>
+            </CardHeader>
+            <CardContent className="p-8 space-y-4">
+              {optionalFields.map((field) => (
+                <div key={field.id} className="flex items-center justify-between p-4 rounded-2xl border border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-900/50 transition-colors">
+                  <Label htmlFor={`field-${field.id}`} className="text-sm font-bold text-slate-700 dark:text-slate-200 cursor-pointer">{field.label}</Label>
+                  <Switch 
+                    id={`field-${field.id}`}
+                    checked={!disabledFields.includes(field.id)} 
+                    onCheckedChange={() => toggleField(field.id)} 
+                    className="data-[state=checked]:bg-primary"
+                  />
+                </div>
+              ))}
+              
+              <Button 
+                onClick={handleSave} 
+                disabled={isSaving} 
+                className="w-full h-14 rounded-2xl font-bold text-base gap-3 shadow-xl shadow-primary/20 mt-6"
+              >
+                {isSaving ? (
+                  <div className="w-5 h-5 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+                ) : (
+                  <>
+                    <Save className="w-5 h-5" />
+                    Save Configuration
+                  </>
+                )}
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+
+      
     </div>
   );
 }

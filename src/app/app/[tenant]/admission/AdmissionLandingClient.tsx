@@ -8,8 +8,8 @@ import AdmissionFormClient from "./AdmissionFormClient";
 import { AdmissionStatusClient } from "./status/AdmissionStatusClient";
 import { motion, AnimatePresence } from "framer-motion";
 
-export default function AdmissionLandingClient({ workspaceId, workspaceName, config, courses, logoUrl }: any) {
-  const [view, setView] = useState<"choice" | "form" | "status">("choice");
+export default function AdmissionLandingClient({ workspaceId, workspaceName, config, courses, logoUrl, initialCourseId, fromGlobal }: any) {
+  const [view, setView] = useState<"choice" | "form" | "status">(initialCourseId ? "form" : "choice");
 
   if (view === "form") {
     return (
@@ -22,6 +22,8 @@ export default function AdmissionLandingClient({ workspaceId, workspaceName, con
           workspaceName={workspaceName} 
           config={config} 
           courses={courses} 
+          initialCourseId={initialCourseId}
+          fromGlobal={fromGlobal}
         />
       </div>
     );

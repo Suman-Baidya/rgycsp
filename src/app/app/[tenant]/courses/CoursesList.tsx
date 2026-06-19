@@ -15,6 +15,7 @@ import { cn } from "@/lib/utils";
 import CourseDetailsModal from "@/app/courses/CourseDetailsModal";
 
 interface Course {
+  id?: string;
   title: string;
   category?: string | null;
   fee: string;
@@ -206,10 +207,12 @@ export function CoursesList({ initialCourses }: { initialCourses: Course[] }) {
                       >
                         View Details
                       </Button>
-                      <Button className="flex-1 rounded-xl h-12 font-black text-xs bg-primary/10 text-primary hover:bg-primary hover:text-white border-none shadow-none transition-all group/btn">
-                        Enroll
-                        <ArrowRight className="w-4 h-4 ml-2 group-hover/btn:translate-x-1 transition-transform" />
-                      </Button>
+                      <Link href={`admission?courseId=${course.id}`} className="flex-1">
+                        <Button className="w-full rounded-xl h-12 font-black text-xs bg-primary/10 text-primary hover:bg-primary hover:text-white border-none shadow-none transition-all group/btn">
+                          Enroll
+                          <ArrowRight className="w-4 h-4 ml-2 group-hover/btn:translate-x-1 transition-transform" />
+                        </Button>
+                      </Link>
                     </div>
                   </CardContent>
                 </Card>
@@ -289,9 +292,11 @@ export function CoursesList({ initialCourses }: { initialCourses: Course[] }) {
                       >
                         View Details
                       </Button>
-                      <Button className="w-full md:w-auto px-8 rounded-xl h-12 font-black text-xs bg-primary text-primary-foreground hover:scale-105 transition-all shadow-xl shadow-primary/20">
-                        Enroll Now
-                      </Button>
+                      <Link href={`admission?courseId=${course.id}`} className="w-full md:w-auto">
+                        <Button className="w-full px-8 rounded-xl h-12 font-black text-xs bg-primary text-primary-foreground hover:scale-105 transition-all shadow-xl shadow-primary/20">
+                          Enroll Now
+                        </Button>
+                      </Link>
                     </div>
                   </CardContent>
                 </Card>

@@ -119,7 +119,7 @@ export function WorkspaceSidebar({
           {navItems.map((item) => {
             const isActive = isActivePath(pathname, item.href);
             return (
-              <Link key={item.name} href={item.href}>
+              <Link key={item.name} href={item.href} className="block w-full">
                 <div
                   className={cn(
                     "flex items-center gap-3 transition-all duration-300 group relative overflow-hidden",
@@ -281,7 +281,7 @@ export function WorkspaceSidebar({
                   const isActive = isActivePath(pathname, item.href);
                   
                   return (
-                    <Link key={item.name} href={item.href}>
+                    <Link key={item.name} href={item.href} className="block w-full">
                       <div className={cn(
                         "flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-300",
                         isActive ? "bg-primary text-primary-foreground shadow-md" : "hover:bg-white/5 text-zinc-300"

@@ -46,6 +46,7 @@ export default async function WorkspaceCoursesPage({
     const gc = c.globalCourse || {};
     return {
       ...c,
+      id: c.id,
       title: gc.name || c.title,
       category: gc.category || c.category || "General",
       duration: gc.duration || c.duration || "Self-paced",

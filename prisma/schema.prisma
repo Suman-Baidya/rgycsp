@@ -49,6 +49,10 @@ model Workspace {
   idProofUrl   String?
   isActive     Boolean @default(true)
 
+  pinCode   String?
+  state     String?
+  district  String?
+
   tokensBalance Int @default(0) // Custom Token Economy
 
   createdAt DateTime @default(now())
@@ -216,11 +220,15 @@ model StudentProfile {
   whatsapp      String?
   parentName    String?
   parentPhone   String?
+  fatherName    String?
+  motherName    String?
+  guardianPhone String?
   address       String?
   bloodGroup    String?
   religion      String?
   caste         String?
   qualification Json?   // { name, year, percentage, board }
+  status        StudentStatus @default(UNREGISTERED)
   admissionDate DateTime  @default(now())
   applicationId String?   @unique
 
@@ -412,8 +420,12 @@ model AdmissionApplication {
   // Step 1: Personal
   fullName     String
   guardianName String?
+  fatherName   String?
+  motherName   String?
+  guardianPhone String?
   dob          DateTime?
   gender       String?
+  bloodGroup   String?
   religion     String?
   caste        String?
 
@@ -436,6 +448,7 @@ model AdmissionApplication {
 
   // System Tracking
   status          ApplicationStatus @default(PENDING)
+  source          ApplicationSource @default(ONLINE)
   tempPassword    String? // For applicant portal login
   rejectionReason String?           @db.Text
 
@@ -451,6 +464,18 @@ enum ApplicationStatus {
   PENDING
   APPROVED
   REJECTED
+}
+
+enum ApplicationSource {
+  ONLINE
+  MANUAL
+  CSV
+}
+
+enum StudentStatus {
+  UNREGISTERED
+  REGISTERED
+  PASS_OUT
 }
 
 // ============================================

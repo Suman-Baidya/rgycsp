@@ -68,7 +68,7 @@ export async function verifyAdmissionOTP(email: string, otp: string): Promise<{ 
 }
 
 
-export async function submitAdmissionApplication(workspaceId: string, data: any): Promise<{ success: boolean, error?: string, data?: any }> {
+export async function submitAdmissionApplication(workspaceId: string, data: any, fromGlobal: boolean = false): Promise<{ success: boolean, error?: string, data?: any }> {
   try {
     // Generate meaningful application ID (e.g. SUMAN12345)
     const namePart = data.fullName.replace(/\s/g, '').substring(0, 5).toUpperCase().padEnd(5, 'X');
@@ -121,8 +121,12 @@ export async function submitAdmissionApplication(workspaceId: string, data: any)
         appliedCourse: data.appliedCourse,
         fullName: data.fullName,
         guardianName: data.guardianName,
+        fatherName: data.fatherName,
+        motherName: data.motherName,
+        guardianPhone: data.guardianPhone,
         dob: dobDate,
         gender: data.gender,
+        bloodGroup: data.bloodGroup,
         religion: data.religion,
         caste: data.caste,
         address: data.address,
@@ -158,6 +162,19 @@ export async function submitAdmissionApplication(workspaceId: string, data: any)
         link: `/admin/students/applications/${application.id}`,
       }
     });
+
+    if (fromGlobal) {
+      // Notify Super Admin
+      await db.notification.create({
+        data: {
+          workspaceId: null, // Super Admin
+          title: "Global Portal Admission",
+          message: `${data.fullName} enrolled in ${data.appliedCourse} via the Global Portal. Assigned to center ID: ${workspaceId}.`,
+          type: "APPLICATION",
+          link: `/super-admin/students`,
+        }
+      });
+    }
 
     revalidatePath(`/app/[tenant]/admin`, "layout");
     revalidatePath(`/app/[tenant]/admin/admissions`);
@@ -199,7 +216,7 @@ export async function checkApplicationStatus(workspaceId: string, applicationNo:
 }
 
 
-export async function updateApplicationStatus(id: string, status: string, rejectionReason?: string) {
+export async function updateApplicationStatus(id: string, status: string, rejectionReason?: string, batchId?: string) {
   try {
     const application = await db.admissionApplication.update({
       where: { id },
@@ -262,7 +279,8 @@ export async function updateApplicationStatus(id: string, status: string, reject
         where: { applicationId: application.id },
         update: {
           userId: user.id,
-          enrollmentNo: enrollmentNo!
+          enrollmentNo: enrollmentNo!,
+          batchId: batchId || null
         },
         create: {
           workspaceId: application.workspaceId,
@@ -271,10 +289,22 @@ export async function updateApplicationStatus(id: string, status: string, reject
           enrollmentNo: enrollmentNo!,
           dob: application.dob,
           gender: application.gender,
+          bloodGroup: application.bloodGroup,
+          fatherName: application.fatherName,
+          motherName: application.motherName,
+          guardianPhone: application.guardianPhone,
+          religion: application.religion,
+          caste: application.caste,
+          email: application.email,
+          whatsapp: application.whatsapp,
+          parentName: application.guardianName,
+          qualification: application.qualification ? (application.qualification as any) : null,
           phone: application.mobile!,
-          address: application.address ? JSON.stringify(application.address) : null,
+          address: application.address ? (JSON.stringify(application.address) as any) : null,
           admissionDate: new Date(),
           applicationId: application.id,
+          batchId: batchId || null,
+          status: "UNREGISTERED",
         }
       });
 
@@ -289,6 +319,10 @@ export async function updateApplicationStatus(id: string, status: string, reject
         }
       });
     }
+
+    revalidatePath(`/app/[tenant]/admin`, "layout");
+    revalidatePath(`/app/[tenant]/admin/admissions`);
+    revalidatePath(`/app/[tenant]/admin/students`);
 
     return { success: true };
   } catch (error: any) {

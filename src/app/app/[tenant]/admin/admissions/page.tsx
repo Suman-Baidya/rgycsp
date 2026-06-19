@@ -16,6 +16,13 @@ export default async function AdmissionsPage({
     include: {
       admissionApps: {
         orderBy: { createdAt: "desc" }
+      },
+      courses: {
+        where: { isActive: true },
+        select: { id: true, title: true, feeAmount: true }
+      },
+      batches: {
+        select: { id: true, name: true, courseId: true }
       }
     }
   });
@@ -36,6 +43,8 @@ export default async function AdmissionsPage({
       applications={workspace.admissionApps || []}
       config={configResult.data ?? {}}
       pendingCount={pendingCount}
+      courses={workspace.courses || []}
+      batches={workspace.batches || []}
     />
   );
 }

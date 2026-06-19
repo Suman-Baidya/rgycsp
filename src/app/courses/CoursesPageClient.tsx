@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { motion, AnimatePresence } from "framer-motion";
 import CourseDetailsModal from "./CourseDetailsModal";
+import Link from "next/link";
 
 export default function CoursesPageClient({ initialData, initialGroups = [] }: { initialData: any, initialGroups?: any[] }) {
   const [courses, setCourses] = useState(initialData.courses);
@@ -194,11 +195,13 @@ export default function CoursesPageClient({ initialData, initialGroups = [] }: {
                   >
                     Details
                   </Button>
-                  <Button 
-                    className="flex-1 rounded-xl h-11 font-bold bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/20"
-                  >
-                    Enroll
-                  </Button>
+                  <Link href={`/nearest-center?courseId=${course.id}`} className="flex-1">
+                    <Button 
+                      className="w-full rounded-xl h-11 font-bold bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/20"
+                    >
+                      Enroll
+                    </Button>
+                  </Link>
                 </div>
               </div>
             </motion.div>

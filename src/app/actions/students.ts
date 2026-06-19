@@ -29,7 +29,7 @@ export async function createStudent(workspaceId: string, data: any) {
     const { 
       fullName, enrollmentNo, phone, email, whatsapp, 
       dob, gender, religion, caste, bloodGroup, address,
-      parentName, parentPhone, batchId, qualification 
+      parentName, parentPhone, fatherName, motherName, guardianPhone, batchId, qualification 
     } = data;
 
     const student = await db.studentProfile.create({
@@ -48,6 +48,9 @@ export async function createStudent(workspaceId: string, data: any) {
         address,
         parentName,
         parentPhone,
+        fatherName,
+        motherName,
+        guardianPhone,
         batchId: batchId === "none" ? null : (batchId || null),
         qualification: qualification || null,
       }
@@ -66,7 +69,7 @@ export async function updateStudent(id: string, data: any) {
     const { 
       fullName, enrollmentNo, phone, email, whatsapp, 
       dob, gender, religion, caste, bloodGroup, address,
-      parentName, parentPhone, batchId, qualification 
+      parentName, parentPhone, fatherName, motherName, guardianPhone, batchId, qualification 
     } = data;
 
     const student = await db.studentProfile.update({
@@ -85,6 +88,9 @@ export async function updateStudent(id: string, data: any) {
         address,
         parentName,
         parentPhone,
+        fatherName,
+        motherName,
+        guardianPhone,
         batchId: batchId === "none" ? null : (batchId || null),
         qualification: qualification || null,
       }

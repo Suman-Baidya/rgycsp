@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { AdminPageHeader } from "@/components/layout/AdminPageHeader";
-import { Users, LayoutGrid, Receipt, Calendar, Plus } from "lucide-react";
+import { User, UserCheck, GraduationCap, LayoutGrid, Receipt, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import StudentList from "./StudentList";
@@ -19,7 +19,7 @@ export default function StudentsManagementClient({
   batches: any[];
   courses: any[];
 }) {
-  const [activeTab, setActiveTab] = useState("students");
+  const [activeTab, setActiveTab] = useState("registered");
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -27,7 +27,9 @@ export default function StudentsManagementClient({
   }, []);
 
   const tabs = [
-    { id: "students", label: "Active Students", icon: Users },
+    { id: "unregistered", label: "Current Unregistered", icon: User },
+    { id: "registered", label: "Active Registered", icon: UserCheck },
+    { id: "pass_out", label: "Pass Out Students", icon: GraduationCap },
     { id: "batches", label: "Batches & Schedules", icon: LayoutGrid },
     { id: "invoices", label: "Fee Management", icon: Receipt },
   ];
@@ -35,36 +37,37 @@ export default function StudentsManagementClient({
   if (!mounted) return null;
 
   return (
-    <div className="p-4 lg:p-10 max-w-7xl mx-auto space-y-10 w-full">
+    <div className="p-4 lg:p-10 max-w-7xl mx-auto space-y-8 w-full">
       <AdminPageHeader 
         title="Student Management" 
         description="Manage your enrolled students, organize them into batches, and track fee payments."
-      >
-        <div className="flex gap-2 p-1.5 bg-slate-100 dark:bg-slate-800/50 rounded-2xl border border-slate-200/50 dark:border-slate-700/50">
-          {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={cn(
-                "flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all duration-300",
-                activeTab === tab.id
-                  ? "bg-white dark:bg-slate-700 text-primary shadow-sm border border-slate-200/50 dark:border-slate-600/50"
-                  : "text-slate-500 hover:text-slate-900 dark:hover:text-white"
-              )}
-            >
-              <tab.icon className="w-4 h-4" />
-              {tab.label}
-            </button>
-          ))}
-        </div>
-      </AdminPageHeader>
+      />
+
+      <div className="flex flex-nowrap overflow-x-auto no-scrollbar gap-2 p-2 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm max-w-full">
+        {tabs.map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            className={cn(
+              "flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 whitespace-nowrap shrink-0",
+              activeTab === tab.id
+                ? "bg-slate-100 dark:bg-slate-800 text-primary shadow-inner"
+                : "text-slate-500 hover:text-slate-900 hover:bg-slate-50 dark:hover:text-white dark:hover:bg-slate-800/50"
+            )}
+          >
+            <tab.icon className="w-4 h-4" />
+            {tab.label}
+          </button>
+        ))}
+      </div>
       
       <div className="transition-all duration-300">
-        {activeTab === "students" && (
+        {(activeTab === "unregistered" || activeTab === "registered" || activeTab === "pass_out") && (
           <StudentList 
             workspaceId={workspaceId} 
             initialStudents={initialStudents} 
             batches={batches}
+            status={activeTab.toUpperCase()}
           />
         )}
         

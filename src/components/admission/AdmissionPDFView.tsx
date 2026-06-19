@@ -24,6 +24,7 @@ export function AdmissionPDFView({ application, workspace, settings, config }: A
   const declarationText = config?.declarationText || "I hereby declare that the particulars furnished above are true, complete and correct to the best of my knowledge and belief. I also understand that in the event of any information being found false or incorrect, my admission is liable to be cancelled without any notice. I agree to abide by the rules and regulations of the institute.";
 
   const checklist = Array.isArray(config?.requiredDocs) ? config.requiredDocs : ["Passport Size Photo", "Identity Proof (Aadhaar/Voter)", "Last Qualification Marksheet"];
+  const disabledFields = Array.isArray(config?.disabledFields) ? config.disabledFields : [];
 
   return (
     <div className="py-8 bg-slate-200 min-h-screen no-print flex flex-col items-center gap-8">
@@ -31,90 +32,116 @@ export function AdmissionPDFView({ application, workspace, settings, config }: A
       {/* PAGE 1: Premium Header & Core Details */}
       <div id="admission-form-content" className="bg-white text-slate-900 font-sans w-[210mm] min-h-[297mm] relative overflow-hidden box-border shadow-2xl">
 
+        {/* WATERMARK */}
+        {settings?.logoUrl && (
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0" style={{ opacity: 0.05 }}>
+            <img src={settings.logoUrl} alt="Watermark" className="w-[120mm] h-[120mm] object-contain grayscale" />
+          </div>
+        )}
+
         {/* PREMIUM STYLISH HEADER */}
-        <div className="relative h-56 flex items-center px-12 overflow-hidden" style={{ backgroundColor: primaryColor }}>
+        <div className="relative h-64 flex items-center px-12 overflow-hidden z-10" style={{ backgroundColor: primaryColor }}>
           <div className="absolute inset-0 opacity-10 pointer-events-none">
             <div className="absolute top-0 right-0 w-96 h-96 bg-white rounded-full -mr-48 -mt-48"></div>
             <div className="absolute bottom-0 left-0 w-64 h-64 border-8 border-white rounded-full -ml-32 -mb-32"></div>
           </div>
 
           <div className="relative z-10 flex justify-between items-center w-full text-white">
-            <div className="flex items-center gap-8">
+            <div className="flex items-center gap-6">
               {settings?.logoUrl && (
-                <div className="relative w-28 h-28 border-4 border-white/20 rounded-3xl overflow-hidden p-2 bg-white shadow-2xl">
+                <div className="relative w-28 h-28 border-4 border-white/20 rounded-3xl overflow-hidden p-2 bg-white shadow-2xl shrink-0">
                   <img src={settings.logoUrl} alt="Logo" className="w-full h-full object-contain" />
                 </div>
               )}
-              <div>
-                <h1 className="text-4xl font-bold tracking-tight uppercase leading-none mb-3">{settings?.siteName || workspace.name}</h1>
+              <div className="flex-1">
+                <h1 className="text-2xl font-bold tracking-tight uppercase leading-snug mb-1">{settings?.siteName || workspace.name}</h1>
+                <h2 className="text-[13px] font-bold tracking-wider text-white/90 mb-3">Rajeev Gandhi Youth Computer Shiksha Parishad</h2>
                 <div className="flex flex-col gap-2 opacity-90">
-                  <span className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest"><MapPin className="w-4 h-4 opacity-60" /> {settings?.address || "Institute Campus Address"}</span>
+                  <span className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest"><MapPin className="w-3.5 h-3.5 opacity-60" /> {settings?.address || "Institute Campus Address"}</span>
                   <div className="flex gap-6 mt-1">
-                    <span className="flex items-center gap-2 text-[11px] font-bold"><Phone className="w-3.5 h-3.5 opacity-60" /> {settings?.contactPhone}</span>
-                    <span className="flex items-center gap-2 text-[11px] font-bold"><Mail className="w-3.5 h-3.5 opacity-60" /> {settings?.contactEmail}</span>
+                    <span className="flex items-center gap-2 text-[10px] font-bold"><Phone className="w-3 h-3 opacity-60" /> {settings?.contactPhone}</span>
+                    <span className="flex items-center gap-2 text-[10px] font-bold"><Mail className="w-3 h-3 opacity-60" /> {settings?.contactEmail}</span>
                   </div>
                 </div>
               </div>
             </div>
 
-            <div className="text-right">
+            <div className="text-right shrink-0">
               <div className="bg-white/10 backdrop-blur-md border border-white/20 p-5 rounded-3xl">
                 <span className="text-[10px] font-bold uppercase block opacity-60 mb-1 tracking-widest">Application No</span>
-                <span className="text-3xl font-bold tracking-tighter">{application.applicationNo}</span>
+                <span className="text-2xl font-bold tracking-tighter">{application.applicationNo}</span>
               </div>
             </div>
           </div>
         </div>
 
         {/* Admission Form Title Bar */}
-        <div className="relative h-12 flex items-center justify-center -mt-6 z-20">
-          <div className="bg-white px-10 py-3 rounded-2xl shadow-xl border border-slate-100">
-            <h2 className="text-2xl font-bold uppercase tracking-[0.02em] text-slate-900">Admission Form</h2>
+        <div className="relative h-10 flex items-center justify-center -mt-5 z-20">
+          <div className="bg-white px-8 py-2 rounded-2xl shadow-xl border border-slate-100">
+            <h2 className="text-xl font-bold uppercase tracking-[0.02em] text-slate-900">Admission Form</h2>
           </div>
         </div>
 
-        {/* Content Area with P-12 */}
-        <div className="p-12 pt-8">
-
-          {/* Student Photo Section */}
-          <div className="absolute top-64 right-12 w-36 h-44 border-4 border-white rounded-2xl overflow-hidden bg-slate-50 shadow-2xl z-30 flex flex-col items-center justify-center">
-            {application.photoUrl ? (
-              <img src={application.photoUrl} alt="Student" className="w-full h-full object-cover" />
-            ) : (
-              <div className="text-slate-200 text-center p-4">
-                <User className="w-12 h-12 mx-auto mb-2 opacity-10" />
-                <span className="text-[9px] font-bold uppercase opacity-30">Photo</span>
-              </div>
-            )}
-          </div>
+        {/* Content Area with P-10 */}
+        <div className="p-10 pt-6 relative z-10">
 
           {/* SECTION 1: Personal Details */}
-          <div className="mb-5 relative z-10">
+          <div className="mb-4 relative z-10">
             <SectionTitle title="Personal Information" icon={<User className="w-4 h-4" />} color={primaryColor} />
-            <div className="grid grid-cols-2 gap-x-12 gap-y-3 ml-14">
-              <InfoBox label="Full Name" value={capitalize(application.fullName)} />
-              <InfoBox label="Gender" value={application.gender} />
-              <InfoBox label="Guardian's Name" value={capitalize(application.guardianName)} />
-              <InfoBox label="Category (Caste)" value={application.caste} />
-              <InfoBox label="Date of Birth" value={application.dob ? new Date(application.dob).toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' }) : "-"} />
-              <InfoBox label="Religion" value={application.religion} />
+            <div className="flex justify-between items-start ml-14">
+              <div className="grid grid-cols-2 gap-x-8 gap-y-2 w-[70%]">
+                <InfoBox label="Full Name" value={capitalize(application.fullName)} />
+                <InfoBox label="Date of Birth" value={application.dob ? new Date(application.dob).toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' }) : "-"} />
+                <InfoBox label="Gender" value={application.gender} />
+                {(!disabledFields.includes("fatherName") || application.fatherName) && (
+                  <InfoBox label="Father's Name" value={capitalize(application.fatherName)} />
+                )}
+                {(!disabledFields.includes("motherName") || application.motherName) && (
+                  <InfoBox label="Mother's Name" value={capitalize(application.motherName)} />
+                )}
+                {(!disabledFields.includes("guardianPhone") || application.guardianPhone) && (
+                  <InfoBox label="Guardian Phone" value={application.guardianPhone} />
+                )}
+                {(!disabledFields.includes("caste") || application.caste) && (
+                  <InfoBox label="Category (Caste)" value={application.caste} />
+                )}
+                {(!disabledFields.includes("religion") || application.religion) && (
+                  <InfoBox label="Religion" value={application.religion} />
+                )}
+                {(!disabledFields.includes("bloodGroup") || application.bloodGroup) && (
+                  <InfoBox label="Blood Group" value={application.bloodGroup} />
+                )}
 
-
-              <div className="col-span-2 mt-2">
-                <div className="p-5 rounded-2xl border-2 bg-slate-50" style={{ borderColor: `${primaryColor}20` }}>
-                  <span className="text-[10px] font-bold text-slate-400 uppercase mb-1 block">Course Applied For</span>
-                  <span className="text-xl font-bold" style={{ color: primaryColor }}>{application.appliedCourse}</span>
+                <div className="col-span-2 mt-1">
+                  <div className="p-3 rounded-2xl border-2 bg-white/80 backdrop-blur-sm" style={{ borderColor: `${primaryColor}20` }}>
+                    <span className="text-[10px] font-bold text-slate-400 uppercase mb-0.5 block">Course Applied For</span>
+                    <span className="text-lg font-bold" style={{ color: primaryColor }}>{application.appliedCourse}</span>
+                  </div>
                 </div>
+              </div>
+
+              {/* Student Photo Section */}
+              <div className="w-28 h-36 border-[4px] border-white rounded-2xl overflow-hidden bg-slate-50 shadow-xl shadow-black/10 flex flex-col items-center justify-center ring-1 ring-slate-900/5 -mt-10 mr-2 shrink-0">
+                {application.photoUrl ? (
+                  <img src={application.photoUrl} alt="Student" className="w-full h-full object-cover" />
+                ) : (
+                  <div className="text-slate-200 text-center p-4">
+                    <User className="w-10 h-10 mx-auto mb-2 opacity-10" />
+                    <span className="text-[8px] font-bold uppercase opacity-30">Photo</span>
+                  </div>
+                )}
               </div>
             </div>
           </div>
 
           {/* SECTION 2: Contact Details */}
-          <div className="mb-5 relative z-10">
+          <div className="mb-4 relative z-10">
             <SectionTitle title="Contact & Communication" icon={<Mail className="w-4 h-4" />} color={primaryColor} />
-            <div className="grid grid-cols-2 gap-x-12 gap-y-3 ml-14">
+            <div className="grid grid-cols-2 gap-x-12 gap-y-2 ml-14">
               <InfoBox label="Mobile Number" value={application.mobile} />
-              <InfoBox label="WhatsApp Number" value={application.whatsapp || application.mobile} />
+              {(!disabledFields.includes("whatsapp") || application.whatsapp) && (
+                <InfoBox label="WhatsApp Number" value={application.whatsapp || application.mobile} />
+              )}
               <InfoBox label="Email Address" value={application.email || "N/A"} />
               <InfoBox label="PIN Code" value={address.pin} />
               <div className="col-span-2">
@@ -124,29 +151,31 @@ export function AdmissionPDFView({ application, workspace, settings, config }: A
           </div>
 
           {/* SECTION 3: Academic History */}
-          <div className="mb-5 relative z-10">
-            <SectionTitle title="Academic Qualification" icon={<GraduationCap className="w-4 h-4" />} color={primaryColor} />
-            <div className="ml-14 overflow-hidden rounded-2xl border border-slate-200 shadow-sm">
-              <table className="w-full text-left">
-                <thead className="text-white" style={{ backgroundColor: primaryColor }}>
-                  <tr>
-                    <th className="px-6 py-4 text-[10px] font-bold uppercase">Examination</th>
-                    <th className="px-6 py-4 text-[10px] font-bold uppercase">Board / University</th>
-                    <th className="px-6 py-4 text-[10px] font-bold uppercase">Year</th>
-                    <th className="px-6 py-4 text-[10px] font-bold uppercase text-right">Aggregate %</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 text-[14px]">
-                  <tr className="bg-white">
-                    <td className="px-6 py-5 font-bold text-slate-900">{qualification.name || "-"}</td>
-                    <td className="px-6 py-5 font-medium text-slate-500">{capitalize(qualification.board)}</td>
-                    <td className="px-6 py-5 font-medium text-slate-500">{qualification.year || "-"}</td>
-                    <td className="px-6 py-5 font-bold text-right" style={{ color: primaryColor }}>{qualification.percentage ? `${qualification.percentage}%` : "-"}</td>
-                  </tr>
-                </tbody>
-              </table>
+          {(!disabledFields.includes("qualification") || qualification.name) && (
+            <div className="mb-4 relative z-10">
+              <SectionTitle title="Academic Qualification" icon={<GraduationCap className="w-4 h-4" />} color={primaryColor} />
+              <div className="ml-14 overflow-hidden rounded-2xl border border-slate-200 shadow-sm bg-white/80 backdrop-blur-sm">
+                <table className="w-full text-left">
+                  <thead className="text-white" style={{ backgroundColor: primaryColor }}>
+                    <tr>
+                      <th className="px-5 py-3 text-[9px] font-bold uppercase">Examination</th>
+                      <th className="px-5 py-3 text-[9px] font-bold uppercase">Board / University</th>
+                      <th className="px-5 py-3 text-[9px] font-bold uppercase">Year</th>
+                      <th className="px-5 py-3 text-[9px] font-bold uppercase text-right">Aggregate %</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 text-[12px]">
+                    <tr>
+                      <td className="px-5 py-4 font-bold text-slate-900">{qualification.name || "-"}</td>
+                      <td className="px-5 py-4 font-medium text-slate-500">{capitalize(qualification.board)}</td>
+                      <td className="px-5 py-4 font-medium text-slate-500">{qualification.year || "-"}</td>
+                      <td className="px-5 py-4 font-bold text-right" style={{ color: primaryColor }}>{qualification.percentage ? `${qualification.percentage}%` : "-"}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
             </div>
-          </div>
+          )}
         </div>
 
         <div className="absolute bottom-12 left-12 right-12 flex justify-between items-center text-[10px] font-bold text-slate-300 uppercase border-t pt-6">
@@ -158,16 +187,23 @@ export function AdmissionPDFView({ application, workspace, settings, config }: A
       {/* PAGE 2: Additional & Declaration */}
       <div id="admission-form-content-2" className="bg-white text-slate-900 font-sans w-[210mm] min-h-[297mm] relative overflow-hidden box-border shadow-2xl">
 
+        {/* WATERMARK */}
+        {settings?.logoUrl && (
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0" style={{ opacity: 0.05 }}>
+            <img src={settings.logoUrl} alt="Watermark" className="w-[120mm] h-[120mm] object-contain grayscale" />
+          </div>
+        )}
+
         {/* Minimalist Header for Page 2 */}
         <div className="h-2" style={{ backgroundColor: primaryColor }}></div>
 
-        <div className="p-12">
+        <div className="p-10 pt-8">
           {/* SECTION 4: Additional Information (Custom Fields) */}
-          {config?.customFields && Array.isArray(config.customFields) && config.customFields.length > 0 && (
-            <div className="mb-12 relative z-10">
+          {config?.customFields && Array.isArray(config.customFields) && config.customFields.filter((f: any) => !f.id.startsWith('doc_')).length > 0 && (
+            <div className="mb-6 relative z-10">
               <SectionTitle title="Additional Information" icon={<BookOpen className="w-4 h-4" />} color={primaryColor} />
-              <div className="grid grid-cols-2 gap-x-12 gap-y-6 ml-14">
-                {config.customFields.map((field: any) => (
+              <div className="grid grid-cols-2 gap-x-12 gap-y-3 ml-14">
+                {config.customFields.filter((f: any) => !f.id.startsWith('doc_')).map((field: any) => (
                   <InfoBox
                     key={field.id}
                     label={field.label}

@@ -16,40 +16,79 @@ export interface RoutingConfig {
  * Detects mode and tenant from hostname and pathname.
  */
 export function getRoutingConfig(pathname: string, hostname?: string, tenantOverride?: string): RoutingConfig {
-  // 1. Initial State
   let mode: RoutingMode = "root";
   let tenant: string | null = tenantOverride || null;
   let workspaceBase = "";
 
-  // 2. Identify Subdirectory Mode (Highest Priority on Root Domain/Localhost)
   const isSubdirectoryPath = pathname.startsWith('/app/');
-  
-  // 3. Robust Hostname Analysis
-  if (hostname) {
-    const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "localhost:3000";
-    const cleanHost = hostname.split(':')[0]; // Remove port if present
-    const cleanRoot = rootDomain.split(':')[0];
+  const isSuperAdminPath = pathname.startsWith('/super-admin');
 
-    if (cleanHost === cleanRoot || cleanHost === 'localhost' || cleanHost === '127.0.0.1') {
+  // Helper to construct the base path
+  const setSubdirectoryMode = (tenantVal: string | null) => {
+    mode = "subdirectory";
+    tenant = tenantVal;
+    if (tenant === "super-admin") {
+      workspaceBase = "/super-admin";
+    } else {
+      workspaceBase = tenant ? `/app/${tenant}` : "";
+    }
+  };
+
+  if (hostname) {
+    const rootEnv = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "";
+    const cleanHost = hostname.split(':')[0]; // Remove port if present
+    
+    // 1. Detect localDomain dynamically just like proxy.ts
+    let localDomain = "";
+    if (rootEnv && cleanHost.endsWith(rootEnv.split(':')[0])) {
+      localDomain = rootEnv.split(':')[0];
+    } else if (cleanHost.includes('localhost') || cleanHost.includes('127.0.0.1')) {
+      const parts = cleanHost.split('.');
+      localDomain = parts.length > 1 ? parts.slice(1).join('.') : cleanHost;
+    } else {
+      const parts = cleanHost.split('.');
+      if (cleanHost.includes("vercel.app")) {
+        localDomain = parts.length > 3 ? parts.slice(1).join('.') : cleanHost;
+      } else {
+        localDomain = parts.length >= 3 ? parts.slice(-2).join('.') : cleanHost;
+      }
+    }
+    
+    if (!localDomain) localDomain = "localhost";
+
+    if (cleanHost === localDomain) {
       // We are on the root domain or localhost
-      if (isSubdirectoryPath) {
-        mode = "subdirectory";
-        tenant = tenant || pathname.split('/')[2] || null;
-        workspaceBase = tenant ? `/app/${tenant}` : "";
+      if (tenantOverride === "super-admin" || isSuperAdminPath) {
+        setSubdirectoryMode("super-admin");
+      } else if (tenantOverride || isSubdirectoryPath) {
+        setSubdirectoryMode(tenantOverride || pathname.split('/')[2] || null);
       } else {
         mode = "root";
       }
-    } else if (cleanHost.endsWith(`.${cleanRoot}`)) {
+    } else if (cleanHost.endsWith(`.${localDomain}`)) {
       // We are on a subdomain
       mode = "subdomain";
-      tenant = tenant || cleanHost.replace(`.${cleanRoot}`, "").toLowerCase();
+      tenant = tenantOverride || cleanHost.replace(`.${localDomain}`, "").toLowerCase();
       workspaceBase = ""; // Subdomains don't use prefixes
+    } else {
+      // Fallback
+      if (tenantOverride === "super-admin" || isSuperAdminPath) {
+        setSubdirectoryMode("super-admin");
+      } else if (tenantOverride || isSubdirectoryPath) {
+        setSubdirectoryMode(tenantOverride || pathname.split('/')[2] || null);
+      } else {
+        mode = "root";
+      }
     }
-  } else if (isSubdirectoryPath) {
-    // Fallback if hostname is missing but path starts with /app/
-    mode = "subdirectory";
-    tenant = tenant || pathname.split('/')[2] || null;
-    workspaceBase = tenant ? `/app/${tenant}` : "";
+  } else {
+    // Fallback if hostname is missing (e.g. SSR)
+    if (tenantOverride === "super-admin" || isSuperAdminPath) {
+      setSubdirectoryMode("super-admin");
+    } else if (tenantOverride || isSubdirectoryPath) {
+      setSubdirectoryMode(tenantOverride || pathname.split('/')[2] || null);
+    } else {
+      mode = "root";
+    }
   }
 
   return { mode, tenant, workspaceBase };

@@ -125,14 +125,11 @@ export function AdminSidebar() {
         <nav className="flex-1 py-6 px-4 space-y-2 overflow-y-auto overflow-x-hidden custom-scrollbar">
           {navItems.map((item) => {
             const tenant = "super-admin";
-            // In subdomain mode, href should be relative to root. 
-            // In root domain mode, it must include /super-admin.
-            const isSubdomain = typeof window !== 'undefined' && window.location.host.startsWith('super-admin.');
-            const href = isSubdomain ? item.href : `/super-admin${item.href === "/" ? "" : item.href}`;
+            const href = getTenantLink(item.href, tenant, pathname);
             const isActive = isActivePath(pathname, href);
             
             return (
-              <Link key={item.name} href={href}>
+              <Link key={item.name} href={href} className="block w-full">
                 <div
                   className={cn(
                     "flex items-center gap-3 transition-all duration-300 group relative overflow-hidden",
@@ -218,8 +215,8 @@ export function AdminSidebar() {
       <div className="lg:hidden fixed bottom-0 left-0 right-0 z-[60] bg-zinc-950/95 backdrop-blur-md border-t border-white/10 pb-safe pb-4 pt-2">
         <div className="flex items-center justify-around px-2">
           {mainNavItems.map((item) => {
-            const isSubdomain = typeof window !== 'undefined' && window.location.host.startsWith('super-admin.');
-            const href = isSubdomain ? item.href : `/super-admin${item.href === "/" ? "" : item.href}`;
+            const tenant = "super-admin";
+            const href = getTenantLink(item.href, tenant, pathname);
             const isActive = isActivePath(pathname, href);
             
             return (
@@ -281,12 +278,12 @@ export function AdminSidebar() {
               <div className="w-12 h-1.5 bg-zinc-800 rounded-full mx-auto mt-4 mb-2" />
               <div className="flex-1 overflow-y-auto p-4 space-y-2 custom-scrollbar">
                 {moreNavItems.map((item) => {
-                  const isSubdomain = typeof window !== 'undefined' && window.location.host.startsWith('super-admin.');
-                  const href = isSubdomain ? item.href : `/super-admin${item.href === "/" ? "" : item.href}`;
+                  const tenant = "super-admin";
+                  const href = getTenantLink(item.href, tenant, pathname);
                   const isActive = isActivePath(pathname, href);
                   
                   return (
-                    <Link key={item.name} href={href}>
+                    <Link key={item.name} href={href} className="block w-full">
                       <div className={cn(
                         "flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-300",
                         isActive ? "bg-primary text-primary-foreground shadow-md" : "hover:bg-white/5 text-zinc-300"

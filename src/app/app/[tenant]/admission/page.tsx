@@ -8,11 +8,14 @@ import { auth } from "@/auth";
 import AdmissionLandingClient from "./AdmissionLandingClient";
 
 export default async function AdmissionPage({
-  params
+  params,
+  searchParams
 }: {
   params: Promise<{ tenant: string }>;
+  searchParams: Promise<{ courseId?: string, fromGlobal?: string }>;
 }) {
   const { tenant } = await params;
+  const { courseId, fromGlobal } = await searchParams;
 
   const workspace = await db.workspace.findUnique({
     where: { subdomain: tenant },
@@ -80,6 +83,8 @@ export default async function AdmissionPage({
             config={workspace.admissionConfig || {}} 
             courses={workspace.courses} 
             logoUrl={workspace.siteSettings.logoUrl}
+            initialCourseId={courseId}
+            fromGlobal={fromGlobal}
           />
         </div>
       </main>

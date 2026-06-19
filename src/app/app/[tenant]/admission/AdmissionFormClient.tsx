@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -25,9 +25,12 @@ const formSchema = z.object({
   courseId: z.string().optional(),
   appliedCourse: z.string().min(1, "Course is required"),
   fullName: z.string().min(2, "Full name is required"),
-  guardianName: z.string().min(2, "Guardian's name is required"),
+  fatherName: z.string().optional(),
+  motherName: z.string().optional(),
+  guardianPhone: z.string().optional(),
   dob: z.string().regex(/^\d{2}\/\d{2}\/\d{4}$/, "Use DD/MM/YYYY format"),
   gender: z.string().min(1, "Gender is required"),
+  bloodGroup: z.string().optional(),
   religion: z.string().optional(),
   caste: z.string().optional(),
   
@@ -49,11 +52,11 @@ const formSchema = z.object({
 
   photoUrl: z.string().min(1, "Photo is required"),
   signatureUrl: z.string().min(1, "Signature is required"),
-  idProofUrl: z.string().min(1, "ID Proof is required"),
+  idProofUrl: z.string().optional(),
   customData: z.record(z.string(), z.any()).optional(),
 });
 
-export default function AdmissionFormClient({ workspaceId, workspaceName, config, courses }: any) {
+export default function AdmissionFormClient({ workspaceId, workspaceName, config, courses, initialCourseId, fromGlobal }: any) {
   const showVerification = config?.enableEmailVerification !== false;
   const [step, setStep] = useState(showVerification ? 0 : 1); // Respect config
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -73,9 +76,9 @@ export default function AdmissionFormClient({ workspaceId, workspaceName, config
     setCaptcha({ q: `${n1} + ${n2}`, a: n1 + n2 });
   };
 
-  useState(() => {
+  useEffect(() => {
     generateCaptcha();
-  });
+  }, []);
 
   const pathname = usePathname();
   const params = useParams();
@@ -89,12 +92,23 @@ export default function AdmissionFormClient({ workspaceId, workspaceName, config
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      fullName: "", guardianName: "", dob: "", gender: "", religion: "", caste: "",
+      fullName: "", fatherName: "", motherName: "", guardianPhone: "", dob: "", gender: "", bloodGroup: "", religion: "", caste: "",
       vill: "", po: "", ps: "", dist: "", pin: "", state: "",
       mobile: "", whatsapp: "", email: "",
       qualName: "", qualYear: "", qualPercent: "", qualBoard: "",
       photoUrl: "", signatureUrl: "", idProofUrl: "", courseId: "", appliedCourse: "",
       customData: {}
+    }
+  });
+
+  // Automatically select course if initialCourseId is provided
+  useState(() => {
+    if (initialCourseId && courses?.length > 0) {
+      const selectedCourse = courses.find((c: any) => c.id === initialCourseId);
+      if (selectedCourse) {
+        form.setValue("courseId", selectedCourse.id);
+        form.setValue("appliedCourse", selectedCourse.title);
+      }
     }
   });
 
@@ -162,7 +176,11 @@ export default function AdmissionFormClient({ workspaceId, workspaceName, config
   const nextStep = async () => {
     let fieldsToValidate: any[] = [];
     if (step === 1) {
-      fieldsToValidate = ["fullName", "guardianName", "dob", "gender", "appliedCourse"];
+      fieldsToValidate = ["fullName", "dob", "gender", "appliedCourse"];
+      if (!disabledFields.includes("fatherName")) fieldsToValidate.push("fatherName");
+      if (!disabledFields.includes("motherName")) fieldsToValidate.push("motherName");
+      if (!disabledFields.includes("guardianPhone")) fieldsToValidate.push("guardianPhone");
+      if (!disabledFields.includes("bloodGroup")) fieldsToValidate.push("bloodGroup");
       if (!disabledFields.includes("religion")) fieldsToValidate.push("religion");
       if (!disabledFields.includes("caste")) fieldsToValidate.push("caste");
     } else if (step === 2) {
@@ -202,13 +220,39 @@ export default function AdmissionFormClient({ workspaceId, workspaceName, config
   };
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
+    // Validate dynamic documents
+    let hasError = false;
+    const requiredDocsList = Array.isArray(config?.requiredDocs) ? config.requiredDocs : ["Passport Size Photo", "ID Proof", "Marksheet"];
+    const customData = values.customData || {};
+    
+    for (const doc of requiredDocsList) {
+      const docLower = doc.toLowerCase();
+      // Photo and signature are validated by Zod schema implicitly
+      if (docLower.includes("photo") || docLower.includes("passport") || docLower.includes("signature")) continue;
+      
+      if (docLower === "id proof" || docLower === "aadhaar" || docLower.includes("id proof")) {
+        if (!values.idProofUrl) {
+          toast.error(`${doc} is required`);
+          hasError = true;
+        }
+        continue;
+      }
+      
+      if (!customData[`doc_${doc}`]) {
+        toast.error(`${doc} is required`);
+        hasError = true;
+      }
+    }
+    
+    if (hasError) return;
+
     setIsSubmitting(true);
     const address = { vill: values.vill, po: values.po, ps: values.ps, dist: values.dist, pin: values.pin, state: values.state };
     const qualification = { name: values.qualName, year: values.qualYear, percentage: values.qualPercent, board: values.qualBoard };
 
     const payload = { ...values, address, qualification };
 
-    const res = await submitAdmissionApplication(workspaceId, payload);
+    const res = await submitAdmissionApplication(workspaceId, payload, fromGlobal);
     if (res.success) {
       setSuccessData(res.data);
       setStep(6);
@@ -402,11 +446,40 @@ export default function AdmissionFormClient({ workspaceId, workspaceName, config
                   </Select>
                   {errors.gender && <p className="text-red-500 text-[10px] font-bold mt-1">{errors.gender.message}</p>}
                 </div>
-                <div className="space-y-2">
-                  <Label>Guardian Name *</Label>
-                  <Input {...form.register("guardianName")} className="h-12 rounded-xl" />
-                  {errors.guardianName && <p className="text-red-500 text-[10px] font-bold mt-1">{errors.guardianName.message}</p>}
-                </div>
+                {!disabledFields.includes("fatherName") && (
+                  <div className="space-y-2">
+                    <Label>Father's Name</Label>
+                    <Input {...form.register("fatherName")} className="h-12 rounded-xl" />
+                    {errors.fatherName && <p className="text-red-500 text-[10px] font-bold mt-1">{errors.fatherName.message}</p>}
+                  </div>
+                )}
+                {!disabledFields.includes("motherName") && (
+                  <div className="space-y-2">
+                    <Label>Mother's Name</Label>
+                    <Input {...form.register("motherName")} className="h-12 rounded-xl" />
+                    {errors.motherName && <p className="text-red-500 text-[10px] font-bold mt-1">{errors.motherName.message}</p>}
+                  </div>
+                )}
+                {!disabledFields.includes("guardianPhone") && (
+                  <div className="space-y-2">
+                    <Label>Guardian Phone Number</Label>
+                    <Input {...form.register("guardianPhone")} className="h-12 rounded-xl" />
+                    {errors.guardianPhone && <p className="text-red-500 text-[10px] font-bold mt-1">{errors.guardianPhone.message}</p>}
+                  </div>
+                )}
+                {!disabledFields.includes("bloodGroup") && (
+                  <div className="space-y-2">
+                    <Label>Blood Group</Label>
+                    <Select onValueChange={(v) => setValue("bloodGroup", v as any)} value={(watch("bloodGroup") as string) || ""}>
+                      <SelectTrigger className="h-12 rounded-xl"><SelectValue placeholder="Select" /></SelectTrigger>
+                      <SelectContent>
+                        {["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"].map(bg => (
+                          <SelectItem key={bg} value={bg}>{bg}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
                 {!disabledFields.includes("religion") && (
                   <div className="space-y-2">
                     <Label>Religion</Label>
@@ -459,6 +532,19 @@ export default function AdmissionFormClient({ workspaceId, workspaceName, config
                   <Input {...form.register("mobile")} className="h-12 rounded-xl" />
                   {errors.mobile && <p className="text-red-500 text-[10px] font-bold mt-1">{errors.mobile.message}</p>}
                 </div>
+                {!disabledFields.includes("whatsapp") && (
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <Label>WhatsApp Number</Label>
+                      <div className="flex items-center space-x-2">
+                        <Checkbox id="same-wp" onCheckedChange={handleWhatsappCheck} />
+                        <label htmlFor="same-wp" className="text-[10px] font-bold text-slate-500 cursor-pointer">Same as Mobile</label>
+                      </div>
+                    </div>
+                    <Input {...form.register("whatsapp")} className="h-12 rounded-xl" />
+                    {errors.whatsapp && <p className="text-red-500 text-[10px] font-bold mt-1">{errors.whatsapp.message}</p>}
+                  </div>
+                )}
                 <div className="space-y-2">
                   <Label>PIN Code *</Label>
                   <Input {...form.register("pin")} onBlur={handlePinBlur} maxLength={6} className="h-12 rounded-xl" />
@@ -488,6 +574,10 @@ export default function AdmissionFormClient({ workspaceId, workspaceName, config
                   <Label>State *</Label>
                   <Input {...form.register("state")} className="h-12 rounded-xl" />
                   {errors.state && <p className="text-red-500 text-[10px] font-bold mt-1">{errors.state.message}</p>}
+                </div>
+                <div className="space-y-2">
+                  <Label>Country *</Label>
+                  <Input value="India" readOnly className="h-12 rounded-xl bg-slate-50 text-slate-500 focus-visible:ring-0" />
                 </div>
               </div>
             )}
@@ -571,38 +661,67 @@ export default function AdmissionFormClient({ workspaceId, workspaceName, config
             )}
 
             {/* STEP 5: DOCUMENTS */}
-            {step === 5 && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div className="space-y-2">
-                  <Label>Photo *</Label>
-                  <ImageUpload value={watch("photoUrl")} onChange={(url) => setValue("photoUrl", url)} maxSizeK={100} folder={`RGYCSP/Workspaces/${tenant || 'global'}/admissions`} />
+            {step === 5 && (() => {
+              const requiredDocs = Array.isArray(config?.requiredDocs) ? config.requiredDocs : ["Passport Size Photo", "ID Proof", "Marksheet"];
+              
+              return (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <div className="space-y-2">
+                    <Label>Photo *</Label>
+                    <ImageUpload value={watch("photoUrl")} onChange={(url) => setValue("photoUrl", url)} maxSizeK={100} folder={`RGYCSP/Workspaces/${tenant || 'global'}/admissions`} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Signature *</Label>
+                    <ImageUpload value={watch("signatureUrl")} onChange={(url) => setValue("signatureUrl", url)} maxSizeK={100} folder={`RGYCSP/Workspaces/${tenant || 'global'}/admissions`} />
+                  </div>
+                  
+                  {requiredDocs.map((doc: string, idx: number) => {
+                    const docLower = doc.toLowerCase();
+                    if (docLower.includes("photo") || docLower.includes("passport") || docLower.includes("signature")) return null;
+                    
+                    if (docLower === "id proof" || docLower === "aadhaar" || docLower.includes("id proof")) {
+                      return (
+                        <div key={idx} className="space-y-2">
+                          <Label>{doc} *</Label>
+                          <ImageUpload value={watch("idProofUrl") || null} onChange={(url) => setValue("idProofUrl", url)} maxSizeK={1024} folder={`RGYCSP/Workspaces/${tenant || 'global'}/admissions`} />
+                        </div>
+                      );
+                    }
+                    
+                    return (
+                      <div key={idx} className="space-y-2">
+                        <Label>{doc} *</Label>
+                        <ImageUpload 
+                          value={(watch("customData") || {})[`doc_${doc}`]} 
+                          onChange={(url) => {
+                            const current = watch("customData") || {};
+                            setValue("customData", { ...current, [`doc_${doc}`]: url });
+                          }} 
+                          maxSizeK={1024} 
+                          folder={`RGYCSP/Workspaces/${tenant || 'global'}/admissions`} 
+                        />
+                      </div>
+                    );
+                  })}
                 </div>
-                <div className="space-y-2">
-                  <Label>Signature *</Label>
-                  <ImageUpload value={watch("signatureUrl")} onChange={(url) => setValue("signatureUrl", url)} maxSizeK={100} folder={`RGYCSP/Workspaces/${tenant || 'global'}/admissions`} />
-                </div>
-                <div className="space-y-2 md:col-span-2">
-                  <Label>ID Proof *</Label>
-                  <ImageUpload value={watch("idProofUrl")} onChange={(url) => setValue("idProofUrl", url)} maxSizeK={1024} folder={`RGYCSP/Workspaces/${tenant || 'global'}/admissions`} />
-                </div>
-              </div>
-            )}
+              );
+            })()}
 
           </form>
         </CardContent>
-        <CardFooter className="flex justify-between border-t bg-slate-50 p-6">
+        <CardFooter className="flex justify-between border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-zinc-900/30 p-6 sm:p-8">
           <Button 
             variant="outline" 
             onClick={prevStep} 
             disabled={(step === 0 && showVerification) || (step === 1 && !showVerification) || isSubmitting} 
-            className="rounded-xl font-bold"
+            className="h-14 px-6 sm:px-8 rounded-2xl font-bold text-sm bg-white dark:bg-zinc-900 border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-zinc-800 shadow-sm transition-all"
           >
-            <ArrowLeft className="w-4 h-4 mr-2" /> Back
+            <ArrowLeft className="w-5 h-5 mr-2" /> Back
           </Button>
           {step > 0 && (
-            <Button onClick={step < 5 ? nextStep : form.handleSubmit(onSubmit)} disabled={isSubmitting} className="rounded-xl font-bold tracking-widest text-xs px-8 bg-slate-900">
-              {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : (step < 5 ? "Next Step" : "Submit")}
-              {step < 5 && <ArrowRight className="w-4 h-4 ml-2" />}
+            <Button onClick={step < 5 ? nextStep : form.handleSubmit(onSubmit)} disabled={isSubmitting} className="h-14 px-8 sm:px-10 rounded-2xl font-bold tracking-widest text-sm bg-slate-900 hover:bg-slate-800 text-white dark:bg-primary dark:hover:bg-primary/90 dark:text-primary-foreground shadow-xl shadow-slate-900/20 dark:shadow-primary/20 transition-all">
+              {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : (step < 5 ? "Next Step" : "Submit")}
+              {step < 5 && <ArrowRight className="w-5 h-5 ml-2" />}
             </Button>
           )}
         </CardFooter>
