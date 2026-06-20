@@ -12,7 +12,7 @@ export default async function GalleryPage({ params }: { params: Promise<{ tenant
   const session = await auth();
 
   const workspace = await db.workspace.findUnique({
-    where: { subdomain: tenant },
+    where: { subdomain: tenant?.toLowerCase() },
     include: {
       siteSettings: true,
       galleryItems: {

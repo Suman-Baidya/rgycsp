@@ -36,3 +36,12 @@ export async function isSubdirectoryMode(): Promise<boolean> {
   const config = getRoutingConfig(pathname, host);
   return config.mode === "subdirectory";
 }
+
+/**
+ * Gets the workspace base prefix for the current server request.
+ */
+export async function getServerWorkspaceBase(tenant: string): Promise<string> {
+  const { pathname, host } = await getServerRoutingContext();
+  const { workspaceBase } = getRoutingConfig(pathname, host, tenant);
+  return workspaceBase;
+}

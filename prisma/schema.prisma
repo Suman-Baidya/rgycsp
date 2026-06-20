@@ -54,6 +54,7 @@ model Workspace {
   district  String?
 
   tokensBalance Int @default(0) // Custom Token Economy
+  walletBalance Float @default(0) // Franchise Wallet Balance
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -70,6 +71,7 @@ model Workspace {
   admissionConfig AdmissionFormConfig?
   admissionApps   AdmissionApplication[]
   notifications   Notification[]
+  walletTransactions WalletTransaction[]
 }
 
 // ============================================
@@ -579,4 +581,60 @@ model GlobalCourseGroup {
   
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+}
+
+// ============================================
+// Wallet Economy System
+// ============================================
+
+model WalletTransaction {
+  id          String   @id @default(cuid())
+  workspaceId String
+  amount      Float
+  type        TransactionType
+  status      TransactionStatus
+  description String?  @db.Text
+  receiptUrl  String?
+  referenceId String?
+  rejectionReason String? @db.Text
+  
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+enum TransactionType {
+  CREDIT
+  DEBIT
+}
+
+enum TransactionStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model RegistrationFeeConfig {
+  id        String   @id @default(cuid())
+  duration  String   @unique
+  amount    Float
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model WalletPaymentConfig {
+  id                String   @id @default(cuid())
+  upiId             String?
+  qrCodeUrl         String?
+  bankName          String?
+  accountHolderName String?
+  accountNumber     String?
+  ifscCode          String?
+  instructions      String?  @db.Text
+  agreementTerms    String?  @db.Text
+  guideTitle        String?
+  guideDescription  String?  @db.Text
+  guideYoutubeLink  String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 }

@@ -14,7 +14,7 @@ export default async function WorkspaceAdminDashboard({
   const { tenant } = await params;
   
   const workspace = await db.workspace.findUnique({
-    where: { subdomain: tenant },
+    where: { subdomain: tenant?.toLowerCase() },
     include: {
       _count: {
         select: {

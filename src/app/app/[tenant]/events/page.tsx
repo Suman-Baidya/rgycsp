@@ -24,7 +24,7 @@ export default async function EventsPage({
   }
 
   const workspace = await db.workspace.findUnique({
-    where: { subdomain: tenant },
+    where: { subdomain: tenant?.toLowerCase() },
     include: workspaceInclude
   });
 

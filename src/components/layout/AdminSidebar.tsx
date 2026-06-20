@@ -31,11 +31,11 @@ import { getPendingFranchiseCount } from "@/app/actions/franchise";
 
 const navItems = [
   { name: "Overview", href: "/", icon: LayoutDashboard },
+  { name: "Wallet Economy", href: "/wallet", icon: Coins },
   { name: "Franchises", href: "/franchises", icon: Building2 },
   { name: "Users", href: "/users", icon: Users },
   { name: "Courses", href: "/courses", icon: BookOpen },
   { name: "Documents", href: "/documents", icon: FileText },
-  { name: "Token Economy", href: "/token-economy", icon: Coins },
   { name: "System Logs", href: "/logs", icon: Activity },
   { name: "Settings", href: "/settings", icon: Settings },
   { name: "Profile", href: "/profile", icon: User },

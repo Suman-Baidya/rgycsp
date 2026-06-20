@@ -18,7 +18,7 @@ export default async function AdmissionPage({
   const { courseId, fromGlobal } = await searchParams;
 
   const workspace = await db.workspace.findUnique({
-    where: { subdomain: tenant },
+    where: { subdomain: tenant?.toLowerCase() },
     include: {
       siteSettings: true,
       admissionConfig: true,

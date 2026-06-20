@@ -12,6 +12,49 @@ export async function registerStudentAction(workspaceId: string, data: any) {
     const randomDigits = Math.floor(10000 + Math.random() * 90000).toString();
     const applicationNo = `${namePart}${randomDigits}`;
     
+    // Wallet Deduction Logic
+    let feeAmount = 0;
+    if (data.courseId) {
+      const course = await db.course.findUnique({ where: { id: data.courseId } });
+      if (course?.duration) {
+        const feeConfig = await db.registrationFeeConfig.findUnique({
+          where: { duration: course.duration }
+        });
+        if (feeConfig) {
+          feeAmount = feeConfig.amount;
+        }
+      }
+    }
+
+    const workspace = await db.workspace.findUnique({
+      where: { id: workspaceId }
+    });
+
+    if (!workspace) {
+      return { success: false, error: "Workspace not found." };
+    }
+
+    if (feeAmount > 0 && workspace.walletBalance < feeAmount) {
+      return { success: false, error: `Insufficient wallet balance. Needed: ${feeAmount}, Available: ${workspace.walletBalance}` };
+    }
+
+    // Wrap in transaction if needed, but doing sequentially is fine for now
+    if (feeAmount > 0) {
+      await db.workspace.update({
+        where: { id: workspaceId },
+        data: { walletBalance: { decrement: feeAmount } }
+      });
+      await db.walletTransaction.create({
+        data: {
+          workspaceId,
+          amount: feeAmount,
+          type: "DEBIT",
+          status: "APPROVED",
+          description: `Student Registration Fee (App: ${applicationNo})`
+        }
+      });
+    }
+    
     // Create Admission Application
     const application = await db.admissionApplication.create({
       data: {

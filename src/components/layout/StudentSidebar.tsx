@@ -24,21 +24,38 @@ import { signOut } from "next-auth/react";
 
 import { detectTenant, getTenantLink, isActivePath, WORKSPACE_ROUTES } from "@/lib/routing";
 
-export function StudentSidebar({ tenant: propTenant }: { tenant?: string }) {
+export function StudentSidebar({ 
+  tenant: propTenant,
+  workspaceBase
+}: { 
+  tenant?: string;
+  workspaceBase?: string;
+}) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMoreOpen, setIsMoreOpen] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
   const pathname = usePathname();
   
   const tenant = propTenant || detectTenant(pathname, typeof window !== 'undefined' ? window.location.host : undefined);
+
+  // Create absolute safe links using workspaceBase if provided by server
+  const getSafeLink = (path: string) => {
+    if (workspaceBase !== undefined) {
+      if (workspaceBase === "") return path; // Subdomain mode
+      const cleanPath = path.startsWith('/') ? path : `/${path}`;
+      return `${workspaceBase}${cleanPath}`.replace(/\/+/g, '/');
+    }
+    return getTenantLink(path, tenant, pathname);
+  };
+
   const navItems = [
-    { name: "Overview", href: getTenantLink(WORKSPACE_ROUTES.STUDENT_DASHBOARD, tenant, pathname), icon: LayoutDashboard },
-    { name: "My Courses", href: getTenantLink(WORKSPACE_ROUTES.STUDENT_COURSES, tenant, pathname), icon: BookOpen },
-    { name: "Attendance", href: getTenantLink(WORKSPACE_ROUTES.STUDENT_ATTENDANCE, tenant, pathname), icon: Calendar },
-    { name: "Exams", href: getTenantLink(WORKSPACE_ROUTES.STUDENT_EXAMS, tenant, pathname), icon: FileText },
-    { name: "Fees & Invoices", href: getTenantLink(WORKSPACE_ROUTES.STUDENT_FEES, tenant, pathname), icon: Wallet },
-    { name: "Notices", href: getTenantLink(WORKSPACE_ROUTES.STUDENT_NOTICES, tenant, pathname), icon: Bell },
-    { name: "My Profile", href: getTenantLink(WORKSPACE_ROUTES.STUDENT_PROFILE, tenant, pathname), icon: User },
+    { name: "Overview", href: getSafeLink(WORKSPACE_ROUTES.STUDENT_DASHBOARD), icon: LayoutDashboard },
+    { name: "My Courses", href: getSafeLink(WORKSPACE_ROUTES.STUDENT_COURSES), icon: BookOpen },
+    { name: "Attendance", href: getSafeLink(WORKSPACE_ROUTES.STUDENT_ATTENDANCE), icon: Calendar },
+    { name: "Exams", href: getSafeLink(WORKSPACE_ROUTES.STUDENT_EXAMS), icon: FileText },
+    { name: "Fees & Invoices", href: getSafeLink(WORKSPACE_ROUTES.STUDENT_FEES), icon: Wallet },
+    { name: "Notices", href: getSafeLink(WORKSPACE_ROUTES.STUDENT_NOTICES), icon: Bell },
+    { name: "My Profile", href: getSafeLink(WORKSPACE_ROUTES.STUDENT_PROFILE), icon: User },
   ];
 
   useEffect(() => {

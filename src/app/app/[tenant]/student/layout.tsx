@@ -6,7 +6,7 @@ import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/prisma";
 import { CustomThemeStyle } from "@/components/providers/CustomThemeStyle";
-import { getServerTenantLink } from "@/lib/routing-server";
+import { getServerTenantLink, getServerWorkspaceBase } from "@/lib/routing-server";
 
 export default async function StudentLayout({
   children,
@@ -25,13 +25,14 @@ export default async function StudentLayout({
   }
 
   const workspace = await db.workspace.findUnique({
-    where: { subdomain: tenant },
+    where: { subdomain: tenant?.toLowerCase() },
     include: { siteSettings: true }
   });
 
   if (!workspace) redirect("/");
 
   const homeHref = await getServerTenantLink("/", tenant);
+  const workspaceBase = await getServerWorkspaceBase(tenant);
 
   return (
     <div className="flex min-h-screen bg-background text-foreground transition-colors duration-300">
@@ -41,7 +42,7 @@ export default async function StudentLayout({
         fontFamily={workspace.siteSettings?.fontFamily || undefined}
       />
       
-      <StudentSidebar tenant={tenant} />
+      <StudentSidebar tenant={tenant} workspaceBase={workspaceBase} />
       <MobileBottomNav tenant={tenant} />
       
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden pb-24 lg:pb-0">

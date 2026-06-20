@@ -18,7 +18,7 @@ export default async function HelpCenterPage({
   const { tenant } = await params;
 
   const workspace = await db.workspace.findUnique({
-    where: { subdomain: tenant },
+    where: { subdomain: tenant?.toLowerCase() },
     include: {
       siteSettings: {
         include: {

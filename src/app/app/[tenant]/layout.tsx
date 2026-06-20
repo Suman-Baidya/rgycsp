@@ -12,7 +12,7 @@ export default async function TenantLayout({
   
   // Verify the tenant exists before rendering anything on this subdomain
   const workspace = await db.workspace.findUnique({
-    where: { subdomain: tenant }
+    where: { subdomain: tenant?.toLowerCase() }
   });
 
   if (!workspace || !workspace.isActive) {

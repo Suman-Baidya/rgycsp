@@ -9,6 +9,7 @@ import {
   Users,
   UserCheck,
   BookOpen,
+  Wallet,
   ChevronLeft,
   ChevronRight,
   Menu,
@@ -27,9 +28,11 @@ import { signOut } from "next-auth/react";
 
 export function WorkspaceSidebar({ 
   tenant: propTenant,
+  workspaceBase,
   admissionsCount = 0 
 }: { 
   tenant?: string;
+  workspaceBase?: string;
   admissionsCount?: number;
 }) {
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -41,15 +44,26 @@ export function WorkspaceSidebar({
   const tenant = propTenant || detectTenant(pathname, typeof window !== 'undefined' ? window.location.host : undefined);
   const displayTenant = tenant || "Workspace";
 
+  // Create absolute safe links using workspaceBase if provided by server
+  const getSafeLink = (path: string) => {
+    if (workspaceBase !== undefined) {
+      if (workspaceBase === "") return path; // Subdomain mode
+      const cleanPath = path.startsWith('/') ? path : `/${path}`;
+      return `${workspaceBase}${cleanPath}`.replace(/\/+/g, '/');
+    }
+    return getTenantLink(path, tenant, pathname);
+  };
+
   const navItems = [
-    { name: "Overview", href: getTenantLink(WORKSPACE_ROUTES.ADMIN, tenant, pathname), icon: LayoutDashboard },
-    { name: "Staff & Roles", href: getTenantLink(WORKSPACE_ROUTES.ADMIN_STAFF, tenant, pathname), icon: UserCheck },
-    { name: "Students", href: getTenantLink(WORKSPACE_ROUTES.ADMIN_STUDENTS, tenant, pathname), icon: Users },
-    { name: "Admissions", href: getTenantLink(WORKSPACE_ROUTES.ADMIN_ADMISSIONS, tenant, pathname), icon: UserPlus },
-    { name: "Attendance", href: getTenantLink(WORKSPACE_ROUTES.ADMIN_ATTENDANCE, tenant, pathname), icon: Calendar },
-    { name: "Courses", href: getTenantLink(WORKSPACE_ROUTES.ADMIN_COURSES, tenant, pathname), icon: BookOpen },
-    { name: "Exam Gen", href: getTenantLink(WORKSPACE_ROUTES.ADMIN_EXAM_GENERATOR, tenant, pathname), icon: Sparkles },
-    { name: "Landing Page", href: getTenantLink(WORKSPACE_ROUTES.ADMIN_SETTINGS, tenant, pathname), icon: Building2 },
+    { name: "Overview", href: getSafeLink(WORKSPACE_ROUTES.ADMIN), icon: LayoutDashboard },
+    { name: "Wallet", href: getSafeLink(WORKSPACE_ROUTES.ADMIN_WALLET), icon: Wallet },
+    { name: "Staff & Roles", href: getSafeLink(WORKSPACE_ROUTES.ADMIN_STAFF), icon: UserCheck },
+    { name: "Students", href: getSafeLink(WORKSPACE_ROUTES.ADMIN_STUDENTS), icon: Users },
+    { name: "Admissions", href: getSafeLink(WORKSPACE_ROUTES.ADMIN_ADMISSIONS), icon: UserPlus },
+    { name: "Attendance", href: getSafeLink(WORKSPACE_ROUTES.ADMIN_ATTENDANCE), icon: Calendar },
+    { name: "Courses", href: getSafeLink(WORKSPACE_ROUTES.ADMIN_COURSES), icon: BookOpen },
+    { name: "Exam Gen", href: getSafeLink(WORKSPACE_ROUTES.ADMIN_EXAM_GENERATOR), icon: Sparkles },
+    { name: "Landing Page", href: getSafeLink(WORKSPACE_ROUTES.ADMIN_SETTINGS), icon: Building2 },
   ];
 
   // Close mobile drawer on navigation

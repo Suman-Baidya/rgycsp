@@ -2,7 +2,7 @@ import { auth } from "@/auth";
 import Link from "next/link";
 import { WorkspaceSidebar } from "@/components/layout/WorkspaceSidebar";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
-import { getServerTenantLink } from "@/lib/routing-server";
+import { getServerTenantLink, getServerWorkspaceBase } from "@/lib/routing-server";
 import { db } from "@/lib/prisma";
 import { getPendingApplicationsCount } from "@/app/actions/admin-applications";
 
@@ -31,10 +31,11 @@ export default async function WorkspaceAdminLayout({
   }
 
   const homeHref = await getServerTenantLink("/", tenant);
+  const workspaceBase = await getServerWorkspaceBase(tenant);
 
   return (
     <div className="flex min-h-screen bg-background text-foreground transition-colors duration-300">
-      <WorkspaceSidebar tenant={tenant} admissionsCount={admissionsCount} />
+      <WorkspaceSidebar tenant={tenant} workspaceBase={workspaceBase} admissionsCount={admissionsCount} />
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         <header className="h-16 border-b border-border/40 bg-background/50 backdrop-blur-md flex items-center px-4 lg:px-8 sticky top-0 z-40">
           <div className="lg:hidden ml-14 font-bold tracking-tight text-lg text-foreground capitalize truncate max-w-[200px]">

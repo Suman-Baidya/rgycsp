@@ -8,7 +8,7 @@ export default async function WorkspaceSettingsPage({ params }: { params: Promis
   const { tenant } = await params;
 
   const workspace = await db.workspace.findUnique({
-    where: { subdomain: tenant }
+    where: { subdomain: tenant?.toLowerCase() }
   });
 
   if (!workspace) {
