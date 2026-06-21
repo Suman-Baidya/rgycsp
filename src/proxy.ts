@@ -23,32 +23,36 @@ export default auth((req) => {
 
   // Get hostname of request
   const hostname = req.headers.get("host") || "";
+  const cleanHost = hostname.split(':')[0];
   
   // 1. Detect the root domain dynamically
   const rootEnv = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "";
   let localDomain = "";
   
-  if (rootEnv && hostname.endsWith(rootEnv)) {
+  if (rootEnv && cleanHost.endsWith(rootEnv.split(':')[0])) {
     // Priority 1: Use explicit Root Domain ENV if current host matches it
-    localDomain = rootEnv;
-  } else if (hostname.includes('localhost') || hostname.includes('127.0.0.1')) {
+    localDomain = rootEnv.split(':')[0];
+  } else if (cleanHost.includes('localhost') || cleanHost.includes('127.0.0.1')) {
     // Priority 2: Localhost development
-    const parts = hostname.split('.');
-    localDomain = parts.length > 1 ? parts.slice(1).join('.') : hostname;
+    const parts = cleanHost.split('.');
+    localDomain = parts.length > 1 ? parts.slice(1).join('.') : cleanHost;
+  } else if (/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(cleanHost)) {
+    // Priority 3: IP Address (no subdomains possible)
+    localDomain = cleanHost;
   } else {
-    // Priority 3: Dynamic extraction from Vercel or Custom Domains
-    const parts = hostname.split('.');
-    if (hostname.includes("vercel.app")) {
+    // Priority 4: Dynamic extraction from Vercel or Custom Domains
+    const parts = cleanHost.split('.');
+    if (cleanHost.includes("vercel.app")) {
       // Handles project.vercel.app or branch.project.vercel.app
-      localDomain = parts.length > 3 ? parts.slice(1).join('.') : hostname;
+      localDomain = parts.length > 3 ? parts.slice(1).join('.') : cleanHost;
     } else {
       // tenant.domain.com -> domain.com
-      localDomain = parts.length >= 3 ? parts.slice(-2).join('.') : hostname;
+      localDomain = parts.length >= 3 ? parts.slice(-2).join('.') : cleanHost;
     }
   }
 
   // Final fallback
-  if (!localDomain) localDomain = "localhost:3000";
+  if (!localDomain) localDomain = "localhost";
   
   const searchParams = req.nextUrl.searchParams.toString();
   const path = `${url.pathname}${searchParams.length > 0 ? `?${searchParams}` : ""}`;
@@ -64,11 +68,22 @@ export default auth((req) => {
     });
   }
 
+  // 0.5 Bypass explicit subdirectory or super-admin routes to prevent double-rewriting on IP addresses
+  if (url.pathname.startsWith('/app/') || url.pathname.startsWith('/super-admin')) {
+    const requestHeaders = new Headers(req.headers);
+    requestHeaders.set('x-pathname', url.pathname);
+    return NextResponse.next({
+      request: {
+        headers: requestHeaders,
+      }
+    });
+  }
+
   // 1. Handle root domain and specific bypasses
   if (
-    hostname === localDomain ||
+    cleanHost === localDomain ||
     // Skip subdomains for initial Vercel branch previews (except if it matches our localDomain pattern)
-    (hostname.includes("vercel.app") && !hostname.endsWith(`.${localDomain}`) && !hostname.startsWith('super-admin.'))
+    (cleanHost.includes("vercel.app") && !cleanHost.endsWith(`.${localDomain}`) && !cleanHost.startsWith('super-admin.'))
   ) {
     const requestHeaders = new Headers(req.headers);
     requestHeaders.set('x-pathname', url.pathname);

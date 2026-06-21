@@ -34,6 +34,17 @@ export function getRoutingConfig(pathname: string, hostname?: string, tenantOver
     }
   };
 
+  // Eagerly detect mode from pathname or tenant override
+  if (tenantOverride === "super-admin" || isSuperAdminPath) {
+    setSubdirectoryMode("super-admin");
+    return { mode, tenant, workspaceBase };
+  }
+
+  if (isSubdirectoryPath) {
+    setSubdirectoryMode(tenantOverride || pathname.split('/')[2] || null);
+    return { mode, tenant, workspaceBase };
+  }
+
   if (hostname) {
     const rootEnv = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "";
     const cleanHost = hostname.split(':')[0]; // Remove port if present
@@ -45,6 +56,9 @@ export function getRoutingConfig(pathname: string, hostname?: string, tenantOver
     } else if (cleanHost.includes('localhost') || cleanHost.includes('127.0.0.1')) {
       const parts = cleanHost.split('.');
       localDomain = parts.length > 1 ? parts.slice(1).join('.') : cleanHost;
+    } else if (/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(cleanHost)) {
+      // It's an IP address
+      localDomain = cleanHost;
     } else {
       const parts = cleanHost.split('.');
       if (cleanHost.includes("vercel.app")) {
@@ -56,36 +70,23 @@ export function getRoutingConfig(pathname: string, hostname?: string, tenantOver
     
     if (!localDomain) localDomain = "localhost";
 
-    if (cleanHost === localDomain) {
-      // We are on the root domain or localhost
-      if (tenantOverride === "super-admin" || isSuperAdminPath) {
-        setSubdirectoryMode("super-admin");
-      } else if (tenantOverride || isSubdirectoryPath) {
-        setSubdirectoryMode(tenantOverride || pathname.split('/')[2] || null);
-      } else {
-        mode = "root";
-      }
-    } else if (cleanHost.endsWith(`.${localDomain}`)) {
+    if (cleanHost !== localDomain && cleanHost.endsWith(`.${localDomain}`)) {
       // We are on a subdomain
       mode = "subdomain";
       tenant = tenantOverride || cleanHost.replace(`.${localDomain}`, "").toLowerCase();
       workspaceBase = ""; // Subdomains don't use prefixes
     } else {
       // Fallback
-      if (tenantOverride === "super-admin" || isSuperAdminPath) {
-        setSubdirectoryMode("super-admin");
-      } else if (tenantOverride || isSubdirectoryPath) {
-        setSubdirectoryMode(tenantOverride || pathname.split('/')[2] || null);
+      if (tenantOverride) {
+        setSubdirectoryMode(tenantOverride);
       } else {
         mode = "root";
       }
     }
   } else {
     // Fallback if hostname is missing (e.g. SSR)
-    if (tenantOverride === "super-admin" || isSuperAdminPath) {
-      setSubdirectoryMode("super-admin");
-    } else if (tenantOverride || isSubdirectoryPath) {
-      setSubdirectoryMode(tenantOverride || pathname.split('/')[2] || null);
+    if (tenantOverride) {
+      setSubdirectoryMode(tenantOverride);
     } else {
       mode = "root";
     }
