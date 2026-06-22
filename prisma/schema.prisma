@@ -55,9 +55,26 @@ model Workspace {
 
   tokensBalance Int @default(0) // Custom Token Economy
   walletBalance Float @default(0) // Franchise Wallet Balance
+  commissionBalance Float @default(0) // Separate Commission Balance
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  // State Manager & Referrals
+  isStateManager         Boolean  @default(false)
+  commissionReleaseHours Int      @default(24) // Delay before commission is released
+  ownReferralId          String?  @unique
+
+  appliedReferralId      String?  // The referral ID they used when they were created/assigned
+  referredById           String?
+
+  // Commission rules for the State Manager who referred this franchise
+  referralCommissionRate      Float    @default(0)
+  referralCommissionExpiry    DateTime?
+  isReferralCommissionEnabled Boolean  @default(true)
+
+  referredBy             Workspace?  @relation("StateManagement", fields: [referredById], references: [id])
+  referredWorkspaces     Workspace[] @relation("StateManagement")
 
   roles           WorkspaceRole[]
   courses         Course[]
@@ -597,6 +614,15 @@ model WalletTransaction {
   receiptUrl  String?
   referenceId String?
   rejectionReason String? @db.Text
+  
+  // State Manager Commissions
+  sourceWorkspaceId String?
+  isCommission      Boolean  @default(false)
+  releaseAt         DateTime?
+  
+  // Commission specific types
+  isCommissionWithdrawal Boolean @default(false)
+  isCommissionTransfer   Boolean @default(false)
   
   workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   createdAt   DateTime  @default(now())

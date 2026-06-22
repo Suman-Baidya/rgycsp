@@ -20,6 +20,7 @@ import {
   UserPlus,
   Sparkles,
   MoreHorizontal,
+  MapPinned,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -29,11 +30,13 @@ import { signOut } from "next-auth/react";
 export function WorkspaceSidebar({ 
   tenant: propTenant,
   workspaceBase,
-  admissionsCount = 0 
+  admissionsCount = 0,
+  isStateManager = false
 }: { 
   tenant?: string;
   workspaceBase?: string;
   admissionsCount?: number;
+  isStateManager?: boolean;
 }) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMoreOpen, setIsMoreOpen] = useState(false);
@@ -65,6 +68,10 @@ export function WorkspaceSidebar({
     { name: "Exam Gen", href: getSafeLink(WORKSPACE_ROUTES.ADMIN_EXAM_GENERATOR), icon: Sparkles },
     { name: "Landing Page", href: getSafeLink(WORKSPACE_ROUTES.ADMIN_SETTINGS), icon: Building2 },
   ];
+
+  if (isStateManager) {
+    navItems.splice(8, 0, { name: "State Manager", href: getSafeLink(WORKSPACE_ROUTES.ADMIN_STATE_MANAGER || "/admin/state-manager"), icon: MapPinned });
+  }
 
   // Close mobile drawer on navigation
   useEffect(() => {

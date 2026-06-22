@@ -78,10 +78,14 @@ export async function approveApplication(applicationId: string, batchId: string)
     const result = await db.$transaction(async (tx) => {
       // 0. Deduct wallet balance if applicable
       if (feeAmount > 0) {
-        await tx.workspace.update({
-          where: { id: application.workspaceId },
+        const updatedWorkspace = await tx.workspace.updateMany({
+          where: { id: application.workspaceId, walletBalance: { gte: feeAmount } },
           data: { walletBalance: { decrement: feeAmount } }
         });
+
+        if (updatedWorkspace.count === 0) {
+          throw new Error(`Transaction failed: Insufficient wallet balance. Needed: ${feeAmount}`);
+        }
 
         await tx.walletTransaction.create({
           data: {

@@ -40,10 +40,14 @@ export async function registerStudentAction(workspaceId: string, data: any) {
 
     // Wrap in transaction if needed, but doing sequentially is fine for now
     if (feeAmount > 0) {
-      await db.workspace.update({
-        where: { id: workspaceId },
+      const updatedWorkspace = await db.workspace.updateMany({
+        where: { id: workspaceId, walletBalance: { gte: feeAmount } },
         data: { walletBalance: { decrement: feeAmount } }
       });
+      
+      if (updatedWorkspace.count === 0) {
+        return { success: false, error: `Transaction failed: Insufficient wallet balance. Needed: ${feeAmount}` };
+      }
       await db.walletTransaction.create({
         data: {
           workspaceId,

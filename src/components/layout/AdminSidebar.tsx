@@ -21,7 +21,8 @@ import {
   User,
   MoreHorizontal,
   Building2,
-  BookOpen
+  BookOpen,
+  MapPinned
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -33,6 +34,7 @@ const navItems = [
   { name: "Overview", href: "/", icon: LayoutDashboard },
   { name: "Wallet Economy", href: "/wallet", icon: Coins },
   { name: "Franchises", href: "/franchises", icon: Building2 },
+  { name: "State Managers", href: "/state-managers", icon: MapPinned },
   { name: "Users", href: "/users", icon: Users },
   { name: "Courses", href: "/courses", icon: BookOpen },
   { name: "Documents", href: "/documents", icon: FileText },

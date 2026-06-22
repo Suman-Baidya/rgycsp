@@ -141,10 +141,48 @@ export async function approveRechargeRequest(transactionId: string) {
       });
 
       // Update workspace wallet balance
-      await tx.workspace.update({
+      const workspace = await tx.workspace.update({
         where: { id: transaction.workspaceId },
-        data: { walletBalance: { increment: transaction.amount } }
+        data: { walletBalance: { increment: transaction.amount } },
+        select: { id: true, name: true, referredById: true, isReferralCommissionEnabled: true, referralCommissionRate: true, referralCommissionExpiry: true }
       });
+      
+      // Process State Manager Commission
+      if (workspace.referredById && workspace.isReferralCommissionEnabled) {
+        const referrer = await tx.workspace.findUnique({
+          where: { id: workspace.referredById },
+          select: { id: true, isStateManager: true, commissionReleaseHours: true }
+        });
+
+        if (referrer && referrer.isStateManager) {
+          const expiryDate = workspace.referralCommissionExpiry;
+          const isValid = !expiryDate || expiryDate > new Date();
+          const commissionRate = workspace.referralCommissionRate || 0;
+
+          if (isValid && commissionRate > 0) {
+            const commissionAmount = transaction.amount * (commissionRate / 100);
+            
+            // Queue pending commission based on configuration
+            const releaseAt = new Date();
+            // @ts-ignore: Prisma client cache issue
+            releaseAt.setHours(releaseAt.getHours() + (referrer.commissionReleaseHours || 24));
+
+            await tx.walletTransaction.create({
+              data: {
+                workspaceId: referrer.id,
+                amount: commissionAmount,
+                type: 'CREDIT',
+                status: 'PENDING',
+                description: `Commission from ${workspace.name} wallet recharge`,
+                referenceId: `COMM-${Date.now()}`,
+                sourceWorkspaceId: workspace.id,
+                isCommission: true,
+                releaseAt
+              }
+            });
+          }
+        }
+      }
       
       // Create a notification for the franchise
       await tx.notification.create({
@@ -182,10 +220,48 @@ export async function directRecharge(workspaceId: string, amount: number, reason
         }
       });
 
-      await tx.workspace.update({
+      const workspace = await tx.workspace.update({
         where: { id: workspaceId },
-        data: { walletBalance: { increment: amount } }
+        data: { walletBalance: { increment: amount } },
+        select: { id: true, name: true, referredById: true, isReferralCommissionEnabled: true, referralCommissionRate: true, referralCommissionExpiry: true }
       });
+      
+      // Process State Manager Commission
+      if (workspace.referredById && workspace.isReferralCommissionEnabled) {
+        const referrer = await tx.workspace.findUnique({
+          where: { id: workspace.referredById },
+          select: { id: true, isStateManager: true, commissionReleaseHours: true }
+        });
+
+        if (referrer && referrer.isStateManager) {
+          const expiryDate = workspace.referralCommissionExpiry;
+          const isValid = !expiryDate || expiryDate > new Date();
+          const commissionRate = workspace.referralCommissionRate || 0;
+
+          if (isValid && commissionRate > 0) {
+            const commissionAmount = amount * (commissionRate / 100);
+            
+            // Queue pending commission based on configuration
+            const releaseAt = new Date();
+            // @ts-ignore: Prisma client cache issue
+            releaseAt.setHours(releaseAt.getHours() + (referrer.commissionReleaseHours || 24));
+
+            await tx.walletTransaction.create({
+              data: {
+                workspaceId: referrer.id,
+                amount: commissionAmount,
+                type: 'CREDIT',
+                status: 'PENDING',
+                description: `Commission from ${workspace.name} direct recharge`,
+                referenceId: `COMM-${Date.now()}`,
+                sourceWorkspaceId: workspace.id,
+                isCommission: true,
+                releaseAt
+              }
+            });
+          }
+        }
+      }
       
       await tx.notification.create({
         data: {
