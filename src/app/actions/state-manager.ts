@@ -604,6 +604,8 @@ export async function getReferredFranchiseRecharges(stateManagerId: string, fran
         isCommissionTransfer: false,
         // @ts-ignore
         isCommissionWithdrawal: false,
+        // @ts-ignore
+        isPromotional: false,
         createdAt: {
           gte: startDate,
           ...(endDate ? { lte: endDate } : {})

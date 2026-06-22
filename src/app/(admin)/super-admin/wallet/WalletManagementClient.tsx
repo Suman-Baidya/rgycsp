@@ -67,6 +67,7 @@ export default function WalletManagementClient({
   const [selectedWorkspace, setSelectedWorkspace] = useState<any>(null);
   const [rechargeAmount, setRechargeAmount] = useState("");
   const [rechargeReason, setRechargeReason] = useState("");
+  const [isPromotional, setIsPromotional] = useState(false);
   const [isRecharging, setIsRecharging] = useState(false);
   const WALLETS_PER_PAGE = 10;
   const HISTORY_PER_PAGE = 10;
@@ -126,12 +127,13 @@ export default function WalletManagementClient({
 
     setIsRecharging(true);
     try {
-      const res = await directRecharge(selectedWorkspace.id, amountNum, rechargeReason);
+      const res = await directRecharge(selectedWorkspace.id, amountNum, rechargeReason, isPromotional);
       if (res.success) {
         toast.success(`Successfully added ₹${amountNum} to ${selectedWorkspace.name}`);
         setRechargeModalOpen(false);
         setRechargeAmount("");
         setRechargeReason("");
+        setIsPromotional(false);
         setSelectedWorkspace(null);
       } else {
         toast.error("Failed to add funds: " + res.error);
@@ -310,6 +312,7 @@ export default function WalletManagementClient({
                             setSelectedWorkspace(wallet);
                             setRechargeAmount("");
                             setRechargeReason("");
+                            setIsPromotional(false);
                             setRechargeModalOpen(true);
                           }}
                         >
@@ -750,7 +753,7 @@ export default function WalletManagementClient({
 
       {/* Direct Recharge Modal */}
       <Dialog open={rechargeModalOpen} onOpenChange={setRechargeModalOpen}>
-        <DialogContent className="sm:max-w-md rounded-3xl p-8 border-2 border-slate-100 dark:border-slate-800 shadow-2xl">
+        <DialogContent className="sm:max-w-xl rounded-3xl p-8 border-2 border-slate-100 dark:border-slate-800 shadow-2xl">
           <DialogHeader>
             <DialogTitle className="text-2xl font-black flex items-center gap-2">
               <PlusCircle className="h-6 w-6 text-primary" />
@@ -787,7 +790,37 @@ export default function WalletManagementClient({
                 className="w-full rounded-2xl border-2 border-slate-200 dark:border-slate-800 p-4 text-sm font-medium bg-slate-50 dark:bg-slate-900 min-h-[100px] focus:ring-primary focus:border-primary transition-colors resize-none"
               />
             </div>
-            <DialogFooter className="pt-4 sm:justify-between gap-3">
+            
+            <div className="space-y-3 pt-2">
+              <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">Recharge Type</label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <label className={cn(
+                  "relative flex cursor-pointer rounded-2xl border-2 p-4 transition-all hover:bg-slate-50 dark:hover:bg-slate-900/50",
+                  !isPromotional ? "border-primary bg-primary/5" : "border-slate-200 dark:border-slate-800"
+                )}>
+                  <input type="radio" name="rechargeType" className="sr-only" checked={!isPromotional} onChange={() => setIsPromotional(false)} />
+                  <div className="flex w-full flex-col">
+                    <span className="font-bold text-slate-900 dark:text-white">Standard Recharge</span>
+                    <span className="text-xs font-medium text-slate-500 mt-1">Generates State Manager Commission</span>
+                  </div>
+                </label>
+
+                <label className={cn(
+                  "relative flex cursor-pointer rounded-2xl border-2 p-4 transition-all hover:bg-slate-50 dark:hover:bg-slate-900/50",
+                  isPromotional ? "border-amber-500 bg-amber-500/5" : "border-slate-200 dark:border-slate-800"
+                )}>
+                  <input type="radio" name="rechargeType" className="sr-only" checked={isPromotional} onChange={() => setIsPromotional(true)} />
+                  <div className="flex w-full flex-col">
+                    <span className="font-bold text-slate-900 dark:text-white flex items-center gap-1">
+                      Promotional Offer <Badge className="bg-amber-500 hover:bg-amber-600 text-[9px] px-1.5 py-0">NEW</Badge>
+                    </span>
+                    <span className="text-xs font-medium text-slate-500 mt-1">NO Commission to State Manager</span>
+                  </div>
+                </label>
+              </div>
+            </div>
+
+            <DialogFooter className="pt-6 sm:justify-between gap-3">
               <Button type="button" variant="ghost" onClick={() => setRechargeModalOpen(false)} className="rounded-xl px-6">
                 Cancel
               </Button>

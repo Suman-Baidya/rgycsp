@@ -623,6 +623,7 @@ model WalletTransaction {
   // Commission specific types
   isCommissionWithdrawal Boolean @default(false)
   isCommissionTransfer   Boolean @default(false)
+  isPromotional          Boolean @default(false)
   
   workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   createdAt   DateTime  @default(now())

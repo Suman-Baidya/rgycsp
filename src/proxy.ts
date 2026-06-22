@@ -96,8 +96,8 @@ export default auth((req) => {
   }
 
   // 2. Handle subdomains (Super Admin and Tenants)
-  if (hostname.endsWith(`.${localDomain}`)) {
-    const tenant = hostname.replace(`.${localDomain}`, "").toLowerCase();
+  if (cleanHost.endsWith(`.${localDomain}`)) {
+    const tenant = cleanHost.replace(`.${localDomain}`, "").toLowerCase();
     
     // Special case: Super Admin Subdomain
     if (tenant === 'super-admin') {

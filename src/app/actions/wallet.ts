@@ -204,7 +204,7 @@ export async function approveRechargeRequest(transactionId: string) {
   }
 }
 
-export async function directRecharge(workspaceId: string, amount: number, reason: string) {
+export async function directRecharge(workspaceId: string, amount: number, reason: string, isPromotional: boolean = false) {
   try {
     await prisma.$transaction(async (tx) => {
       const referenceId = 'DIRECT-' + Date.now();
@@ -217,6 +217,7 @@ export async function directRecharge(workspaceId: string, amount: number, reason
           status: 'APPROVED',
           description: reason,
           referenceId,
+          isPromotional,
         }
       });
 
@@ -226,8 +227,8 @@ export async function directRecharge(workspaceId: string, amount: number, reason
         select: { id: true, name: true, referredById: true, isReferralCommissionEnabled: true, referralCommissionRate: true, referralCommissionExpiry: true }
       });
       
-      // Process State Manager Commission
-      if (workspace.referredById && workspace.isReferralCommissionEnabled) {
+      // Process State Manager Commission (Only if NOT promotional)
+      if (!isPromotional && workspace.referredById && workspace.isReferralCommissionEnabled) {
         const referrer = await tx.workspace.findUnique({
           where: { id: workspace.referredById },
           select: { id: true, isStateManager: true, commissionReleaseHours: true }
