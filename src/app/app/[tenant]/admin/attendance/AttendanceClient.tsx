@@ -146,7 +146,7 @@ export default function AttendanceClient({
                   )}
                 >
                   <span className="font-bold text-sm leading-tight">{batch.name}</span>
-                  <span className="text-[10px] uppercase font-black opacity-60 mt-1">{batch.course.title}</span>
+                  <span className="text-[10px] uppercase font-black opacity-60 mt-1">{batch.course?.title || "Independent Batch"}</span>
                 </button>
               ))}
               {batches.length === 0 && (

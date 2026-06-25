@@ -32,6 +32,7 @@ import { jsPDF } from "jspdf";
 import html2canvas from "html2canvas";
 import { toast } from "sonner";
 import { saveDocumentTemplate, getDocumentTemplates, deleteDocumentTemplate } from "@/app/actions/document-templates";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
 interface DocVariable {
   id: string;
@@ -62,6 +63,7 @@ export default function DocumentDesigner() {
   const [view, setView] = useState<"list" | "editor">("list");
   const [templates, setTemplates] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [templateToDelete, setTemplateToDelete] = useState<any>(null);
   
   // Current Template State
   const [currentId, setCurrentId] = useState<string | null>(null);
@@ -178,15 +180,20 @@ export default function DocumentDesigner() {
     setIsSaving(false);
   };
 
-  const handleDelete = async (id: string, e: React.MouseEvent) => {
+  const handleDeleteClick = (template: any, e: React.MouseEvent) => {
     e.stopPropagation();
-    if (!confirm("Are you sure you want to delete this template?")) return;
+    setTemplateToDelete(template);
+  };
+
+  const confirmDelete = async () => {
+    if (!templateToDelete) return;
     
-    const res = await deleteDocumentTemplate(id);
+    const res = await deleteDocumentTemplate(templateToDelete.id);
     if (res.success) {
       toast.success("Template deleted");
       fetchTemplates();
     }
+    setTemplateToDelete(null);
   };
 
   const addVariable = (type: "text" | "image" | "signature") => {
@@ -375,12 +382,12 @@ export default function DocumentDesigner() {
                   <div className="absolute top-3 right-3 z-20">
                     <div className="transition-all duration-300 transform translate-y-[-10px] opacity-0 group-hover:translate-y-0 group-hover:opacity-100">
                        <Button 
-                         variant="destructive" 
-                         size="icon" 
-                         onClick={(e) => handleDelete(template.id, e)}
-                         className="h-9 w-9 rounded-xl shadow-xl backdrop-blur-md bg-red-500/90 hover:bg-red-600 border border-white/20 transition-all active:scale-90"
-                       >
-                         <Trash2 className="h-4 w-4 text-white" />
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-50 rounded-lg shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                        onClick={(e) => handleDeleteClick(template, e)}
+                      >
+                         <Trash2 className="h-4 w-4" />
                        </Button>
                     </div>
                   </div>
@@ -777,6 +784,19 @@ export default function DocumentDesigner() {
           </div>
         </div>
       </div>
+      <ConfirmDialog 
+        open={!!templateToDelete} 
+        onOpenChange={(open) => !open && setTemplateToDelete(null)}
+        title="Delete Template"
+        description={
+          <>
+            Are you sure you want to delete <strong className="text-slate-900 dark:text-white">{templateToDelete?.name}</strong>? This action cannot be undone.
+          </>
+        }
+        onConfirm={confirmDelete}
+        confirmText="Delete"
+        destructive={true}
+      />
     </div>
   );
 }

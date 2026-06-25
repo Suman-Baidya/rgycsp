@@ -35,12 +35,13 @@ const navItems = [
   { name: "Wallet Economy", href: "/wallet", icon: Coins },
   { name: "Franchises", href: "/franchises", icon: Building2 },
   { name: "State Managers", href: "/state-managers", icon: MapPinned },
-  { name: "Users", href: "/users", icon: Users },
+  { name: "Students", href: "/students", icon: Users },
+  { name: "Users", href: "/users", icon: User },
   { name: "Courses", href: "/courses", icon: BookOpen },
   { name: "Documents", href: "/documents", icon: FileText },
   { name: "System Logs", href: "/logs", icon: Activity },
   { name: "Settings", href: "/settings", icon: Settings },
-  { name: "Profile", href: "/profile", icon: User },
+  { name: "Profile", href: "/profile", icon: ShieldCheck },
 ];
 
 export function AdminSidebar() {
@@ -124,7 +125,7 @@ export function AdminSidebar() {
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 py-6 px-4 space-y-2 overflow-y-auto overflow-x-hidden custom-scrollbar">
+        <nav className={cn("flex-1 py-6 space-y-2 overflow-y-auto overflow-x-hidden", isCollapsed ? "px-2 scrollbar-hide" : "px-4 custom-scrollbar")}>
           {navItems.map((item) => {
             const tenant = "super-admin";
             const href = getTenantLink(item.href, tenant, pathname);
@@ -138,7 +139,7 @@ export function AdminSidebar() {
                     isActive 
                       ? "bg-gradient-to-r from-primary to-primary/80 text-primary-foreground shadow-[0_8px_20px_-6px_rgba(var(--primary),0.4)]" 
                       : "hover:bg-white/5 hover:text-white text-zinc-400",
-                    isCollapsed ? "justify-center h-12 w-12 mx-auto rounded-xl" : "px-3 py-3 rounded-xl"
+                    isCollapsed ? "justify-center h-10 w-10 mx-auto rounded-xl" : "px-3 py-2.5 rounded-xl"
                   )}
                 >
                   <item.icon className={cn("h-5 w-5 flex-shrink-0 transition-colors", isActive ? "text-primary-foreground" : "group-hover:text-white")} />

@@ -49,19 +49,6 @@ export async function approveApplication(applicationId: string, batchId: string)
       return { success: false, error: "Already approved." };
     }
 
-    // Check wallet balance and duration fee
-    let feeAmount = 0;
-    const duration = application.course?.duration;
-
-    if (duration) {
-      const feeConfig = await db.registrationFeeConfig.findUnique({
-        where: { duration }
-      });
-      if (feeConfig) {
-        feeAmount = feeConfig.amount;
-      }
-    }
-
     const workspace = await db.workspace.findUnique({
       where: { id: application.workspaceId }
     });
@@ -70,34 +57,8 @@ export async function approveApplication(applicationId: string, batchId: string)
       return { success: false, error: "Workspace not found." };
     }
 
-    if (feeAmount > 0 && workspace.walletBalance < feeAmount) {
-      return { success: false, error: `Insufficient wallet balance. Needed: ${feeAmount}, Available: ${workspace.walletBalance}` };
-    }
-
     // Wrap in transaction
     const result = await db.$transaction(async (tx) => {
-      // 0. Deduct wallet balance if applicable
-      if (feeAmount > 0) {
-        const updatedWorkspace = await tx.workspace.updateMany({
-          where: { id: application.workspaceId, walletBalance: { gte: feeAmount } },
-          data: { walletBalance: { decrement: feeAmount } }
-        });
-
-        if (updatedWorkspace.count === 0) {
-          throw new Error(`Transaction failed: Insufficient wallet balance. Needed: ${feeAmount}`);
-        }
-
-        await tx.walletTransaction.create({
-          data: {
-            workspaceId: application.workspaceId,
-            amount: feeAmount,
-            type: "DEBIT",
-            status: "APPROVED",
-            description: `Student Registration Fee (App: ${application.applicationNo})`
-          }
-        });
-      }
-
       // 1. Update application status
       const updatedApp = await tx.admissionApplication.update({
         where: { id: applicationId },
@@ -115,6 +76,8 @@ export async function approveApplication(applicationId: string, batchId: string)
         data: {
           workspaceId: application.workspaceId,
           batchId: batchId || null,
+          courseId: application.courseId,
+          applicationId: application.id,
           fullName: application.fullName,
           enrollmentNo: enrollmentNo,
           dob: application.dob,
@@ -125,6 +88,7 @@ export async function approveApplication(applicationId: string, batchId: string)
           address: typeof application.address === 'object' ? JSON.stringify(application.address) : null,
           bloodGroup: null,
           admissionDate: new Date(),
+          status: "UNREGISTERED" // Explicitly setting status
         }
       });
 

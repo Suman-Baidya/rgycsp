@@ -23,6 +23,7 @@ import {
 import { createBatch, updateBatch, deleteBatch } from "@/app/actions/batches";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
 export default function BatchManagement({ 
   workspaceId, 
@@ -38,11 +39,11 @@ export default function BatchManagement({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [editingBatch, setEditingBatch] = useState<any>(null);
+  const [batchToDelete, setBatchToDelete] = useState<any>(null);
 
   // Form State
   const [formData, setFormData] = useState({
     name: "",
-    courseId: "",
     schedule: ""
   });
 
@@ -56,14 +57,12 @@ export default function BatchManagement({
       setEditingBatch(batch);
       setFormData({
         name: batch.name,
-        courseId: batch.courseId,
         schedule: batch.schedule || ""
       });
     } else {
       setEditingBatch(null);
       setFormData({
         name: "",
-        courseId: courses[0]?.id || "",
         schedule: ""
       });
     }
@@ -71,8 +70,8 @@ export default function BatchManagement({
   };
 
   const handleSave = async () => {
-    if (!formData.name || !formData.courseId) {
-      toast.error("Please fill in all required fields.");
+    if (!formData.name) {
+      toast.error("Please fill in the batch name.");
       return;
     }
 
@@ -82,7 +81,7 @@ export default function BatchManagement({
         const res = await updateBatch(editingBatch.id, formData);
         if (res.success) {
           toast.success("Batch updated successfully");
-          setBatches(prev => prev.map(b => b.id === editingBatch.id ? { ...b, ...formData, course: courses.find(c => c.id === formData.courseId) } : b));
+          setBatches(prev => prev.map(b => b.id === editingBatch.id ? { ...b, ...formData } : b));
           setIsModalOpen(false);
         } else {
           toast.error(res.error || "Update failed");
@@ -104,22 +103,27 @@ export default function BatchManagement({
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this batch?")) return;
+  const handleDeleteClick = (batch: any) => {
+    setBatchToDelete(batch);
+  };
+
+  const confirmDelete = async () => {
+    if (!batchToDelete) return;
     
     setIsProcessing(true);
     try {
-      const res = await deleteBatch(id);
-      if (res.success) {
-        toast.success("Batch deleted");
-        setBatches(prev => prev.filter(b => b.id !== id));
+      const result = await deleteBatch(batchToDelete.id);
+      if (result.success) {
+        setBatches(batches.filter((b: any) => b.id !== batchToDelete.id));
+        toast.success("Batch deleted successfully");
       } else {
-        toast.error(res.error);
+        toast.error(result.error || "Failed to delete batch");
       }
     } catch (err) {
       toast.error("Delete failed");
     } finally {
       setIsProcessing(false);
+      setBatchToDelete(null);
     }
   };
 
@@ -147,7 +151,7 @@ export default function BatchManagement({
                <Button variant="ghost" size="icon" onClick={() => handleOpenModal(batch)} className="h-10 w-10 rounded-xl bg-slate-50 dark:bg-slate-800 text-slate-600 hover:text-primary">
                  <Pencil className="w-4 h-4" />
                </Button>
-               <Button variant="ghost" size="icon" onClick={() => handleDelete(batch.id)} className="h-10 w-10 rounded-xl bg-red-50 dark:bg-red-900/20 text-red-500 hover:bg-red-500 hover:text-white">
+               <Button variant="ghost" size="icon" onClick={() => handleDeleteClick(batch)} className="h-10 w-10 rounded-xl bg-red-50 dark:bg-red-900/20 text-red-500 hover:bg-red-500 hover:text-white">
                  <Trash2 className="w-4 h-4" />
                </Button>
             </div>
@@ -160,7 +164,7 @@ export default function BatchManagement({
                 <h4 className="text-xl font-bold text-slate-900 dark:text-white">{batch.name}</h4>
                 <div className="flex items-center gap-2 text-xs font-bold text-primary uppercase tracking-widest bg-primary/5 w-fit px-3 py-1 rounded-full">
                   <GraduationCap className="w-3 h-3" />
-                  {batch.course?.title || "No Course"}
+                  Independent Batch
                 </div>
               </div>
 
@@ -220,24 +224,7 @@ export default function BatchManagement({
               />
             </div>
 
-            <div className="space-y-2">
-              <Label className="text-xs font-bold uppercase tracking-widest text-slate-400 ml-1">Assign Course</Label>
-              <Select 
-                value={formData.courseId} 
-                onValueChange={(val) => setFormData({ ...formData, courseId: val as string })}
-              >
-                <SelectTrigger className="h-12 rounded-2xl font-bold">
-                  <SelectValue placeholder="Select a course" />
-                </SelectTrigger>
-                <SelectContent className="rounded-2xl border-none shadow-2xl">
-                  {courses.map(course => (
-                    <SelectItem key={course.id} value={course.id} className="rounded-xl font-bold py-3">
-                      {course.title}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+
 
             <div className="space-y-2">
               <Label className="text-xs font-bold uppercase tracking-widest text-slate-400 ml-1">Schedule (Optional)</Label>
@@ -260,6 +247,20 @@ export default function BatchManagement({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      
+      <ConfirmDialog 
+        open={!!batchToDelete} 
+        onOpenChange={(open) => !open && setBatchToDelete(null)}
+        title="Delete Batch"
+        description={
+          <>
+            Are you sure you want to delete <strong className="text-slate-900 dark:text-white">{batchToDelete?.name}</strong>? This action cannot be undone.
+          </>
+        }
+        onConfirm={confirmDelete}
+        confirmText="Delete"
+        destructive={true}
+      />
     </div>
   );
 }

@@ -12,8 +12,20 @@ export default function CsvBulkImport({ workspaceId }: { workspaceId: string }) 
   const [parsedData, setParsedData] = useState<any[]>([]);
 
   const handleDownloadTemplate = () => {
-    const headers = ["fullName", "mobile", "email", "courseId", "batchId", "fees"];
-    const example = ["John Doe", "9876543210", "john@example.com", "course_cuid", "batch_cuid", "5000"];
+    const headers = [
+      "fullName", "fatherName", "motherName", "dob", "gender", "religion", "caste", "bloodGroup", "guardianPhone",
+      "mobile", "whatsapp", "email",
+      "vill", "po", "ps", "dist", "state", "pin",
+      "qualName", "qualBoard", "qualYear", "qualPercent",
+      "courseId", "batchId", "fees"
+    ];
+    const example = [
+      "John Doe", "Robert Doe", "Jane Doe", "2000-01-15", "Male", "Hindu", "GEN", "O+", "9876543210",
+      "9876543210", "9876543210", "john@example.com",
+      "Salt Lake", "Sector 5", "Bidhannagar", "Kolkata", "West Bengal", "700091",
+      "12th", "CBSE", "2018", "85",
+      "course_cuid", "batch_cuid", "5000"
+    ];
     
     const csvContent = "data:text/csv;charset=utf-8," 
       + headers.join(",") + "\n"

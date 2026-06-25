@@ -13,6 +13,7 @@ import { toast } from "sonner";
 import { Settings, Building2, Link as LinkIcon, Edit2, ShieldCheck, Shield, Network, Search, Download, ChevronLeft, ChevronRight, CheckCircle2, Copy, Unlink } from "lucide-react";
 import { AdminPageHeader } from "@/components/layout/AdminPageHeader";
 import { cn } from "@/lib/utils";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
 export function StateManagerClient({ initialManagers, franchises, allWithdrawals = [] }: { initialManagers: any[], franchises: any[], allWithdrawals?: any[] }) {
   const [managers, setManagers] = useState(initialManagers);
@@ -41,6 +42,9 @@ export function StateManagerClient({ initialManagers, franchises, allWithdrawals
   
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [editForm, setEditForm] = useState<any>({});
+  const [managerToClear, setManagerToClear] = useState<string | null>(null);
+  const [managerToRevoke, setManagerToRevoke] = useState<string | null>(null);
+  const [franchiseToUnlink, setFranchiseToUnlink] = useState<string | null>(null);
 
   // Default 1 year expiry
   const defaultExpiryDate = new Date();
@@ -145,20 +149,29 @@ export function StateManagerClient({ initialManagers, franchises, allWithdrawals
     }
   };
 
-  const handleClearNow = async (id: string) => {
-    if(!confirm("Are you sure you want to clear and release all pending commissions for this State Manager?")) return;
-    const res = await clearPendingCommissions(id);
+  const handleClearNowClick = (id: string) => {
+    setManagerToClear(id);
+  };
+
+  const confirmClearNow = async () => {
+    if (!managerToClear) return;
+    const res = await clearPendingCommissions(managerToClear);
     if(res.success) {
-      toast.success(res.message || `Cleared ${formatCurrency(res.amountCleared || 0)} successfully.`);
+      toast.success(`Cleared ${formatCurrency(res.amountCleared || 0)} successfully.`);
       window.location.reload();
     } else {
       toast.error(res.error || "Failed to clear commissions.");
     }
+    setManagerToClear(null);
   };
 
-  const handleRevoke = async (id: string) => {
-    if(!confirm("Are you sure you want to completely revoke State Manager access? They will lose all referral capabilities and the menu will be hidden from their dashboard.")) return;
-    const res = await revokeStateManager(id);
+  const handleRevokeClick = (id: string) => {
+    setManagerToRevoke(id);
+  };
+
+  const confirmRevoke = async () => {
+    if (!managerToRevoke) return;
+    const res = await revokeStateManager(managerToRevoke);
     if(res.success) {
       toast.success("State Manager access revoked.");
       setIsEditOpen(false);
@@ -166,6 +179,7 @@ export function StateManagerClient({ initialManagers, franchises, allWithdrawals
     } else {
       toast.error(res.error || "Failed to revoke access.");
     }
+    setManagerToRevoke(null);
   };
 
   const handleApproveWithdrawal = async (transactionId: string) => {
@@ -437,7 +451,7 @@ export function StateManagerClient({ initialManagers, franchises, allWithdrawals
                             <div className="flex items-center md:justify-end gap-2">
                               <p className="font-bold text-sm text-amber-500">{formatCurrency(m.totalPending || 0)}</p>
                               {m.totalPending > 0 && (
-                                <button onClick={() => handleClearNow(m.id)} className="text-[10px] bg-amber-500/10 text-amber-600 hover:bg-amber-500/20 px-2 py-0.5 rounded-md font-bold transition-colors">Clear Now</button>
+                                <Button onClick={() => handleClearNowClick(m.workspaceId)} variant="outline" size="sm" className="h-8 rounded-lg font-bold border-green-200 text-green-700 bg-green-50 hover:bg-green-100">Clear Now</Button>
                               )}
                             </div>
                             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Pending</p>
@@ -573,17 +587,7 @@ export function StateManagerClient({ initialManagers, franchises, allWithdrawals
                               <Button 
                                 variant="outline" 
                                 size="sm" 
-                                onClick={async () => {
-                                  if (confirm("Are you sure you want to unlink this franchise?")) {
-                                    const res = await assignReferralToFranchise(f.id, null);
-                                    if (res.success) {
-                                      toast.success("Franchise unlinked.");
-                                      window.location.reload();
-                                    } else {
-                                      toast.error(res.error || "Failed to unlink.");
-                                    }
-                                  }
-                                }} 
+                                onClick={() => setFranchiseToUnlink(f.id)} 
                                 className="h-10 px-4 rounded-xl font-bold bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 flex-1 md:flex-none text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-500/10 shadow-sm transition-all"
                               >
                                 <Unlink className="w-4 h-4 mr-2" /> Unlink
@@ -894,7 +898,7 @@ export function StateManagerClient({ initialManagers, franchises, allWithdrawals
             </div>
           </div>
           <div className="p-6 border-t border-slate-50 dark:border-slate-800 flex items-center justify-between bg-slate-50/30 dark:bg-slate-800/20">
-             <Button variant="destructive" onClick={() => handleRevoke(editForm.id)} className="h-12 px-6 rounded-xl font-bold shadow-lg">Revoke Power</Button>
+             <Button variant="destructive" onClick={() => handleRevokeClick(editForm.id)} className="h-12 px-6 rounded-xl font-bold shadow-lg">Revoke Power</Button>
              <div className="flex gap-3">
                <Button variant="ghost" onClick={() => setIsEditOpen(false)} className="h-12 px-6 rounded-xl font-bold">Cancel</Button>
                <Button onClick={handleEdit} className="h-12 px-8 rounded-xl bg-amber-500 hover:bg-amber-600 text-white shadow-lg shadow-amber-500/20 font-bold">Save Changes</Button>
@@ -963,6 +967,45 @@ export function StateManagerClient({ initialManagers, franchises, allWithdrawals
           </div>
         </DialogContent>
       </Dialog>
+      
+      <ConfirmDialog 
+        open={!!managerToClear} 
+        onOpenChange={(open) => !open && setManagerToClear(null)}
+        title="Clear Pending Commissions"
+        description="Are you sure you want to clear and release all pending commissions for this State Manager?"
+        onConfirm={confirmClearNow}
+        confirmText="Clear Commissions"
+      />
+
+      <ConfirmDialog 
+        open={!!managerToRevoke} 
+        onOpenChange={(open) => !open && setManagerToRevoke(null)}
+        title="Revoke State Manager Access"
+        description="Are you sure you want to completely revoke State Manager access? They will lose all referral capabilities and the menu will be hidden from their dashboard."
+        onConfirm={confirmRevoke}
+        confirmText="Revoke Access"
+        destructive={true}
+      />
+
+      <ConfirmDialog 
+        open={!!franchiseToUnlink} 
+        onOpenChange={(open) => !open && setFranchiseToUnlink(null)}
+        title="Unlink Franchise"
+        description="Are you sure you want to unlink this franchise?"
+        onConfirm={async () => {
+          if (!franchiseToUnlink) return;
+          const res = await assignReferralToFranchise(franchiseToUnlink, null);
+          if (res.success) {
+            toast.success("Franchise unlinked.");
+            window.location.reload();
+          } else {
+            toast.error(res.error || "Failed to unlink.");
+          }
+          setFranchiseToUnlink(null);
+        }}
+        confirmText="Unlink"
+        destructive={true}
+      />
     </div>
   );
 }

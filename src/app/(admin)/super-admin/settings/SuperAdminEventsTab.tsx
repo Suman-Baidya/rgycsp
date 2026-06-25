@@ -9,6 +9,7 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Calendar, Clock, MapPin, Plus, Trash2, Edit2, CheckCircle2, Image as ImageIcon, Video, Users, ListTodo, Images, LayoutDashboard, ChevronRight, Check } from "lucide-react";
 import { toast } from "sonner";
@@ -33,6 +34,7 @@ export function SuperAdminEventsTab() {
   
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("basic");
+  const [eventToDelete, setEventToDelete] = useState<any>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [isCreatingCategory, setIsCreatingCategory] = useState(false);
   const [formData, setFormData] = useState<any>({
@@ -169,11 +171,15 @@ export function SuperAdminEventsTab() {
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this event?")) return;
+  const handleDeleteClick = (event: any) => {
+    setEventToDelete(event);
+  };
+
+  const confirmDelete = async () => {
+    if (!eventToDelete) return;
     
     try {
-      const res = await deleteEvent(id);
+      const res = await deleteEvent(eventToDelete.id);
       if (res.success) {
         toast.success("Event deleted");
         loadData();
@@ -182,6 +188,8 @@ export function SuperAdminEventsTab() {
       }
     } catch (error) {
       toast.error("An error occurred");
+    } finally {
+      setEventToDelete(null);
     }
   };
 
@@ -259,7 +267,7 @@ export function SuperAdminEventsTab() {
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-2">
                         <Button variant="ghost" size="icon" onClick={() => handleEdit(event)} className="h-9 w-9 text-blue-500 hover:bg-blue-500/10 rounded-xl"><Edit2 className="h-4 w-4" /></Button>
-                        <Button variant="ghost" size="icon" onClick={() => handleDelete(event.id)} className="h-9 w-9 text-red-500 hover:bg-red-500/10 rounded-xl"><Trash2 className="h-4 w-4" /></Button>
+                        <Button variant="ghost" size="icon" onClick={() => handleDeleteClick(event)} className="w-10 h-10 rounded-xl text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 hover:text-red-600 transition-colors shrink-0"><Trash2 className="h-4 w-4" /></Button>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -647,6 +655,20 @@ export function SuperAdminEventsTab() {
           </div>
         </DialogContent>
       </Dialog>
+      
+      <ConfirmDialog 
+        open={!!eventToDelete} 
+        onOpenChange={(open) => !open && setEventToDelete(null)}
+        title="Delete Event"
+        description={
+          <>
+            Are you sure you want to delete <strong className="text-slate-900 dark:text-white">{eventToDelete?.title}</strong>? This action cannot be undone.
+          </>
+        }
+        onConfirm={confirmDelete}
+        confirmText="Delete"
+        destructive={true}
+      />
     </div>
   );
 }

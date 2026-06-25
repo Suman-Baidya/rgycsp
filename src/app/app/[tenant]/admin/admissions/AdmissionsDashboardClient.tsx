@@ -9,6 +9,7 @@ import { AdminApplicationsClient } from "../students/AdminApplicationsClient";
 import AdmissionConfigClient from "../students/AdmissionConfigClient";
 import ManualEnrollmentTab from "./ManualEnrollmentTab";
 import BatchManagement from "../students/BatchManagement";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import AnalyticsTab from "./AnalyticsTab";
 import { toast } from "sonner";
 import { cleanupRejectedApplications } from "@/app/actions/cleanup";
@@ -30,17 +31,28 @@ export default function AdmissionsDashboardClient({
 }) {
   const [activeTab, setActiveTab] = useState("applications");
   const [isCleaning, setIsCleaning] = useState(false);
+  const [editingOnlineApp, setEditingOnlineApp] = useState<any>(null);
+  const [confirmCleanup, setConfirmCleanup] = useState(false);
 
-  const handleCleanup = async () => {
-    if (!window.confirm("Are you sure you want to permanently delete rejected applications older than 30 days?")) return;
+  const handleCleanupClick = () => {
+    setConfirmCleanup(true);
+  };
+
+  const confirmCleanupAction = async () => {
     setIsCleaning(true);
     const res = await cleanupRejectedApplications(workspaceId);
     setIsCleaning(false);
+    setConfirmCleanup(false);
     if (res.success) {
       toast.success(`Cleanup complete. Deleted ${res.count} old applications.`);
     } else {
       toast.error(res.error || "Cleanup failed.");
     }
+  };
+
+  const handleEditOnlineApp = (app: any) => {
+    setEditingOnlineApp(app);
+    setActiveTab("new-admission");
   };
 
   const tabs = [
@@ -57,7 +69,7 @@ export default function AdmissionsDashboardClient({
         title="Student Admissions" 
         description="Manage new enrollments, process applications, and configure admission form."
       >
-        <Button onClick={handleCleanup} disabled={isCleaning} variant="destructive" className="rounded-xl h-9 text-xs">
+        <Button onClick={handleCleanupClick} disabled={isCleaning} variant="destructive" className="rounded-xl h-9 text-xs">
           {isCleaning ? "Cleaning..." : "Cleanup Rejected Forms"}
         </Button>
       </AdminPageHeader>
@@ -66,7 +78,10 @@ export default function AdmissionsDashboardClient({
         {tabs.map((tab) => (
           <button
             key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
+            onClick={() => {
+               setActiveTab(tab.id);
+               if (tab.id !== "new-admission") setEditingOnlineApp(null);
+            }}
             className={cn(
               "flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 whitespace-nowrap shrink-0",
               activeTab === tab.id
@@ -91,6 +106,12 @@ export default function AdmissionsDashboardClient({
             workspaceId={workspaceId}
             courses={courses}
             batches={batches}
+            drafts={applications.filter(a => a.status === "DRAFT")}
+            editingOnlineApp={editingOnlineApp}
+            onCancelEdit={() => {
+              setEditingOnlineApp(null);
+              setActiveTab("applications");
+            }}
           />
         )}
 
@@ -99,6 +120,8 @@ export default function AdmissionsDashboardClient({
             workspaceId={workspaceId} 
             initialData={applications} 
             batches={batches}
+            courses={courses}
+            onEditOnlineApp={handleEditOnlineApp}
           />
         )}
 
@@ -119,6 +142,16 @@ export default function AdmissionsDashboardClient({
           </div>
         )}
       </div>
+      
+      <ConfirmDialog 
+        open={confirmCleanup} 
+        onOpenChange={setConfirmCleanup}
+        title="Cleanup Rejected Applications"
+        description="Are you sure you want to permanently delete all rejected applications older than 30 days? This action cannot be undone."
+        onConfirm={confirmCleanupAction}
+        confirmText="Yes, delete them"
+        destructive={true}
+      />
     </div>
   );
 }

@@ -304,6 +304,10 @@ export async function updateApplicationStatus(id: string, status: string, reject
           admissionDate: new Date(),
           applicationId: application.id,
           batchId: batchId || null,
+          courseId: application.courseId || null,
+          photoUrl: application.photoUrl || null,
+          signatureUrl: application.signatureUrl || null,
+          idProofUrl: application.idProofUrl || null,
           status: "UNREGISTERED",
         }
       });

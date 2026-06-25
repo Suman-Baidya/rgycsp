@@ -67,6 +67,7 @@ export default function StudentsManagementClient({
             workspaceId={workspaceId} 
             initialStudents={initialStudents} 
             batches={batches}
+            courses={courses}
             status={activeTab.toUpperCase()}
           />
         )}

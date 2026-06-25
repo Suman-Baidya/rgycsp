@@ -37,7 +37,7 @@ import { useParams, usePathname } from "next/navigation";
 import Image from "next/image";
 import { ApplicationDetailsModal } from "./ApplicationDetailsModal";
 
-export function AdminApplicationsClient({ workspaceId, initialData, batches = [] }: any) {
+export function AdminApplicationsClient({ workspaceId, initialData, batches = [], courses = [], onEditOnlineApp }: any) {
   const [data, setData] = useState(initialData);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<"ALL" | "PENDING" | "APPROVED" | "REJECTED">("PENDING");
@@ -98,7 +98,14 @@ export function AdminApplicationsClient({ workspaceId, initialData, batches = []
     const status = actionType === "APPROVE" ? "APPROVED" : "REJECTED";
 
     try {
-      const res = await updateApplicationStatus(actionApp.id, status, reason, selectedBatchId);
+      let res;
+      if (status === "APPROVED") {
+         const { finalEnrollApplication } = await import("@/app/actions/admissions");
+         res = await finalEnrollApplication(workspaceId, actionApp.id, { batchId: selectedBatchId });
+      } else {
+         res = await updateApplicationStatus(actionApp.id, status, reason, selectedBatchId);
+      }
+
       if (res.success) {
         toast.success(`Application ${status.toLowerCase()} successfully`);
         // Remove from list if approved (since they move to unregistered) or update it
@@ -301,25 +308,27 @@ export function AdminApplicationsClient({ workspaceId, initialData, batches = []
                         <Eye className="w-4 h-4 mr-2" /> Details
                      </Button>
                      
-                     <DropdownMenu>
-                        <DropdownMenuTrigger className="inline-flex h-9 items-center justify-center rounded-xl bg-slate-900 text-white hover:bg-slate-800 font-bold px-4 text-sm cursor-pointer shadow-sm transition-all active:scale-95 outline-none">
-                              Update Status
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="rounded-2xl p-2 min-w-[160px] shadow-2xl border-none ring-1 ring-slate-100 dark:ring-slate-800 bg-white dark:bg-slate-900">
-                          {app.status === "PENDING" && (
-                            <>
-                              <DropdownMenuItem onClick={() => { setActionApp(app); setActionType("APPROVE"); }}>
-                                <CheckCircle className="w-4 h-4 mr-2 text-emerald-500" />
-                                Approve
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => { setActionApp(app); setActionType("REJECT"); }} className="text-red-600">
-                                <XCircle className="w-4 h-4 mr-2" />
-                                Reject
-                              </DropdownMenuItem>
-                            </>
-                          )}
-                        </DropdownMenuContent>
-                     </DropdownMenu>
+                     {app.status === "PENDING" ? (
+                       <Button 
+                         size="sm" 
+                         className="rounded-xl font-bold bg-primary hover:bg-primary/90 text-white shadow-sm"
+                         onClick={() => onEditOnlineApp && onEditOnlineApp(app)}
+                       >
+                         <CheckCircle className="w-4 h-4 mr-2" /> Review & Approve
+                       </Button>
+                     ) : (
+                       <DropdownMenu>
+                          <DropdownMenuTrigger className="inline-flex h-9 items-center justify-center rounded-xl bg-slate-900 text-white hover:bg-slate-800 font-bold px-4 text-sm cursor-pointer shadow-sm transition-all active:scale-95 outline-none">
+                                Update Status
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="rounded-2xl p-2 min-w-[160px] shadow-2xl border-none ring-1 ring-slate-100 dark:ring-slate-800 bg-white dark:bg-slate-900">
+                             <DropdownMenuItem onClick={() => { setActionApp(app); setActionType("REJECT"); }} className="text-red-600">
+                               <XCircle className="w-4 h-4 mr-2" />
+                               Reject
+                             </DropdownMenuItem>
+                          </DropdownMenuContent>
+                       </DropdownMenu>
+                     )}
                   </div>
                </div>
             </div>
@@ -364,11 +373,11 @@ export function AdminApplicationsClient({ workspaceId, initialData, batches = []
                 className="w-full flex h-10 rounded-xl border border-input bg-background px-3 py-2 text-sm focus:border-emerald-500 transition-all outline-none"
               >
                 <option value="">-- Choose a batch --</option>
-                {batches.filter((b: any) => b.courseId === actionApp?.courseId).map((batch: any) => (
+                {batches.filter((b: any) => !b.courseId || b.courseId === actionApp?.courseId).map((batch: any) => (
                   <option key={batch.id} value={batch.id}>{batch.name}</option>
                 ))}
               </select>
-              {batches.filter((b: any) => b.courseId === actionApp?.courseId).length === 0 && (
+              {batches.filter((b: any) => !b.courseId || b.courseId === actionApp?.courseId).length === 0 && (
                 <p className="text-xs text-red-500 mt-1">No batches available for this course. Please create a batch first.</p>
               )}
             </div>

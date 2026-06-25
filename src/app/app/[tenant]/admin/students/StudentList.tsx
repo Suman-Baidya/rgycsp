@@ -1,13 +1,13 @@
 "use client";
 
 import React, { useState } from "react";
-import { Plus, Search, MoreVertical, UserPlus, Phone, Mail, GraduationCap, FileText, Eye, Pencil, Database, Download, Loader2 } from "lucide-react";
+import { Plus, Search, MoreVertical, UserPlus, Phone, Mail, GraduationCap, FileText, Eye, Pencil, Database, Download, Loader2, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Dialog,
   DialogContent,
@@ -16,22 +16,34 @@ import {
   DialogTrigger,
   DialogFooter,
 } from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Label } from "@/components/ui/label";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { createStudent, updateStudent } from "@/app/actions/students";
 import { importStudentsCSV } from "@/app/actions/students-import";
+import { registerStudent, markStudentAsPassOut, toggleDocumentApproval } from "@/app/actions/student-registration";
 import { toast } from "sonner";
 import { useRouter, usePathname, useParams } from "next/navigation";
 import Link from "next/link";
+import { ImageUpload } from "@/components/ui/ImageUpload";
 
 export default function StudentList({ 
   workspaceId, 
   initialStudents,
-  batches 
+  batches,
+  courses,
+  status
 }: { 
   workspaceId: string; 
   initialStudents: any[];
   batches: any[];
+  courses: any[];
   status?: string;
 }) {
   const [searchTerm, setSearchTerm] = useState("");
@@ -58,13 +70,24 @@ export default function StudentList({
     bloodGroup: "",
     religion: "",
     caste: "",
-    address: "",
-    parentName: "",
-    parentPhone: "",
+    addressVill: "",
+    addressPO: "",
+    addressPS: "",
+    addressDist: "",
+    addressState: "",
+    addressPin: "",
     fatherName: "",
     motherName: "",
     guardianPhone: "",
     batchId: "",
+    courseId: "",
+    qualName: "",
+    qualYear: "",
+    qualPercent: "",
+    qualBoard: "",
+    photoUrl: "",
+    signatureUrl: "",
+    idProofUrl: "",
   });
 
   const handleCSVUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -158,33 +181,110 @@ export default function StudentList({
 
   const handleEditClick = (student: any) => {
     setSelectedStudent(student);
+    let qual: any = null;
+    try {
+      if (typeof student.qualification === 'string') {
+        qual = JSON.parse(student.qualification);
+      } else if (student.qualification) {
+        qual = student.qualification;
+      }
+    } catch (e) { }
+
+    let addrObj: any = {};
+    try {
+      if (typeof student.address === 'string') {
+        if (student.address.trim().startsWith('{')) {
+          addrObj = JSON.parse(student.address);
+        } else {
+          addrObj = { vill: student.address };
+        }
+      } else if (student.address) {
+        addrObj = student.address;
+      } else if (student.admissionApp?.address) {
+        if (typeof student.admissionApp.address === 'string') {
+          addrObj = JSON.parse(student.admissionApp.address);
+        } else {
+          addrObj = student.admissionApp.address;
+        }
+      }
+    } catch (e) { }
+
     setEditFormData({
       fullName: student.fullName,
       enrollmentNo: student.enrollmentNo,
       phone: student.phone || "",
       email: student.email || "",
       whatsapp: student.whatsapp || "",
-      dob: student.dob ? new Date(student.dob).toISOString().split('T')[0] : "",
+      dob: student.dob ? new Date(student.dob).toLocaleDateString('en-GB') : "",
       gender: student.gender || "",
       bloodGroup: student.bloodGroup || "",
       religion: student.religion || "",
       caste: student.caste || "",
-      address: student.address || "",
-      parentName: student.parentName || "",
-      parentPhone: student.parentPhone || "",
-      fatherName: student.fatherName || "",
-      motherName: student.motherName || "",
-      guardianPhone: student.guardianPhone || "",
-      batchId: student.batchId || "",
-    });
-    setEditOpen(true);
-  };
+    addressVill: addrObj?.vill || "",
+    addressPO: addrObj?.po || "",
+    addressPS: addrObj?.ps || "",
+    addressDist: addrObj?.dist || "",
+    addressState: addrObj?.state || "",
+    addressPin: addrObj?.pin || "",
+    fatherName: student.fatherName || "",
+    motherName: student.motherName || "",
+    guardianPhone: student.guardianPhone || "",
+    batchId: student.batchId || "",
+    courseId: student.courseId || "",
+    qualName: qual?.name || "",
+    qualYear: qual?.year || "",
+    qualPercent: qual?.percentage || "",
+    qualBoard: qual?.board || "",
+    photoUrl: student.photoUrl || student.admissionApp?.photoUrl || "",
+    signatureUrl: student.signatureUrl || student.admissionApp?.signatureUrl || "",
+    idProofUrl: student.idProofUrl || student.admissionApp?.idProofUrl || "",
+  });
+  setEditOpen(true);
+};
 
   const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedStudent) return;
     setIsSubmitting(true);
-    const result = await updateStudent(selectedStudent.id, editFormData);
+    
+    // Parse DD/MM/YYYY to YYYY-MM-DD
+    let parsedDob = editFormData.dob;
+    if (parsedDob && parsedDob.includes('/')) {
+      const [dd, mm, yyyy] = parsedDob.split('/');
+      if (dd && mm && yyyy) {
+        parsedDob = `${yyyy}-${mm}-${dd}`;
+      }
+    }
+
+    const qualObj = {
+      name: editFormData.qualName,
+      year: editFormData.qualYear,
+      percentage: editFormData.qualPercent,
+      board: editFormData.qualBoard
+    };
+
+    const addrObj = {
+      vill: editFormData.addressVill,
+      po: editFormData.addressPO,
+      ps: editFormData.addressPS,
+      dist: editFormData.addressDist,
+      state: editFormData.addressState,
+      pin: editFormData.addressPin
+    };
+
+    const { 
+      qualName, qualYear, qualPercent, qualBoard, 
+      addressVill, addressPO, addressPS, addressDist, addressState, addressPin, 
+      ...restPayload 
+    } = editFormData;
+
+    const payload = { 
+      ...restPayload, 
+      dob: parsedDob, 
+      qualification: qualObj, 
+      address: JSON.stringify(addrObj) 
+    };
+    const result = await updateStudent(selectedStudent.id, payload);
     setIsSubmitting(false);
 
     if (result.success) {
@@ -193,6 +293,61 @@ export default function StudentList({
       router.refresh();
     } else {
       toast.error(result.error || "Failed to update student");
+    }
+  };
+
+  const [isActioning, setIsActioning] = useState<string | null>(null);
+  const [studentToRegister, setStudentToRegister] = useState<any>(null);
+  const [studentToPassout, setStudentToPassout] = useState<any>(null);
+
+  const handleRegisterClick = (student: any) => {
+    setStudentToRegister(student);
+  };
+
+  const confirmRegister = async () => {
+    if (!studentToRegister) return;
+    setIsActioning(studentToRegister.id);
+    const result = await registerStudent(studentToRegister.id, typeof tenant === 'string' ? tenant : '');
+    setIsActioning(null);
+    setStudentToRegister(null);
+
+    if (result.success) {
+      toast.success(result.message);
+      router.refresh();
+    } else {
+      toast.error(result.error || "Failed to register student");
+    }
+  };
+
+  const handleDocumentApproval = async (student: any, docType: 'admitCard' | 'registrationCard' | 'marksheet' | 'certificate') => {
+    setIsActioning(`${student.id}-${docType}`);
+    const result = await toggleDocumentApproval(student.id, docType, typeof tenant === 'string' ? tenant : '');
+    setIsActioning(null);
+
+    if (result.success) {
+      toast.success(result.message);
+      router.refresh();
+    } else {
+      toast.error(result.error || "Failed to update document approval");
+    }
+  };
+
+  const handlePassOutClick = (student: any) => {
+    setStudentToPassout(student);
+  };
+
+  const confirmPassOut = async () => {
+    if (!studentToPassout) return;
+    setIsActioning(studentToPassout.id);
+    const result = await markStudentAsPassOut(studentToPassout.id, typeof tenant === 'string' ? tenant : '');
+    setIsActioning(null);
+    setStudentToPassout(null);
+
+    if (result.success) {
+      toast.success(result.message);
+      router.refresh();
+    } else {
+      toast.error(result.error || "Failed to mark student as pass out");
     }
   };
 
@@ -214,12 +369,14 @@ export default function StudentList({
     religion: "",
     caste: "",
     address: "",
-    parentName: "",
-    parentPhone: "",
     fatherName: "",
     motherName: "",
     guardianPhone: "",
     batchId: "",
+    courseId: "",
+    photoUrl: "",
+    signatureUrl: "",
+    idProofUrl: "",
   });
 
   // Set initial enrollment no on client mount to avoid hydration mismatch
@@ -265,12 +422,14 @@ export default function StudentList({
         religion: "",
         caste: "",
         address: "",
-        parentName: "",
-        parentPhone: "",
         fatherName: "",
         motherName: "",
         guardianPhone: "",
         batchId: "",
+        courseId: "",
+        photoUrl: "",
+        signatureUrl: "",
+        idProofUrl: "",
       });
     } else {
       toast.error(result.error || "Failed to enroll student");
@@ -303,9 +462,12 @@ export default function StudentList({
               className="group bg-white dark:bg-slate-900 rounded-3xl border-2 border-slate-100 dark:border-slate-800/50 p-6 transition-all duration-300 hover:border-primary/30 dark:hover:border-primary/50 hover:shadow-2xl hover:shadow-primary/5 dark:hover:shadow-black/60 flex flex-col md:flex-row md:items-center justify-between gap-6"
             >
               <div className="flex items-center gap-5 flex-1 min-w-0">
-                <div className="h-14 w-14 rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-primary font-bold text-lg border-2 border-slate-200/50 dark:border-slate-700/50 shrink-0">
-                  {student.fullName.charAt(0)}
-                </div>
+                <Avatar className="h-14 w-14 rounded-2xl border-2 border-slate-200/50 dark:border-slate-700/50 shrink-0">
+                  <AvatarImage src={student.photoUrl || student.admissionApp?.photoUrl || undefined} className="object-cover" />
+                  <AvatarFallback className="bg-slate-100 dark:bg-slate-800 text-primary font-bold text-lg rounded-2xl">
+                    {student.fullName.charAt(0)}
+                  </AvatarFallback>
+                </Avatar>
                 <div className="flex flex-col min-w-0">
                   <div className="flex items-center gap-2 mb-1">
                     <h3 className="font-bold text-slate-900 dark:text-white truncate text-lg leading-none">{student.fullName}</h3>
@@ -357,8 +519,9 @@ export default function StudentList({
                 <DialogContent className="max-w-2xl rounded-[2rem] border-none shadow-2xl p-0 overflow-hidden">
                   <div className="bg-primary h-32 w-full relative">
                     <div className="absolute -bottom-12 left-8 p-1 bg-white dark:bg-slate-900 rounded-3xl shadow-xl">
-                      <Avatar className="h-24 w-24 rounded-2xl border-4 border-white dark:border-slate-900">
-                        <AvatarFallback className="bg-primary/10 text-primary text-2xl font-bold">
+                      <Avatar className="h-24 w-24 rounded-2xl border-4 border-white dark:border-slate-900 shadow-sm">
+                        <AvatarImage src={student.photoUrl || student.admissionApp?.photoUrl || undefined} className="object-cover" />
+                        <AvatarFallback className="bg-primary/10 text-primary text-2xl font-bold rounded-2xl">
                           {student.fullName.charAt(0)}
                         </AvatarFallback>
                       </Avatar>
@@ -455,14 +618,85 @@ export default function StudentList({
                 </DialogContent>
               </Dialog>
 
-              <Button 
-                onClick={() => handleEditClick(student)}
-                variant="ghost" 
-                size="icon" 
-                className="h-9 w-9 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-400 dark:text-slate-600"
-              >
-                <Pencil className="h-4 w-4" />
-              </Button>
+              <div className="flex items-center gap-1">
+                {student.status === "UNREGISTERED" && (
+                  <Button
+                    onClick={() => handleRegisterClick(student)}
+                    disabled={isActioning === student.id}
+                    className="h-9 rounded-lg font-bold text-[10px] px-3 gap-2 bg-emerald-500 hover:bg-emerald-600 text-white"
+                  >
+                    {isActioning === student.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <UserPlus className="h-3 w-3" />}
+                    Register
+                  </Button>
+                )}
+
+                {student.status === "REGISTERED" && (
+                  <>
+                    <div className="flex gap-1 border-r border-slate-200 dark:border-slate-800 pr-2 mr-1 items-center">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger className="inline-flex items-center justify-center h-9 w-9 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-400 dark:text-slate-600 shrink-0 outline-none">
+                          <MoreVertical className="h-4 w-4" />
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-56 rounded-xl">
+                          <DropdownMenuItem 
+                            onClick={() => handleDocumentApproval(student, 'admitCard')}
+                            disabled={isActioning === `${student.id}-admitCard`}
+                            className="text-xs font-bold cursor-pointer py-2"
+                          >
+                            {isActioning === `${student.id}-admitCard` ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-2" /> : (student.admitCardApproved ? <CheckCircle className="h-3.5 w-3.5 mr-2 text-indigo-500" /> : <FileText className="h-3.5 w-3.5 mr-2 text-slate-400" />)}
+                            Admit Card {student.admitCardApproved && <span className="ml-auto text-[9px] bg-indigo-100 text-indigo-700 px-1.5 py-0.5 rounded">Approved</span>}
+                          </DropdownMenuItem>
+                          <DropdownMenuItem 
+                            onClick={() => handleDocumentApproval(student, 'registrationCard')}
+                            disabled={isActioning === `${student.id}-registrationCard`}
+                            className="text-xs font-bold cursor-pointer py-2"
+                          >
+                            {isActioning === `${student.id}-registrationCard` ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-2" /> : (student.registrationCardApproved ? <CheckCircle className="h-3.5 w-3.5 mr-2 text-indigo-500" /> : <FileText className="h-3.5 w-3.5 mr-2 text-slate-400" />)}
+                            Registration Card {student.registrationCardApproved && <span className="ml-auto text-[9px] bg-indigo-100 text-indigo-700 px-1.5 py-0.5 rounded">Approved</span>}
+                          </DropdownMenuItem>
+                          <DropdownMenuItem 
+                            onClick={() => handleDocumentApproval(student, 'marksheet')}
+                            disabled={isActioning === `${student.id}-marksheet`}
+                            className="text-xs font-bold cursor-pointer py-2"
+                          >
+                            {isActioning === `${student.id}-marksheet` ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-2" /> : (student.marksheetApproved ? <CheckCircle className="h-3.5 w-3.5 mr-2 text-indigo-500" /> : <FileText className="h-3.5 w-3.5 mr-2 text-slate-400" />)}
+                            Marksheet {student.marksheetApproved && <span className="ml-auto text-[9px] bg-indigo-100 text-indigo-700 px-1.5 py-0.5 rounded">Approved</span>}
+                          </DropdownMenuItem>
+                          <DropdownMenuItem 
+                            onClick={() => handleDocumentApproval(student, 'certificate')}
+                            disabled={isActioning === `${student.id}-certificate`}
+                            className="text-xs font-bold cursor-pointer py-2"
+                          >
+                            {isActioning === `${student.id}-certificate` ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-2" /> : (student.certificateApproved ? <CheckCircle className="h-3.5 w-3.5 mr-2 text-indigo-500" /> : <FileText className="h-3.5 w-3.5 mr-2 text-slate-400" />)}
+                            Certificate {student.certificateApproved && <span className="ml-auto text-[9px] bg-indigo-100 text-indigo-700 px-1.5 py-0.5 rounded">Approved</span>}
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+                    <Button
+                      onClick={() => handlePassOutClick(student)}
+                      disabled={isActioning === student.id}
+                      variant="ghost"
+                      size="sm"
+                      className="h-9 rounded-lg font-bold text-[10px] px-2 text-amber-500 hover:text-amber-600 hover:bg-amber-50"
+                    >
+                      {isActioning === student.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <GraduationCap className="h-3 w-3 mr-1" />}
+                      Pass Out
+                    </Button>
+                  </>
+                )}
+
+                {student.status !== "PASS_OUT" && (
+                  <Button 
+                    onClick={() => handleEditClick(student)}
+                    variant="ghost" 
+                    size="icon" 
+                    className="h-9 w-9 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-400 dark:text-slate-600 shrink-0"
+                  >
+                    <Pencil className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
             </div>
           </div>
         ))}
@@ -470,141 +704,244 @@ export default function StudentList({
     </div>
 
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
-        <DialogContent className="max-w-4xl rounded-[2rem] border-none shadow-2xl p-0 overflow-hidden">
-          <DialogHeader className="bg-primary p-8 text-white">
-            <DialogTitle className="font-bold text-2xl">Edit Student Profile</DialogTitle>
-            <p className="text-white/70 text-sm mt-1">Modify the student's information and save changes.</p>
-          </DialogHeader>
-          <form onSubmit={handleUpdate} className="p-8 space-y-8 max-h-[80vh] overflow-y-auto custom-scrollbar bg-white dark:bg-slate-900">
-            {/* Section 1: Personal Information */}
-            <div className="space-y-4">
-              <div className="flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-2">
-                <div className="h-1.5 w-1.5 rounded-full bg-white" />
-                <h3 className="text-[10px] font-bold text-white tracking-widest">1. Personal Information</h3>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label className="font-bold text-xs text-slate-500">Full Name</Label>
-                  <Input required value={editFormData.fullName} onChange={e => setEditFormData({...editFormData, fullName: e.target.value})} placeholder="Student Name" className="rounded-xl h-11" />
-                </div>
-                <div className="space-y-2">
-                  <Label className="font-bold text-xs text-slate-500">Enrollment No</Label>
-                  <Input required value={editFormData.enrollmentNo} onChange={e => setEditFormData({...editFormData, enrollmentNo: e.target.value})} placeholder="STU-XXXX" className="rounded-xl h-11" />
-                </div>
-                <div className="space-y-2">
-                  <Label className="font-bold text-xs text-slate-500">Date of Birth</Label>
-                  <div className="relative">
-                    <Button 
-                      variant="outline" 
-                      type="button"
-                      className="w-full h-11 rounded-xl font-bold justify-start px-4 pointer-events-none"
-                    >
-                      {editFormData.dob ? new Date(editFormData.dob).toLocaleDateString('en-GB') : "Select Date"}
-                    </Button>
-                    <input 
-                      type="date" 
-                      value={editFormData.dob} 
-                      onChange={e => setEditFormData({...editFormData, dob: e.target.value})} 
-                      className="absolute inset-0 opacity-0 cursor-pointer w-full h-full z-20"
-                    />
+        <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col overflow-hidden rounded-[2.5rem] p-0 border-2 border-slate-100 dark:border-slate-800">
+          <div className="flex-1 overflow-y-auto p-8 sm:p-10 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-slate-200 dark:[&::-webkit-scrollbar-thumb]:bg-slate-700 [&::-webkit-scrollbar-thumb]:rounded-full">
+            <DialogHeader className="mb-6">
+              <DialogTitle className="text-2xl font-bold tracking-tight">Edit Student Profile</DialogTitle>
+              <p className="text-sm text-slate-500 mt-1">Modify the student's information and save changes.</p>
+            </DialogHeader>
+            
+            <form onSubmit={handleUpdate}>
+              <div className="space-y-10">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                  {/* 01 Personal Information */}
+                  <div className="space-y-6">
+                    <h3 className="text-lg font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2 border-b pb-2">
+                      <span className="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center text-xs">01</span>
+                      Personal Information
+                    </h3>
+                    <div className="grid gap-4">
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-bold text-slate-400">Full Name *</label>
+                        <Input required value={editFormData.fullName} onChange={e => setEditFormData({...editFormData, fullName: e.target.value})} className="h-11 rounded-xl" />
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-1.5">
+                          <label className="text-xs font-bold text-slate-400">Father's Name</label>
+                          <Input value={editFormData.fatherName} onChange={e => setEditFormData({...editFormData, fatherName: e.target.value})} className="h-11 rounded-xl" />
+                        </div>
+                        <div className="space-y-1.5">
+                          <label className="text-xs font-bold text-slate-400">Mother's Name</label>
+                          <Input value={editFormData.motherName} onChange={e => setEditFormData({...editFormData, motherName: e.target.value})} className="h-11 rounded-xl" />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-1.5">
+                          <label className="text-xs font-bold text-slate-400">Enrollment No</label>
+                          <Input required value={editFormData.enrollmentNo} onChange={e => setEditFormData({...editFormData, enrollmentNo: e.target.value})} className="h-11 rounded-xl" />
+                        </div>
+                        <div className="space-y-1.5">
+                          <label className="text-xs font-bold text-slate-400">Date of Birth</label>
+                          <Input 
+                            type="text" 
+                            placeholder="DD/MM/YYYY"
+                            value={editFormData.dob} 
+                            onChange={e => {
+                              let val = e.target.value.replace(/\D/g, '');
+                              if (val.length > 8) val = val.slice(0, 8);
+                              if (val.length >= 2 && val.length < 4) val = val.slice(0,2) + '/' + val.slice(2);
+                              else if (val.length >= 4) val = val.slice(0,2) + '/' + val.slice(2,4) + '/' + val.slice(4,8);
+                              setEditFormData({...editFormData, dob: val});
+                            }} 
+                            maxLength={10}
+                            className="h-11 rounded-xl" 
+                          />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-1.5">
+                          <label className="text-xs font-bold text-slate-400">Gender</label>
+                          <select value={editFormData.gender} onChange={e => setEditFormData({...editFormData, gender: e.target.value})} className="flex h-11 w-full rounded-xl border-2 border-slate-100 bg-background px-3 py-2 text-sm focus:border-primary outline-none">
+                            <option value="">Select</option>
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                            <option value="Other">Other</option>
+                          </select>
+                        </div>
+                        <div className="space-y-1.5">
+                          <label className="text-xs font-bold text-slate-400">Blood Group</label>
+                          <select value={editFormData.bloodGroup} onChange={e => setEditFormData({...editFormData, bloodGroup: e.target.value})} className="flex h-11 w-full rounded-xl border-2 border-slate-100 bg-background px-3 py-2 text-sm focus:border-primary outline-none">
+                            <option value="">Select</option>
+                            {["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"].map(bg => <option key={bg} value={bg}>{bg}</option>)}
+                          </select>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-1.5">
+                          <label className="text-xs font-bold text-slate-400">Religion</label>
+                          <Input value={editFormData.religion} onChange={e => setEditFormData({...editFormData, religion: e.target.value})} className="h-11 rounded-xl" />
+                        </div>
+                        <div className="space-y-1.5">
+                          <label className="text-xs font-bold text-slate-400">Caste</label>
+                          <select value={editFormData.caste} onChange={e => setEditFormData({...editFormData, caste: e.target.value})} className="flex h-11 w-full rounded-xl border-2 border-slate-100 bg-background px-3 py-2 text-sm focus:border-primary outline-none">
+                            <option value="">Select</option>
+                            {["GEN", "SC", "ST", "OBC", "Others"].map(c => <option key={c} value={c}>{c}</option>)}
+                          </select>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 02 Contact & Address */}
+                  <div className="space-y-6">
+                    <h3 className="text-lg font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2 border-b pb-2">
+                      <span className="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center text-xs">02</span>
+                      Contact & Address
+                    </h3>
+                    <div className="grid gap-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-1.5">
+                          <label className="text-xs font-bold text-slate-400">Mobile Number *</label>
+                          <Input value={editFormData.phone} onChange={e => setEditFormData({...editFormData, phone: e.target.value})} className="h-11 rounded-xl" />
+                        </div>
+                        <div className="space-y-1.5">
+                          <label className="text-xs font-bold text-slate-400">WhatsApp Number</label>
+                          <Input value={editFormData.whatsapp} onChange={e => setEditFormData({...editFormData, whatsapp: e.target.value})} className="h-11 rounded-xl" />
+                        </div>
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-bold text-slate-400">Email Address</label>
+                        <Input type="email" value={editFormData.email} onChange={e => setEditFormData({...editFormData, email: e.target.value})} className="h-11 rounded-xl" />
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-bold text-slate-400">Guardian Phone</label>
+                        <Input value={editFormData.guardianPhone} onChange={e => setEditFormData({...editFormData, guardianPhone: e.target.value})} className="h-11 rounded-xl" />
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-1.5">
+                          <label className="text-xs font-bold text-slate-400">Village/Street</label>
+                          <Input value={editFormData.addressVill} onChange={e => setEditFormData({...editFormData, addressVill: e.target.value})} className="h-11 rounded-xl" />
+                        </div>
+                        <div className="space-y-1.5">
+                          <label className="text-xs font-bold text-slate-400">Post Office</label>
+                          <Input value={editFormData.addressPO} onChange={e => setEditFormData({...editFormData, addressPO: e.target.value})} className="h-11 rounded-xl" />
+                        </div>
+                        <div className="space-y-1.5">
+                          <label className="text-xs font-bold text-slate-400">Police Station</label>
+                          <Input value={editFormData.addressPS} onChange={e => setEditFormData({...editFormData, addressPS: e.target.value})} className="h-11 rounded-xl" />
+                        </div>
+                        <div className="space-y-1.5">
+                          <label className="text-xs font-bold text-slate-400">District</label>
+                          <Input value={editFormData.addressDist} onChange={e => setEditFormData({...editFormData, addressDist: e.target.value})} className="h-11 rounded-xl" />
+                        </div>
+                        <div className="space-y-1.5">
+                          <label className="text-xs font-bold text-slate-400">State</label>
+                          <Input value={editFormData.addressState} onChange={e => setEditFormData({...editFormData, addressState: e.target.value})} className="h-11 rounded-xl" />
+                        </div>
+                        <div className="space-y-1.5">
+                          <label className="text-xs font-bold text-slate-400">PIN Code</label>
+                          <Input value={editFormData.addressPin} onChange={e => setEditFormData({...editFormData, addressPin: e.target.value})} className="h-11 rounded-xl" />
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
-                <div className="space-y-2">
-                  <Label className="font-bold text-xs text-slate-500">Gender</Label>
-                  <Select onValueChange={(val: any) => setEditFormData({...editFormData, gender: val})} value={(editFormData.gender as string) || ""}>
-                    <SelectTrigger className="rounded-xl h-11">
-                      <SelectValue placeholder="Select Gender" />
-                    </SelectTrigger>
-                    <SelectContent className="rounded-xl">
-                      <SelectItem value="MALE">Male</SelectItem>
-                      <SelectItem value="FEMALE">Female</SelectItem>
-                      <SelectItem value="OTHER">Other</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label className="font-bold text-xs text-slate-500">Blood Group</Label>
-                  <Input value={editFormData.bloodGroup} onChange={e => setEditFormData({...editFormData, bloodGroup: e.target.value})} placeholder="e.g. O+" className="rounded-xl h-11" />
-                </div>
-                <div className="space-y-2">
-                  <Label className="font-bold text-xs text-slate-500">Religion</Label>
-                  <Input value={editFormData.religion} onChange={e => setEditFormData({...editFormData, religion: e.target.value})} placeholder="e.g. Hindu" className="rounded-xl h-11" />
-                </div>
-              </div>
-            </div>
 
-            {/* Section 2: Contact & Address */}
-            <div className="space-y-4">
-              <div className="flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-2">
-                <div className="h-1.5 w-1.5 rounded-full bg-primary" />
-                <h3 className="text-[10px] font-bold text-slate-900 dark:text-slate-200 tracking-widest">2. Contact & Address</h3>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label className="font-bold text-xs text-slate-500">Phone Number</Label>
-                  <Input value={editFormData.phone} onChange={e => setEditFormData({...editFormData, phone: e.target.value})} placeholder="+91 XXXXX XXXXX" className="rounded-xl h-11" />
-                </div>
-                <div className="space-y-2">
-                  <Label className="font-bold text-xs text-slate-500">Whatsapp Number</Label>
-                  <Input value={editFormData.whatsapp} onChange={e => setEditFormData({...editFormData, whatsapp: e.target.value})} placeholder="+91 XXXXX XXXXX" className="rounded-xl h-11" />
-                </div>
-                <div className="space-y-2 md:col-span-2">
-                  <Label className="font-bold text-xs text-slate-500">Email Address</Label>
-                  <Input type="email" value={editFormData.email} onChange={e => setEditFormData({...editFormData, email: e.target.value})} placeholder="student@example.com" className="rounded-xl h-11" />
-                </div>
-                <div className="space-y-2 md:col-span-2">
-                  <Label className="font-bold text-xs text-slate-500">Full Address</Label>
-                  <Input value={editFormData.address} onChange={e => setEditFormData({...editFormData, address: e.target.value})} placeholder="Village, P.O, P.S, Dist, Pin" className="rounded-xl h-11" />
-                </div>
-              </div>
-            </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                  {/* 03 Academic Details */}
+                  <div className="space-y-6">
+                    <h3 className="text-lg font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2 border-b pb-2">
+                      <span className="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center text-xs">03</span>
+                      Academic Details
+                    </h3>
+                    <div className="grid gap-4">
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-bold text-slate-400">Qualification Name</label>
+                        <Input value={editFormData.qualName} onChange={e => setEditFormData({...editFormData, qualName: e.target.value})} placeholder="e.g. 10th, 12th, B.A." className="h-11 rounded-xl" />
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-bold text-slate-400">Board/University</label>
+                        <Input value={editFormData.qualBoard} onChange={e => setEditFormData({...editFormData, qualBoard: e.target.value})} className="h-11 rounded-xl" />
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-1.5">
+                          <label className="text-xs font-bold text-slate-400">Year of Passing</label>
+                          <Input value={editFormData.qualYear} onChange={e => setEditFormData({...editFormData, qualYear: e.target.value})} placeholder="YYYY" maxLength={4} className="h-11 rounded-xl" />
+                        </div>
+                        <div className="space-y-1.5">
+                          <label className="text-xs font-bold text-slate-400">Percentage (%)</label>
+                          <Input value={editFormData.qualPercent} onChange={e => setEditFormData({...editFormData, qualPercent: e.target.value})} className="h-11 rounded-xl" />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
 
-            {/* Section 3: Guardian & Academic */}
-            <div className="space-y-4">
-              <div className="flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-2">
-                <div className="h-1.5 w-1.5 rounded-full bg-primary" />
-                <h3 className="text-[10px] font-bold text-slate-900 dark:text-slate-200 tracking-widest">3. Guardian & Academic</h3>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label className="font-bold text-xs text-slate-500">Father's Name</Label>
-                  <Input value={editFormData.fatherName} onChange={e => setEditFormData({...editFormData, fatherName: e.target.value})} placeholder="Father's Name" className="rounded-xl h-11" />
-                </div>
-                <div className="space-y-2">
-                  <Label className="font-bold text-xs text-slate-500">Mother's Name</Label>
-                  <Input value={editFormData.motherName} onChange={e => setEditFormData({...editFormData, motherName: e.target.value})} placeholder="Mother's Name" className="rounded-xl h-11" />
-                </div>
-                <div className="space-y-2">
-                  <Label className="font-bold text-xs text-slate-500">Guardian Phone</Label>
-                  <Input value={editFormData.guardianPhone} onChange={e => setEditFormData({...editFormData, guardianPhone: e.target.value})} placeholder="+91 XXXXX XXXXX" className="rounded-xl h-11" />
-                </div>
-                <div className="space-y-2">
-                  <Label className="font-bold text-xs text-slate-500">Other Guardian Name</Label>
-                  <Input value={editFormData.parentName} onChange={e => setEditFormData({...editFormData, parentName: e.target.value})} placeholder="Other Guardian Name" className="rounded-xl h-11" />
-                </div>
-                <div className="space-y-2 md:col-span-2">
-                  <Label className="font-bold text-xs text-slate-500">Assign Batch</Label>
-                  <Select value={(editFormData.batchId as string) || ""} onValueChange={(val: any) => setEditFormData({...editFormData, batchId: val})}>
-                    <SelectTrigger className="rounded-xl h-11">
-                      <SelectValue placeholder="Select a batch" />
-                    </SelectTrigger>
-                    <SelectContent className="rounded-xl">
-                      {batches.map(batch => (
-                        <SelectItem key={batch.id} value={batch.id}>{batch.name}</SelectItem>
-                      ))}
-                      <SelectItem value="none">No Batch</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  {/* 04 Course Details */}
+                  <div className="space-y-6">
+                    <h3 className="text-lg font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2 border-b pb-2">
+                      <span className="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center text-xs">04</span>
+                      Course Details
+                    </h3>
+                    <div className="grid gap-4">
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-bold text-slate-400">Assign Course</label>
+                        <select value={editFormData.courseId} onChange={e => setEditFormData({...editFormData, courseId: e.target.value})} className="flex h-11 w-full rounded-xl border-2 border-slate-100 bg-background px-3 py-2 text-sm focus:border-primary outline-none">
+                          <option value="">Select a course</option>
+                          {courses.map((course: any) => (
+                            <option key={course.id} value={course.id}>{course.title}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-bold text-slate-400">Assign Batch</label>
+                        <select value={editFormData.batchId} onChange={e => setEditFormData({...editFormData, batchId: e.target.value})} className="flex h-11 w-full rounded-xl border-2 border-slate-100 bg-background px-3 py-2 text-sm focus:border-primary outline-none">
+                          <option value="">Select a batch</option>
+                          {batches.map((batch: any) => (
+                            <option key={batch.id} value={batch.id}>{batch.name}</option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <div className="pt-6">
-              <Button type="submit" disabled={isSubmitting} className="w-full rounded-2xl font-bold py-7 text-lg shadow-xl shadow-primary/20 hover:shadow-primary/30 transition-all">
-                {isSubmitting ? "Updating..." : "Save Changes"}
-              </Button>
-            </div>
-          </form>
+              {/* 05 Documents (Full Width) */}
+              <div className="space-y-6 pt-6 mt-6 border-t border-slate-100 dark:border-slate-800">
+                <h3 className="text-lg font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2 border-b pb-2">
+                  <span className="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center text-xs">05</span>
+                  Documents
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-bold text-slate-400">Photo</label>
+                    <ImageUpload value={editFormData.photoUrl} onChange={(url) => setEditFormData({...editFormData, photoUrl: url})} maxSizeK={100} folder={`RGYCSP/Workspaces/${workspaceId}/students`} />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-bold text-slate-400">Signature</label>
+                    <ImageUpload value={editFormData.signatureUrl} onChange={(url) => setEditFormData({...editFormData, signatureUrl: url})} maxSizeK={100} folder={`RGYCSP/Workspaces/${workspaceId}/students`} />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-bold text-slate-400">ID Proof</label>
+                    <ImageUpload value={editFormData.idProofUrl} onChange={(url) => setEditFormData({...editFormData, idProofUrl: url})} maxSizeK={1024} folder={`RGYCSP/Workspaces/${workspaceId}/students`} />
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-10 pt-6 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end gap-3 sticky bottom-0 bg-white dark:bg-slate-900 z-10 -mx-2 px-2 pb-2">
+                <Button type="button" variant="outline" onClick={() => setEditOpen(false)} className="rounded-xl font-bold h-11 px-8" disabled={isSubmitting}>
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={isSubmitting} className="rounded-xl font-bold h-11 px-8 shadow-xl shadow-primary/20 hover:shadow-primary/30 transition-all">
+                  {isSubmitting ? "Updating..." : "Save Changes"}
+                </Button>
+              </div>
+            </form>
+          </div>
         </DialogContent>
       </Dialog>
 
@@ -649,6 +986,34 @@ export default function StudentList({
           </div>
         </div>
       )}
+      
+      <ConfirmDialog 
+        open={!!studentToRegister} 
+        onOpenChange={(open) => !open && setStudentToRegister(null)}
+        title="Register Student"
+        description={
+          <>
+            Are you sure you want to register <strong className="text-slate-900 dark:text-white">{studentToRegister?.fullName}</strong>? Registration fees will be deducted from your wallet based on the course duration.
+          </>
+        }
+        onConfirm={confirmRegister}
+        confirmText="Register"
+        destructive={false}
+      />
+
+      <ConfirmDialog 
+        open={!!studentToPassout} 
+        onOpenChange={(open) => !open && setStudentToPassout(null)}
+        title="Mark as Passed Out"
+        description={
+          <>
+            Are you sure you want to mark <strong className="text-slate-900 dark:text-white">{studentToPassout?.fullName}</strong> as passed out? This action cannot be undone.
+          </>
+        }
+        onConfirm={confirmPassOut}
+        confirmText="Mark Pass Out"
+        destructive={true}
+      />
     </div>
   );
 }

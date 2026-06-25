@@ -26,8 +26,8 @@ if (connectionString) {
   console.warn("PRISMA: DATABASE_URL is not set. Prisma will likely fail unless provided via config.");
 }
 
-if (globalThis.prisma && (!('franchiseApplication' in globalThis.prisma) || !('globalCourse' in globalThis.prisma))) {
-  console.log("PRISMA: Schema changed, clearing globalThis.prisma cache");
+if (globalThis.prisma) {
+  console.log("PRISMA: Clearing globalThis.prisma cache for schema update");
   globalThis.prisma = undefined;
 }
 
@@ -42,3 +42,5 @@ if (process.env.NODE_ENV !== "production") globalThis.prisma = db;
 
 // Trigger Next.js recompile to load the updated Prisma Client (hostName field added)
 // Last Updated: 2026-06-14T03:07:00Z
+
+// trigger reload

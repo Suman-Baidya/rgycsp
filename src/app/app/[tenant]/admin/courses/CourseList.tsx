@@ -256,9 +256,9 @@ export default function CourseList({
                               <BookOpen className="w-8 h-8" />
                             )}
                           </div>
-                          <div className="flex flex-col gap-1">
-                             <h4 className="text-2xl font-black text-primary leading-tight uppercase tracking-tight">{globalCourse.short || "COURSE"}</h4>
-                             <span className="text-sm font-bold text-slate-600 dark:text-slate-300">{globalCourse.name}</span>
+                          <div className="flex flex-col gap-1.5 max-w-[300px]">
+                             <h4 className="text-2xl font-black text-primary leading-tight uppercase tracking-[0.2em]">{globalCourse.short || "COURSE"}</h4>
+                             <span className="text-sm font-bold text-slate-600 dark:text-slate-300 capitalize line-clamp-2" title={globalCourse.name}>{globalCourse.name}</span>
                              <span className="text-xs text-muted-foreground font-medium mt-1">
                                <Users className="w-3 h-3 inline mr-1" />
                                {totalStudents} Enrolled

@@ -14,12 +14,13 @@ import AdminCourseFormModal from "./AdminCourseFormModal";
 import ManageGroupsModal from "./ManageGroupsModal";
 import Image from "next/image";
 import { Switch } from "@/components/ui/switch";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
 export default function CoursesClient({ initialData, initialGroups = [] }: { initialData: any, initialGroups?: any[] }) {
   const [courses, setCourses] = useState(initialData.courses);
   const [total, setTotal] = useState(initialData.total);
   const [totalPages, setTotalPages] = useState(initialData.totalPages);
-  
+
   const [search, setSearch] = useState("");
   const [group, setGroup] = useState("all");
   const [page, setPage] = useState(1);
@@ -28,6 +29,7 @@ export default function CoursesClient({ initialData, initialGroups = [] }: { ini
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isManageGroupsOpen, setIsManageGroupsOpen] = useState(false);
   const [editingCourse, setEditingCourse] = useState<any>(null);
+  const [courseToDelete, setCourseToDelete] = useState<any>(null);
   const [courseGroups, setCourseGroups] = useState<any[]>(initialGroups);
 
   const fetchGroups = useCallback(async () => {
@@ -62,10 +64,14 @@ export default function CoursesClient({ initialData, initialGroups = [] }: { ini
     return () => clearTimeout(timeout);
   }, [search, group, page, fetchCourses]);
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this course?")) return;
+  const handleDeleteClick = (course: any) => {
+    setCourseToDelete(course);
+  };
+
+  const confirmDelete = async () => {
+    if (!courseToDelete) return;
     try {
-      const res = await deleteGlobalCourse(id);
+      const res = await deleteGlobalCourse(courseToDelete.id);
       if (res.success) {
         toast.success("Course deleted successfully");
         fetchCourses();
@@ -74,6 +80,8 @@ export default function CoursesClient({ initialData, initialGroups = [] }: { ini
       }
     } catch (e) {
       toast.error("Failed to delete course");
+    } finally {
+      setCourseToDelete(null);
     }
   };
 
@@ -103,8 +111,8 @@ export default function CoursesClient({ initialData, initialGroups = [] }: { ini
 
   return (
     <div className="space-y-10 pb-12 max-w-7xl mx-auto">
-      <AdminPageHeader 
-        title="Global Courses" 
+      <AdminPageHeader
+        title="Global Courses"
         description="Manage platform-wide courses and syllabus catalog."
       >
         <div className="flex items-center gap-3">
@@ -123,8 +131,8 @@ export default function CoursesClient({ initialData, initialGroups = [] }: { ini
         <div className="p-6 border-b border-border/50 bg-slate-50/50 dark:bg-slate-900/50 flex flex-col sm:flex-row gap-4 items-center justify-between">
           <div className="relative w-full sm:max-w-md">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-            <Input 
-              placeholder="Search courses by name..." 
+            <Input
+              placeholder="Search courses by name..."
               value={search}
               onChange={(e) => { setSearch(e.target.value); setPage(1); }}
               className="pl-10 h-12 rounded-2xl border-2 border-slate-200 focus-visible:border-primary"
@@ -152,18 +160,18 @@ export default function CoursesClient({ initialData, initialGroups = [] }: { ini
               Page {page} of {totalPages}
             </span>
             <div className="flex gap-2">
-              <Button 
+              <Button
                 variant="outline" size="sm"
-                disabled={page === 1 || isLoading} 
+                disabled={page === 1 || isLoading}
                 onClick={() => setPage(p => p - 1)}
                 className="rounded-lg border-2 h-9 px-3 flex items-center gap-1"
               >
                 <ChevronLeft className="h-4 w-4" />
                 <span className="hidden sm:inline">Previous</span>
               </Button>
-              <Button 
+              <Button
                 variant="outline" size="sm"
-                disabled={page === totalPages || isLoading} 
+                disabled={page === totalPages || isLoading}
                 onClick={() => setPage(p => p + 1)}
                 className="rounded-lg border-2 h-9 px-3 flex items-center gap-1"
               >
@@ -173,7 +181,7 @@ export default function CoursesClient({ initialData, initialGroups = [] }: { ini
             </div>
           </div>
         )}
-        
+
         <CardContent className="p-0">
           <div className="overflow-x-auto custom-scrollbar">
             <table className="w-full text-sm text-left">
@@ -208,9 +216,11 @@ export default function CoursesClient({ initialData, initialGroups = [] }: { ini
                           )}
                         </div>
                       </td>
-                      <td className="px-6 py-4">
-                        <p className="font-bold text-foreground text-base max-w-[250px] truncate">{course.name}</p>
-                        <p className="text-xs text-muted-foreground">Short: {course.short || 'N/A'}</p>
+                      <td className="px-6 py-4 max-w-[300px]">
+                        <div className="flex flex-col">
+                          <h4 className="text-xl font-bold text-primary uppercase">{course.short || "COURSE"}</h4>
+                          <span className="text-md font-bold text-slate-600 dark:text-slate-300 capitalize line-clamp-2" title={course.name}>{course.name}</span>
+                        </div>
                       </td>
                       <td className="px-6 py-4">
                         <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium bg-primary/10 text-primary uppercase">
@@ -223,8 +233,8 @@ export default function CoursesClient({ initialData, initialGroups = [] }: { ini
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
-                          <Switch 
-                            checked={course.isActive} 
+                          <Switch
+                            checked={course.isActive}
                             onCheckedChange={() => handleToggleActive(course)}
                           />
                           <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold ${course.isActive ? 'bg-green-100 text-green-700 dark:bg-green-500/20 dark:text-green-400' : 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-400'}`}>
@@ -237,7 +247,7 @@ export default function CoursesClient({ initialData, initialGroups = [] }: { ini
                           <Button variant="ghost" size="icon" onClick={() => openEditModal(course)} className="h-8 w-8 text-blue-500 hover:text-blue-600 hover:bg-blue-50">
                             <Edit className="h-4 w-4" />
                           </Button>
-                          <Button variant="ghost" size="icon" onClick={() => handleDelete(course.id)} className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-50">
+                          <Button variant="ghost" size="icon" onClick={() => handleDeleteClick(course)} className="h-9 w-9 text-red-500 hover:text-red-600 hover:bg-red-50 rounded-lg">
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         </div>
@@ -248,7 +258,7 @@ export default function CoursesClient({ initialData, initialGroups = [] }: { ini
               </tbody>
             </table>
           </div>
-          
+
           {/* Bottom Pagination */}
           {totalPages > 1 && (
             <div className="px-6 py-4 border-t border-border/50 flex items-center justify-between bg-slate-50/50 dark:bg-slate-900/50">
@@ -256,18 +266,18 @@ export default function CoursesClient({ initialData, initialGroups = [] }: { ini
                 Showing {courses.length} courses (Total: {total})
               </span>
               <div className="flex gap-2">
-                <Button 
+                <Button
                   variant="outline" size="sm"
-                  disabled={page === 1 || isLoading} 
+                  disabled={page === 1 || isLoading}
                   onClick={() => setPage(p => p - 1)}
                   className="rounded-lg border-2 h-9 px-3 flex items-center gap-1"
                 >
                   <ChevronLeft className="h-4 w-4" />
                   <span className="hidden sm:inline">Previous</span>
                 </Button>
-                <Button 
+                <Button
                   variant="outline" size="sm"
-                  disabled={page === totalPages || isLoading} 
+                  disabled={page === totalPages || isLoading}
                   onClick={() => setPage(p => p + 1)}
                   className="rounded-lg border-2 h-9 px-3 flex items-center gap-1"
                 >
@@ -280,9 +290,9 @@ export default function CoursesClient({ initialData, initialGroups = [] }: { ini
         </CardContent>
       </Card>
 
-      <AdminCourseFormModal 
-        isOpen={isModalOpen} 
-        onClose={() => setIsModalOpen(false)} 
+      <AdminCourseFormModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
         course={editingCourse}
         onSuccess={fetchCourses}
         groups={courseGroups}
@@ -292,6 +302,20 @@ export default function CoursesClient({ initialData, initialGroups = [] }: { ini
         isOpen={isManageGroupsOpen}
         onClose={() => setIsManageGroupsOpen(false)}
         onUpdate={() => { fetchGroups(); fetchCourses(); }}
+      />
+
+      <ConfirmDialog
+        open={!!courseToDelete}
+        onOpenChange={(open) => !open && setCourseToDelete(null)}
+        title="Delete Course"
+        description={
+          <>
+            Are you sure you want to delete <strong className="text-slate-900 dark:text-white">{courseToDelete?.title}</strong>? This action cannot be undone.
+          </>
+        }
+        onConfirm={confirmDelete}
+        confirmText="Delete"
+        destructive={true}
       />
     </div>
   );

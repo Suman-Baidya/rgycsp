@@ -41,53 +41,53 @@ enum SystemRole {
 // ============================================
 
 model Workspace {
-  id        String  @id @default(cuid())
-  name      String
-  subdomain String  @unique
+  id           String  @id @default(cuid())
+  name         String
+  subdomain    String  @unique
   logoUrl      String?
   signatureUrl String?
   idProofUrl   String?
   isActive     Boolean @default(true)
 
-  pinCode   String?
-  state     String?
-  district  String?
+  pinCode  String?
+  state    String?
+  district String?
 
-  tokensBalance Int @default(0) // Custom Token Economy
-  walletBalance Float @default(0) // Franchise Wallet Balance
+  tokensBalance     Int   @default(0) // Custom Token Economy
+  walletBalance     Float @default(0) // Franchise Wallet Balance
   commissionBalance Float @default(0) // Separate Commission Balance
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   // State Manager & Referrals
-  isStateManager         Boolean  @default(false)
-  commissionReleaseHours Int      @default(24) // Delay before commission is released
-  ownReferralId          String?  @unique
+  isStateManager         Boolean @default(false)
+  commissionReleaseHours Int     @default(24) // Delay before commission is released
+  ownReferralId          String? @unique
 
-  appliedReferralId      String?  // The referral ID they used when they were created/assigned
-  referredById           String?
+  appliedReferralId String? // The referral ID they used when they were created/assigned
+  referredById      String?
 
   // Commission rules for the State Manager who referred this franchise
-  referralCommissionRate      Float    @default(0)
+  referralCommissionRate      Float     @default(0)
   referralCommissionExpiry    DateTime?
-  isReferralCommissionEnabled Boolean  @default(true)
+  isReferralCommissionEnabled Boolean   @default(true)
 
-  referredBy             Workspace?  @relation("StateManagement", fields: [referredById], references: [id])
-  referredWorkspaces     Workspace[] @relation("StateManagement")
+  referredBy         Workspace?  @relation("StateManagement", fields: [referredById], references: [id])
+  referredWorkspaces Workspace[] @relation("StateManagement")
 
-  roles           WorkspaceRole[]
-  courses         Course[]
-  batches         Batch[]
-  studentProfiles StudentProfile[]
-  attendances     Attendance[]
-  invoices        Invoice[]
-  siteSettings    SiteSettings?
-  events          Event[]
-  galleryItems    GalleryItem[]
-  admissionConfig AdmissionFormConfig?
-  admissionApps   AdmissionApplication[]
-  notifications   Notification[]
+  roles              WorkspaceRole[]
+  courses            Course[]
+  batches            Batch[]
+  studentProfiles    StudentProfile[]
+  attendances        Attendance[]
+  invoices           Invoice[]
+  siteSettings       SiteSettings?
+  events             Event[]
+  galleryItems       GalleryItem[]
+  admissionConfig    AdmissionFormConfig?
+  admissionApps      AdmissionApplication[]
+  notifications      Notification[]
   walletTransactions WalletTransaction[]
 }
 
@@ -191,14 +191,15 @@ model Course {
 
   globalCourseId String?
   globalCourse   GlobalCourse? @relation(fields: [globalCourseId], references: [id], onDelete: SetNull)
-  
-  priceDisplay   String?
-  discountText   String?
-  showFee        Boolean @default(true)
+
+  priceDisplay String?
+  discountText String?
+  showFee      Boolean @default(true)
 
   workspace     Workspace              @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   batches       Batch[]
   admissionApps AdmissionApplication[]
+  students      StudentProfile[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -207,12 +208,12 @@ model Course {
 model Batch {
   id          String  @id @default(cuid())
   workspaceId String
-  courseId    String
+  courseId    String?
   name        String // e.g., "Morning Batch A"
   schedule    String? // Could be JSON or stringified schedule
 
   workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-  course    Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  course    Course?   @relation(fields: [courseId], references: [id], onDelete: SetNull)
 
   students StudentProfile[]
 
@@ -229,6 +230,7 @@ model StudentProfile {
   userId      String? @unique // Optional if account isn't created yet
   workspaceId String
   batchId     String?
+  courseId    String?
 
   fullName      String
   enrollmentNo  String // System generated ID
@@ -246,16 +248,28 @@ model StudentProfile {
   bloodGroup    String?
   religion      String?
   caste         String?
-  qualification Json?   // { name, year, percentage, board }
+  qualification Json? // { name, year, percentage, board }
+
+  photoUrl     String?
+  signatureUrl String?
+  idProofUrl   String?
+
   status        StudentStatus @default(UNREGISTERED)
-  admissionDate DateTime  @default(now())
-  applicationId String?   @unique
+  admissionDate DateTime      @default(now())
+  applicationId String?       @unique
+
+  // Document Approvals
+  admitCardApproved        Boolean @default(false)
+  registrationCardApproved Boolean @default(false)
+  marksheetApproved        Boolean @default(false)
+  certificateApproved      Boolean @default(false)
 
   admissionApp AdmissionApplication? @relation(fields: [applicationId], references: [id], onDelete: SetNull)
 
   user      User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
   workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   batch     Batch?    @relation(fields: [batchId], references: [id], onDelete: SetNull)
+  course    Course?   @relation(fields: [courseId], references: [id], onDelete: SetNull)
 
   attendances Attendance[]
   invoices    Invoice[]
@@ -414,14 +428,14 @@ model AdmissionFormConfig {
   // Instructions or terms to display at the beginning/end of the form
   instructions   String? @db.Text
   successMessage String? @db.Text
-  
+
   // Dynamic Content for PDF and Portal
   declarationText String? @db.Text
-  requiredDocs    Json?   // ["Aadhaar Card", "Birth Certificate", ...]
+  requiredDocs    Json? // ["Aadhaar Card", "Birth Certificate", ...]
 
-  isActive Boolean @default(true)
+  isActive                Boolean @default(true)
   enableEmailVerification Boolean @default(true)
-  customFields Json? // [{ id, label, type, required, options }]
+  customFields            Json? // [{ id, label, type, required, options }]
 
   workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
 
@@ -437,16 +451,16 @@ model AdmissionApplication {
   appliedCourse String? // To store the display name/fallback name
 
   // Step 1: Personal
-  fullName     String
-  guardianName String?
-  fatherName   String?
-  motherName   String?
+  fullName      String
+  guardianName  String?
+  fatherName    String?
+  motherName    String?
   guardianPhone String?
-  dob          DateTime?
-  gender       String?
-  bloodGroup   String?
-  religion     String?
-  caste        String?
+  dob           DateTime?
+  gender        String?
+  bloodGroup    String?
+  religion      String?
+  caste         String?
 
   // Step 2: Contact & Address
   address  Json? // { vill, po, ps, dist, pin, state }
@@ -481,6 +495,7 @@ model AdmissionApplication {
 
 enum ApplicationStatus {
   PENDING
+  DRAFT
   APPROVED
   REJECTED
 }
@@ -520,17 +535,17 @@ model Notification {
 }
 
 model DocumentTemplate {
-  id          String   @id @default(cuid())
-  workspaceId String?  
+  id          String  @id @default(cuid())
+  workspaceId String?
   name        String
-  type        String   
-  background  String?  
-  width       Int      @default(800)
-  height      Int      @default(1131)
-  config      Json     
+  type        String
+  background  String?
+  width       Int     @default(800)
+  height      Int     @default(1131)
+  config      Json
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([workspaceId])
 }
@@ -546,7 +561,7 @@ model FranchiseApplication {
   pinCode         String
   state           String
   district        String
-  addressDetail   String            // vill/word etc.
+  addressDetail   String // vill/word etc.
   computerCount   Int
   teacherCount    Int
   roomCount       Int?
@@ -554,7 +569,7 @@ model FranchiseApplication {
   photoUrl        String
   signatureUrl    String
   idProofUrl      String
-  passwordHash    String            // to create user later
+  passwordHash    String // to create user later
   status          ApplicationStatus @default(PENDING)
   username        String?           @unique // WB-002 once approved
   rejectionReason String?           @db.Text
@@ -567,37 +582,37 @@ model FranchiseApplication {
 // ============================================
 
 model GlobalCourse {
-  id          String   @id @default(cuid())
-  groupId     String?  // e.g. "diploma"
-  short       String?  // e.g. "DCA"
-  name        String
-  description String?  @db.Text
-  duration    String?
-  price       Float    @default(0)
+  id           String  @id @default(cuid())
+  groupId      String? // e.g. "diploma"
+  short        String? // e.g. "DCA"
+  name         String
+  description  String? @db.Text
+  duration     String?
+  price        Float   @default(0)
   priceDisplay String?
   discountText String?
-  showFee     Boolean  @default(true)
-  rating      Float    @default(0)
-  demand      String?
-  popular     Boolean  @default(false)
-  banner      String?
-  syllabus    Json?
-  isActive    Boolean  @default(true)
+  showFee      Boolean @default(true)
+  rating       Float   @default(0)
+  demand       String?
+  popular      Boolean @default(false)
+  banner       String?
+  syllabus     Json?
+  isActive     Boolean @default(true)
 
-  courses     Course[]
+  courses Course[]
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model GlobalCourseGroup {
-  id          String   @id @default(cuid())
-  value       String   @unique // Internal ID, e.g., "diploma"
-  label       String   // Display name, e.g., "Diploma Courses"
-  isActive    Boolean  @default(true)
-  
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id       String  @id @default(cuid())
+  value    String  @unique // Internal ID, e.g., "diploma"
+  label    String // Display name, e.g., "Diploma Courses"
+  isActive Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 // ============================================
@@ -605,29 +620,29 @@ model GlobalCourseGroup {
 // ============================================
 
 model WalletTransaction {
-  id          String   @id @default(cuid())
-  workspaceId String
-  amount      Float
-  type        TransactionType
-  status      TransactionStatus
-  description String?  @db.Text
-  receiptUrl  String?
-  referenceId String?
-  rejectionReason String? @db.Text
-  
+  id              String            @id @default(cuid())
+  workspaceId     String
+  amount          Float
+  type            TransactionType
+  status          TransactionStatus
+  description     String?           @db.Text
+  receiptUrl      String?
+  referenceId     String?
+  rejectionReason String?           @db.Text
+
   // State Manager Commissions
   sourceWorkspaceId String?
-  isCommission      Boolean  @default(false)
+  isCommission      Boolean   @default(false)
   releaseAt         DateTime?
-  
+
   // Commission specific types
   isCommissionWithdrawal Boolean @default(false)
   isCommissionTransfer   Boolean @default(false)
   isPromotional          Boolean @default(false)
-  
-  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 }
 
 enum TransactionType {

@@ -47,6 +47,21 @@ export function WorkspaceSidebar({
   const tenant = propTenant || detectTenant(pathname, typeof window !== 'undefined' ? window.location.host : undefined);
   const displayTenant = tenant || "Workspace";
 
+  // Component to safely handle Next.js App Router subdomain rewrite bug (flight tree mismatch)
+  const [isSubdomainMode, setIsSubdomainMode] = useState(false);
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setIsSubdomainMode(window.location.host.includes('.') && !window.location.host.startsWith('192.') && !window.location.host.startsWith('127.'));
+    }
+  }, []);
+
+  const TenantNavLink = ({ href, children, className, onClick }: any) => {
+    if (isSubdomainMode) {
+      return <a href={href} className={className} onClick={onClick}>{children}</a>;
+    }
+    return <Link href={href} className={className} onClick={onClick}>{children}</Link>;
+  };
+
   // Create absolute safe links using workspaceBase if provided by server
   const getSafeLink = (path: string) => {
     if (workspaceBase !== undefined) {
@@ -136,24 +151,30 @@ export function WorkspaceSidebar({
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 py-6 px-4 space-y-2 overflow-y-auto overflow-x-hidden custom-scrollbar">
+        <nav className={cn("flex-1 py-6 space-y-2 overflow-y-auto overflow-x-hidden", isCollapsed ? "px-2 scrollbar-hide" : "px-4 custom-scrollbar")}>
           {navItems.map((item) => {
             const isActive = isActivePath(pathname, item.href);
+            
             return (
-              <Link key={item.name} href={item.href} className="block w-full">
-                <div
-                  className={cn(
-                    "flex items-center gap-3 transition-all duration-300 group relative overflow-hidden",
-                    isActive 
-                      ? "bg-gradient-to-r from-primary to-primary/80 text-primary-foreground shadow-[0_8px_20px_-6px_rgba(var(--primary),0.4)]" 
-                      : "hover:bg-white/5 hover:text-white text-zinc-400",
-                    isCollapsed ? "justify-center h-12 w-12 mx-auto rounded-xl" : "px-3 py-3 rounded-xl"
-                  )}
-                >
-                  <item.icon className={cn("h-5 w-5 flex-shrink-0 transition-colors", isActive ? "text-primary-foreground" : "group-hover:text-white")} />
+              <TenantNavLink
+                key={item.name}
+                href={item.href}
+                className={cn(
+                  "relative flex items-center justify-between px-3 py-2.5 rounded-xl transition-all duration-300 group overflow-hidden",
+                  isActive 
+                    ? "bg-white/10 text-white shadow-sm ring-1 ring-white/20" 
+                    : "hover:bg-white/5 hover:text-white",
+                  isCollapsed ? "justify-center h-10 w-10 mx-auto" : ""
+                )}
+              >
+                <div className="flex items-center gap-3">
+                  <item.icon className={cn(
+                    "h-5 w-5 transition-colors",
+                    isActive ? "text-white" : "text-zinc-400 group-hover:text-white"
+                  )} />
                   
                   {!isCollapsed && (
-                    <motion.span
+                    <motion.span 
                       initial={{ opacity: 0, x: -10 }}
                       animate={{ opacity: 1, x: 0 }}
                       className="font-medium whitespace-nowrap flex-1"
@@ -163,12 +184,7 @@ export function WorkspaceSidebar({
                   )}
 
                   {!isCollapsed && item.name === "Admissions" && admissionsCount > 0 && (
-                    <span className={cn(
-                      "ml-auto flex items-center justify-center min-w-[1.25rem] h-5 px-1 rounded-lg text-[10px] font-bold transition-colors shadow-sm",
-                      isActive 
-                        ? "bg-white text-zinc-950" 
-                        : "bg-red-500 text-white"
-                    )}>
+                    <span className="ml-auto flex items-center justify-center min-w-[1.25rem] h-5 px-1 rounded-lg text-[10px] font-bold bg-red-500 text-white shadow-sm">
                       {admissionsCount}
                     </span>
                   )}
@@ -179,20 +195,13 @@ export function WorkspaceSidebar({
                     </div>
                   )}
 
-                  {isActive && (
-                    <motion.div
-                      layoutId="active-nav-workspace"
-                      className="absolute -left-1 w-1.5 h-6 bg-white rounded-r-full"
-                    />
-                  )}
-
                   {isCollapsed && (
                     <div className="absolute left-full ml-4 px-2 py-1 bg-zinc-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50 whitespace-nowrap border border-white/10 shadow-xl">
                       {item.name}
                     </div>
                   )}
                 </div>
-              </Link>
+              </TenantNavLink>
             );
           })}
         </nav>
@@ -238,7 +247,7 @@ export function WorkspaceSidebar({
             const isActive = isActivePath(pathname, item.href);
             
             return (
-              <Link key={item.name} href={item.href} className="flex flex-col items-center gap-1 w-16 relative">
+              <TenantNavLink key={item.name} href={item.href} className="flex flex-col items-center gap-1 w-16 relative">
                 <div className={cn(
                   "p-2 rounded-xl transition-all duration-300 flex items-center justify-center",
                   isActive ? "bg-primary text-primary-foreground shadow-[0_4px_12px_-4px_rgba(var(--primary),0.5)]" : "text-zinc-400"
@@ -257,7 +266,7 @@ export function WorkspaceSidebar({
                 )}>
                   {item.name}
                 </span>
-              </Link>
+              </TenantNavLink>
             );
           })}
           
@@ -302,7 +311,7 @@ export function WorkspaceSidebar({
                   const isActive = isActivePath(pathname, item.href);
                   
                   return (
-                    <Link key={item.name} href={item.href} className="block w-full">
+                    <TenantNavLink key={item.name} href={item.href} className="block w-full">
                       <div className={cn(
                         "flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-300",
                         isActive ? "bg-primary text-primary-foreground shadow-md" : "hover:bg-white/5 text-zinc-300"
@@ -319,7 +328,7 @@ export function WorkspaceSidebar({
                           </span>
                         )}
                       </div>
-                    </Link>
+                    </TenantNavLink>
                   );
                 })}
               </div>

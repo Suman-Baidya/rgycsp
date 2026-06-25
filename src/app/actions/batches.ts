@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 
 export async function createBatch(data: { 
   workspaceId: string; 
-  courseId: string; 
+  courseId?: string; 
   name: string; 
   schedule?: string; 
 }) {
@@ -13,13 +13,13 @@ export async function createBatch(data: {
     const batch = await db.batch.create({
       data: {
         workspaceId: data.workspaceId,
-        courseId: data.courseId,
+        courseId: data.courseId || null,
         name: data.name,
         schedule: data.schedule,
       },
     });
 
-    revalidatePath(`/app/[tenant]/admin/students`, "page");
+    revalidatePath(`/app/[tenant]/admin`, "layout");
     return { success: true, data: batch };
   } catch (error: any) {
     console.error("Failed to create batch:", error);
@@ -38,7 +38,7 @@ export async function updateBatch(id: string, data: {
       data,
     });
 
-    revalidatePath(`/app/[tenant]/admin/students`, "page");
+    revalidatePath(`/app/[tenant]/admin`, "layout");
     return { success: true, data: batch };
   } catch (error: any) {
     console.error("Failed to update batch:", error);
@@ -64,7 +64,7 @@ export async function deleteBatch(id: string) {
       where: { id },
     });
 
-    revalidatePath(`/app/[tenant]/admin/students`, "page");
+    revalidatePath(`/app/[tenant]/admin`, "layout");
     return { success: true };
   } catch (error: any) {
     console.error("Failed to delete batch:", error);

@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Loader2, Plus, Edit2, Trash2, Tag } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -25,6 +26,7 @@ export default function ManageGroupsModal({ isOpen, onClose, onUpdate }: { isOpe
   const [value, setValue] = useState("");
   const [label, setLabel] = useState("");
   const [isActive, setIsActive] = useState(true);
+  const [groupToDelete, setGroupToDelete] = useState<any>(null);
 
   const fetchGroups = async () => {
     setIsLoading(true);
@@ -58,10 +60,14 @@ export default function ManageGroupsModal({ isOpen, onClose, onUpdate }: { isOpe
     setIsActive(group.isActive);
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this category? Courses using this category will still exist but won't be filterable by this group.")) return;
+  const handleDeleteClick = (group: any) => {
+    setGroupToDelete(group);
+  };
+
+  const confirmDelete = async () => {
+    if (!groupToDelete) return;
     try {
-      const res = await deleteGlobalCourseGroup(id);
+      const res = await deleteGlobalCourseGroup(groupToDelete.id);
       if (res.success) {
         toast.success("Category deleted");
         fetchGroups();
@@ -71,6 +77,8 @@ export default function ManageGroupsModal({ isOpen, onClose, onUpdate }: { isOpe
       }
     } catch (e) {
       toast.error("Failed to delete");
+    } finally {
+      setGroupToDelete(null);
     }
   };
 
@@ -256,11 +264,7 @@ export default function ManageGroupsModal({ isOpen, onClose, onUpdate }: { isOpe
                               >
                                 {editingId === group.id ? "Editing..." : "Edit"}
                               </Button>
-                              <Button 
-                                variant="ghost" size="icon" 
-                                onClick={() => handleDelete(group.id)} 
-                                className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-50 rounded-lg ml-1"
-                              >
+                              <Button variant="ghost" size="icon" onClick={() => setGroupToDelete(group)} className="h-9 w-9 text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 hover:text-red-600 rounded-xl">
                                 <Trash2 className="h-4 w-4" />
                               </Button>
                             </div>
@@ -286,6 +290,20 @@ export default function ManageGroupsModal({ isOpen, onClose, onUpdate }: { isOpe
           </div>
         </div>
       </DialogContent>
+      
+      <ConfirmDialog 
+        open={!!groupToDelete} 
+        onOpenChange={(open) => !open && setGroupToDelete(null)}
+        title="Delete Category"
+        description={
+          <>
+            Are you sure you want to delete <strong className="text-slate-900 dark:text-white">{groupToDelete?.label}</strong>? Courses using this category will still exist but won't be filterable by this group.
+          </>
+        }
+        onConfirm={confirmDelete}
+        confirmText="Delete"
+        destructive={true}
+      />
     </Dialog>
   );
 }

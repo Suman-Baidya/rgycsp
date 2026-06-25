@@ -5,6 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
@@ -1458,6 +1459,7 @@ function EventsManagement({ workspaceId, events, mediaFolderBase }: any) {
   const [editingEvent, setEditingEvent] = useState<any>(null);
   const [search, setSearch] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
+  const [eventToDelete, setEventToDelete] = useState<any>(null);
 
   const filteredEvents = events.filter((e: any) => {
     if (!search) return true;
@@ -1487,17 +1489,22 @@ function EventsManagement({ workspaceId, events, mediaFolderBase }: any) {
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this event?")) return;
+  const handleDeleteClick = (event: any) => {
+    setEventToDelete(event);
+  };
+
+  const confirmDelete = async () => {
+    if (!eventToDelete) return;
     setIsProcessing(true);
     try {
-      const res = await deleteEvent(id);
+      const res = await deleteEvent(eventToDelete.id);
       if (res.success) toast.success("Event deleted");
       else toast.error(res.error || "Delete failed");
     } catch (err) {
       toast.error("Delete failed");
     } finally {
       setIsProcessing(false);
+      setEventToDelete(null);
     }
   };
 
@@ -1562,7 +1569,7 @@ function EventsManagement({ workspaceId, events, mediaFolderBase }: any) {
               </div>
               <div className="flex items-center gap-3 pt-2">
                  <Button variant="outline" size="sm" onClick={() => setEditingEvent(event)} className="flex-1 rounded-xl font-bold h-10 hover:bg-primary/5 hover:text-primary border-border/60 transition-all">Edit</Button>
-                 <Button variant="ghost" size="icon" onClick={() => handleDelete(event.id)} className="w-10 h-10 rounded-xl text-red-500 hover:bg-red-500/10 transition-all">
+                 <Button variant="ghost" size="icon" onClick={() => handleDeleteClick(event)} className="w-10 h-10 rounded-xl text-red-500 hover:bg-red-500/10 transition-all">
                     <Trash2 className="w-4 h-4" />
                  </Button>
               </div>
@@ -1582,6 +1589,19 @@ function EventsManagement({ workspaceId, events, mediaFolderBase }: any) {
           </div>
         )}
       </div>
+      <ConfirmDialog 
+        open={!!eventToDelete} 
+        onOpenChange={(open) => !open && setEventToDelete(null)}
+        title="Delete Event"
+        description={
+          <>
+            Are you sure you want to delete <strong className="text-slate-900 dark:text-white">{eventToDelete?.title}</strong>? This action cannot be undone.
+          </>
+        }
+        onConfirm={confirmDelete}
+        confirmText="Delete"
+        destructive={true}
+      />
     </div>
   );
 }
@@ -1591,6 +1611,7 @@ function GalleryManagement({ workspaceId, galleryItems, mediaFolderBase }: any) 
   const [editingItem, setEditingItem] = useState<any>(null);
   const [search, setSearch] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
+  const [imageToDelete, setImageToDelete] = useState<any>(null);
 
   const filteredItems = galleryItems.filter((e: any) => {
     if (!search) return true;
@@ -1620,15 +1641,20 @@ function GalleryManagement({ workspaceId, galleryItems, mediaFolderBase }: any) 
     setIsProcessing(false);
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this image?")) return;
-    const res = await deleteGalleryItem(id);
+  const handleDeleteClick = (item: any) => {
+    setImageToDelete(item);
+  };
+
+  const confirmDelete = async () => {
+    if (!imageToDelete) return;
+    const res = await deleteGalleryItem(imageToDelete.id);
     if (res.success) {
       toast.success("Image removed from gallery");
       window.location.reload();
     } else {
       toast.error(res.error || "Failed to delete");
     }
+    setImageToDelete(null);
   };
 
   if (isAdding || editingItem) {
@@ -1680,7 +1706,7 @@ function GalleryManagement({ workspaceId, galleryItems, mediaFolderBase }: any) 
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-6">
                  <div className="flex items-center gap-2">
                     <Button variant="secondary" size="sm" onClick={() => setEditingItem(item)} className="flex-1 rounded-xl font-bold h-10 hover:bg-white hover:text-primary transition-all">Edit</Button>
-                    <Button variant="destructive" size="icon" onClick={() => handleDelete(item.id)} className="w-10 h-10 rounded-xl transition-all">
+                    <Button variant="destructive" size="icon" onClick={() => handleDeleteClick(item)} className="w-10 h-10 rounded-xl transition-all">
                        <Trash2 className="w-4 h-4" />
                     </Button>
                  </div>
@@ -1705,6 +1731,19 @@ function GalleryManagement({ workspaceId, galleryItems, mediaFolderBase }: any) 
           </div>
         )}
       </div>
+      <ConfirmDialog 
+        open={!!imageToDelete} 
+        onOpenChange={(open) => !open && setImageToDelete(null)}
+        title="Delete Image"
+        description={
+          <>
+            Are you sure you want to delete <strong className="text-slate-900 dark:text-white">{imageToDelete?.title || "Untitled Image"}</strong> from the gallery? This action cannot be undone.
+          </>
+        }
+        onConfirm={confirmDelete}
+        confirmText="Delete"
+        destructive={true}
+      />
     </div>
   );
 }

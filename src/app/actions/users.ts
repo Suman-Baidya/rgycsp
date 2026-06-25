@@ -21,7 +21,8 @@ export async function getUsers() {
         studentProfile: {
           select: {
             id: true,
-            enrollmentNo: true
+            enrollmentNo: true,
+            status: true
           }
         },
         _count: {

@@ -10,6 +10,7 @@ export default function StudentsDashboardClient({
   workspaceId, 
   initialStudents, 
   batches, 
+  courses,
   applications, 
   config,
   pendingCount 
@@ -17,6 +18,7 @@ export default function StudentsDashboardClient({
   workspaceId: string;
   initialStudents: any[];
   batches: any[];
+  courses: any[];
   applications: any[];
   config: any;
   pendingCount: number;
@@ -37,6 +39,7 @@ export default function StudentsDashboardClient({
             workspaceId={workspaceId} 
             initialStudents={initialStudents} 
             batches={batches}
+            courses={courses}
           />
         )}
         
