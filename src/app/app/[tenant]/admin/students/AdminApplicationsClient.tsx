@@ -119,7 +119,7 @@ export function AdminApplicationsClient({ workspaceId, initialData, batches = []
         setReason("");
         setSelectedBatchId("");
       } else {
-        toast.error(res.error || "Failed to update status");
+        toast.error((res as any).error || "Failed to update status");
       }
     } catch (err) {
       toast.error("Something went wrong");

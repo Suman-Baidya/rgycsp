@@ -5,6 +5,7 @@ import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { getServerTenantLink, getServerWorkspaceBase } from "@/lib/routing-server";
 import { db } from "@/lib/prisma";
 import { getPendingApplicationsCount } from "@/app/actions/admin-applications";
+import { AdminRouteGuard } from "@/components/layout/AdminRouteGuard";
 
 export default async function WorkspaceAdminLayout({
   children,
@@ -23,10 +24,32 @@ export default async function WorkspaceAdminLayout({
   });
 
   let admissionsCount = 0;
-  if (workspace) {
+  let userRole = "UNAUTHORIZED";
+  let userPermissions: string[] = [];
+
+  if (workspace && session?.user) {
     const countResult = await getPendingApplicationsCount(workspace.id);
     if (countResult.success) {
       admissionsCount = countResult.data ?? 0;
+    }
+
+    if (session.user.role === "SUPER_ADMIN") {
+      userRole = "ADMIN"; // Super Admin gets full access in franchises
+    }
+
+    const roleRecord = await db.workspaceRole.findFirst({
+      where: { userId: session.user.id, workspaceId: workspace.id }
+    });
+    
+    if (roleRecord && session.user.role !== "SUPER_ADMIN") {
+      userRole = roleRecord.role;
+      try {
+        if (Array.isArray(roleRecord.permissions)) {
+          userPermissions = roleRecord.permissions as string[];
+        } else if (typeof roleRecord.permissions === 'string') {
+          userPermissions = JSON.parse(roleRecord.permissions);
+        }
+      } catch (e) {}
     }
   }
 
@@ -35,11 +58,18 @@ export default async function WorkspaceAdminLayout({
 
   return (
     <div className="flex min-h-screen bg-background text-foreground transition-colors duration-300">
+      <AdminRouteGuard 
+        tenant={tenant} 
+        userRole={userRole} 
+        userPermissions={userPermissions} 
+      />
       <WorkspaceSidebar 
         tenant={tenant} 
         workspaceBase={workspaceBase} 
         admissionsCount={admissionsCount} 
         isStateManager={workspace?.isStateManager || false}
+        userRole={userRole}
+        userPermissions={userPermissions}
       />
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         <header className="h-16 border-b border-border/40 bg-background/50 backdrop-blur-md flex items-center px-4 lg:px-8 sticky top-0 z-40">

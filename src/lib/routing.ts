@@ -141,6 +141,7 @@ export const WORKSPACE_ROUTES = {
   ADMIN_EXAM_GENERATOR: "/admin/exam-generator",
   ADMIN_SETTINGS: "/admin/settings",
   ADMIN_STATE_MANAGER: "/admin/state-manager",
+  ADMIN_PRODUCTS: "/admin/products",
   ADMIN_WALLET: "/admin/wallet",
   STUDENT_DASHBOARD: "/student/dashboard",
   STUDENT_PROFILE: "/student/profile",

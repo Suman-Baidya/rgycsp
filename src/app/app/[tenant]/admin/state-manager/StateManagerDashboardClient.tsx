@@ -336,7 +336,7 @@ export function StateManagerDashboardClient({
                     />
                   </div>
                   
-                  <Select value={txTypeFilter} onValueChange={(v: string) => { setTxTypeFilter(v); setCurrentPageCommissions(1); }}>
+                  <Select value={txTypeFilter} onValueChange={(v) => { setTxTypeFilter(v as string); setCurrentPageCommissions(1); }}>
                     <SelectTrigger className="h-10 w-full sm:w-[150px] rounded-xl bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800 font-bold text-slate-600 dark:text-slate-300">
                       <div className="flex items-center gap-2"><Filter className="w-3.5 h-3.5 text-slate-400"/> <SelectValue /></div>
                     </SelectTrigger>
@@ -348,7 +348,7 @@ export function StateManagerDashboardClient({
                     </SelectContent>
                   </Select>
 
-                  <Select value={txSortOrder} onValueChange={(v: string) => { setTxSortOrder(v); setCurrentPageCommissions(1); }}>
+                  <Select value={txSortOrder} onValueChange={(v) => { setTxSortOrder(v as string); setCurrentPageCommissions(1); }}>
                     <SelectTrigger className="h-10 w-full sm:w-[150px] rounded-xl bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800 font-bold text-slate-600 dark:text-slate-300">
                       <div className="flex items-center gap-2"><CalendarIcon className="w-3.5 h-3.5 text-slate-400"/> <SelectValue /></div>
                     </SelectTrigger>

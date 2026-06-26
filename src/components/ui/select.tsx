@@ -44,14 +44,16 @@ function SelectContent({
       <SelectPrimitive.Positioner
         side={side}
         sideOffset={sideOffset}
-        className="z-50"
+        className="z-[105]"
+        style={{ zIndex: 105 }}
       >
         <SelectPrimitive.Popup
           data-slot="select-content"
           className={cn(
-            "relative z-50 max-h-96 min-w-[8rem] overflow-hidden rounded-xl border bg-popover text-popover-foreground shadow-md data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
+            "relative max-h-96 min-w-[8rem] overflow-hidden rounded-xl border bg-popover text-popover-foreground shadow-md data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
             className
           )}
+          style={{ zIndex: 105 }}
           {...props}
         >
           <div className="p-1">{children}</div>

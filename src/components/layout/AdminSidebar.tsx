@@ -22,13 +22,15 @@ import {
   MoreHorizontal,
   Building2,
   BookOpen,
-  MapPinned
+  MapPinned,
+  ShoppingCart
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { signOut } from "next-auth/react";
 import { isActivePath, getTenantLink, detectTenant } from "@/lib/routing";
 import { getPendingFranchiseCount } from "@/app/actions/franchise";
+import { getPendingOrdersCount } from "@/app/actions/product-order";
 
 const navItems = [
   { name: "Overview", href: "/", icon: LayoutDashboard },
@@ -38,6 +40,7 @@ const navItems = [
   { name: "Students", href: "/students", icon: Users },
   { name: "Users", href: "/users", icon: User },
   { name: "Courses", href: "/courses", icon: BookOpen },
+  { name: "Products", href: "/products", icon: ShoppingCart },
   { name: "Documents", href: "/documents", icon: FileText },
   { name: "System Logs", href: "/logs", icon: Activity },
   { name: "Settings", href: "/settings", icon: Settings },
@@ -49,18 +52,25 @@ export function AdminSidebar() {
   const [isMoreOpen, setIsMoreOpen] = useState(false);
   const pathname = usePathname();
   const [pendingApplications, setPendingApplications] = useState(0);
+  const [pendingOrders, setPendingOrders] = useState(0);
 
   // Close mobile drawer on navigation
   useEffect(() => {
     setIsMoreOpen(false);
   }, [pathname]);
 
-  // Fetch pending applications count periodically
+  // Fetch pending applications and orders count periodically
   useEffect(() => {
     const fetchPendingCount = async () => {
       try {
-        const count = await getPendingFranchiseCount();
-        setPendingApplications(count);
+        const [franchiseCount, ordersResult] = await Promise.all([
+          getPendingFranchiseCount(),
+          getPendingOrdersCount()
+        ]);
+        setPendingApplications(franchiseCount);
+        if (ordersResult.success && ordersResult.count !== undefined) {
+          setPendingOrders(ordersResult.count);
+        }
       } catch (e) {
         console.error(e);
       }
@@ -156,6 +166,11 @@ export function AdminSidebar() {
                           {pendingApplications}
                         </span>
                       )}
+                      {item.name === "Products" && pendingOrders > 0 && (
+                        <span className="h-5 min-w-5 px-1.5 bg-red-500 text-white text-[10px] font-black rounded flex items-center justify-center animate-pulse shadow-[0_0_10px_rgba(239,68,68,0.5)]">
+                          {pendingOrders}
+                        </span>
+                      )}
                     </motion.span>
                   )}
 
@@ -170,12 +185,21 @@ export function AdminSidebar() {
                     <div className="absolute top-2 right-2 w-2.5 h-2.5 bg-amber-500 rounded-full animate-pulse shadow-[0_0_10px_rgba(245,158,11,0.5)] border-2 border-zinc-950"></div>
                   )}
 
+                  {isCollapsed && item.name === "Products" && pendingOrders > 0 && (
+                    <div className="absolute top-2 right-2 w-2.5 h-2.5 bg-red-500 rounded-full animate-pulse shadow-[0_0_10px_rgba(239,68,68,0.5)] border-2 border-zinc-950"></div>
+                  )}
+
                   {isCollapsed && (
                     <div className="absolute left-full ml-4 px-2 py-1 bg-zinc-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50 whitespace-nowrap border border-white/10 shadow-xl flex items-center gap-2">
                       {item.name}
                       {item.name === "Franchises" && pendingApplications > 0 && (
                         <span className="h-4 min-w-4 px-1 bg-amber-500 text-white text-[9px] font-black rounded flex items-center justify-center">
                           {pendingApplications}
+                        </span>
+                      )}
+                      {item.name === "Products" && pendingOrders > 0 && (
+                        <span className="h-4 min-w-4 px-1 bg-red-500 text-white text-[9px] font-black rounded flex items-center justify-center">
+                          {pendingOrders}
                         </span>
                       )}
                     </div>
@@ -243,12 +267,15 @@ export function AdminSidebar() {
             );
           })}
           
-          <button onClick={toggleMore} className="flex flex-col items-center gap-1 w-16">
+          <button onClick={toggleMore} className="flex flex-col items-center gap-1 w-16 relative">
             <div className={cn(
               "p-2 rounded-xl transition-all duration-300 flex items-center justify-center",
               isMoreOpen ? "bg-white/10 text-white" : "text-zinc-400"
             )}>
               <MoreHorizontal className="h-5 w-5" />
+              {pendingOrders > 0 && (
+                <div className="absolute top-1 right-3 w-2.5 h-2.5 bg-red-500 rounded-full animate-pulse shadow-[0_0_10px_rgba(239,68,68,0.5)] border border-zinc-950"></div>
+              )}
             </div>
             <span className={cn(
               "text-[10px] font-medium transition-colors text-center w-full truncate px-1",
@@ -292,7 +319,14 @@ export function AdminSidebar() {
                         isActive ? "bg-primary text-primary-foreground shadow-md" : "hover:bg-white/5 text-zinc-300"
                       )}>
                         <item.icon className="h-5 w-5" />
-                        <span className="font-medium">{item.name}</span>
+                        <span className="font-medium flex-1 flex justify-between items-center">
+                          {item.name}
+                          {item.name === "Products" && pendingOrders > 0 && (
+                            <span className="h-5 min-w-5 px-1.5 bg-red-500 text-white text-[10px] font-black rounded flex items-center justify-center animate-pulse shadow-[0_0_10px_rgba(239,68,68,0.5)]">
+                              {pendingOrders}
+                            </span>
+                          )}
+                        </span>
                       </div>
                     </Link>
                   );

@@ -21,6 +21,7 @@ import {
   Sparkles,
   MoreHorizontal,
   MapPinned,
+  ShoppingCart,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -31,12 +32,16 @@ export function WorkspaceSidebar({
   tenant: propTenant,
   workspaceBase,
   admissionsCount = 0,
-  isStateManager = false
+  isStateManager = false,
+  userRole = "ADMIN",
+  userPermissions = []
 }: { 
   tenant?: string;
   workspaceBase?: string;
   admissionsCount?: number;
   isStateManager?: boolean;
+  userRole?: string;
+  userPermissions?: string[];
 }) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMoreOpen, setIsMoreOpen] = useState(false);
@@ -72,20 +77,28 @@ export function WorkspaceSidebar({
     return getTenantLink(path, tenant, pathname);
   };
 
-  const navItems = [
-    { name: "Overview", href: getSafeLink(WORKSPACE_ROUTES.ADMIN), icon: LayoutDashboard },
-    { name: "Wallet", href: getSafeLink(WORKSPACE_ROUTES.ADMIN_WALLET), icon: Wallet },
-    { name: "Staff & Roles", href: getSafeLink(WORKSPACE_ROUTES.ADMIN_STAFF), icon: UserCheck },
-    { name: "Students", href: getSafeLink(WORKSPACE_ROUTES.ADMIN_STUDENTS), icon: Users },
-    { name: "Admissions", href: getSafeLink(WORKSPACE_ROUTES.ADMIN_ADMISSIONS), icon: UserPlus },
-    { name: "Attendance", href: getSafeLink(WORKSPACE_ROUTES.ADMIN_ATTENDANCE), icon: Calendar },
-    { name: "Courses", href: getSafeLink(WORKSPACE_ROUTES.ADMIN_COURSES), icon: BookOpen },
-    { name: "Exam Gen", href: getSafeLink(WORKSPACE_ROUTES.ADMIN_EXAM_GENERATOR), icon: Sparkles },
-    { name: "Landing Page", href: getSafeLink(WORKSPACE_ROUTES.ADMIN_SETTINGS), icon: Building2 },
+  const allNavItems = [
+    { id: "dashboard", name: "Overview", href: getSafeLink(WORKSPACE_ROUTES.ADMIN), icon: LayoutDashboard },
+    { id: "wallet", name: "Wallet", href: getSafeLink(WORKSPACE_ROUTES.ADMIN_WALLET), icon: Wallet },
+    { id: "staff", name: "Staff & Roles", href: getSafeLink(WORKSPACE_ROUTES.ADMIN_STAFF), icon: UserCheck },
+    { id: "students", name: "Students", href: getSafeLink(WORKSPACE_ROUTES.ADMIN_STUDENTS), icon: Users },
+    { id: "admissions", name: "Admissions", href: getSafeLink(WORKSPACE_ROUTES.ADMIN_ADMISSIONS), icon: UserPlus },
+    { id: "attendance", name: "Attendance", href: getSafeLink(WORKSPACE_ROUTES.ADMIN_ATTENDANCE), icon: Calendar },
+    { id: "courses", name: "Courses", href: getSafeLink(WORKSPACE_ROUTES.ADMIN_COURSES), icon: BookOpen },
+    { id: "products", name: "Products & Store", href: getSafeLink(WORKSPACE_ROUTES.ADMIN_PRODUCTS), icon: ShoppingCart },
+    { id: "exam-gen", name: "Exam Gen", href: getSafeLink(WORKSPACE_ROUTES.ADMIN_EXAM_GENERATOR), icon: Sparkles },
+    { id: "settings", name: "Landing Page", href: getSafeLink(WORKSPACE_ROUTES.ADMIN_SETTINGS), icon: Building2 },
   ];
 
+  const navItems = userRole === "ADMIN" 
+    ? allNavItems 
+    : allNavItems.filter(item => 
+        // Staff page is typically admin only unless specifically allowed (which we didn't add to checkbox array, but let's say it's admin only)
+        item.id === "staff" ? userRole === "ADMIN" : userPermissions.includes(item.id) || item.id === "dashboard"
+      );
+
   if (isStateManager) {
-    navItems.splice(8, 0, { name: "State Manager", href: getSafeLink(WORKSPACE_ROUTES.ADMIN_STATE_MANAGER || "/admin/state-manager"), icon: MapPinned });
+    navItems.splice(8, 0, { id: "state-manager", name: "State Manager", href: getSafeLink(WORKSPACE_ROUTES.ADMIN_STATE_MANAGER || "/admin/state-manager"), icon: MapPinned });
   }
 
   // Close mobile drawer on navigation

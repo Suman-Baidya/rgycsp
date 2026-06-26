@@ -89,6 +89,7 @@ model Workspace {
   admissionApps      AdmissionApplication[]
   notifications      Notification[]
   walletTransactions WalletTransaction[]
+  productOrders      ProductOrder[]
 }
 
 // ============================================
@@ -150,6 +151,7 @@ model WorkspaceRole {
   userId      String
   workspaceId String
   role        WorkspaceRoleType @default(STAFF)
+  permissions Json?
 
   user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
@@ -680,3 +682,58 @@ model WalletPaymentConfig {
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 }
+
+// ============================================
+// Franchise Product System
+// ============================================
+
+model ProductCategory {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?  @db.Text
+  isActive    Boolean  @default(true)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Product {
+  id          String   @id @default(cuid())
+  title       String
+  description String?  @db.Text
+  price       Float
+  stock       Int      @default(0)
+  category    String?  // "Uniform", "Books", "Bags", etc.
+  image       String?
+  isActive    Boolean  @default(true)
+
+  orders      ProductOrder[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model ProductOrder {
+  id          String   @id @default(cuid())
+  productId   String
+  workspaceId String
+  quantity    Int
+  totalPrice  Float
+  status      OrderStatus @default(PENDING)
+  paymentStatus PaymentStatus @default(PENDING) 
+  
+  product     Product    @relation(fields: [productId], references: [id], onDelete: Cascade)
+  workspace   Workspace  @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+enum OrderStatus {
+  PENDING
+  APPROVED
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
+
