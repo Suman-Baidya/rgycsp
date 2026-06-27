@@ -35,9 +35,11 @@ interface ProfileFormProps {
     username: string | null;
     image: string | null;
   };
+  roleName?: string;
+  tenant?: string;
 }
 
-export function ProfileForm({ user }: ProfileFormProps) {
+export function ProfileForm({ user, roleName = "Franchise Admin", tenant }: ProfileFormProps) {
   const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
   const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
   const [isEditingProfile, setIsEditingProfile] = useState(false);
@@ -66,6 +68,9 @@ export function ProfileForm({ user }: ProfileFormProps) {
     
     if (res.success) {
       toast.success("Profile updated successfully");
+      setIsEditingProfile(false);
+      // Optional: use router.refresh() if needed to force server component re-render
+      window.location.reload();
     } else {
       toast.error(res.error || "Failed to update profile");
     }
@@ -122,7 +127,7 @@ export function ProfileForm({ user }: ProfileFormProps) {
               <div className="flex flex-col sm:flex-row sm:items-center gap-3">
                 <h1 className="text-3xl font-bold tracking-tight text-foreground">{name || "Administrator"}</h1>
                 <Badge variant="default" className="h-6 w-fit mx-auto sm:mx-0 rounded-md px-2 text-[10px] font-semibold uppercase tracking-wider bg-gradient-to-r from-primary to-primary/80 text-primary-foreground shadow-sm border-none">
-                  Super Admin
+                  {roleName}
                 </Badge>
               </div>
               <div className="flex flex-wrap items-center justify-center sm:justify-start gap-x-4 gap-y-2 text-muted-foreground text-sm font-medium">

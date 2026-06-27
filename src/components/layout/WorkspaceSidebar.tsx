@@ -22,6 +22,7 @@ import {
   MoreHorizontal,
   MapPinned,
   ShoppingCart,
+  UserCog,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -88,6 +89,7 @@ export function WorkspaceSidebar({
     { id: "products", name: "Products & Store", href: getSafeLink(WORKSPACE_ROUTES.ADMIN_PRODUCTS), icon: ShoppingCart },
     { id: "exam-gen", name: "Exam Gen", href: getSafeLink(WORKSPACE_ROUTES.ADMIN_EXAM_GENERATOR), icon: Sparkles },
     { id: "settings", name: "Landing Page", href: getSafeLink(WORKSPACE_ROUTES.ADMIN_SETTINGS), icon: Building2 },
+    { id: "profile", name: "Profile", href: getSafeLink(WORKSPACE_ROUTES.ADMIN_PROFILE), icon: UserCog },
   ];
 
   const navItems = userRole === "ADMIN" 
