@@ -90,3 +90,69 @@ export async function saveAttendance(
     return { success: false, error: "Failed to save attendance records." };
   }
 }
+
+export async function getBatchAttendanceReport(batchId: string, duration: "LAST_MONTH" | "LAST_6_MONTHS" | "FULL_COURSE") {
+  try {
+    let startDate: Date | undefined;
+    
+    if (duration === "LAST_MONTH") {
+      startDate = new Date();
+      startDate.setMonth(startDate.getMonth() - 1);
+    } else if (duration === "LAST_6_MONTHS") {
+      startDate = new Date();
+      startDate.setMonth(startDate.getMonth() - 6);
+    }
+    
+    const dateFilter = startDate ? { gte: startDate } : undefined;
+
+    const students = await db.studentProfile.findMany({
+      where: { batchId },
+      select: {
+        id: true,
+        fullName: true,
+        enrollmentNo: true,
+        attendances: {
+          where: dateFilter ? { date: dateFilter } : undefined,
+          select: {
+            date: true,
+            status: true
+          }
+        }
+      },
+      orderBy: { fullName: "asc" }
+    });
+
+    return { success: true, data: students };
+  } catch (error: any) {
+    console.error("Error fetching batch report:", error);
+    return { success: false, error: "Failed to fetch batch attendance report." };
+  }
+}
+
+export async function getStudentAttendanceStats(studentId: string) {
+  try {
+    const attendances = await db.attendance.findMany({
+      where: { studentProfileId: studentId },
+      orderBy: { date: "desc" }
+    });
+
+    const totalDays = attendances.length;
+    const presentDays = attendances.filter(a => a.status === "PRESENT").length;
+    const absentDays = attendances.filter(a => a.status === "ABSENT").length;
+    const percentage = totalDays > 0 ? Math.round((presentDays / totalDays) * 100) : 0;
+
+    return { 
+      success: true, 
+      data: {
+        totalDays,
+        presentDays,
+        absentDays,
+        percentage,
+        recentRecords: attendances.slice(0, 10)
+      } 
+    };
+  } catch (error: any) {
+    console.error("Error fetching student stats:", error);
+    return { success: false, error: "Failed to fetch student attendance stats." };
+  }
+}

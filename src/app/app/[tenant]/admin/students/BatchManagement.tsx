@@ -44,12 +44,18 @@ export default function BatchManagement({
   // Form State
   const [formData, setFormData] = useState({
     name: "",
-    schedule: ""
+    schedule: "",
+    courseId: "independent",
+    capacity: "30",
+    teacherName: "",
+    startDate: "",
+    endDate: ""
   });
 
   const filteredBatches = batches.filter(b => 
     b.name.toLowerCase().includes(search.toLowerCase()) ||
-    b.course?.title?.toLowerCase().includes(search.toLowerCase())
+    b.course?.title?.toLowerCase().includes(search.toLowerCase()) ||
+    b.teacherName?.toLowerCase().includes(search.toLowerCase())
   );
 
   const handleOpenModal = (batch?: any) => {
@@ -57,13 +63,23 @@ export default function BatchManagement({
       setEditingBatch(batch);
       setFormData({
         name: batch.name,
-        schedule: batch.schedule || ""
+        schedule: batch.schedule || "",
+        courseId: batch.courseId || "independent",
+        capacity: batch.capacity?.toString() || "30",
+        teacherName: batch.teacherName || "",
+        startDate: batch.startDate ? new Date(batch.startDate).toISOString().split('T')[0] : "",
+        endDate: batch.endDate ? new Date(batch.endDate).toISOString().split('T')[0] : ""
       });
     } else {
       setEditingBatch(null);
       setFormData({
         name: "",
-        schedule: ""
+        schedule: "",
+        courseId: "independent",
+        capacity: "30",
+        teacherName: "",
+        startDate: "",
+        endDate: ""
       });
     }
     setIsModalOpen(true);
@@ -77,17 +93,27 @@ export default function BatchManagement({
 
     setIsProcessing(true);
     try {
+      const payload = {
+        name: formData.name,
+        schedule: formData.schedule,
+        courseId: formData.courseId === "independent" ? undefined : formData.courseId,
+        capacity: parseInt(formData.capacity) || 30,
+        teacherName: formData.teacherName,
+        startDate: formData.startDate ? new Date(formData.startDate) : undefined,
+        endDate: formData.endDate ? new Date(formData.endDate) : undefined,
+      };
+
       if (editingBatch) {
-        const res = await updateBatch(editingBatch.id, formData);
+        const res = await updateBatch(editingBatch.id, payload);
         if (res.success) {
           toast.success("Batch updated successfully");
-          setBatches(prev => prev.map(b => b.id === editingBatch.id ? { ...b, ...formData } : b));
+          setBatches(prev => prev.map(b => b.id === editingBatch.id ? { ...b, ...res.data } : b));
           setIsModalOpen(false);
         } else {
           toast.error(res.error || "Update failed");
         }
       } else {
-        const res = await createBatch({ ...formData, workspaceId });
+        const res = await createBatch({ ...payload, workspaceId });
         if (res.success) {
           toast.success("Batch created successfully");
           // In a real app we'd probably revalidate, but for UI feel:
@@ -162,20 +188,52 @@ export default function BatchManagement({
                   <LayoutGrid className="w-6 h-6" />
                 </div>
                 <h4 className="text-xl font-bold text-slate-900 dark:text-white">{batch.name}</h4>
-                <div className="flex items-center gap-2 text-xs font-bold text-primary uppercase tracking-widest bg-primary/5 w-fit px-3 py-1 rounded-full">
-                  <GraduationCap className="w-3 h-3" />
-                  Independent Batch
-                </div>
+                {batch.courseId ? (
+                  <div className="flex items-center gap-2 text-xs font-bold text-blue-600 uppercase tracking-widest bg-blue-50 w-fit px-3 py-1 rounded-full">
+                    <GraduationCap className="w-3 h-3" />
+                    {batch.course?.title || "Linked Course"}
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2 text-xs font-bold text-emerald-600 uppercase tracking-widest bg-emerald-50 w-fit px-3 py-1 rounded-full">
+                    <LayoutGrid className="w-3 h-3" />
+                    Independent Batch
+                  </div>
+                )}
               </div>
 
               <div className="space-y-3 pt-4 border-t border-slate-50 dark:border-slate-800/50">
+                {batch.teacherName && (
+                  <div className="flex items-center gap-3 text-sm text-slate-500">
+                    <div className="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center">
+                      <GraduationCap className="w-3 h-3 text-slate-400" />
+                    </div>
+                    <span className="font-medium text-slate-700 dark:text-slate-300">Teacher: {batch.teacherName}</span>
+                  </div>
+                )}
                 <div className="flex items-center gap-3 text-sm text-slate-500">
                   <Clock className="w-4 h-4 text-slate-400" />
                   <span className="font-medium">{batch.schedule || "No schedule set"}</span>
                 </div>
-                <div className="flex items-center gap-3 text-sm text-slate-500">
-                  <Calendar className="w-4 h-4 text-slate-400" />
-                  <span className="font-medium">{batch._count?.students || 0} Students Enrolled</span>
+                
+                {/* Capacity Progress Bar */}
+                <div className="pt-2 space-y-1.5">
+                  <div className="flex justify-between items-center text-xs font-bold text-slate-400 uppercase tracking-wider">
+                    <span>Capacity</span>
+                    <span className={cn(
+                      batch._count?.students >= (batch.capacity || 30) ? "text-red-500" : "text-primary"
+                    )}>
+                      {batch._count?.students || 0} / {batch.capacity || 30}
+                    </span>
+                  </div>
+                  <div className="h-2 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                    <div 
+                      className={cn(
+                        "h-full rounded-full transition-all duration-500",
+                        batch._count?.students >= (batch.capacity || 30) ? "bg-red-500" : "bg-primary"
+                      )}
+                      style={{ width: `${Math.min(((batch._count?.students || 0) / (batch.capacity || 30)) * 100, 100)}%` }}
+                    />
+                  </div>
                 </div>
               </div>
               
@@ -203,7 +261,7 @@ export default function BatchManagement({
       </div>
 
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="max-w-md rounded-[2.5rem] p-8">
+        <DialogContent className="max-w-2xl rounded-[2.5rem] p-8">
           <DialogHeader className="space-y-3">
             <DialogTitle className="text-2xl font-bold">
               {editingBatch ? "Edit Batch" : "Create New Batch"}
@@ -213,27 +271,86 @@ export default function BatchManagement({
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-6 py-6">
+          <div className="space-y-6 py-6 max-h-[60vh] overflow-y-auto px-2 -mx-2">
             <div className="space-y-2">
-              <Label className="text-xs font-bold uppercase tracking-widest text-slate-400 ml-1">Batch Name</Label>
+              <Label className="text-xs font-bold uppercase tracking-widest text-slate-400 ml-1">Associated Course</Label>
+              <Select value={formData.courseId} onValueChange={(v) => setFormData({...formData, courseId: v})}>
+                <SelectTrigger className="h-12 rounded-2xl font-bold bg-slate-50/50 dark:bg-slate-900/50">
+                  <SelectValue placeholder="Independent Batch (No Course)">
+                    {formData.courseId === "independent" || !formData.courseId 
+                      ? "Independent Batch (No Course)" 
+                      : courses.find(c => c.id === formData.courseId)?.title || "Unknown Course"}
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="independent">Independent Batch (No Course)</SelectItem>
+                  {courses.map(c => (
+                    <SelectItem key={c.id} value={c.id}>{c.title}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label className="text-xs font-bold uppercase tracking-widest text-slate-400 ml-1">Batch Name *</Label>
+                <Input 
+                  value={formData.name} 
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })} 
+                  placeholder="e.g., Morning Batch A" 
+                  className="h-12 rounded-2xl font-bold"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-xs font-bold uppercase tracking-widest text-slate-400 ml-1">Capacity</Label>
+                <Input 
+                  type="number"
+                  value={formData.capacity} 
+                  onChange={(e) => setFormData({ ...formData, capacity: e.target.value })} 
+                  className="h-12 rounded-2xl font-bold"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-xs font-bold uppercase tracking-widest text-slate-400 ml-1">Teacher's Name</Label>
               <Input 
-                value={formData.name} 
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })} 
-                placeholder="e.g., Morning Batch A" 
+                value={formData.teacherName} 
+                onChange={(e) => setFormData({ ...formData, teacherName: e.target.value })} 
+                placeholder="e.g., John Doe" 
                 className="h-12 rounded-2xl font-bold"
               />
             </div>
 
-
-
             <div className="space-y-2">
-              <Label className="text-xs font-bold uppercase tracking-widest text-slate-400 ml-1">Schedule (Optional)</Label>
+              <Label className="text-xs font-bold uppercase tracking-widest text-slate-400 ml-1">Schedule</Label>
               <Input 
                 value={formData.schedule} 
                 onChange={(e) => setFormData({ ...formData, schedule: e.target.value })} 
                 placeholder="e.g., Mon, Wed, Fri - 10:00 AM" 
                 className="h-12 rounded-2xl font-bold"
               />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label className="text-xs font-bold uppercase tracking-widest text-slate-400 ml-1">Start Date</Label>
+                <Input 
+                  type="date"
+                  value={formData.startDate} 
+                  onChange={(e) => setFormData({ ...formData, startDate: e.target.value })} 
+                  className="h-12 rounded-2xl font-bold"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-xs font-bold uppercase tracking-widest text-slate-400 ml-1">End Date</Label>
+                <Input 
+                  type="date"
+                  value={formData.endDate} 
+                  onChange={(e) => setFormData({ ...formData, endDate: e.target.value })} 
+                  className="h-12 rounded-2xl font-bold"
+                />
+              </div>
             </div>
           </div>
 

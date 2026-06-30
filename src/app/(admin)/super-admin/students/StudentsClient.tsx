@@ -1,9 +1,9 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useRef } from "react";
 import {
   Users, GraduationCap, Building2, Search,
-  Eye, Pencil, ChevronLeft, ChevronRight, CheckCircle, FileText, Calendar, Mail, Phone, MoreHorizontal, User, UserCheck, Trash2, ShieldCheck
+  Eye, Pencil, ChevronLeft, ChevronRight, CheckCircle, FileText, Calendar, Mail, Phone, MoreHorizontal, User, UserCheck, Trash2, ShieldCheck, Download, ExternalLink
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,6 +14,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { AdminPageHeader } from "@/components/layout/AdminPageHeader";
 import { ImageUpload } from "@/components/ui/ImageUpload";
 import { updateStudent } from "@/app/actions/students";
+import { issueStudentDocument } from "@/app/actions/student-documents";
+import { registerStudent } from "@/app/actions/student-registration";
+import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -23,9 +26,14 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSub,
+  DropdownMenuSubTrigger,
+  DropdownMenuPortal,
+  DropdownMenuSubContent,
 } from "@/components/ui/dropdown-menu";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { DocumentRenderer, DocumentRendererRef } from "@/components/documents/DocumentRenderer";
 
 interface StudentsClientProps {
   initialStudents: any[];
@@ -47,6 +55,16 @@ export default function StudentsClient({ initialStudents, initialWorkspaces }: S
   const [editOpen, setEditOpen] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState<any>(null);
   const [studentToDelete, setStudentToDelete] = useState<any>(null);
+  
+  // View State
+  const [viewOpen, setViewOpen] = useState(false);
+  const [selectedStudentForView, setSelectedStudentForView] = useState<any>(null);
+
+  // Docs Modal State
+  const [docsModalOpen, setDocsModalOpen] = useState(false);
+  const [selectedStudentForDocs, setSelectedStudentForDocs] = useState<any>(null);
+  const docRefs = useRef<{ [key: string]: DocumentRendererRef | null }>({});
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [editFormData, setEditFormData] = useState({
     fullName: "",
@@ -132,8 +150,41 @@ export default function StudentsClient({ initialStudents, initialWorkspaces }: S
     setEditOpen(true);
   };
 
+  const handleIssueDocument = async (studentId: string, docType: "MARKSHEET" | "CERTIFICATE" | "STUDENT_ID" | "ADMIT_CARD", status: boolean) => {
+    const res = await issueStudentDocument(studentId, docType, status);
+    if (res.success) {
+      toast.success(`${docType.replace('_', ' ')} ${status ? 'Issued' : 'Revoked'} successfully`);
+      if (selectedStudentForDocs) {
+        setSelectedStudentForDocs({
+          ...selectedStudentForDocs,
+          ...(docType === "MARKSHEET" && { marksheetApproved: status }),
+          ...(docType === "CERTIFICATE" && { certificateApproved: status }),
+          ...(docType === "STUDENT_ID" && { registrationCardApproved: status }),
+          ...(docType === "ADMIT_CARD" && { admitCardApproved: status }),
+        });
+      }
+    } else {
+      toast.error(res.error || "Failed to update document status");
+    }
+  };
+
   const handleDeleteClick = (student: any) => {
     setStudentToDelete(student);
+  };
+
+  const handleRegisterStudent = async (student: any) => {
+    const loadingToast = toast.loading(`Registering ${student.fullName}...`);
+    try {
+      const result = await registerStudent(student.id, "super-admin");
+      if (result.success) {
+        toast.success(result.message || "Student registered successfully!", { id: loadingToast });
+        router.refresh();
+      } else {
+        toast.error(result.error || "Failed to register student", { id: loadingToast });
+      }
+    } catch (error: any) {
+      toast.error(error.message || "An error occurred", { id: loadingToast });
+    }
   };
 
   const confirmDelete = () => {
@@ -462,12 +513,25 @@ export default function StudentsClient({ initialStudents, initialWorkspaces }: S
 
                       {/* Static Style Actions */}
                       <div className="flex items-center gap-0 w-full lg:w-auto mt-2 lg:mt-0 bg-slate-50 dark:bg-slate-800/40 lg:bg-transparent rounded-xl p-1 lg:p-0">
+                        {student.status === "UNREGISTERED" && (
+                          <Button
+                            variant="ghost"
+                            onClick={() => handleRegisterStudent(student)}
+                            className="h-10 rounded-xl text-emerald-600 bg-emerald-50 dark:bg-emerald-500/10 hover:bg-emerald-100 dark:hover:bg-emerald-500/20 transition-colors font-semibold px-4 mr-1"
+                            title="Register Student"
+                          >
+                            <UserCheck className="h-4 w-4 mr-2" /> Register
+                          </Button>
+                        )}
                         <Button
                           variant="ghost"
                           size="icon"
                           className="h-10 w-10 rounded-xl text-slate-500 hover:text-primary hover:bg-primary/5 transition-colors"
                           title="View Details"
-                          onClick={() => toast.info("View profile coming soon")}
+                          onClick={() => {
+                            setSelectedStudentForView(student);
+                            setViewOpen(true);
+                          }}
                         >
                           <Eye className="h-4 w-4" />
                         </Button>
@@ -490,25 +554,27 @@ export default function StudentsClient({ initialStudents, initialWorkspaces }: S
                           <Trash2 className="h-4 w-4" />
                         </Button>
 
-                        <DropdownMenu>
-                          <DropdownMenuTrigger
-                            className="inline-flex items-center justify-center whitespace-nowrap h-10 w-10 rounded-xl text-slate-500 hover:text-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary/20"
-                            title="Documents"
-                          >
-                            <MoreHorizontal className="h-4 w-4" />
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="w-48 rounded-xl font-medium">
-                            <DropdownMenuItem onClick={() => toast.info("Admit Card functionality coming soon")} className="cursor-pointer gap-2 py-2.5">
-                              <FileText className="h-4 w-4 text-slate-400" /> Admit Card
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => toast.info("Marksheet functionality coming soon")} className="cursor-pointer gap-2 py-2.5">
-                              <CheckCircle className="h-4 w-4 text-slate-400" /> Marksheet
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => toast.info("Certificate functionality coming soon")} className="cursor-pointer gap-2 py-2.5">
-                              <GraduationCap className="h-4 w-4 text-slate-400" /> Certificate
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                        {(student.status === "REGISTERED" || student.status === "PASS_OUT") && (
+                          <DropdownMenu>
+                            <DropdownMenuTrigger
+                              className="inline-flex items-center justify-center whitespace-nowrap h-10 w-10 rounded-xl text-slate-500 hover:text-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary/20"
+                              title="Documents"
+                            >
+                              <MoreHorizontal className="h-4 w-4" />
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent side="top" align="end" className="w-56 rounded-xl font-medium p-1">
+                              <DropdownMenuItem 
+                                onClick={() => {
+                                  setSelectedStudentForDocs(student);
+                                  setDocsModalOpen(true);
+                                }} 
+                                className="cursor-pointer gap-2 py-2.5"
+                              >
+                                <FileText className="h-4 w-4 text-slate-400" /> Manage Documents
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -519,6 +585,236 @@ export default function StudentsClient({ initialStudents, initialWorkspaces }: S
           {renderPagination(currentPage, totalPages, setCurrentPage)}
         </CardContent>
       </Card>
+
+      {/* View Student Dialog */}
+      <Dialog open={viewOpen} onOpenChange={setViewOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col overflow-hidden rounded-[2.5rem] p-0 border-2 border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/50">
+          {selectedStudentForView && (
+            <div className="flex-1 overflow-y-auto p-6 sm:p-8 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-slate-200 dark:[&::-webkit-scrollbar-thumb]:bg-slate-700 [&::-webkit-scrollbar-thumb]:rounded-full">
+              <div className="space-y-6">
+                {/* Header Profile Section */}
+                <div className="flex flex-col md:flex-row gap-6 items-start md:items-center bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                  <Avatar className="h-24 w-24 border-4 border-slate-50 dark:border-slate-800 shadow-xl">
+                    <AvatarImage src={selectedStudentForView.photoUrl || selectedStudentForView.admissionApp?.photoUrl} className="object-cover" />
+                    <AvatarFallback className="bg-primary/10 text-primary text-2xl font-bold">
+                      {selectedStudentForView.fullName.charAt(0)}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1 space-y-2">
+                    <div className="flex flex-col md:flex-row md:items-center gap-3">
+                      <h2 className="text-2xl font-black tracking-tight text-slate-900 dark:text-white">
+                        {selectedStudentForView.fullName}
+                      </h2>
+                      <Badge className={cn(
+                        "rounded-full px-3 py-1 text-[10px] font-black tracking-widest uppercase",
+                        selectedStudentForView.status === "REGISTERED" ? "bg-emerald-500 hover:bg-emerald-600" :
+                        selectedStudentForView.status === "PASS_OUT" ? "bg-amber-500 hover:bg-amber-600" :
+                        "bg-slate-400 hover:bg-slate-500"
+                      )}>
+                        {selectedStudentForView.status.replace("_", " ")}
+                      </Badge>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-4 text-sm font-medium text-slate-500">
+                      <div className="flex items-center gap-1.5"><Badge variant="outline" className="text-xs font-bold font-mono text-primary border-primary/20 bg-primary/5">{selectedStudentForView.enrollmentNo}</Badge></div>
+                      <div className="flex items-center gap-1.5"><Calendar className="h-4 w-4" /> Joined {new Date(selectedStudentForView.admissionDate).toLocaleDateString()}</div>
+                      {selectedStudentForView.phone && <div className="flex items-center gap-1.5"><Phone className="h-4 w-4" /> {selectedStudentForView.phone}</div>}
+                    </div>
+                  </div>
+                  
+                  {/* Action Buttons */}
+                  <div className="flex flex-col gap-2 w-full md:w-auto mt-4 md:mt-0">
+                    <Button 
+                      onClick={() => { setViewOpen(false); handleEditClick(selectedStudentForView); }} 
+                      className="w-full md:w-[160px] rounded-xl shadow-sm" 
+                      variant="outline"
+                    >
+                      <Pencil className="h-4 w-4 mr-2" /> Edit Profile
+                    </Button>
+                    <Button 
+                      onClick={() => window.open(`/app/${selectedStudentForView.workspace?.subdomain}/student/dashboard`, '_blank')} 
+                      className="w-full md:w-[160px] rounded-xl shadow-md shadow-primary/20 bg-primary text-primary-foreground hover:scale-[1.02] transition-transform"
+                    >
+                      <ExternalLink className="h-4 w-4 mr-2" /> Dashboard
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Grid Layout for details */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Academic Stats */}
+                  <Card className="rounded-[2rem] border-slate-200 dark:border-slate-800 shadow-sm bg-white dark:bg-slate-900 overflow-hidden flex flex-col">
+                    <CardHeader className="bg-slate-50/50 dark:bg-slate-800/20 border-b border-slate-100 dark:border-slate-800 pb-4">
+                      <h3 className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2">
+                        <GraduationCap className="h-5 w-5 text-primary" /> Academic Profile
+                      </h3>
+                    </CardHeader>
+                    <CardContent className="p-6 space-y-4 flex-1">
+                      <div>
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Course</p>
+                        <p className="font-semibold text-slate-900 dark:text-white">{selectedStudentForView.course?.title || "Not Assigned"}</p>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Batch</p>
+                          <p className="font-semibold text-slate-900 dark:text-white">{selectedStudentForView.batch?.name || "Not Assigned"}</p>
+                        </div>
+                        <div>
+                          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Course Duration</p>
+                          <p className="font-semibold text-slate-900 dark:text-white">{selectedStudentForView.course?.duration || "N/A"}</p>
+                        </div>
+                        <div>
+                          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Remaining Months</p>
+                          <p className="font-semibold text-slate-900 dark:text-white">
+                            {(() => {
+                              const durationStr = selectedStudentForView.course?.duration;
+                              if (!durationStr || !selectedStudentForView.admissionDate) return "N/A";
+                              const match = durationStr.match(/(\d+)/);
+                              if (match) {
+                                const durationMonths = parseInt(match[1]);
+                                const isYears = durationStr.toLowerCase().includes('year');
+                                const totalMonths = isYears ? durationMonths * 12 : durationMonths;
+                                
+                                const admissionDate = new Date(selectedStudentForView.admissionDate);
+                                const currentDate = new Date();
+                                const monthsPassed = (currentDate.getFullYear() - admissionDate.getFullYear()) * 12 + (currentDate.getMonth() - admissionDate.getMonth());
+                                
+                                const remaining = totalMonths - monthsPassed;
+                                return remaining > 0 ? `${remaining} Months` : "Completed";
+                              }
+                              return "N/A";
+                            })()}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Fees Remaining</p>
+                          <p className="font-semibold text-amber-600 dark:text-amber-500">N/A (Pending API)</p>
+                        </div>
+                      </div>
+                      {(() => {
+                        let qual: any = null;
+                        try {
+                          qual = typeof selectedStudentForView.qualification === 'string' ? JSON.parse(selectedStudentForView.qualification) : selectedStudentForView.qualification;
+                        } catch(e){}
+                        if(qual && qual.name) {
+                          return (
+                            <div className="pt-4 mt-2 border-t border-slate-100 dark:border-slate-800">
+                              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Highest Qualification</p>
+                              <p className="font-semibold text-slate-900 dark:text-white">{qual.name} ({qual.year}) - {qual.percentage}%</p>
+                            </div>
+                          );
+                        }
+                        return null;
+                      })()}
+                    </CardContent>
+                  </Card>
+
+                  {/* Documents & Approvals */}
+                  <Card className="rounded-[2rem] border-slate-200 dark:border-slate-800 shadow-sm bg-white dark:bg-slate-900 overflow-hidden flex flex-col">
+                    <CardHeader className="bg-slate-50/50 dark:bg-slate-800/20 border-b border-slate-100 dark:border-slate-800 pb-4">
+                      <h3 className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2">
+                        <ShieldCheck className="h-5 w-5 text-emerald-500" /> Documents Status
+                      </h3>
+                    </CardHeader>
+                    <CardContent className="p-6 flex-1">
+                      <div className="grid grid-cols-2 gap-4 h-full">
+                        {[
+                          { label: "ID Card", val: selectedStudentForView.registrationCardApproved },
+                          { label: "Admit Card", val: selectedStudentForView.admitCardApproved },
+                          { label: "Marksheet", val: selectedStudentForView.marksheetApproved },
+                          { label: "Certificate", val: selectedStudentForView.certificateApproved },
+                        ].map((doc, idx) => (
+                          <div key={idx} className="flex flex-col p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 justify-center">
+                            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">{doc.label}</span>
+                            <div className="flex items-center gap-1.5 mt-1.5">
+                              {doc.val ? (
+                                <><CheckCircle className="h-4 w-4 text-emerald-500" /><span className="text-sm font-bold text-emerald-600 dark:text-emerald-400">Issued</span></>
+                              ) : (
+                                <><div className="h-2 w-2 rounded-full bg-amber-400 ml-1 mr-0.5" /><span className="text-sm font-bold text-amber-600 dark:text-amber-400">Pending</span></>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Personal Details */}
+                  <Card className="rounded-[2rem] border-slate-200 dark:border-slate-800 shadow-sm bg-white dark:bg-slate-900 md:col-span-2 overflow-hidden">
+                    <CardHeader className="bg-slate-50/50 dark:bg-slate-800/20 border-b border-slate-100 dark:border-slate-800 pb-4">
+                      <h3 className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2">
+                        <User className="h-5 w-5 text-blue-500" /> Personal Details
+                      </h3>
+                    </CardHeader>
+                    <CardContent className="p-6">
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                        <div>
+                          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Date of Birth</p>
+                          <p className="font-semibold text-slate-900 dark:text-white">{selectedStudentForView.dob ? new Date(selectedStudentForView.dob).toLocaleDateString('en-GB') : "N/A"}</p>
+                        </div>
+                        <div>
+                          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Gender</p>
+                          <p className="font-semibold text-slate-900 dark:text-white capitalize">{selectedStudentForView.gender || "N/A"}</p>
+                        </div>
+                        <div>
+                          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Blood Group</p>
+                          <p className="font-semibold text-slate-900 dark:text-white">{selectedStudentForView.bloodGroup || "N/A"}</p>
+                        </div>
+                        <div>
+                          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Religion / Caste</p>
+                          <p className="font-semibold text-slate-900 dark:text-white capitalize">{(selectedStudentForView.religion || "N/A")} / {(selectedStudentForView.caste || "N/A")}</p>
+                        </div>
+                        <div className="md:col-span-2">
+                          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Father's Name</p>
+                          <p className="font-semibold text-slate-900 dark:text-white">{selectedStudentForView.fatherName || "N/A"}</p>
+                        </div>
+                        <div className="md:col-span-2">
+                          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Mother's Name</p>
+                          <p className="font-semibold text-slate-900 dark:text-white">{selectedStudentForView.motherName || "N/A"}</p>
+                        </div>
+                        
+                        <div className="md:col-span-4 pt-4 border-t border-slate-100 dark:border-slate-800 grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Contact Details</p>
+                                <div className="space-y-2">
+                                  {selectedStudentForView.email && (
+                                      <div className="flex items-center gap-2 text-sm">
+                                          <Mail className="h-4 w-4 text-slate-400" />
+                                          <span className="font-medium text-slate-700 dark:text-slate-300">{selectedStudentForView.email}</span>
+                                      </div>
+                                  )}
+                                  {selectedStudentForView.whatsapp && (
+                                      <div className="flex items-center gap-2 text-sm">
+                                          <Phone className="h-4 w-4 text-emerald-500" />
+                                          <span className="font-medium text-slate-700 dark:text-slate-300">{selectedStudentForView.whatsapp} (WhatsApp)</span>
+                                      </div>
+                                  )}
+                                </div>
+                            </div>
+                            <div>
+                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Full Address</p>
+                                <p className="font-semibold text-slate-700 dark:text-slate-300 leading-relaxed text-sm">
+                                    {(() => {
+                                    let addrObj: any = {};
+                                    try {
+                                        addrObj = typeof selectedStudentForView.address === 'string' ? JSON.parse(selectedStudentForView.address) : selectedStudentForView.address;
+                                    } catch(e) {}
+                                    if(addrObj?.vill) {
+                                        return `${addrObj.vill}, PO: ${addrObj.po || "N/A"}, PS: ${addrObj.ps || "N/A"}, Dist: ${addrObj.dist || "N/A"}, State: ${addrObj.state || "N/A"} - ${addrObj.pin || "N/A"}`;
+                                    }
+                                    return selectedStudentForView.address || "N/A";
+                                    })()}
+                                </p>
+                            </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* Edit Student Dialog */}
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
@@ -766,6 +1062,100 @@ export default function StudentsClient({ initialStudents, initialWorkspaces }: S
         onConfirm={confirmDelete}
         confirmText="Delete Student"
       />
+
+      {/* Docs Modal */}
+      <Dialog open={docsModalOpen} onOpenChange={setDocsModalOpen}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto rounded-[2.5rem] p-8 bg-slate-50/50 dark:bg-slate-950/50 border-2 border-slate-100 dark:border-slate-800">
+          <DialogHeader className="mb-6">
+            <div className="w-12 h-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mb-4">
+              <FileText className="w-6 h-6" />
+            </div>
+            <DialogTitle className="text-3xl font-black tracking-tight text-slate-900 dark:text-white">
+              Manage Documents
+            </DialogTitle>
+            <p className="text-base text-slate-500 font-medium mt-2">
+              Issue and manage documents for <strong className="text-slate-900 dark:text-white font-black">{selectedStudentForDocs?.fullName}</strong>.
+            </p>
+          </DialogHeader>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {[
+              { id: 'STUDENT_ID', label: 'Student ID Card', desc: 'Identity verification for the student.', approved: selectedStudentForDocs?.registrationCardApproved, icon: <User className="w-4 h-4 text-blue-500" /> },
+              { id: 'ADMIT_CARD', label: 'Admit Card', desc: 'Required for appearing in examinations.', approved: selectedStudentForDocs?.admitCardApproved, icon: <Calendar className="w-4 h-4 text-indigo-500" /> },
+              { id: 'MARKSHEET', label: 'Marksheet', desc: 'Semester-wise detailed marksheets.', approved: selectedStudentForDocs?.marksheetApproved, icon: <FileText className="w-4 h-4 text-emerald-500" /> },
+              { id: 'CERTIFICATE', label: 'Final Certificate', desc: 'Official completion certificate.', approved: selectedStudentForDocs?.certificateApproved, icon: <GraduationCap className="w-4 h-4 text-amber-500" /> }
+            ].map((doc) => (
+              <div key={doc.id} className="flex flex-col p-6 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl gap-4 shadow-sm hover:shadow-md transition-shadow">
+                <div className="flex items-start justify-between">
+                  <div className="flex-1 pr-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className="w-8 h-8 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+                        {doc.icon}
+                      </div>
+                      <h3 className="font-black text-slate-900 dark:text-white text-lg tracking-tight">{doc.label}</h3>
+                    </div>
+                    <p className="text-sm font-medium text-slate-500 leading-snug">{doc.desc}</p>
+                  </div>
+                  {doc.approved ? (
+                    <Badge className="bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 hover:bg-emerald-100 border-0 rounded-xl px-3 py-1 font-bold">Issued</Badge>
+                  ) : (
+                    <Badge className="bg-amber-50 text-amber-600 dark:bg-amber-500/10 hover:bg-amber-100 border-0 rounded-xl px-3 py-1 font-bold">Pending</Badge>
+                  )}
+                </div>
+                
+                <div className="flex items-center justify-between pt-4 mt-2 border-t border-slate-100 dark:border-slate-800">
+                  <div className="flex items-center gap-3">
+                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Issue Status</span>
+                    <Switch 
+                      checked={!!doc.approved} 
+                      onCheckedChange={(checked) => {
+                        if (docRefs.current[doc.id] && !docRefs.current[doc.id]?.hasTemplate()) {
+                          toast.error(`Design template for ${doc.label} does not exist yet!`);
+                          return;
+                        }
+                        handleIssueDocument(selectedStudentForDocs?.id, doc.id as any, checked);
+                      }}
+                      className={doc.approved ? "data-[state=checked]:bg-emerald-500" : ""}
+                    />
+                  </div>
+                  
+                  {/* The Renderer */}
+                  <DocumentRenderer 
+                    ref={el => { docRefs.current[doc.id] = el; }} 
+                    type={doc.id} 
+                    student={selectedStudentForDocs} 
+                  />
+
+                  <div className="flex items-center gap-2">
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="rounded-xl h-10 w-10 text-slate-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                      title="Preview Document"
+                      onClick={() => {
+                        if (docRefs.current[doc.id]) docRefs.current[doc.id]?.preview();
+                      }}
+                    >
+                      <Eye className="w-5 h-5" />
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="rounded-xl h-10 w-10 text-slate-500 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/20"
+                      title="Download PDF"
+                      onClick={() => {
+                        if (docRefs.current[doc.id]) docRefs.current[doc.id]?.downloadPDF();
+                      }}
+                    >
+                      <Download className="w-5 h-5" />
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
 
       </div>
     </TooltipProvider>

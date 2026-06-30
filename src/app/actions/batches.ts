@@ -8,6 +8,10 @@ export async function createBatch(data: {
   courseId?: string; 
   name: string; 
   schedule?: string; 
+  capacity?: number;
+  teacherName?: string;
+  startDate?: Date;
+  endDate?: Date;
 }) {
   try {
     const batch = await db.batch.create({
@@ -16,6 +20,10 @@ export async function createBatch(data: {
         courseId: data.courseId || null,
         name: data.name,
         schedule: data.schedule,
+        capacity: data.capacity || 30,
+        teacherName: data.teacherName,
+        startDate: data.startDate,
+        endDate: data.endDate,
       },
     });
 
@@ -31,6 +39,10 @@ export async function updateBatch(id: string, data: {
   courseId?: string; 
   name?: string; 
   schedule?: string; 
+  capacity?: number;
+  teacherName?: string;
+  startDate?: Date;
+  endDate?: Date;
 }) {
   try {
     const batch = await db.batch.update({

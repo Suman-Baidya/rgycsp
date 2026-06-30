@@ -618,7 +618,14 @@ export default function ManualEnrollmentTab({
                         <label className="text-xs font-bold text-slate-400">Assign Batch (Optional)</label>
                         <select value={formData.batchId} onChange={(e) => setFormData({...formData, batchId: e.target.value})} className="flex h-11 w-full rounded-xl border-2 border-slate-100 bg-background px-3 py-2 text-sm focus:border-primary outline-none">
                           <option value="">Select Batch</option>
-                          {batches.filter(b => !b.courseId || b.courseId === formData.courseId).map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
+                          {batches.filter(b => !b.courseId || b.courseId === formData.courseId).map(b => {
+                            const isFull = (b._count?.students || 0) >= (b.capacity || 30);
+                            return (
+                              <option key={b.id} value={b.id} disabled={isFull}>
+                                {b.name} {isFull ? "(Full)" : `(${b._count?.students || 0}/${b.capacity || 30})`}
+                              </option>
+                            );
+                          })}
                         </select>
                       </div>
                       <div className="space-y-1.5">

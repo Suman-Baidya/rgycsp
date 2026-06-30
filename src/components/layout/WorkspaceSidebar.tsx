@@ -23,6 +23,7 @@ import {
   MapPinned,
   ShoppingCart,
   UserCog,
+  GraduationCap,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -87,7 +88,7 @@ export function WorkspaceSidebar({
     { id: "attendance", name: "Attendance", href: getSafeLink(WORKSPACE_ROUTES.ADMIN_ATTENDANCE), icon: Calendar },
     { id: "courses", name: "Courses", href: getSafeLink(WORKSPACE_ROUTES.ADMIN_COURSES), icon: BookOpen },
     { id: "products", name: "Products & Store", href: getSafeLink(WORKSPACE_ROUTES.ADMIN_PRODUCTS), icon: ShoppingCart },
-    { id: "exam-gen", name: "Exam Gen", href: getSafeLink(WORKSPACE_ROUTES.ADMIN_EXAM_GENERATOR), icon: Sparkles },
+    { id: "exam-zone", name: "Exam Zone", href: getSafeLink(WORKSPACE_ROUTES.ADMIN_EXAM_GENERATOR), icon: GraduationCap },
     { id: "settings", name: "Landing Page", href: getSafeLink(WORKSPACE_ROUTES.ADMIN_SETTINGS), icon: Building2 },
     { id: "profile", name: "Profile", href: getSafeLink(WORKSPACE_ROUTES.ADMIN_PROFILE), icon: UserCog },
   ];

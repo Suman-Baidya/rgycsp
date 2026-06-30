@@ -25,14 +25,16 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ImageUpload } from "@/components/ui/ImageUpload";
 import { AdminPageHeader } from "@/components/layout/AdminPageHeader";
 import { cn } from "@/lib/utils";
 import { jsPDF } from "jspdf";
 import html2canvas from "html2canvas";
 import { toast } from "sonner";
-import { saveDocumentTemplate, getDocumentTemplates, deleteDocumentTemplate } from "@/app/actions/document-templates";
+import { saveDocumentTemplate, getDocumentTemplates, deleteDocumentTemplate, checkActiveTemplateExists, toggleTemplateStatus } from "@/app/actions/document-templates";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { Switch } from "@/components/ui/switch";
 
 interface DocVariable {
   id: string;
@@ -48,15 +50,170 @@ interface DocVariable {
 }
 
 const DEMO_DATA: Record<string, string> = {
+  // Student Base
   studentName: "Suman Baidya",
-  registrationNo: "ABCD-2024-001",
-  courseName: "Full Stack Web Development",
-  batchName: "Morning Batch A",
-  issueDate: "May 15, 2024",
-  workspaceName: "Zenith Coding Academy",
-  principalSign: "https://api.dicebear.com/7.x/bottts/svg?seed=sign",
   studentPhoto: "https://api.dicebear.com/7.x/avataaars/svg?seed=student",
+  studentSign: "https://api.dicebear.com/7.x/bottts/svg?seed=sign",
+  registrationNo: "ABCD-2024-001",
+  dob: "12-05-1998",
+  gender: "Male",
+  bloodGroup: "O+",
+  phone: "9876543210",
+  email: "suman@example.com",
+  fatherName: "John Doe",
+  motherName: "Jane Doe",
+  address: "123 Coding Street, Tech City, NY 10001",
+  
+  // Course & Batch
+  courseName: "Full Stack Web Development",
+  courseCode: "FSWD-101",
+  courseDuration: "12 Months",
+  batchName: "Morning Batch A",
+  batchTime: "10:00 AM - 12:00 PM",
+  
+  // Franchise / Center
+  franchiseName: "Zenith Coding Academy",
+  franchiseCode: "ZCA-001",
+  franchiseAddress: "456 Academy Road, Learn City",
+  franchisePhone: "1800-123-456",
+  franchiseEmail: "zenith@example.com",
+  centerHeadSign: "https://api.dicebear.com/7.x/bottts/svg?seed=headsign",
+  franchiseOwnerName: "Dr. Richard Smith",
+  franchiseOwnerPhoto: "https://api.dicebear.com/7.x/avataaars/svg?seed=owner",
+  franchiseOwnerSign: "https://api.dicebear.com/7.x/bottts/svg?seed=ownersign",
+  
+  // Marksheet
+  semesterName: "Semester 1",
+  unit1Marks: "85", unit1Name: "HTML & CSS",
+  unit2Marks: "90", unit2Name: "JavaScript Basics",
+  unit3Marks: "78", unit3Name: "React JS",
+  unit4Marks: "92", unit4Name: "Node JS",
+  unit5Marks: "88", unit5Name: "Database",
+  unit6Marks: "95", unit6Name: "Project",
+  totalMarksObtained: "528",
+  totalMaxMarks: "600",
+  percentage: "88.0%",
+  grade: "A+",
+  resultStatus: "PASS",
+
+  // Staff
+  staffName: "Alice Smith",
+  staffPhoto: "https://api.dicebear.com/7.x/avataaars/svg?seed=staff",
+  staffSign: "https://api.dicebear.com/7.x/bottts/svg?seed=staffsign",
+  staffId: "STF-2024-055",
+  staffRole: "Senior Developer",
+  staffPhone: "1234567890",
+
+  // System & Notice
+  issueDate: "May 15, 2024",
+  validUntil: "May 14, 2025",
+  principalSign: "https://api.dicebear.com/7.x/bottts/svg?seed=principal",
+  noticeTitle: "Urgent Meeting Notice",
+  noticeBody: "All staff members are requested to attend the meeting at 4:00 PM.",
+  noticeDate: "June 28, 2026",
+
+  // Exam
+  examName: "Final Semester Examination 2026",
+  examDate: "December 15, 2026",
+  examTime: "10:00 AM - 01:00 PM",
+  examDuration: "180 Minutes",
+  examSyllabus: "Unit 1 to 5, React, Node",
+  examRollNo: "EX-98234-A",
 };
+
+const VARIABLE_GROUPS = [
+  {
+    label: "Student Variables",
+    items: [
+      { id: "studentName", label: "Full Name" },
+      { id: "studentPhoto", label: "Profile Picture" },
+      { id: "studentSign", label: "Student Signature" },
+      { id: "registrationNo", label: "Enrollment Number" },
+      { id: "dob", label: "Date of Birth" },
+      { id: "gender", label: "Gender" },
+      { id: "bloodGroup", label: "Blood Group" },
+      { id: "phone", label: "Phone Number" },
+      { id: "email", label: "Email Address" },
+      { id: "fatherName", label: "Father's Name" },
+      { id: "motherName", label: "Mother's Name" },
+      { id: "address", label: "Full Address" },
+    ]
+  },
+  {
+    label: "Course & Batch Variables",
+    items: [
+      { id: "courseName", label: "Course Title" },
+      { id: "courseCode", label: "Course Code" },
+      { id: "courseDuration", label: "Course Duration" },
+      { id: "batchName", label: "Batch Name" },
+      { id: "batchTime", label: "Batch Timing" },
+    ]
+  },
+  {
+    label: "Franchise / Center Variables",
+    items: [
+      { id: "franchiseName", label: "Center Name" },
+      { id: "franchiseCode", label: "Center Code" },
+      { id: "franchiseAddress", label: "Center Address" },
+      { id: "franchisePhone", label: "Center Phone" },
+      { id: "franchiseEmail", label: "Center Email" },
+      { id: "centerHeadSign", label: "Center Head Sign" },
+      { id: "franchiseOwnerName", label: "Owner Name" },
+      { id: "franchiseOwnerPhoto", label: "Owner Photo" },
+      { id: "franchiseOwnerSign", label: "Owner Signature" },
+    ]
+  },
+  {
+    label: "Marksheet Variables",
+    items: [
+      { id: "semesterName", label: "Semester Name" },
+      { id: "unit1Name", label: "Unit 1 Name" }, { id: "unit1Marks", label: "Unit 1 Marks" },
+      { id: "unit2Name", label: "Unit 2 Name" }, { id: "unit2Marks", label: "Unit 2 Marks" },
+      { id: "unit3Name", label: "Unit 3 Name" }, { id: "unit3Marks", label: "Unit 3 Marks" },
+      { id: "unit4Name", label: "Unit 4 Name" }, { id: "unit4Marks", label: "Unit 4 Marks" },
+      { id: "unit5Name", label: "Unit 5 Name" }, { id: "unit5Marks", label: "Unit 5 Marks" },
+      { id: "unit6Name", label: "Unit 6 Name" }, { id: "unit6Marks", label: "Unit 6 Marks" },
+      { id: "totalMarksObtained", label: "Total Obtained" },
+      { id: "totalMaxMarks", label: "Total Max Marks" },
+      { id: "percentage", label: "Percentage" },
+      { id: "grade", label: "Grade" },
+      { id: "resultStatus", label: "Result (Pass/Fail)" },
+    ]
+  },
+  {
+    label: "Staff Variables",
+    items: [
+      { id: "staffName", label: "Staff Name" },
+      { id: "staffPhoto", label: "Staff Photo" },
+      { id: "staffSign", label: "Staff Signature" },
+      { id: "staffId", label: "Staff ID" },
+      { id: "staffRole", label: "Staff Role" },
+      { id: "staffPhone", label: "Staff Phone" },
+    ]
+  },
+  {
+    label: "System Variables",
+    items: [
+      { id: "issueDate", label: "Issue Date" },
+      { id: "validUntil", label: "Valid Until" },
+      { id: "principalSign", label: "Principal Signature" },
+      { id: "noticeTitle", label: "Notice Title" },
+      { id: "noticeBody", label: "Notice Body" },
+      { id: "noticeDate", label: "Notice Date" },
+    ]
+  },
+  {
+    label: "Exam Variables",
+    items: [
+      { id: "examName", label: "Exam Title" },
+      { id: "examDate", label: "Exam Date" },
+      { id: "examTime", label: "Exam Shift Time" },
+      { id: "examDuration", label: "Exam Duration" },
+      { id: "examSyllabus", label: "Exam Syllabus" },
+      { id: "examRollNo", label: "Exam Roll Number" },
+    ]
+  }
+];
 
 export default function DocumentDesigner() {
   const [mounted, setMounted] = useState(false);
@@ -64,6 +221,8 @@ export default function DocumentDesigner() {
   const [templates, setTemplates] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [templateToDelete, setTemplateToDelete] = useState<any>(null);
+  const [templateToSave, setTemplateToSave] = useState<{ id?: string, forceActive?: boolean } | null>(null);
+  const [conflictWarning, setConflictWarning] = useState<{ exists: boolean, name?: string } | null>(null);
   
   // Current Template State
   const [currentId, setCurrentId] = useState<string | null>(null);
@@ -158,7 +317,7 @@ export default function DocumentDesigner() {
     setView("editor");
   };
 
-  const handleSave = async () => {
+  const performSave = async (forceActive: boolean = true) => {
     setIsSaving(true);
     const res = await saveDocumentTemplate({
       id: currentId || undefined,
@@ -168,16 +327,54 @@ export default function DocumentDesigner() {
       width: canvasSize.width,
       height: canvasSize.height,
       config: variables,
+      isActive: forceActive,
     });
 
     if (res.success) {
       toast.success("Document template saved successfully");
       if (!currentId) setCurrentId(res.id || null);
       fetchTemplates();
+      setTemplateToSave(null);
+      setConflictWarning(null);
     } else {
       toast.error(res.error || "Failed to save template");
     }
     setIsSaving(false);
+  };
+
+  const handleSave = async () => {
+    if (!currentId) {
+      // It's a new template, check for conflict
+      const conflict = await checkActiveTemplateExists(templateType);
+      if (conflict.exists) {
+        setConflictWarning(conflict);
+        setTemplateToSave({ forceActive: true });
+        return;
+      }
+    }
+    performSave(true);
+  };
+  
+  const handleToggleStatus = async (template: any, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const newStatus = !template.isActive;
+    
+    toast.promise(
+      new Promise(async (resolve, reject) => {
+        const res = await toggleTemplateStatus(template.id, newStatus, template.type);
+        if (res.success) {
+          fetchTemplates();
+          resolve(res);
+        } else {
+          reject(new Error(res.error));
+        }
+      }),
+      {
+        loading: "Updating status...",
+        success: () => `Template marked as ${newStatus ? 'Active' : 'Inactive'}`,
+        error: (err) => `Failed: ${err.message}`
+      }
+    );
   };
 
   const handleDeleteClick = (template: any, e: React.MouseEvent) => {
@@ -407,12 +604,17 @@ export default function DocumentDesigner() {
                     <div className="px-2.5 py-0.5 rounded-full bg-primary/10 border border-primary/20">
                       <span className="text-[9px] font-black uppercase tracking-widest text-primary">{template.type}</span>
                     </div>
-                    <div className="flex items-center gap-1.5 text-slate-400 dark:text-zinc-500">
-                       <div className="w-1 h-1 rounded-full bg-slate-300 dark:bg-zinc-700" />
-                       <span className="text-[9px] font-bold uppercase tracking-tight">{new Date(template.updatedAt).toLocaleDateString()}</span>
+                    <div 
+                      className="flex items-center gap-2 cursor-pointer z-20 relative"
+                      onClick={(e) => handleToggleStatus(template, e)}
+                    >
+                      <span className={cn("text-[9px] font-black uppercase tracking-widest", template.isActive ? "text-green-500" : "text-slate-400")}>
+                        {template.isActive ? "Active" : "Inactive"}
+                      </span>
+                      <Switch checked={!!template.isActive} className="scale-75 pointer-events-none" />
                     </div>
                   </div>
-                  <h4 className="font-black text-slate-900 dark:text-white text-base leading-tight group-hover:text-primary transition-colors line-clamp-1">
+                  <h4 className="font-black text-slate-900 dark:text-white text-base leading-tight group-hover:text-primary transition-colors line-clamp-1 mt-1">
                     {template.name}
                   </h4>
                   
@@ -431,6 +633,15 @@ export default function DocumentDesigner() {
             ))}
           </div>
         )}
+        
+        <ConfirmDialog 
+          open={!!templateToDelete}
+          onOpenChange={(open) => !open && setTemplateToDelete(null)}
+          title="Delete Template?"
+          description={`Are you sure you want to permanently delete the template "${templateToDelete?.name}"? This action cannot be undone.`}
+          onConfirm={confirmDelete}
+          confirmText="Yes, Delete"
+        />
       </div>
     );
   }
@@ -472,6 +683,17 @@ export default function DocumentDesigner() {
         </div>
       </AdminPageHeader>
 
+      <ConfirmDialog 
+        open={!!conflictWarning}
+        onOpenChange={(open) => !open && setConflictWarning(null)}
+        title="Active Template Exists"
+        description={`An active template already exists for this document type${conflictWarning?.name ? ` ("${conflictWarning.name}")` : ''}. Saving this new design will deactivate the previous one. Do you want to proceed and set this as the active template?`}
+        onConfirm={() => {
+          performSave(true);
+        }}
+        confirmText="Save and Set Active"
+      />
+
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-10">
         {/* Designer Sidebar */}
         <div className="xl:col-span-3 space-y-6">
@@ -489,17 +711,24 @@ export default function DocumentDesigner() {
                </div>
                <div className="space-y-2">
                   <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Doc Type</Label>
-                  <select 
+                  <Select
                     value={templateType}
-                    onChange={(e) => setTemplateType(e.target.value)}
-                    className="w-full h-11 bg-slate-50 dark:bg-slate-800 border-2 border-slate-50 dark:border-slate-800 rounded-xl font-bold px-3 focus:outline-none"
+                    onValueChange={(value: any) => setTemplateType(value)}
                   >
-                    <option value="CERTIFICATE">Certificate</option>
-                    <option value="ID_CARD">ID Card</option>
-                    <option value="MARKSHEET">Marksheet</option>
-                    <option value="BUSINESS_CARD">Business Card</option>
-                    <option value="LETTER_PAD">Letter Pad</option>
-                  </select>
+                    <SelectTrigger className="w-full h-11 bg-slate-50 border-2 border-slate-50 rounded-xl font-bold px-3 focus:ring-0 focus:ring-offset-0">
+                      <SelectValue placeholder="Select document type..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="CERTIFICATE">Students Certificate</SelectItem>
+                      <SelectItem value="MARKSHEET">Students Marksheet</SelectItem>
+                      <SelectItem value="ADMIT_CARD">Admit Card</SelectItem>
+                      <SelectItem value="STUDENT_ID">Student ID Card</SelectItem>
+                      <SelectItem value="STAFF_ID">Staff Id Card</SelectItem>
+                      <SelectItem value="FRANCHISE_ID">Franchise Owner ID</SelectItem>
+                      <SelectItem value="NOTICE_PAD">Notice Pad</SelectItem>
+                      <SelectItem value="FRANCHISE_CERTIFICATE">Franchises Certificate</SelectItem>
+                    </SelectContent>
+                  </Select>
                </div>
             </CardContent>
           </Card>
@@ -538,13 +767,40 @@ export default function DocumentDesigner() {
               <CardContent className="space-y-6">
                 <div className="space-y-2">
                   <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Binding Variable</Label>
-                  <select 
+                  <Select
                     value={selectedVar.name}
-                    onChange={(e) => updateVariable(selectedVar.id, { name: e.target.value })}
-                    className="w-full h-11 bg-slate-50 border-2 border-slate-50 rounded-xl font-bold px-3 focus:outline-none"
+                    onValueChange={(value: any) => updateVariable(selectedVar.id, { name: value })}
                   >
-                    {Object.keys(DEMO_DATA).map(key => (<option key={key} value={key}>{key}</option>))}
-                  </select>
+                    <SelectTrigger className="w-full h-11 bg-slate-50 border-2 border-slate-50 rounded-xl font-bold px-3 focus:ring-0 focus:ring-offset-0">
+                      <SelectValue placeholder="Select variable..." />
+                    </SelectTrigger>
+                    <SelectContent className="max-h-[400px]">
+                      {VARIABLE_GROUPS.map((group) => {
+                        const isImageVar = selectedVar.type === 'image' || selectedVar.type === 'signature';
+                        const imageKeys = ['studentPhoto', 'studentSign', 'centerHeadSign', 'franchiseOwnerPhoto', 'franchiseOwnerSign', 'staffPhoto', 'staffSign', 'principalSign'];
+                        
+                        const filteredItems = group.items.filter(item => {
+                          if (isImageVar) return imageKeys.includes(item.id);
+                          return !imageKeys.includes(item.id);
+                        });
+
+                        if (filteredItems.length === 0) return null;
+
+                        return (
+                          <div key={group.label} className="py-1">
+                            <div className="font-black text-xs text-white uppercase tracking-wider bg-slate-900 dark:bg-black py-2 px-2 sticky top-0 z-10">
+                              {group.label}
+                            </div>
+                            {filteredItems.map((item) => (
+                              <SelectItem key={item.id} value={item.id} className="font-semibold cursor-pointer py-2 pl-6">
+                                {item.label} <span className="text-[10px] text-slate-400 font-mono ml-2">({item.id})</span>
+                              </SelectItem>
+                            ))}
+                          </div>
+                        );
+                      })}
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">

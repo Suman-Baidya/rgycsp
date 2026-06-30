@@ -22,7 +22,13 @@ export default async function AdmissionsPage({
         select: { id: true, title: true, feeAmount: true }
       },
       batches: {
-        select: { id: true, name: true, courseId: true }
+        select: { 
+          id: true, 
+          name: true, 
+          courseId: true,
+          capacity: true,
+          _count: { select: { students: true } }
+        }
       }
     }
   });

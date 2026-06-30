@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { UserPlus, Search, ShieldCheck, Mail, Shield, Eye, Pencil, Loader2, BookOpen, Users, LayoutDashboard, Calendar, Wallet, Settings, Sparkles, ShoppingCart } from "lucide-react";
+import { UserPlus, Search, ShieldCheck, Mail, Shield, Eye, Pencil, Loader2, BookOpen, Users, LayoutDashboard, Calendar, Wallet, Settings, GraduationCap, ShoppingCart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -29,7 +29,7 @@ const PERMISSION_OPTIONS = [
   { id: "courses", label: "Courses", icon: BookOpen },
   { id: "wallet", label: "Wallet", icon: Wallet },
   { id: "products", label: "Products", icon: ShoppingCart },
-  { id: "exam-gen", label: "Exam Gen", icon: Sparkles },
+  { id: "exam-gen", label: "Exam Zone", icon: GraduationCap },
   { id: "settings", label: "Settings", icon: Settings },
 ];
 

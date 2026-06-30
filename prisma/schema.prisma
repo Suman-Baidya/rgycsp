@@ -90,6 +90,12 @@ model Workspace {
   notifications      Notification[]
   walletTransactions WalletTransaction[]
   productOrders      ProductOrder[]
+  exams              Exam[]
+  chapters           Chapter[]
+  questions          QuestionBank[]
+
+  // Documents
+  registrationCertificateApproved Boolean @default(false)
 }
 
 // ============================================
@@ -116,6 +122,9 @@ model SiteSettings {
 
   navigation   Json? // [{ label: 'Home', href: '/', isActive: true }, ...]
   navbarConfig Json? // { showNavbar, showTopBar, showMenus, ctaPrimary: {text, link}, ctaSecondary: {text, link} }
+
+  globalIdCardAccess    Boolean @default(true)
+  globalAdmitCardAccess Boolean @default(true)
 
   sections LandingSection[]
 
@@ -202,6 +211,8 @@ model Course {
   batches       Batch[]
   admissionApps AdmissionApplication[]
   students      StudentProfile[]
+  exams         Exam[]
+  chapters      Chapter[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -213,6 +224,11 @@ model Batch {
   courseId    String?
   name        String // e.g., "Morning Batch A"
   schedule    String? // Could be JSON or stringified schedule
+  
+  capacity    Int     @default(30)
+  teacherName String?
+  startDate   DateTime?
+  endDate     DateTime?
 
   workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   course    Course?   @relation(fields: [courseId], references: [id], onDelete: SetNull)
@@ -275,6 +291,8 @@ model StudentProfile {
 
   attendances Attendance[]
   invoices    Invoice[]
+  semesters   StudentSemester[]
+  examEnrollments ExamEnrollment[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -545,6 +563,7 @@ model DocumentTemplate {
   width       Int     @default(800)
   height      Int     @default(1131)
   config      Json
+  isActive    Boolean @default(true)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -737,3 +756,122 @@ enum OrderStatus {
   CANCELLED
 }
 
+// ============================================
+// Semester and Marks System
+// ============================================
+
+model StudentSemester {
+  id               String         @id @default(cuid())
+  studentProfileId String
+  semesterNumber   Int            // 1 or 2
+  status           String         @default("PENDING") // PENDING, PASSED, FAILED
+  totalMarks       Float          @default(0)
+  percentage       Float          @default(0)
+  grade            String?
+  
+  student          StudentProfile @relation(fields: [studentProfileId], references: [id], onDelete: Cascade)
+  marks            StudentMarks[]
+  
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+
+  @@unique([studentProfileId, semesterNumber])
+}
+
+model StudentMarks {
+  id                String          @id @default(cuid())
+  studentSemesterId String
+  unitName          String          // e.g., "Unit 1", "Unit 2"
+  marksObtained     Float           @default(0)
+  maxMarks          Float           @default(100)
+  
+  semester          StudentSemester @relation(fields: [studentSemesterId], references: [id], onDelete: Cascade)
+}
+
+// ============================================
+// Examination System
+// ============================================
+
+model Exam {
+  id          String   @id @default(cuid())
+  workspaceId String
+  title       String   // e.g., "Final Examination 2026"
+  type        String   @default("OFFLINE") // OFFLINE, ONLINE
+  date        DateTime?
+  duration    String?  // Added for dynamic admit cards
+  syllabus    String?  @db.Text // Added for dynamic admit cards
+  courseId    String?
+
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  course      Course?   @relation(fields: [courseId], references: [id], onDelete: SetNull)
+  shifts      ExamShift[]
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model ExamShift {
+  id          String   @id @default(cuid())
+  examId      String
+  name        String   // e.g., "Morning Shift", "Shift 1"
+  startTime   String?  // e.g., "10:00 AM"
+  endTime     String?  // e.g., "12:00 PM"
+  capacity    Int      @default(30)
+  
+  exam        Exam     @relation(fields: [examId], references: [id], onDelete: Cascade)
+  enrollments ExamEnrollment[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model ExamEnrollment {
+  id               String   @id @default(cuid())
+  examShiftId      String
+  studentProfileId String
+  rollNo           String?  // Auto-generated or manual
+  
+  shift            ExamShift @relation(fields: [examShiftId], references: [id], onDelete: Cascade)
+  student          StudentProfile @relation(fields: [studentProfileId], references: [id], onDelete: Cascade)
+
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@unique([examShiftId, studentProfileId])
+}
+
+
+
+model Chapter {
+  id          String   @id @default(cuid())
+  workspaceId String
+  courseId    String
+  name        String
+  description String?
+  
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  course      Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  questions   QuestionBank[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model QuestionBank {
+  id            String   @id @default(cuid())
+  workspaceId   String
+  chapterId     String
+  
+  questionText  String
+  optionA       String
+  optionB       String
+  optionC       String
+  optionD       String
+  correctOption String
+  
+  workspace     Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  chapter       Chapter   @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}

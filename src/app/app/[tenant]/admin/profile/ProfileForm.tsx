@@ -64,7 +64,7 @@ export function ProfileForm({ user, roleName = "Franchise Admin", tenant }: Prof
     e.preventDefault();
     setIsUpdatingProfile(true);
     
-    const res = await updateProfile({ name, email, username, image });
+    const res = await updateProfile({ name, email, username, image, targetUserId: user.id });
     
     if (res.success) {
       toast.success("Profile updated successfully");
@@ -91,7 +91,7 @@ export function ProfileForm({ user, roleName = "Franchise Admin", tenant }: Prof
     }
 
     setIsUpdatingPassword(true);
-    const res = await updatePassword({ currentPassword, newPassword });
+    const res = await updatePassword({ currentPassword, newPassword, targetUserId: user.id });
     
     if (res.success) {
       toast.success("Password changed successfully");
@@ -108,11 +108,11 @@ export function ProfileForm({ user, roleName = "Franchise Admin", tenant }: Prof
     <div className="space-y-8 animate-in fade-in duration-500">
       
       {/* Clean Premium Profile Header with Colors */}
-      <div className="relative overflow-hidden rounded-[2rem] border border-border/50 bg-white dark:bg-zinc-950 shadow-sm">
-        {/* Colorful Gradient Background */}
-        <div className="absolute inset-0 h-32 bg-gradient-to-r from-blue-500/20 via-purple-500/20 to-pink-500/20 dark:from-blue-500/10 dark:via-purple-500/10 dark:to-pink-500/10" />
+      <div className="relative overflow-hidden rounded-[2rem] border border-border/50 shadow-sm">
+        {/* Colorful Theme Background */}
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-background to-primary/5 dark:from-primary/10 dark:via-zinc-950 dark:to-primary/5" />
         
-        <div className="flex flex-col md:flex-row gap-6 items-start md:items-end justify-between px-8 pb-8 pt-16 relative z-10">
+        <div className="flex flex-col md:flex-row gap-6 items-start md:items-end justify-between px-8 pb-8 pt-10 relative z-10">
           <div className="flex flex-col sm:flex-row items-center sm:items-end gap-6 w-full">
             <div className="h-28 w-28 rounded-full border-4 border-background shadow-lg bg-gradient-to-br from-primary/20 to-primary/5 overflow-hidden relative shrink-0">
               {image ? (
@@ -125,7 +125,7 @@ export function ProfileForm({ user, roleName = "Franchise Admin", tenant }: Prof
             </div>
             <div className="space-y-2 text-center sm:text-left flex-1 pb-2">
               <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-                <h1 className="text-3xl font-bold tracking-tight text-foreground">{name || "Administrator"}</h1>
+                <h1 className="text-3xl font-bold tracking-tight text-foreground uppercase">{name || "Administrator"}</h1>
                 <Badge variant="default" className="h-6 w-fit mx-auto sm:mx-0 rounded-md px-2 text-[10px] font-semibold uppercase tracking-wider bg-gradient-to-r from-primary to-primary/80 text-primary-foreground shadow-sm border-none">
                   {roleName}
                 </Badge>
@@ -159,17 +159,17 @@ export function ProfileForm({ user, roleName = "Franchise Admin", tenant }: Prof
         
         {/* Segmented Control Tabs */}
         <div className="flex w-full">
-          <TabsList className="flex p-1 bg-slate-100 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700/50 w-fit h-auto">
+          <TabsList className="flex flex-nowrap overflow-x-auto no-scrollbar gap-2 p-2 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm w-fit h-auto">
             <TabsTrigger 
               value="personal" 
-              className="flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-bold transition-all data-[state=active]:bg-white dark:data-[state=active]:bg-slate-700 data-[state=active]:text-primary data-[state=active]:shadow-sm text-slate-500 hover:text-slate-900 dark:hover:text-white data-[state=inactive]:bg-transparent"
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 whitespace-nowrap shrink-0 data-[state=active]:bg-slate-100 dark:data-[state=active]:bg-slate-800 data-[state=active]:text-primary data-[state=active]:shadow-inner text-slate-500 hover:text-slate-900 hover:bg-slate-50 dark:hover:text-white dark:hover:bg-slate-800/50 data-[state=inactive]:bg-transparent"
             >
               <User className="h-4 w-4" />
               Profile Details
             </TabsTrigger>
             <TabsTrigger 
               value="security" 
-              className="flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-bold transition-all data-[state=active]:bg-white dark:data-[state=active]:bg-slate-700 data-[state=active]:text-primary data-[state=active]:shadow-sm text-slate-500 hover:text-slate-900 dark:hover:text-white data-[state=inactive]:bg-transparent"
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 whitespace-nowrap shrink-0 data-[state=active]:bg-slate-100 dark:data-[state=active]:bg-slate-800 data-[state=active]:text-primary data-[state=active]:shadow-inner text-slate-500 hover:text-slate-900 hover:bg-slate-50 dark:hover:text-white dark:hover:bg-slate-800/50 data-[state=inactive]:bg-transparent"
             >
               <Lock className="h-4 w-4" />
               Security & Access

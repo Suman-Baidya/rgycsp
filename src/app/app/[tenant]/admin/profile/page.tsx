@@ -17,41 +17,39 @@ export default async function ProfilePage(props: { params: Promise<{ tenant: str
     redirect("/login");
   }
 
-  const user = await db.user.findUnique({
-    where: { id: session.user.id },
-    select: {
-      id: true,
-      name: true,
-      email: true,
-      username: true,
-      image: true,
+  const workspace = await db.workspace.findUnique({
+    where: { subdomain: tenant.toLowerCase() },
+    include: {
+      roles: {
+        where: { role: "ADMIN" },
+        include: { user: true }
+      }
     }
   });
 
-  if (!user) {
+  if (!workspace) {
     redirect("/login");
   }
 
-  // Get the role of the user in this workspace
-  let roleName = "Admin";
-  if (session.user.role === "SUPER_ADMIN") {
-    roleName = "Super Admin";
-  } else {
-    const workspace = await db.workspace.findUnique({
-      where: { subdomain: tenant.toLowerCase() }
-    });
-    if (workspace) {
-      const roleRecord = await db.workspaceRole.findFirst({
-        where: { userId: session.user.id, workspaceId: workspace.id }
-      });
-      if (roleRecord) {
-        roleName = roleRecord.role === "ADMIN" ? "Franchise Admin" : roleRecord.role;
-      }
-    }
+  // Find the franchise owner
+  const franchiseOwner = workspace.roles[0]?.user;
+  
+  if (!franchiseOwner) {
+    return <div>Error: No franchise admin found for this workspace.</div>;
   }
 
+  const user = {
+    id: franchiseOwner.id,
+    name: franchiseOwner.name,
+    email: franchiseOwner.email,
+    username: franchiseOwner.username,
+    image: franchiseOwner.image,
+  };
+
+  const roleName = "Franchise Owner";
+
   return (
-    <div className="space-y-10 pb-24 p-6">
+    <div className="p-4 lg:p-10 max-w-7xl mx-auto space-y-8 w-full">
       <AdminPageHeader 
         title="Account Settings" 
         description="Manage your personal identity and security preferences within this franchise."

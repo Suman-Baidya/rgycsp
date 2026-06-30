@@ -55,6 +55,8 @@ export function SettingsForm({ settings, isSuperAdmin = true }: { settings: any,
     { name: "Pricing", href: "/pricing", id: "pricing", isActive: true },
     { name: "Support", href: "/support", id: "support", isActive: true }
   ]);
+  const [globalIdCardAccess, setGlobalIdCardAccess] = useState(settings.globalIdCardAccess ?? true);
+  const [globalAdmitCardAccess, setGlobalAdmitCardAccess] = useState(settings.globalAdmitCardAccess ?? true);
   const [isSaving, setIsSaving] = useState(false);
   const mediaFolderBase = settings.workspaceId && settings.workspace?.subdomain 
     ? `RGYCSP/Workspaces/${settings.workspace.subdomain}` 
@@ -115,6 +117,8 @@ export function SettingsForm({ settings, isSuperAdmin = true }: { settings: any,
       });
     }
     setNavigation(baseNav);
+    setGlobalIdCardAccess(settings.globalIdCardAccess ?? true);
+    setGlobalAdmitCardAccess(settings.globalAdmitCardAccess ?? true);
   }, [settings]);
 
   const handleSaveGeneral = async () => {
@@ -135,6 +139,8 @@ export function SettingsForm({ settings, isSuperAdmin = true }: { settings: any,
         socialLinks,
         navbarConfig,
         navigation,
+        globalIdCardAccess,
+        globalAdmitCardAccess,
       });
       if (result.success) {
         toast.success("Settings updated successfully");
@@ -164,6 +170,7 @@ export function SettingsForm({ settings, isSuperAdmin = true }: { settings: any,
               { value: "page-headers", label: "Page Headers", icon: LayoutDashboard },
               { value: "events", label: "Events", icon: Calendar },
               { value: "legal-pages", label: "Legal Pages", icon: ShieldCheck },
+              ...(isSuperAdmin ? [{ value: "documents", label: "Documents", icon: FileText }] : []),
             ].map((tab) => (
               <TabsTrigger
                 key={tab.value}
@@ -181,6 +188,69 @@ export function SettingsForm({ settings, isSuperAdmin = true }: { settings: any,
         {/* ROW 2: Content (Premium Minimalist Cards) */}
         <div className="w-full animate-in fade-in slide-in-from-bottom-4 duration-500 px-4 sm:px-6">
           
+          {isSuperAdmin && (
+            <TabsContent value="documents" className="mt-0 w-full focus-visible:outline-none">
+              <Accordion defaultValue={["global-access"]} className="space-y-6">
+                <AccordionItem value="global-access" className="border border-border/50 bg-card/50 rounded-3xl overflow-hidden">
+                  <AccordionTrigger className="hover:no-underline py-8 px-6 sm:px-8">
+                    <div className="flex items-center gap-4 text-left">
+                      <div className="w-12 h-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center">
+                        <FileText className="w-6 h-6" />
+                      </div>
+                      <div>
+                        <h3 className="text-xl font-bold tracking-tight">Global Document Access</h3>
+                        <p className="text-sm text-muted-foreground font-medium">Control default access to ID Cards and Admit Cards across the platform.</p>
+                      </div>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="pb-8 px-6 sm:px-8 space-y-8">
+                    <div className="flex items-center justify-between p-4 bg-muted/50 rounded-2xl border border-border/50">
+                      <div>
+                        <Label className="text-base font-bold">Global ID Card Access</Label>
+                        <p className="text-sm text-muted-foreground">If enabled, Franchise Admins and Students can view their ID cards directly without manual issuance.</p>
+                      </div>
+                      <Switch checked={globalIdCardAccess} onCheckedChange={setGlobalIdCardAccess} />
+                    </div>
+                    <div className="flex items-center justify-between p-4 bg-muted/50 rounded-2xl border border-border/50">
+                      <div>
+                        <Label className="text-base font-bold">Global Admit Card Access</Label>
+                        <p className="text-sm text-muted-foreground">If enabled, Students can download their Admit cards directly from their portal.</p>
+                      </div>
+                      <Switch checked={globalAdmitCardAccess} onCheckedChange={setGlobalAdmitCardAccess} />
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
+              
+              {/* Save Button for Documents Tab */}
+              <div className="fixed bottom-0 left-0 lg:left-[280px] right-0 p-6 bg-background/80 backdrop-blur-xl border-t border-border/50 z-40">
+                <div className="max-w-[1200px] mx-auto flex justify-between items-center">
+                  <p className="text-sm text-muted-foreground hidden sm:block">
+                    Remember to save your changes to apply them to your site.
+                  </p>
+                  <Button 
+                    onClick={handleSaveGeneral} 
+                    disabled={isSaving}
+                    size="lg"
+                    className="ml-auto min-w-[200px] rounded-2xl font-semibold shadow-lg shadow-primary/20 transition-all hover:scale-[1.02] active:scale-95"
+                  >
+                    {isSaving ? (
+                      <span className="flex items-center gap-2">
+                        <div className="h-4 w-4 rounded-full border-2 border-primary-foreground/30 border-t-primary-foreground animate-spin" />
+                        Saving Changes...
+                      </span>
+                    ) : (
+                      <span className="flex items-center gap-2">
+                        <Save className="h-5 w-5" />
+                        Save Document Settings
+                      </span>
+                    )}
+                  </Button>
+                </div>
+              </div>
+            </TabsContent>
+          )}
+
           <TabsContent value="branding" className="mt-0 w-full focus-visible:outline-none">
             <Accordion defaultValue={[]} className="space-y-6">
               

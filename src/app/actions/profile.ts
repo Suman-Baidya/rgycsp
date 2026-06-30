@@ -10,11 +10,17 @@ export async function updateProfile(data: {
   email?: string;
   username?: string;
   image?: string;
+  targetUserId?: string;
 }) {
   const session = await auth();
   if (!session?.user?.id) {
     return { success: false, error: "Unauthorized" };
   }
+
+  // Determine which user to update
+  const userIdToUpdate = (session.user.role === "SUPER_ADMIN" && data.targetUserId) 
+    ? data.targetUserId 
+    : session.user.id;
 
   try {
     // Check if email is already taken by another user
@@ -22,7 +28,7 @@ export async function updateProfile(data: {
       const existingUser = await db.user.findFirst({
         where: {
           email: data.email,
-          NOT: { id: session.user.id }
+          NOT: { id: userIdToUpdate }
         }
       });
       if (existingUser) {
@@ -35,7 +41,7 @@ export async function updateProfile(data: {
       const existingUser = await db.user.findFirst({
         where: {
           username: data.username,
-          NOT: { id: session.user.id }
+          NOT: { id: userIdToUpdate }
         }
       });
       if (existingUser) {
@@ -44,7 +50,7 @@ export async function updateProfile(data: {
     }
 
     await db.user.update({
-      where: { id: session.user.id },
+      where: { id: userIdToUpdate },
       data: {
         name: data.name,
         email: data.email,
@@ -64,11 +70,16 @@ export async function updateProfile(data: {
 export async function updatePassword(data: {
   currentPassword?: string;
   newPassword?: string;
+  targetUserId?: string;
 }) {
   const session = await auth();
   if (!session?.user?.id) {
     return { success: false, error: "Unauthorized" };
   }
+
+  const userIdToUpdate = (session.user.role === "SUPER_ADMIN" && data.targetUserId) 
+    ? data.targetUserId 
+    : session.user.id;
 
   if (!data.currentPassword || !data.newPassword) {
     return { success: false, error: "Missing password data" };
@@ -76,7 +87,7 @@ export async function updatePassword(data: {
 
   try {
     const user = await db.user.findUnique({
-      where: { id: session.user.id }
+      where: { id: userIdToUpdate }
     });
 
     if (!user || !user.passwordHash) {
@@ -90,7 +101,7 @@ export async function updatePassword(data: {
 
     const hashed = await hash(data.newPassword, 12);
     await db.user.update({
-      where: { id: session.user.id },
+      where: { id: userIdToUpdate },
       data: { passwordHash: hashed }
     });
 

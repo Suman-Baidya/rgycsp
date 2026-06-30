@@ -29,6 +29,8 @@ export async function updateSiteSettings(data: any) {
           navbarConfig: data.navbarConfig,
           fontFamily: data.fontFamily,
           pageHeaderBanner: data.pageHeaderBanner,
+          globalIdCardAccess: data.globalIdCardAccess ?? true,
+          globalAdmitCardAccess: data.globalAdmitCardAccess ?? true,
         },
       });
     } else {
@@ -50,6 +52,8 @@ export async function updateSiteSettings(data: any) {
           navbarConfig: data.navbarConfig,
           fontFamily: data.fontFamily,
           pageHeaderBanner: data.pageHeaderBanner,
+          globalIdCardAccess: data.globalIdCardAccess ?? true,
+          globalAdmitCardAccess: data.globalAdmitCardAccess ?? true,
         },
       });
     }
