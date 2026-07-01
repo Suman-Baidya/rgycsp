@@ -26,11 +26,16 @@ export default async function StudentCoursesPage({
   const profile = student.studentProfile;
   const currentCourse = profile?.batch?.course;
 
-  // Fetch other courses for discovery
+  // Fetch other courses for discovery (Trending)
   const otherCourses = await db.course.findMany({
     where: { 
       workspaceId: workspace.id,
       id: { not: currentCourse?.id || "" }
+    },
+    orderBy: {
+      students: {
+        _count: 'desc'
+      }
     },
     take: 3
   });

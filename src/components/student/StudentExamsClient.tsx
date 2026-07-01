@@ -18,7 +18,8 @@ import {
   Filter,
   TrendingUp,
   Target,
-  ShieldCheck
+  ShieldCheck,
+  Trophy
 } from "lucide-react";
 import {
   ResponsiveContainer,
@@ -41,34 +42,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 
-function StatsCard({ label, value, subtext, icon, color }: any) {
-  return (
-    <Card className="rounded-[2.5rem] border border-slate-100 dark:border-white/5 shadow-2xl bg-white dark:bg-zinc-900/50 overflow-hidden group">
-      <CardContent className="p-8 flex items-center gap-6 relative">
-        <div
-          className="absolute -right-4 -top-4 w-24 h-24 rounded-full opacity-10 group-hover:opacity-20 transition-opacity blur-3xl"
-          style={{ backgroundColor: color }}
-        />
-        <div
-          className="w-14 h-14 rounded-2xl flex items-center justify-center text-white shadow-lg transition-transform duration-500 group-hover:scale-110"
-          style={{
-            backgroundColor: color,
-            boxShadow: `0 8px 25px -6px ${color}80`
-          }}
-        >
-          {React.cloneElement(icon as React.ReactElement<any>, { className: "w-6 h-6" })}
-        </div>
-        <div>
-          <p className="text-[10px] font-bold uppercase text-slate-400 tracking-widest mb-1">{label}</p>
-          <div className="flex items-baseline gap-2">
-            <h3 className="text-3xl font-bold text-slate-900 dark:text-white tracking-tight">{value}</h3>
-            <span className="text-[10px] font-bold uppercase text-slate-400 tracking-widest">{subtext}</span>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
+
 
 export default function StudentExamsClient({
   settings,
@@ -110,13 +84,14 @@ export default function StudentExamsClient({
       category: "Main Examination",
       difficulty: "Advanced",
       topics: ["Vector Spaces", "Integration", "Matrices"],
-      proctoring: "Remote AI Monitored"
+      proctoring: "Remote AI Monitored",
+      admitIssued: true
     },
     {
       id: "ex-2",
       title: "Logical Reasoning & Aptitude",
       course: "Critical Thinking Workshop",
-      date: "2026-05-03", // Today!
+      date: "2026-05-03",
       time: "02:30 PM",
       duration: "90 Mins",
       totalMarks: 150,
@@ -124,7 +99,8 @@ export default function StudentExamsClient({
       category: "Weekly Skills Test",
       difficulty: "Intermediate",
       topics: ["Pattern Recognition", "Data Interpretation"],
-      proctoring: "On-Campus"
+      proctoring: "On-Campus",
+      admitIssued: false
     }
   ];
 
@@ -132,22 +108,28 @@ export default function StudentExamsClient({
     {
       id: "res-1",
       title: "Mid-Term Physics Exam",
+      course: "Physics 101",
       date: "2026-04-20",
       marks: 85,
       total: 100,
       grade: "A",
       status: "PASSED",
-      percentile: "92%"
+      percentage: "85%",
+      globalRank: 12,
+      franchiseRank: 3
     },
     {
       id: "res-2",
       title: "English Literature - Unit 1",
+      course: "Literature Fundamentals",
       date: "2026-04-05",
-      marks: 72,
+      marks: 38,
       total: 100,
-      grade: "B+",
-      status: "PASSED",
-      percentile: "78%"
+      grade: "F",
+      status: "FAILED",
+      percentage: "38%",
+      globalRank: 412,
+      franchiseRank: 45
     }
   ];
 
@@ -166,13 +148,97 @@ export default function StudentExamsClient({
         </div>
       </div>
 
-      {/* Stats Summary - Now below charts */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-        <StatsCard label="Average Marks" value="82.4" subtext="+4.2 from last" icon={<BarChart3 className="w-5 h-5" />} color={primaryColor} />
-        <StatsCard label="Tests Taken" value="24" subtext="In current session" icon={<FileText className="w-5 h-5" />} color="#10b981" />
-        <StatsCard label="Pass Ratio" value="95%" subtext="Consistency level" icon={<CheckCircle2 className="w-5 h-5" />} color="#f59e0b" />
-        <StatsCard label="Global Rank" value="#18" subtext="Top 2% learners" icon={<Award className="w-5 h-5" />} color="#ef4444" />
+      {/* Premium Exam Metrics Overview */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        
+        {/* 1. Percentage & Status */}
+        <Card className="rounded-[2rem] border border-slate-100 dark:border-white/5 shadow-xl bg-white dark:bg-zinc-900/40 hover:shadow-2xl hover:border-emerald-500/20 transition-all group overflow-hidden relative flex flex-col justify-between">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-3xl -mr-10 -mt-10 group-hover:scale-150 transition-transform duration-700" />
+          <CardContent className="p-6 relative z-10 flex flex-col h-full">
+            <div className="flex justify-between items-start mb-4">
+              <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-500 shadow-sm border border-emerald-500/20 group-hover:scale-110 transition-transform">
+                <BarChart3 className="w-5 h-5" />
+              </div>
+              <Badge className="bg-emerald-500 text-white font-black px-3 py-1 text-[10px] uppercase tracking-widest shadow-lg border-none animate-in fade-in zoom-in duration-500">
+                PASSED
+              </Badge>
+            </div>
+            <div className="mt-auto">
+              <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-1">Overall Score</p>
+              <div className="flex items-baseline gap-2">
+                <h3 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">85<span className="text-xl text-slate-400">%</span></h3>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* 2. Global & Franchise Rank */}
+        <Card className="rounded-[2rem] border border-slate-100 dark:border-white/5 shadow-xl bg-white dark:bg-zinc-900/40 hover:shadow-2xl hover:border-amber-500/20 transition-all group overflow-hidden relative flex flex-col justify-between">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/10 rounded-full blur-3xl -mr-10 -mt-10 group-hover:scale-150 transition-transform duration-700" />
+          <CardContent className="p-6 relative z-10 flex flex-col h-full">
+            <div className="flex justify-between items-start mb-4">
+              <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-500 shadow-sm border border-amber-500/20 group-hover:scale-110 transition-transform">
+                <Trophy className="w-5 h-5" />
+              </div>
+              <div className="text-right">
+                <p className="text-[9px] font-black uppercase text-slate-400 tracking-widest mb-1">Franchise Rank</p>
+                <Badge variant="outline" className="text-amber-600 dark:text-amber-400 border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/10 font-black px-2 py-0.5 shadow-sm text-[10px]">
+                  #3
+                </Badge>
+              </div>
+            </div>
+            <div className="mt-auto">
+              <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-1">Global Rank</p>
+              <h3 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">
+                <span className="text-xl text-slate-400">#</span>12
+              </h3>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* 3. Upcoming Exam */}
+        <Card className="rounded-[2rem] border border-slate-100 dark:border-white/5 shadow-xl bg-white dark:bg-zinc-900/40 hover:shadow-2xl hover:border-primary/20 transition-all group overflow-hidden relative flex flex-col justify-between" style={{ '--theme-color': primaryColor } as any}>
+          <div className="absolute top-0 right-0 w-32 h-32 rounded-full blur-3xl -mr-10 -mt-10 group-hover:scale-150 transition-transform duration-700 opacity-10" style={{ backgroundColor: primaryColor }} />
+          <CardContent className="p-6 relative z-10 flex flex-col h-full">
+            <div className="flex justify-between items-start mb-4">
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center text-white shadow-md group-hover:scale-110 transition-transform" style={{ backgroundColor: primaryColor }}>
+                <Calendar className="w-5 h-5" />
+              </div>
+              <Badge variant="outline" className="font-bold px-2 py-0.5 text-[9px] uppercase tracking-widest shadow-sm bg-white dark:bg-zinc-900">
+                In 14 Days
+              </Badge>
+            </div>
+            <div className="mt-auto">
+              <p className="text-[10px] font-black uppercase tracking-widest mb-1 line-clamp-1" style={{ color: primaryColor }}>Math Assessment</p>
+              <h3 className="text-xl font-black text-slate-900 dark:text-white tracking-tight leading-none mb-1">15 May</h3>
+              <p className="text-xs font-bold text-slate-500">10:00 AM</p>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* 4. Admit Card Status */}
+        <Card className="rounded-[2rem] border border-slate-100 dark:border-white/5 shadow-xl bg-gradient-to-br from-blue-600 to-indigo-700 hover:shadow-2xl hover:shadow-blue-500/20 transition-all group overflow-hidden relative flex flex-col justify-between">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-3xl -mr-10 -mt-10 group-hover:scale-150 transition-transform duration-700" />
+          <CardContent className="p-6 relative z-10 flex flex-col h-full text-white">
+            <div className="flex justify-between items-start mb-4">
+              <div className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center text-white shadow-sm border border-white/20 group-hover:scale-110 transition-transform">
+                <ShieldCheck className="w-5 h-5" />
+              </div>
+              <Badge className="bg-emerald-400 text-emerald-950 font-black px-3 py-1 text-[10px] uppercase tracking-widest shadow-lg border-none animate-pulse">
+                ISSUED
+              </Badge>
+            </div>
+            <div className="mt-auto space-y-3">
+              <p className="text-[10px] font-black uppercase text-blue-200 tracking-widest">Admit Card</p>
+              <Button className="w-full bg-white text-blue-700 hover:bg-slate-100 font-bold rounded-xl h-10 shadow-[0_8px_20px_-6px_rgba(0,0,0,0.3)] group/btn">
+                Download <ExternalLink className="w-4 h-4 ml-2 group-hover/btn:-translate-y-0.5 group-hover/btn:translate-x-0.5 transition-transform" />
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
       </div>
+
+
 
       {/* Analytics Dashboard - Vertical Stack */}
       <section className="flex flex-col gap-10">
@@ -280,8 +346,6 @@ export default function StudentExamsClient({
           </CardContent>
         </Card>
       </section>
-
-
     </div>
   );
 }

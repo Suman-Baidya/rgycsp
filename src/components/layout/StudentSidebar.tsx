@@ -38,6 +38,19 @@ export function StudentSidebar({
   
   const tenant = propTenant || detectTenant(pathname, typeof window !== 'undefined' ? window.location.host : undefined);
 
+  const isSubdomainMode = workspaceBase !== undefined 
+    ? workspaceBase === "" 
+    : typeof window !== 'undefined' 
+      ? (window.location.host.includes('.') && !window.location.host.startsWith('192.') && !window.location.host.startsWith('127.'))
+      : false;
+
+  const TenantNavLink = ({ href, children, className, onClick }: any) => {
+    if (isSubdomainMode) {
+      return <a href={href} className={className} onClick={onClick}>{children}</a>;
+    }
+    return <Link href={href} className={className} onClick={onClick}>{children}</Link>;
+  };
+
   const navItems = [
     { name: "Overview", href: getTenantLink(WORKSPACE_ROUTES.STUDENT_DASHBOARD, tenant, pathname), icon: LayoutDashboard },
     { name: "My Courses", href: getTenantLink(WORKSPACE_ROUTES.STUDENT_COURSES, tenant, pathname), icon: BookOpen },
@@ -114,7 +127,7 @@ export function StudentSidebar({
           {navItems.map((item) => {
             const isActive = isActivePath(pathname, item.href);
             return (
-              <Link key={item.name} href={item.href} className="block w-full">
+              <TenantNavLink key={item.name} href={item.href} className="block w-full">
                 <div
                   className={cn(
                     "flex items-center gap-3 transition-all duration-300 group relative overflow-hidden",
@@ -142,7 +155,7 @@ export function StudentSidebar({
                     </div>
                   )}
                 </div>
-              </Link>
+              </TenantNavLink>
             );
           })}
         </nav>
@@ -176,7 +189,7 @@ export function StudentSidebar({
             const isActive = isActivePath(pathname, item.href);
             
             return (
-              <Link key={item.name} href={item.href} className="flex flex-col items-center gap-1 w-16 relative">
+              <TenantNavLink key={item.name} href={item.href} className="flex flex-col items-center gap-1 w-16 relative">
                 <div className={cn(
                   "p-2 rounded-xl transition-all duration-300 flex items-center justify-center",
                   isActive ? "bg-primary text-primary-foreground shadow-lg" : "text-slate-400"
@@ -189,7 +202,7 @@ export function StudentSidebar({
                 )}>
                   {item.name}
                 </span>
-              </Link>
+              </TenantNavLink>
             );
           })}
           
@@ -234,7 +247,7 @@ export function StudentSidebar({
                   const isActive = isActivePath(pathname, item.href);
                   
                   return (
-                    <Link key={item.name} href={item.href} className="block w-full">
+                    <TenantNavLink key={item.name} href={item.href} className="block w-full">
                       <div className={cn(
                         "flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-300",
                         isActive ? "bg-primary text-primary-foreground shadow-md" : "hover:bg-white/5 text-slate-300"
@@ -242,7 +255,7 @@ export function StudentSidebar({
                         <item.icon className="h-5 w-5" />
                         <span className="font-medium">{item.name}</span>
                       </div>
-                    </Link>
+                    </TenantNavLink>
                   );
                 })}
               </div>

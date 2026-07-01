@@ -55,12 +55,12 @@ export function WorkspaceSidebar({
   const displayTenant = tenant || "Workspace";
 
   // Component to safely handle Next.js App Router subdomain rewrite bug (flight tree mismatch)
-  const [isSubdomainMode, setIsSubdomainMode] = useState(false);
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      setIsSubdomainMode(window.location.host.includes('.') && !window.location.host.startsWith('192.') && !window.location.host.startsWith('127.'));
-    }
-  }, []);
+  // We can accurately determine subdomain mode if workspaceBase is an empty string
+  const isSubdomainMode = workspaceBase !== undefined 
+    ? workspaceBase === "" 
+    : typeof window !== 'undefined' 
+      ? (window.location.host.includes('.') && !window.location.host.startsWith('192.') && !window.location.host.startsWith('127.'))
+      : false;
 
   const TenantNavLink = ({ href, children, className, onClick }: any) => {
     if (isSubdomainMode) {
@@ -69,28 +69,18 @@ export function WorkspaceSidebar({
     return <Link href={href} className={className} onClick={onClick}>{children}</Link>;
   };
 
-  // Create absolute safe links using workspaceBase if provided by server
-  const getSafeLink = (path: string) => {
-    if (workspaceBase !== undefined) {
-      if (workspaceBase === "") return path; // Subdomain mode
-      const cleanPath = path.startsWith('/') ? path : `/${path}`;
-      return `${workspaceBase}${cleanPath}`.replace(/\/+/g, '/');
-    }
-    return getTenantLink(path, tenant, pathname);
-  };
-
   const allNavItems = [
-    { id: "dashboard", name: "Overview", href: getSafeLink(WORKSPACE_ROUTES.ADMIN), icon: LayoutDashboard },
-    { id: "wallet", name: "Wallet", href: getSafeLink(WORKSPACE_ROUTES.ADMIN_WALLET), icon: Wallet },
-    { id: "staff", name: "Staff & Roles", href: getSafeLink(WORKSPACE_ROUTES.ADMIN_STAFF), icon: UserCheck },
-    { id: "students", name: "Students", href: getSafeLink(WORKSPACE_ROUTES.ADMIN_STUDENTS), icon: Users },
-    { id: "admissions", name: "Admissions", href: getSafeLink(WORKSPACE_ROUTES.ADMIN_ADMISSIONS), icon: UserPlus },
-    { id: "attendance", name: "Attendance", href: getSafeLink(WORKSPACE_ROUTES.ADMIN_ATTENDANCE), icon: Calendar },
-    { id: "courses", name: "Courses", href: getSafeLink(WORKSPACE_ROUTES.ADMIN_COURSES), icon: BookOpen },
-    { id: "products", name: "Products & Store", href: getSafeLink(WORKSPACE_ROUTES.ADMIN_PRODUCTS), icon: ShoppingCart },
-    { id: "exam-zone", name: "Exam Zone", href: getSafeLink(WORKSPACE_ROUTES.ADMIN_EXAM_GENERATOR), icon: GraduationCap },
-    { id: "settings", name: "Landing Page", href: getSafeLink(WORKSPACE_ROUTES.ADMIN_SETTINGS), icon: Building2 },
-    { id: "profile", name: "Profile", href: getSafeLink(WORKSPACE_ROUTES.ADMIN_PROFILE), icon: UserCog },
+    { id: "dashboard", name: "Overview", href: getTenantLink(WORKSPACE_ROUTES.ADMIN, tenant, pathname), icon: LayoutDashboard },
+    { id: "wallet", name: "Wallet", href: getTenantLink(WORKSPACE_ROUTES.ADMIN_WALLET, tenant, pathname), icon: Wallet },
+    { id: "staff", name: "Staff & Roles", href: getTenantLink(WORKSPACE_ROUTES.ADMIN_STAFF, tenant, pathname), icon: UserCheck },
+    { id: "students", name: "Students", href: getTenantLink(WORKSPACE_ROUTES.ADMIN_STUDENTS, tenant, pathname), icon: Users },
+    { id: "admissions", name: "Admissions", href: getTenantLink(WORKSPACE_ROUTES.ADMIN_ADMISSIONS, tenant, pathname), icon: UserPlus },
+    { id: "attendance", name: "Attendance", href: getTenantLink(WORKSPACE_ROUTES.ADMIN_ATTENDANCE, tenant, pathname), icon: Calendar },
+    { id: "courses", name: "Courses", href: getTenantLink(WORKSPACE_ROUTES.ADMIN_COURSES, tenant, pathname), icon: BookOpen },
+    { id: "products", name: "Products & Store", href: getTenantLink(WORKSPACE_ROUTES.ADMIN_PRODUCTS, tenant, pathname), icon: ShoppingCart },
+    { id: "exam-gen", name: "Exam Zone", href: getTenantLink(WORKSPACE_ROUTES.ADMIN_EXAM_GENERATOR, tenant, pathname), icon: GraduationCap },
+    { id: "settings", name: "Landing Page", href: getTenantLink(WORKSPACE_ROUTES.ADMIN_SETTINGS, tenant, pathname), icon: Building2 },
+    { id: "profile", name: "Profile", href: getTenantLink(WORKSPACE_ROUTES.ADMIN_PROFILE, tenant, pathname), icon: UserCog },
   ];
 
   const navItems = userRole === "ADMIN" 
@@ -101,7 +91,7 @@ export function WorkspaceSidebar({
       );
 
   if (isStateManager) {
-    navItems.splice(8, 0, { id: "state-manager", name: "State Manager", href: getSafeLink(WORKSPACE_ROUTES.ADMIN_STATE_MANAGER || "/admin/state-manager"), icon: MapPinned });
+    navItems.splice(8, 0, { id: "state-manager", name: "State Manager", href: getTenantLink(WORKSPACE_ROUTES.ADMIN_STATE_MANAGER || "/admin/state-manager", tenant, pathname), icon: MapPinned });
   }
 
   // Close mobile drawer on navigation

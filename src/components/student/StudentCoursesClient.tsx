@@ -1,25 +1,28 @@
 "use client";
 
-// Client component for Learner Courses Path
-
-import React from "react";
+import React, { useState } from "react";
 import { 
   BookOpen, 
   Calendar, 
   Clock, 
-  GraduationCap, 
   ChevronRight, 
   Sparkles,
   PlayCircle,
   CheckCircle2,
   Trophy,
-  ArrowRight
+  ArrowRight,
+  User,
+  GraduationCap,
+  Star
 } from "lucide-react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import Link from "next/link";
 import { cn } from "@/lib/utils";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { getTenantLink } from "@/lib/routing";
+import CourseDetailsModal from "@/app/courses/CourseDetailsModal";
 
 const Progress = ({ value, className, style }: { value?: number, className?: string, style?: React.CSSProperties }) => (
   <div
@@ -52,8 +55,23 @@ export default function StudentCoursesClient({
   settings: any, 
   tenant: string 
 }) {
+  const pathname = usePathname();
   const primaryColor = settings?.primaryColor || "#0f172a";
   const progress = 65; // Mock progress
+
+  const [detailsOpen, setDetailsOpen] = useState(false);
+  const [detailsCourse, setDetailsCourse] = useState<any>(null);
+
+  // Safely parse topics/syllabus
+  let courseTopics: any[] = [];
+  if (currentCourse?.topics) {
+    try {
+      courseTopics = typeof currentCourse.topics === 'string' ? JSON.parse(currentCourse.topics) : currentCourse.topics;
+      if (!Array.isArray(courseTopics)) courseTopics = [];
+    } catch (e) {
+      courseTopics = [];
+    }
+  }
 
   return (
     <div className="p-6 lg:p-10 max-w-7xl mx-auto space-y-12 pb-24">
@@ -103,6 +121,51 @@ export default function StudentCoursesClient({
                     </p>
                   </div>
 
+                  {/* Enhanced Student & Course Details */}
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pb-2 border-b border-slate-100 dark:border-white/5">
+                      <div className="space-y-1">
+                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5"><User className="w-3 h-3" /> Enrolled As</p>
+                          <p className="font-bold text-sm text-slate-900 dark:text-white truncate">{profile.fullName}</p>
+                      </div>
+                      <div className="space-y-1">
+                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5"><Calendar className="w-3 h-3" /> Admission Date</p>
+                          <p className="font-bold text-sm text-slate-900 dark:text-white">{new Date(profile.admissionDate).toLocaleDateString()}</p>
+                      </div>
+                      <div className="space-y-1">
+                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5"><Clock className="w-3 h-3" /> Duration</p>
+                          <p className="font-bold text-sm text-slate-900 dark:text-white">{currentCourse.duration || "N/A"}</p>
+                      </div>
+                      <div className="space-y-1">
+                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5"><GraduationCap className="w-3 h-3" /> Total Units</p>
+                          <p className="font-bold text-sm text-slate-900 dark:text-white">{courseTopics.length > 0 ? courseTopics.length : "N/A"}</p>
+                      </div>
+                  </div>
+
+                  {/* Syllabus / Topics Overview */}
+                  {courseTopics.length > 0 && (
+                    <div className="space-y-4">
+                      <h4 className="font-bold text-sm uppercase tracking-wider text-slate-500">Course Curriculum</h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {courseTopics.slice(0, 4).map((topic: any, idx: number) => (
+                          <div key={idx} className="bg-slate-50 dark:bg-white/5 p-4 rounded-2xl border border-slate-100 dark:border-white/5 flex items-start gap-3 group hover:border-primary/50 transition-colors">
+                            <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                              <span className="text-primary font-bold text-xs">{idx + 1}</span>
+                            </div>
+                            <div>
+                              <p className="font-bold text-sm text-slate-900 dark:text-white line-clamp-1">{topic.title || `Semester ${idx + 1}`}</p>
+                              <p className="text-xs text-slate-500 line-clamp-1">
+                                {topic.items && Array.isArray(topic.items) ? `${topic.items.length} Modules` : 'Pending Setup'}
+                              </p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                      {courseTopics.length > 4 && (
+                        <p className="text-xs font-bold text-primary text-center pt-2 cursor-pointer hover:underline">+ {courseTopics.length - 4} more units</p>
+                      )}
+                    </div>
+                  )}
+
                   {/* Progress Metrics */}
                   <div className="space-y-4 bg-slate-50 dark:bg-white/5 p-8 rounded-3xl border border-slate-100 dark:border-white/5">
                      <div className="flex items-center justify-between mb-2">
@@ -151,40 +214,80 @@ export default function StudentCoursesClient({
             <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-purple-500 to-blue-500 flex items-center justify-center text-white shadow-lg">
               <Sparkles className="w-5 h-5" />
             </div>
-            AI Suggested For You
+            Trending Courses
           </h2>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {otherCourses.map((course, idx) => (
-            <Card key={idx} className="rounded-3xl overflow-hidden border border-slate-100 dark:border-white/5 bg-white dark:bg-zinc-900/50 shadow-lg hover:shadow-2xl transition-all duration-500 group">
-              <div className="relative h-48 overflow-hidden">
-                {course.image ? (
-                  <img src={course.image} alt={course.title} className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
-                ) : (
-                  <div className="absolute inset-0 bg-primary/10" />
-                )}
-                <div className="absolute top-4 left-4">
-                  <Badge className="bg-white/90 backdrop-blur-md text-black hover:bg-white border-none font-bold rounded-lg px-3 py-1 text-[10px] uppercase tracking-wider">
-                    {idx === 0 ? "Best Match" : "Trending"}
-                  </Badge>
+            <Card key={idx} className="group overflow-hidden border-border/40 hover:border-primary/30 transition-all hover:shadow-2xl hover:shadow-primary/5 rounded-[2.5rem] bg-white dark:bg-zinc-900 flex flex-col h-full">
+              <div className="relative aspect-[16/10] overflow-hidden shrink-0">
+                <img 
+                  src={course.image || "https://images.unsplash.com/photo-1509228468518-180dd48a5f5f?q=80&w=2070"} 
+                  alt={course.title} 
+                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
+                />
+                
+                {/* Badges */}
+                <div className="absolute top-6 left-6">
+                  <span className="bg-white/90 dark:bg-zinc-900/90 backdrop-blur-md text-primary px-4 py-1.5 rounded-full text-[10px] font-black tracking-[0.2em] shadow-xl uppercase border border-white/20">
+                    {idx === 0 ? "TOP TRENDING" : "TRENDING"}
+                  </span>
+                </div>
+                
+                {/* Duration/Fee Floating Badge */}
+                <div className="absolute bottom-6 right-6 flex flex-col gap-1 items-end">
+                  <div className="bg-primary text-primary-foreground px-5 py-2 rounded-2xl font-black text-xs sm:text-sm shadow-2xl shadow-primary/40 flex items-center gap-2">
+                    <Clock className="w-3.5 h-3.5" />
+                    <span>{course.duration || "12 Weeks"}</span>
+                  </div>
                 </div>
               </div>
-              <CardContent className="p-6 space-y-4">
-                <div className="space-y-1">
-                  <h3 className="text-xl font-bold tracking-tight group-hover:text-primary transition-colors">{course.title}</h3>
-                  <p className="text-sm text-slate-500 dark:text-slate-400 font-medium line-clamp-2">{course.description || "Expand your expertise with this advanced specialization."}</p>
-                </div>
-                <div className="pt-4 flex items-center justify-between border-t border-slate-50 dark:border-white/5">
-                  <div className="flex items-center gap-4">
-                    <div className="flex flex-col">
-                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Duration</span>
-                      <span className="text-xs font-bold">{course.duration || "12 Weeks"}</span>
-                    </div>
+
+              {/* Content Section */}
+              <CardContent className="p-6 space-y-4 flex-1 flex flex-col">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-orange-500/10 text-orange-600">
+                    <Star className="h-4 w-4 fill-current" />
+                    <span className="text-xs font-black">4.9</span>
                   </div>
-                  <Button variant="ghost" size="sm" className="rounded-xl font-bold group-hover:bg-primary group-hover:text-white transition-all">
-                    Explore <ChevronRight className="w-4 h-4 ml-1" />
+                </div>
+
+                <div className="space-y-1">
+                  <h3 className="text-xl font-bold tracking-tight group-hover:text-primary transition-colors line-clamp-2">{course.title}</h3>
+                  <p className="text-sm text-slate-500 dark:text-slate-400 font-medium line-clamp-2">
+                    {course.description || "Expand your expertise with this advanced specialization."}
+                  </p>
+                </div>
+
+                {/* Footer Buttons */}
+                <div className="pt-4 flex items-center gap-3 mt-auto border-t border-slate-50 dark:border-white/5">
+                  <Button 
+                    variant="outline"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setDetailsCourse({
+                        name: course.title,
+                        banner: course.image,
+                        category: course.category,
+                        duration: course.duration,
+                        priceDisplay: course.priceDisplay || course.feeAmount,
+                        discountText: course.discountText,
+                        showFee: course.showFee,
+                        description: course.description,
+                        syllabus: course.topics
+                      });
+                      setDetailsOpen(true);
+                    }}
+                    className="flex-1 rounded-xl h-12 font-bold text-xs border-primary/20 hover:bg-primary/5 text-primary transition-all"
+                  >
+                    View Details
                   </Button>
+                  <Link href={getTenantLink(`/admission?courseId=${course.id}`, tenant, pathname)} className="flex-1">
+                    <Button className="w-full rounded-xl h-12 font-black text-xs bg-primary/10 text-primary hover:bg-primary hover:text-white border-none shadow-none transition-all group/btn">
+                      Enroll <ArrowRight className="w-4 h-4 ml-1 group-hover/btn:translate-x-1 transition-transform" />
+                    </Button>
+                  </Link>
                 </div>
               </CardContent>
             </Card>
@@ -204,6 +307,12 @@ export default function StudentCoursesClient({
           </div>
         </div>
       </section>
+
+      <CourseDetailsModal 
+        isOpen={detailsOpen} 
+        onClose={() => setDetailsOpen(false)} 
+        course={detailsCourse} 
+      />
     </div>
   );
 }

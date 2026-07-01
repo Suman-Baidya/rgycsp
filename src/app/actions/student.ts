@@ -64,3 +64,78 @@ export async function getWorkspaceRole(workspaceId: string, userId: string) {
     return null;
   }
 }
+
+export async function getStudentDashboardData(workspaceId: string, studentProfileId: string, courseId?: string | null) {
+  try {
+    const session = await auth();
+    if (!session?.user) return { success: false, error: "Not authenticated" };
+
+    // 1. Fetch Invoices for Balance
+    const invoices = await db.invoice.findMany({
+      where: { studentProfileId, workspaceId },
+      select: { amount: true, status: true }
+    });
+
+    const remainingBalance = invoices
+      .filter(inv => inv.status === 'PENDING' || inv.status === 'OVERDUE')
+      .reduce((sum, inv) => sum + inv.amount, 0);
+
+    // 2. Fetch Attendance
+    const attendances = await db.attendance.findMany({
+      where: { studentProfileId, workspaceId },
+      select: { status: true }
+    });
+
+    const totalDays = attendances.length;
+    const presentDays = attendances.filter(a => a.status === 'PRESENT' || a.status === 'LATE').length;
+    const attendancePercentage = totalDays > 0 ? Math.round((presentDays / totalDays) * 100) : 100; // default 100 if no records
+
+    // 3. Fetch Upcoming Exams
+    let upcomingExams: any[] = [];
+    if (courseId) {
+      upcomingExams = await db.exam.findMany({
+        where: {
+          workspaceId,
+          courseId,
+          date: { gte: new Date() }
+        },
+        orderBy: { date: 'asc' },
+        take: 3,
+        select: { id: true, title: true, date: true, type: true }
+      });
+    }
+
+    // 4. Fetch Student Profile for Document Approvals
+    const profile = await db.studentProfile.findUnique({
+      where: { id: studentProfileId },
+      select: {
+        admitCardApproved: true,
+        registrationCardApproved: true,
+        certificateApproved: true,
+        marksheetApproved: true
+      }
+    });
+
+    const issuedDocuments = [];
+    if (profile) {
+      if (profile.admitCardApproved) issuedDocuments.push({ name: 'Admit Card', type: 'DOCUMENT' });
+      if (profile.registrationCardApproved) issuedDocuments.push({ name: 'Registration Card', type: 'DOCUMENT' });
+      if (profile.certificateApproved) issuedDocuments.push({ name: 'Course Certificate', type: 'DOCUMENT' });
+      if (profile.marksheetApproved) issuedDocuments.push({ name: 'Marksheet', type: 'DOCUMENT' });
+    }
+
+    return {
+      success: true,
+      data: {
+        remainingBalance,
+        attendancePercentage,
+        upcomingExams,
+        issuedDocuments
+      }
+    };
+  } catch (error: any) {
+    console.error("Error fetching student dashboard data:", error);
+    return { success: false, error: "Failed to fetch dashboard data." };
+  }
+}
+

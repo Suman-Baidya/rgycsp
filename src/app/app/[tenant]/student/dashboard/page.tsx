@@ -1,4 +1,4 @@
-import { getStudentProfile } from "@/app/actions/student";
+import { getStudentProfile, getStudentDashboardData } from "@/app/actions/student";
 import { getWorkspaceByTenant } from "@/lib/workspace";
 import StudentDashboardClient from "@/components/student/StudentDashboardClient";
 import { redirect } from "next/navigation";
@@ -45,12 +45,23 @@ export default async function StudentDashboardPage({
   const aboutSection = workspaceSettings?.sections?.find((s: any) => s.type === "about");
   const notices = (aboutSection?.content as any)?.notices || [];
 
+  const studentProfileId = result.data.studentProfile?.id;
+  const courseId = result.data.studentProfile?.courseId;
+  let dashboardData = null;
+  if (studentProfileId) {
+    const dashResult = await getStudentDashboardData(workspace.id, studentProfileId, courseId);
+    if (dashResult.success) {
+      dashboardData = dashResult.data;
+    }
+  }
+
   return (
     <StudentDashboardClient 
       student={result.data} 
       tenant={tenant} 
       settings={workspaceSettings} 
       notices={notices}
+      dashboardData={dashboardData}
     />
   );
 }

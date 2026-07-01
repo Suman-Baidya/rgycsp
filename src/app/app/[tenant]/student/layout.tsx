@@ -3,6 +3,7 @@ import Link from "next/link";
 import { StudentSidebar } from "@/components/layout/StudentSidebar";
 import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
+import { StudentBreadcrumbs } from "@/components/student/StudentBreadcrumbs";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/prisma";
 import { CustomThemeStyle } from "@/components/providers/CustomThemeStyle";
@@ -50,11 +51,7 @@ export default async function StudentLayout({
           <div className="lg:hidden ml-4 font-bold tracking-tight text-lg text-foreground truncate max-w-[200px]">
             {workspace.name}
           </div>
-          <div className="hidden lg:flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-            <Link href={homeHref} className="hover:text-primary transition-colors">Workspace Home</Link>
-            <span className="opacity-30">/</span>
-            <span className="text-foreground">Student Portal</span>
-          </div>
+          <StudentBreadcrumbs tenant={tenant} />
           
           <div className="ml-auto flex items-center gap-6">
             <ThemeToggle />
