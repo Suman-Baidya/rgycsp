@@ -301,55 +301,41 @@ export async function updateFranchiseApplicationStatus(
     // APPROVED: Generate Username (e.g. WB-002) and Workspace
     const stateCode = (details?.customStateCode || getStateCode(application.state)).toUpperCase();
     
-    // Find next sequential unique 3 digit number for this StateCode
-    let codeStr = "";
-    let isUnique = false;
-    let attempts = 0;
+    // Find highest sequential number for this StateCode
+    const existingWorkspaces = await db.workspace.findMany({
+      where: { centerCode: { startsWith: `${stateCode}-` } },
+      select: { centerCode: true }
+    });
     
-    while (!isUnique && attempts < 100) {
-      // Let's generate a random 3 digit number or count-based
-      const num = Math.floor(1 + Math.random() * 999);
-      const suffix = String(num).padStart(3, '0');
-      const testUsername = `${stateCode}-${suffix}`;
-      
-      // Check in FranchiseApplication and User tables
-      const appCheck = await db.franchiseApplication.findFirst({
-        where: { username: testUsername }
-      });
-      
-      const userCheck = await db.user.findUnique({
-        where: { username: testUsername }
-      });
-      
-      if (!appCheck && !userCheck) {
-        codeStr = testUsername;
-        isUnique = true;
-      }
-      attempts++;
-    }
+    const existingApps = await db.franchiseApplication.findMany({
+      where: { username: { startsWith: `${stateCode}-` } },
+      select: { username: true }
+    });
+    
+    const existingUsers = await db.user.findMany({
+      where: { username: { startsWith: `${stateCode}-` } },
+      select: { username: true }
+    });
 
-    if (!isUnique) {
-      // Fallback: sequential search
-      for (let i = 1; i <= 999; i++) {
-        const suffix = String(i).padStart(3, '0');
-        const testUsername = `${stateCode}-${suffix}`;
-        const appCheck = await db.franchiseApplication.findFirst({
-          where: { username: testUsername }
-        });
-        const userCheck = await db.user.findUnique({
-          where: { username: testUsername }
-        });
-        if (!appCheck && !userCheck) {
-          codeStr = testUsername;
-          isUnique = true;
-          break;
+    const allCodes = [
+      ...existingWorkspaces.map(w => w.centerCode).filter(Boolean) as string[],
+      ...existingApps.map(a => a.username).filter(Boolean) as string[],
+      ...existingUsers.map(u => u.username).filter(Boolean) as string[]
+    ];
+
+    let maxNum = 0;
+    for (const code of allCodes) {
+      const parts = code.split('-');
+      if (parts.length === 2) {
+        const num = parseInt(parts[1], 10);
+        if (!isNaN(num) && num > maxNum) {
+          maxNum = num;
         }
       }
     }
 
-    if (!isUnique) {
-      return { success: false, error: "Failed to generate unique username code." };
-    }
+    const nextNum = maxNum + 1;
+    const codeStr = `${stateCode}-${String(nextNum).padStart(3, '0')}`;
 
     // Subdomain generation: code lowercased, hyphens removed, alphanumeric only
     const subdomain = (details?.customSubdomain || codeStr.toLowerCase().replace(/[^a-z0-9]/g, "")).toLowerCase();
@@ -395,6 +381,7 @@ export async function updateFranchiseApplicationStatus(
       data: {
         name: application.centerName,
         subdomain: subdomain,
+        centerCode: codeStr,
         logoUrl: application.photoUrl || null,
         isActive: true,
         tokensBalance: 100, // Initial seed tokens for the franchise

@@ -206,11 +206,11 @@ export default function FranchiseProductsClient({
 
       {activeTab === "orders" && (
         <div className="bg-slate-50/50 dark:bg-slate-950/50 rounded-[2.5rem] border-2 border-slate-100 dark:border-slate-800/50 p-8 shadow-inner">
-          <div className="bg-white border-2 border-slate-100 rounded-[2.5rem] overflow-hidden">
+          <div className="bg-white dark:bg-slate-900 border-2 border-slate-100 dark:border-slate-800/60 rounded-[2.5rem] overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse min-w-[800px]">
                 <thead>
-                  <tr className="bg-slate-50 text-slate-500 text-xs uppercase tracking-wider font-bold">
+                  <tr className="bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 text-xs uppercase tracking-wider font-bold">
                     <th className="p-5 pl-8 w-16">Sl.</th>
                     <th className="p-5">Order ID & Date</th>
                     <th className="p-5">Product Details</th>
@@ -219,30 +219,30 @@ export default function FranchiseProductsClient({
                     <th className="p-5 pr-8 text-right">Status</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100">
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
                   {filteredOrders.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).map((order, index) => (
-                    <tr key={order.id} className="hover:bg-slate-50/50 transition-colors">
-                      <td className="p-5 pl-8 font-bold text-slate-500">
+                    <tr key={order.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors">
+                      <td className="p-5 pl-8 font-bold text-slate-500 dark:text-slate-400">
                         {(currentPage - 1) * itemsPerPage + index + 1}
                       </td>
                       <td className="p-5">
-                        <div className="font-mono text-xs font-bold text-slate-700">#{order.id.slice(-6).toUpperCase()}</div>
-                        <div className="text-[10px] font-medium text-slate-400 mt-1">{new Date(order.createdAt).toLocaleDateString()}</div>
+                        <div className="font-mono text-xs font-bold text-slate-700 dark:text-slate-300">#{order.id.slice(-6).toUpperCase()}</div>
+                        <div className="text-[10px] font-medium text-slate-400 dark:text-slate-500 mt-1">{new Date(order.createdAt).toLocaleDateString()}</div>
                       </td>
                       <td className="p-5">
-                        <div className="font-bold text-slate-800">{order.product.title}</div>
-                        <div className="text-xs font-medium text-slate-500 mt-1">Quantity: {order.quantity}</div>
+                        <div className="font-bold text-slate-800 dark:text-slate-200">{order.product.title}</div>
+                        <div className="text-xs font-medium text-slate-500 dark:text-slate-400 mt-1">Quantity: {order.quantity}</div>
                       </td>
-                      <td className="p-5 font-black text-slate-800 flex items-center mt-2.5">
+                      <td className="p-5 font-black text-slate-800 dark:text-slate-200 flex items-center mt-2.5">
                         <IndianRupee className="h-3 w-3 mr-0.5" />{order.totalPrice}
                       </td>
                       <td className="p-5">
                         {order.paymentStatus === "PAID" ? (
-                          <span className="inline-flex items-center gap-1 text-[10px] font-bold text-green-700 bg-green-100 px-2 py-1 rounded-md uppercase">
+                          <span className="inline-flex items-center gap-1 text-[10px] font-bold text-green-700 bg-green-100 dark:bg-green-500/10 dark:text-green-500 px-2 py-1 rounded-md uppercase">
                             <CheckCircle2 className="h-3 w-3" /> Paid
                           </span>
                         ) : (
-                          <span className="inline-flex items-center gap-1 text-[10px] font-bold text-orange-700 bg-orange-100 px-2 py-1 rounded-md uppercase">
+                          <span className="inline-flex items-center gap-1 text-[10px] font-bold text-orange-700 bg-orange-100 dark:bg-orange-500/10 dark:text-orange-500 px-2 py-1 rounded-md uppercase">
                             <Clock className="h-3 w-3" /> Unpaid
                           </span>
                         )}
@@ -250,11 +250,11 @@ export default function FranchiseProductsClient({
                       <td className="p-5 pr-8 text-right">
                         <Badge className={cn(
                           "font-bold text-[10px] uppercase rounded-md px-2 py-0.5 shadow-none",
-                          order.status === "PENDING" ? "bg-orange-100 text-orange-700" :
-                          order.status === "APPROVED" ? "bg-blue-100 text-blue-700" :
-                          order.status === "SHIPPED" ? "bg-purple-100 text-purple-700" :
-                          order.status === "DELIVERED" ? "bg-green-100 text-green-700" :
-                          "bg-slate-100 text-slate-700"
+                          order.status === "PENDING" ? "bg-orange-100 text-orange-700 dark:bg-orange-500/10 dark:text-orange-500" :
+                          order.status === "APPROVED" ? "bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-500" :
+                          order.status === "SHIPPED" ? "bg-purple-100 text-purple-700 dark:bg-purple-500/10 dark:text-purple-500" :
+                          order.status === "DELIVERED" ? "bg-green-100 text-green-700 dark:bg-green-500/10 dark:text-green-500" :
+                          "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300"
                         )}>
                           {order.status}
                         </Badge>
@@ -263,7 +263,7 @@ export default function FranchiseProductsClient({
                   ))}
                   {filteredOrders.length === 0 && (
                     <tr>
-                      <td colSpan={6} className="p-16 text-center text-slate-500 font-medium">You haven't placed any orders yet.</td>
+                      <td colSpan={6} className="p-16 text-center text-slate-500 dark:text-slate-400 font-medium">You haven't placed any orders yet.</td>
                     </tr>
                   )}
                 </tbody>
@@ -272,9 +272,9 @@ export default function FranchiseProductsClient({
             
             {/* Pagination Controls */}
             {filteredOrders.length > 0 && (
-              <div className="p-5 border-t border-slate-100 bg-slate-50 flex items-center justify-between">
-                <div className="text-sm font-medium text-slate-500">
-                  Showing <span className="font-bold text-slate-800">{(currentPage - 1) * itemsPerPage + 1}</span> to <span className="font-bold text-slate-800">{Math.min(currentPage * itemsPerPage, filteredOrders.length)}</span> of <span className="font-bold text-slate-800">{filteredOrders.length}</span> orders
+              <div className="p-5 border-t border-slate-100 dark:border-slate-800/60 bg-slate-50 dark:bg-slate-900 flex items-center justify-between">
+                <div className="text-sm font-medium text-slate-500 dark:text-slate-400">
+                  Showing <span className="font-bold text-slate-800 dark:text-slate-200">{(currentPage - 1) * itemsPerPage + 1}</span> to <span className="font-bold text-slate-800 dark:text-slate-200">{Math.min(currentPage * itemsPerPage, filteredOrders.length)}</span> of <span className="font-bold text-slate-800 dark:text-slate-200">{filteredOrders.length}</span> orders
                 </div>
                 <div className="flex gap-2">
                   <Button 
@@ -305,26 +305,26 @@ export default function FranchiseProductsClient({
       {/* Order Modal */}
       <Dialog open={orderModalOpen} onOpenChange={setOrderModalOpen}>
         <DialogContent className="sm:max-w-xl rounded-[2.5rem] p-0 overflow-hidden">
-          <DialogHeader className="p-8 pb-4 border-b bg-slate-50">
-            <DialogTitle className="text-2xl font-bold">Place Order</DialogTitle>
+          <DialogHeader className="p-8 pb-4 border-b dark:border-slate-800 bg-slate-50 dark:bg-slate-900">
+            <DialogTitle className="text-2xl font-bold dark:text-white">Place Order</DialogTitle>
           </DialogHeader>
           {selectedProduct && (
-            <form onSubmit={handleOrderSubmit} className="p-8 pt-6 space-y-6">
+            <form onSubmit={handleOrderSubmit} className="p-8 pt-6 space-y-6 bg-white dark:bg-slate-950">
               
-              <div className="flex gap-4 items-start p-4 bg-slate-50 rounded-2xl border border-slate-100">
+              <div className="flex gap-4 items-start p-4 bg-slate-50 dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800">
                 <div className="h-12 w-12 bg-primary/10 rounded-xl flex items-center justify-center text-primary shrink-0">
                   <Package className="h-6 w-6" />
                 </div>
                 <div>
-                  <h4 className="font-bold text-slate-900">{selectedProduct.title}</h4>
-                  <div className="text-sm font-medium text-slate-500 mt-1 flex items-center">
+                  <h4 className="font-bold text-slate-900 dark:text-white">{selectedProduct.title}</h4>
+                  <div className="text-sm font-medium text-slate-500 dark:text-slate-400 mt-1 flex items-center">
                     Price: <IndianRupee className="h-3 w-3 ml-1 mr-0.5" />{selectedProduct.price} / unit
                   </div>
                 </div>
               </div>
 
               <div className="space-y-3">
-                <Label className="text-sm font-bold text-slate-700">Select Quantity</Label>
+                <Label className="text-sm font-bold text-slate-700 dark:text-slate-300">Select Quantity</Label>
                 <div className="flex items-center gap-4">
                   <Button type="button" variant="outline" className="h-12 w-12 rounded-xl text-lg font-bold" onClick={() => setQuantity(Math.max(1, quantity - 1))}>-</Button>
                   <Input 
@@ -337,20 +337,20 @@ export default function FranchiseProductsClient({
                   />
                   <Button type="button" variant="outline" className="h-12 w-12 rounded-xl text-lg font-bold" onClick={() => setQuantity(quantity + 1)}>+</Button>
                 </div>
-                <p className="text-[10px] font-medium text-slate-500 text-right">Available stock: {selectedProduct.stock}</p>
+                <p className="text-[10px] font-medium text-slate-500 dark:text-slate-400 text-right">Available stock: {selectedProduct.stock}</p>
               </div>
 
-              <div className="pt-4 border-t border-slate-100 flex justify-between items-end">
+              <div className="pt-4 border-t border-slate-100 dark:border-slate-800 flex justify-between items-end">
                 <div>
-                  <p className="text-xs font-bold text-slate-400 mb-1">Total Amount</p>
-                  <p className="text-3xl font-black text-slate-900 flex items-center">
+                  <p className="text-xs font-bold text-slate-400 dark:text-slate-500 mb-1">Total Amount</p>
+                  <p className="text-3xl font-black text-slate-900 dark:text-white flex items-center">
                     <IndianRupee className="h-6 w-6 mr-1" />
                     {(selectedProduct.price * quantity).toFixed(2)}
                   </p>
                 </div>
               </div>
 
-              <div className="bg-amber-50 border border-amber-200 text-amber-800 p-4 rounded-xl text-xs font-medium">
+              <div className="bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 text-amber-800 dark:text-amber-500 p-4 rounded-xl text-xs font-medium">
                 <strong>Note:</strong> Payment will be collected offline by the headquarters. Once the order is approved by HQ, stock will be secured for you.
               </div>
 

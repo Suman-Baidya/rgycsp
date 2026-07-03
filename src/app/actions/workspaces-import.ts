@@ -19,6 +19,12 @@ export async function importWorkspacesCSV(rows: any[]) {
         ownerEmail, 
         ownerPassword,
         contactPhone,
+        whatsapp,
+        contactEmail,
+        address,
+        state,
+        district,
+        pinCode,
         primaryColor,
         brandDescription
       } = row;
@@ -80,11 +86,17 @@ export async function importWorkspacesCSV(rows: any[]) {
           name,
           subdomain,
           isActive: true,
+          centerCode: codeToUse,
+          state: state || null,
+          district: district || null,
+          pinCode: pinCode || null,
           siteSettings: {
             create: {
               siteName: name,
-              contactEmail: ownerEmail,
+              contactEmail: contactEmail || ownerEmail,
               contactPhone: contactPhone || null,
+              whatsapp: whatsapp || null,
+              address: address || null,
               primaryColor: primaryColor || "#3b82f6",
               brandDescription: brandDescription || `Welcome to ${name}`,
             }

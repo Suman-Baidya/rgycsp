@@ -13,8 +13,15 @@ export async function createWorkspace(data: any) {
       ownerEmail, 
       ownerPassword,
       contactPhone,
+      contactEmail,
+      whatsapp,
+      address,
+      state,
+      district,
+      pinCode,
       primaryColor,
-      brandDescription
+      brandDescription,
+      centerCode
     } = data;
 
     // 1. Check if subdomain exists
@@ -38,8 +45,14 @@ export async function createWorkspace(data: any) {
           name: ownerName,
           email: ownerEmail,
           passwordHash,
+          username: centerCode,
           role: "USER",
         },
+      });
+    } else if (!user.username && centerCode) {
+      user = await db.user.update({
+        where: { id: user.id },
+        data: { username: centerCode }
       });
     }
 
@@ -49,11 +62,17 @@ export async function createWorkspace(data: any) {
         name,
         subdomain,
         isActive: true,
+        centerCode: centerCode || null,
+        state: state || null,
+        district: district || null,
+        pinCode: pinCode || null,
         siteSettings: {
           create: {
             siteName: name,
-            contactEmail: ownerEmail,
+            contactEmail: contactEmail || ownerEmail,
             contactPhone: contactPhone || null,
+            whatsapp: whatsapp || null,
+            address: address || null,
             primaryColor: primaryColor || "#3b82f6",
             brandDescription: brandDescription || `Welcome to ${name}`,
           }
@@ -134,8 +153,15 @@ export async function updateCenterConfig(workspaceId: string, data: any) {
       }
     }
 
-    // Check if new centerCode is taken by another user
+    // Check if new centerCode is taken by another workspace or user
     if (centerCode) {
+      const existingWorkspaceCode = await db.workspace.findFirst({
+        where: { centerCode, id: { not: workspaceId } }
+      });
+      if (existingWorkspaceCode) {
+        return { success: false, error: "Center Code is already in use by another franchise." };
+      }
+      
       const existingUserCode = await db.user.findFirst({
         where: {
           username: centerCode,
@@ -153,6 +179,7 @@ export async function updateCenterConfig(workspaceId: string, data: any) {
       data: {
         name,
         subdomain,
+        centerCode,
         logoUrl,
         signatureUrl,
         idProofUrl
@@ -209,3 +236,33 @@ export async function updateCenterConfig(workspaceId: string, data: any) {
     return { success: false, error: error.message || "Failed to update center configuration." };
   }
 }
+
+export async function toggleWorkspaceStatus(workspaceId: string, isActive: boolean) {
+  try {
+    await db.workspace.update({
+      where: { id: workspaceId },
+      data: { isActive }
+    });
+    revalidatePath("/(admin)/super-admin", "page");
+    revalidatePath("/(admin)/super-admin/franchises", "page");
+    return { success: true };
+  } catch (error: any) {
+    return { success: false, error: error.message || "Failed to update workspace status" };
+  }
+}
+
+export async function deleteWorkspace(workspaceId: string) {
+  try {
+    // Delete the workspace. Prisma cascading should handle related entities if configured,
+    // otherwise we might need to delete them manually. Let us just try deleting the workspace directly.
+    await db.workspace.delete({
+      where: { id: workspaceId }
+    });
+    revalidatePath("/(admin)/super-admin", "page");
+    revalidatePath("/(admin)/super-admin/franchises", "page");
+    return { success: true };
+  } catch (error: any) {
+    return { success: false, error: error.message || "Failed to delete workspace" };
+  }
+}
+

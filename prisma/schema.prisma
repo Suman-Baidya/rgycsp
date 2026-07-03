@@ -44,6 +44,7 @@ model Workspace {
   id           String  @id @default(cuid())
   name         String
   subdomain    String  @unique
+  centerCode   String? @unique
   logoUrl      String?
   signatureUrl String?
   idProofUrl   String?
@@ -211,6 +212,7 @@ model Course {
   batches       Batch[]
   admissionApps AdmissionApplication[]
   students      StudentProfile[]
+  registrations StudentRegistration[]
   exams         Exam[]
   chapters      Chapter[]
 
@@ -252,6 +254,7 @@ model StudentProfile {
 
   fullName      String
   enrollmentNo  String // System generated ID
+  loginPassword String? // Added for dashboard login
   dob           DateTime?
   gender        String?
   phone         String?
@@ -293,6 +296,7 @@ model StudentProfile {
   invoices    Invoice[]
   semesters   StudentSemester[]
   examEnrollments ExamEnrollment[]
+  registrations   StudentRegistration[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -874,4 +878,28 @@ model QuestionBank {
 
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+}
+
+// ============================================
+// Registration Number Config & Registration
+// ============================================
+
+model RegistrationConfig {
+  id                 String   @id @default(cuid())
+  enrollmentPrefix   String   @default("RGY")
+  registrationSeries String   @default("B")
+  updatedAt          DateTime @updatedAt
+}
+
+model StudentRegistration {
+  id               String @id @default(cuid())
+  studentProfileId String
+  courseId         String
+  registrationNo   String @unique
+  
+  student StudentProfile @relation(fields: [studentProfileId], references: [id], onDelete: Cascade)
+  course  Course         @relation(fields: [courseId], references: [id])
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

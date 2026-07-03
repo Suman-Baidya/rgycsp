@@ -243,7 +243,7 @@ export default function WalletManagementClient({
             <tab.icon className="w-4 h-4" />
             {tab.label}
             {tab.count !== undefined && tab.count > 0 && (
-              <span className="flex items-center justify-center min-w-[1.4rem] h-5 px-1.5 bg-primary text-white rounded-lg text-[10px] font-bold shadow-sm">
+              <span className="flex items-center justify-center min-w-[1.4rem] h-5 px-1.5 bg-primary text-white dark:text-slate-900 rounded-lg text-[10px] font-bold shadow-sm">
                 {tab.count}
               </span>
             )}

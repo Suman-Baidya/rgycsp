@@ -62,6 +62,7 @@ export default function StudentList({
   const [editFormData, setEditFormData] = useState({
     fullName: "",
     enrollmentNo: "",
+    loginPassword: "",
     phone: "",
     email: "",
     whatsapp: "",
@@ -212,6 +213,7 @@ export default function StudentList({
     setEditFormData({
       fullName: student.fullName,
       enrollmentNo: student.enrollmentNo,
+      loginPassword: student.loginPassword || "",
       phone: student.phone || "",
       email: student.email || "",
       whatsapp: student.whatsapp || "",
@@ -532,7 +534,10 @@ export default function StudentList({
                     <div className="flex justify-between items-start">
                       <div>
                         <h2 className="text-2xl font-bold text-slate-900 dark:text-white">{student.fullName}</h2>
-                        <p className="text-xs font-bold text-slate-400 tracking-wider mt-1">{student.enrollmentNo}</p>
+                        <div className="flex gap-4">
+                          <p className="text-xs font-bold text-slate-400 tracking-wider mt-1">ENR: {student.enrollmentNo}</p>
+                          <p className="text-xs font-bold text-amber-500 tracking-wider mt-1">PWD: {student.loginPassword || "Not Set"}</p>
+                        </div>
                       </div>
                       <Badge className="bg-primary/10 text-primary hover:bg-primary/20 border-none font-bold px-4 py-1 rounded-full text-[10px]">
                         Active Student
@@ -742,6 +747,13 @@ export default function StudentList({
                           <label className="text-xs font-bold text-slate-400">Enrollment No</label>
                           <Input required value={editFormData.enrollmentNo} onChange={e => setEditFormData({...editFormData, enrollmentNo: e.target.value})} className="h-11 rounded-xl" />
                         </div>
+                        <div className="space-y-1.5">
+                          <label className="text-xs font-bold text-slate-400">Login Password</label>
+                          <Input value={editFormData.loginPassword} onChange={e => setEditFormData({...editFormData, loginPassword: e.target.value})} className="h-11 rounded-xl" />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-1.5">
                           <label className="text-xs font-bold text-slate-400">Date of Birth</label>
                           <Input 

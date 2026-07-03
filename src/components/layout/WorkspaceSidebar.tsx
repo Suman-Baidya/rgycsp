@@ -137,7 +137,7 @@ export function WorkspaceSidebar({
                   <Building2 className="h-5 w-5 text-primary-foreground" />
                 </div>
                 <span className="font-bold text-white tracking-tight text-lg whitespace-nowrap capitalize max-w-[160px] truncate">
-                  {displayTenant} Admin
+                  Franchise Admin
                 </span>
               </motion.div>
             </AnimatePresence>

@@ -15,7 +15,8 @@ import {
   LogOut,
   User as UserIcon,
   Settings,
-  GraduationCap
+  GraduationCap,
+  Mail
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -328,27 +329,79 @@ export function WorkspaceNavbar({ settings, user, tenant: propTenant }: { settin
             initial={{ x: "100%" }}
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
-            className="fixed inset-0 z-[200] bg-zinc-950 flex flex-col p-8"
+            className="fixed inset-0 z-[200] bg-zinc-950 flex flex-col"
           >
-            <div className="flex items-start justify-between mb-8 gap-4">
-              <span className="font-black text-xl leading-tight tracking-tighter text-white uppercase break-words line-clamp-3">
-                {settings.siteName}
-              </span>
-              <Button variant="ghost" size="icon" onClick={() => setIsMobileMenuOpen(false)} className="text-white shrink-0 mt-[-4px] -mr-2">
-                <X className="h-8 w-8" />
-              </Button>
+            <div className="flex-1 overflow-y-auto p-6 custom-scrollbar">
+              <div className="flex items-start justify-between mb-6 gap-4">
+                <span className="font-black text-xl leading-tight tracking-tighter text-white uppercase break-words line-clamp-3">
+                  {settings.siteName}
+                </span>
+                <Button variant="ghost" size="icon" onClick={() => setIsMobileMenuOpen(false)} className="text-white shrink-0 mt-[-4px] -mr-2 hover:bg-white/10 rounded-full">
+                  <X className="h-6 w-6" />
+                </Button>
+              </div>
+              <div className="flex flex-col gap-4">
+                {visibleNavItems.map((item: any) => (
+                  <Link
+                    key={item.id}
+                    href={getLink(item.href)}
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="text-xl font-black text-zinc-400 hover:text-white transition-colors uppercase tracking-tighter py-2"
+                  >
+                    {item.name}
+                  </Link>
+                ))}
+              </div>
             </div>
-            <div className="flex flex-col gap-6">
-              {visibleNavItems.map((item: any) => (
-                <Link
-                  key={item.id}
-                  href={getLink(item.href)}
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="text-3xl font-black text-zinc-500 hover:text-primary transition-colors uppercase tracking-tighter"
-                >
-                  {item.name}
+            
+            {/* Sticky Bottom Actions & Footer */}
+            <div className="sticky bottom-0 bg-zinc-950 p-4 border-t border-white/10 flex flex-col gap-4 pb-safe shadow-[0_-10px_30px_rgba(0,0,0,0.5)]">
+              {user ? (
+                <Link href={dashboardHref} onClick={() => setIsMobileMenuOpen(false)}>
+                  <Button className="w-full h-12 rounded-xl bg-primary text-primary-foreground font-bold gap-3 shadow-xl shadow-primary/20">
+                    <LayoutDashboard className="h-4 w-4" />
+                    Go to Dashboard
+                  </Button>
                 </Link>
-              ))}
+              ) : (
+                <Link href={getLink(settings.navbarConfig?.ctaPrimary?.link || "/login")} onClick={() => setIsMobileMenuOpen(false)}>
+                  <Button className="w-full bg-primary text-primary-foreground h-12 text-lg rounded-xl font-bold shadow-xl shadow-primary/20">
+                    {settings.navbarConfig?.ctaPrimary?.text || "LOGIN"}
+                  </Button>
+                </Link>
+              )}
+              
+              {/* Minimal Icon Footer */}
+              <div className="flex items-center justify-between text-zinc-400 pt-2 border-t border-white/5">
+                <div className="flex items-center gap-4">
+                  {user && (
+                    <>
+                      <Link href="/profile" onClick={() => setIsMobileMenuOpen(false)} className="p-2.5 bg-zinc-900 rounded-full hover:text-white transition-colors">
+                        <UserIcon className="w-4 h-4" />
+                      </Link>
+                      <button onClick={async () => {
+                        const origin = typeof window !== 'undefined' ? `${window.location.protocol}//${window.location.host}` : '';
+                        const target = `${origin}${workspaceBase || '/'}`;
+                        await signOut({ redirect: false });
+                        window.location.href = target;
+                      }} className="p-2.5 bg-red-500/10 text-red-500 rounded-full hover:bg-red-500/20 transition-colors">
+                        <LogOut className="w-4 h-4" />
+                      </button>
+                    </>
+                  )}
+                  {!user && (
+                    <Link href={`tel:${settings.contactPhone || "8944899747"}`} className="p-2.5 bg-zinc-900 rounded-full hover:text-white transition-colors">
+                      <Phone className="w-4 h-4" />
+                    </Link>
+                  )}
+                  <Link href={`mailto:${settings?.contactEmail || "sb.abcd321@gmail.com"}`} className="p-2.5 bg-zinc-900 rounded-full hover:text-white transition-colors">
+                    <Mail className="w-4 h-4" />
+                  </Link>
+                </div>
+                <button onClick={() => setTheme(theme === "dark" ? "light" : "dark")} className="p-2.5 bg-zinc-900 rounded-full text-zinc-400 hover:text-white transition-colors">
+                  {theme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+                </button>
+              </div>
             </div>
           </motion.div>
         )}

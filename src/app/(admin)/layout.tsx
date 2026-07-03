@@ -20,7 +20,7 @@ export default async function AdminLayout({
       <AdminSidebar />
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         <header className="h-16 border-b border-border/40 bg-background/50 backdrop-blur-md flex items-center px-4 lg:px-8 sticky top-0 z-40">
-          <div className="lg:hidden ml-12 font-bold tracking-tighter text-xl text-foreground">ABCD Admin</div>
+          <div className="lg:hidden ml-12 font-bold tracking-tighter text-xl text-foreground">Super Admin</div>
           <div className="hidden lg:block">
             <Breadcrumbs />
           </div>

@@ -48,6 +48,16 @@ import {
   DialogTrigger
 } from "@/components/ui/dialog";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -59,7 +69,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AdminPageHeader } from "@/components/layout/AdminPageHeader";
 import { updateFranchiseApplicationStatus } from "@/app/actions/franchise";
-import { createWorkspace, updateCenterConfig } from "@/app/actions/workspaces";
+import { createWorkspace, updateCenterConfig, toggleWorkspaceStatus, deleteWorkspace } from "@/app/actions/workspaces";
 import { importWorkspacesCSV } from "@/app/actions/workspaces-import";
 import Papa from "papaparse";
 import { ImageUpload } from "@/components/ui/ImageUpload";
@@ -118,8 +128,15 @@ export default function FranchiseApplicationsClient({
     ownerEmail: "",
     ownerPassword: "",
     contactPhone: "",
+    whatsapp: "",
+    contactEmail: "",
+    address: "",
+    state: "",
+    district: "",
+    pinCode: "",
     primaryColor: "#3b82f6",
-    brandDescription: ""
+    brandDescription: "Welcome to our center",
+    centerCode: ""
   });
 
   const wsItemsPerPage = 8;
@@ -157,8 +174,15 @@ export default function FranchiseApplicationsClient({
     address: "",
     logoUrl: "",
     signatureUrl: "",
-    idProofUrl: ""
+    idProofUrl: "",
+    isActive: true
   });
+
+  const [deleteAlertOpen, setDeleteAlertOpen] = useState(false);
+  const [workspaceToDelete, setWorkspaceToDelete] = useState<string | null>(null);
+
+  const [suspendAlertOpen, setSuspendAlertOpen] = useState(false);
+  const [workspaceToSuspend, setWorkspaceToSuspend] = useState<{id: string, currentStatus: boolean} | null>(null);
 
   const handleOpenEditConfig = (ws: any) => {
     const adminUser = ws.roles?.[0]?.user;
@@ -166,14 +190,15 @@ export default function FranchiseApplicationsClient({
       workspaceId: ws.id,
       name: ws.name,
       subdomain: ws.subdomain,
-      centerCode: adminUser?.username || "",
+      centerCode: ws.centerCode || adminUser?.username || "",
       ownerName: adminUser?.name || "",
       ownerEmail: adminUser?.email || "",
       contactPhone: ws.siteSettings?.contactPhone || "",
       address: ws.siteSettings?.address || "",
       logoUrl: ws.logoUrl || "",
       signatureUrl: ws.signatureUrl || "",
-      idProofUrl: ws.idProofUrl || ""
+      idProofUrl: ws.idProofUrl || "",
+      isActive: ws.isActive !== false
     });
     setActiveConfigTab("general");
     setEditConfigOpen(true);
@@ -195,6 +220,55 @@ export default function FranchiseApplicationsClient({
       toast.error("Something went wrong updating center config.");
     } finally {
       setIsUpdatingConfig(false);
+    }
+  };
+
+  const confirmToggleWorkspaceStatus = (wsId: string, currentStatus: boolean) => {
+    setWorkspaceToSuspend({ id: wsId, currentStatus });
+    setSuspendAlertOpen(true);
+  };
+
+  const handleToggleWorkspaceStatus = async () => {
+    if (!workspaceToSuspend) return;
+    
+    const { id, currentStatus } = workspaceToSuspend;
+    const loadingToast = toast.loading(`Updating center status...`);
+    try {
+      const res = await toggleWorkspaceStatus(id, !currentStatus);
+      if (res.success) {
+        toast.success(`Center successfully ${currentStatus ? 'suspended' : 'activated'}.`, { id: loadingToast });
+        setSuspendAlertOpen(false);
+        setWorkspaceToSuspend(null);
+        router.refresh();
+      } else {
+        toast.error(res.error || "Failed to update status.", { id: loadingToast });
+      }
+    } catch (err) {
+      toast.error("Something went wrong.", { id: loadingToast });
+    }
+  };
+
+  const confirmDeleteWorkspace = (wsId: string) => {
+    setWorkspaceToDelete(wsId);
+    setDeleteAlertOpen(true);
+  };
+
+  const handleDeleteWorkspace = async () => {
+    if (!workspaceToDelete) return;
+    
+    const loadingToast = toast.loading("Deleting center...");
+    try {
+      const res = await deleteWorkspace(workspaceToDelete);
+      if (res.success) {
+        toast.success("Center permanently deleted.", { id: loadingToast });
+        setDeleteAlertOpen(false);
+        setWorkspaceToDelete(null);
+        router.refresh();
+      } else {
+        toast.error(res.error || "Failed to delete center.", { id: loadingToast });
+      }
+    } catch (err) {
+      toast.error("Something went wrong.", { id: loadingToast });
     }
   };
 
@@ -267,14 +341,8 @@ export default function FranchiseApplicationsClient({
       setWsOpen(false);
       router.refresh();
       setWorkspaceFormData({ 
-        name: "", 
-        subdomain: "", 
-        ownerName: "", 
-        ownerEmail: "", 
-        ownerPassword: "",
-        contactPhone: "",
-        primaryColor: "#3b82f6",
-        brandDescription: ""
+        name: "", subdomain: "", ownerName: "", ownerEmail: "", 
+        ownerPassword: "", contactPhone: "", whatsapp: "", contactEmail: "", address: "", state: "", district: "", pinCode: "", primaryColor: "#3b82f6", brandDescription: "", centerCode: "" 
       });
     } else {
       toast.error(result.error || "Failed to create center");
@@ -361,7 +429,7 @@ export default function FranchiseApplicationsClient({
 
   // CSV Import Handlers
   const handleDownloadTemplate = () => {
-    const csvContent = "centerCode,name,subdomain,ownerName,ownerEmail,ownerPassword,contactPhone,primaryColor,brandDescription\nWB-123,Example Institute,example,Admin User,admin@example.com,password123,9876543210,#3b82f6,Welcome to Example Institute";
+    const csvContent = "centerCode,name,subdomain,ownerName,ownerEmail,ownerPassword,contactPhone,whatsapp,contactEmail,address,state,district,pinCode,primaryColor,brandDescription\nWB-123,Example Institute,example,Admin User,admin@example.com,password123,9876543210,9876543210,support@example.com,123 Main St,West Bengal,Kolkata,700001,#3b82f6,Welcome to Example Institute";
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
@@ -754,6 +822,97 @@ export default function FranchiseApplicationsClient({
 
                   <div className="h-px bg-slate-100 dark:bg-slate-800 w-full" />
 
+                  {/* Location Details */}
+                  <div className="space-y-6">
+                    <div className="flex items-center gap-2 mb-4">
+                      <div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                      <h3 className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Location Details</h3>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label className="text-xs font-semibold text-slate-600 dark:text-slate-400 ml-1">Full Address</Label>
+                      <Input 
+                        placeholder="Complete street address..."
+                        className="h-12 rounded-xl bg-slate-50 dark:bg-slate-800 border-none font-medium focus-visible:ring-2 focus-visible:ring-primary/20 transition-all"
+                        value={workspaceFormData.address}
+                        onChange={(e) => setWorkspaceFormData({ ...workspaceFormData, address: e.target.value })}
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-6">
+                      <div className="space-y-2">
+                        <Label className="text-xs font-semibold text-slate-600 dark:text-slate-400 ml-1">State</Label>
+                        <Input 
+                          placeholder="e.g. West Bengal"
+                          className="h-12 rounded-xl bg-slate-50 dark:bg-slate-800 border-none font-medium focus-visible:ring-2 focus-visible:ring-primary/20 transition-all"
+                          value={workspaceFormData.state}
+                          onChange={(e) => setWorkspaceFormData({ ...workspaceFormData, state: e.target.value })}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-xs font-semibold text-slate-600 dark:text-slate-400 ml-1">District</Label>
+                        <Input 
+                          placeholder="e.g. North 24 Parganas"
+                          className="h-12 rounded-xl bg-slate-50 dark:bg-slate-800 border-none font-medium focus-visible:ring-2 focus-visible:ring-primary/20 transition-all"
+                          value={workspaceFormData.district}
+                          onChange={(e) => setWorkspaceFormData({ ...workspaceFormData, district: e.target.value })}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-xs font-semibold text-slate-600 dark:text-slate-400 ml-1">PIN Code</Label>
+                        <Input 
+                          placeholder="e.g. 700123"
+                          className="h-12 rounded-xl bg-slate-50 dark:bg-slate-800 border-none font-medium focus-visible:ring-2 focus-visible:ring-primary/20 transition-all"
+                          value={workspaceFormData.pinCode}
+                          onChange={(e) => setWorkspaceFormData({ ...workspaceFormData, pinCode: e.target.value })}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="h-px bg-slate-100 dark:bg-slate-800 w-full" />
+
+                  {/* Contact Information */}
+                  <div className="space-y-6">
+                    <div className="flex items-center gap-2 mb-4">
+                      <div className="h-1.5 w-1.5 rounded-full bg-blue-500" />
+                      <h3 className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Contact Information</h3>
+                    </div>
+                    
+                    <div className="grid grid-cols-3 gap-6">
+                      <div className="space-y-2">
+                        <Label className="text-xs font-semibold text-slate-600 dark:text-slate-400 ml-1">Phone Number</Label>
+                        <Input 
+                          placeholder="+91 XXXXX XXXXX"
+                          className="h-12 rounded-xl bg-slate-50 dark:bg-slate-800 border-none font-medium focus-visible:ring-2 focus-visible:ring-primary/20 transition-all"
+                          value={workspaceFormData.contactPhone}
+                          onChange={(e) => setWorkspaceFormData({ ...workspaceFormData, contactPhone: e.target.value })}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-xs font-semibold text-slate-600 dark:text-slate-400 ml-1">WhatsApp</Label>
+                        <Input 
+                          placeholder="+91 XXXXX XXXXX"
+                          className="h-12 rounded-xl bg-slate-50 dark:bg-slate-800 border-none font-medium focus-visible:ring-2 focus-visible:ring-primary/20 transition-all"
+                          value={workspaceFormData.whatsapp}
+                          onChange={(e) => setWorkspaceFormData({ ...workspaceFormData, whatsapp: e.target.value })}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-xs font-semibold text-slate-600 dark:text-slate-400 ml-1">Support Email</Label>
+                        <Input 
+                          type="email"
+                          placeholder="support@institute.edu"
+                          className="h-12 rounded-xl bg-slate-50 dark:bg-slate-800 border-none font-medium focus-visible:ring-2 focus-visible:ring-primary/20 transition-all"
+                          value={workspaceFormData.contactEmail}
+                          onChange={(e) => setWorkspaceFormData({ ...workspaceFormData, contactEmail: e.target.value })}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="h-px bg-slate-100 dark:bg-slate-800 w-full" />
+
                   {/* Master Admin */}
                   <div className="space-y-6">
                     <div className="flex items-center gap-2 mb-4">
@@ -761,7 +920,17 @@ export default function FranchiseApplicationsClient({
                       <h3 className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Master Administrator</h3>
                     </div>
                     
-                    <div className="grid grid-cols-2 gap-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+                      <div className="space-y-2">
+                        <Label className="text-xs font-semibold text-slate-600 dark:text-slate-400 ml-1">Center Code</Label>
+                        <Input 
+                          required
+                          placeholder="e.g. WB-001"
+                          className="h-12 rounded-xl bg-blue-50 dark:bg-blue-900/20 border-blue-100 dark:border-blue-800 font-bold uppercase text-blue-700 dark:text-blue-400 focus-visible:ring-2 focus-visible:ring-blue-500/20 transition-all"
+                          value={workspaceFormData.centerCode}
+                          onChange={(e) => setWorkspaceFormData({ ...workspaceFormData, centerCode: e.target.value })}
+                        />
+                      </div>
                       <div className="space-y-2">
                         <Label className="text-xs font-semibold text-slate-600 dark:text-slate-400 ml-1">Admin Name</Label>
                         <Input 
@@ -783,9 +952,6 @@ export default function FranchiseApplicationsClient({
                           onChange={(e) => setWorkspaceFormData({ ...workspaceFormData, ownerEmail: e.target.value })}
                         />
                       </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-6">
                       <div className="space-y-2">
                         <Label className="text-xs font-semibold text-slate-600 dark:text-slate-400 ml-1">Initial Password</Label>
                         <Input 
@@ -795,15 +961,6 @@ export default function FranchiseApplicationsClient({
                           className="h-12 rounded-xl bg-slate-50 dark:bg-slate-800 border-none font-medium focus-visible:ring-2 focus-visible:ring-primary/20 transition-all"
                           value={workspaceFormData.ownerPassword}
                           onChange={(e) => setWorkspaceFormData({ ...workspaceFormData, ownerPassword: e.target.value })}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label className="text-xs font-semibold text-slate-600 dark:text-slate-400 ml-1">Contact Phone</Label>
-                        <Input 
-                          placeholder="+91 XXXXX XXXXX"
-                          className="h-12 rounded-xl bg-slate-50 dark:bg-slate-800 border-none font-medium focus-visible:ring-2 focus-visible:ring-primary/20 transition-all"
-                          value={workspaceFormData.contactPhone}
-                          onChange={(e) => setWorkspaceFormData({ ...workspaceFormData, contactPhone: e.target.value })}
                         />
                       </div>
                     </div>
@@ -876,27 +1033,14 @@ export default function FranchiseApplicationsClient({
                 </div>
               </div>
               
-              <div className="flex border-b border-slate-100 dark:border-slate-800">
-                {(["general", "owner", "documents"] as const).map((tab) => (
-                  <button
-                    key={tab}
-                    type="button"
-                    onClick={() => setActiveConfigTab(tab)}
-                    className={cn(
-                      "flex-1 py-4 text-sm font-bold capitalize transition-colors border-b-2",
-                      activeConfigTab === tab
-                        ? "border-blue-500 text-blue-600 dark:text-blue-400 bg-blue-50/50 dark:bg-blue-500/5"
-                        : "border-transparent text-slate-500 hover:text-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/50"
-                    )}
-                  >
-                    {tab}
-                  </button>
-                ))}
-              </div>
-
-              <form onSubmit={handleUpdateConfig} className="p-8 space-y-6 max-h-[60vh] overflow-y-auto custom-scrollbar">
-                {activeConfigTab === "general" && (
-                  <div className="grid grid-cols-2 gap-6">
+              <form onSubmit={handleUpdateConfig} className="p-8 space-y-10 max-h-[70vh] overflow-y-auto custom-scrollbar">
+                {/* 1. General Info */}
+                <div className="space-y-6">
+                  <div className="flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-2">
+                    <Building2 className="h-5 w-5 text-blue-500" />
+                    <h3 className="text-lg font-bold text-slate-800 dark:text-slate-200">General Information</h3>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
                       <Label className="text-xs font-semibold text-slate-600 ml-1">Institute Name</Label>
                       <Input
@@ -928,7 +1072,7 @@ export default function FranchiseApplicationsClient({
                         className="h-12 rounded-xl bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 px-4"
                       />
                     </div>
-                    <div className="space-y-2 col-span-2">
+                    <div className="space-y-2 md:col-span-2">
                       <Label className="text-xs font-semibold text-slate-600 ml-1">Address</Label>
                       <Input
                         value={editConfigData.address}
@@ -937,11 +1081,16 @@ export default function FranchiseApplicationsClient({
                       />
                     </div>
                   </div>
-                )}
+                </div>
 
-                {activeConfigTab === "owner" && (
-                  <div className="grid grid-cols-2 gap-6">
-                    <div className="space-y-2 col-span-2">
+                {/* 2. Owner Details */}
+                <div className="space-y-6">
+                  <div className="flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-2">
+                    <User className="h-5 w-5 text-purple-500" />
+                    <h3 className="text-lg font-bold text-slate-800 dark:text-slate-200">Owner Details & Center Code</h3>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2 md:col-span-2">
                       <Label className="text-xs font-semibold text-slate-600 ml-1">Center Code / App No. (e.g., WB-001)</Label>
                       <Input
                         value={editConfigData.centerCode}
@@ -972,9 +1121,14 @@ export default function FranchiseApplicationsClient({
                       />
                     </div>
                   </div>
-                )}
+                </div>
 
-                {activeConfigTab === "documents" && (
+                {/* 3. Documents */}
+                <div className="space-y-6">
+                  <div className="flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-2">
+                    <FileText className="h-5 w-5 text-emerald-500" />
+                    <h3 className="text-lg font-bold text-slate-800 dark:text-slate-200">Documents</h3>
+                  </div>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <ImageUpload 
                       value={editConfigData.logoUrl} 
@@ -995,14 +1149,51 @@ export default function FranchiseApplicationsClient({
                       folder={`RGYCSP/Workspaces/${editConfigData.subdomain}`} 
                     />
                   </div>
-                )}
+                </div>
 
-                <div className="pt-6 mt-6 border-t border-slate-100 dark:border-slate-800 flex gap-3">
+                {/* 4. Danger Zone */}
+                <div className="space-y-6 pt-4">
+                  <div className="flex items-center gap-2 border-b border-red-100 dark:border-red-900/30 pb-2">
+                    <AlertCircle className="h-5 w-5 text-red-500" />
+                    <h3 className="text-lg font-bold text-red-600 dark:text-red-500">Danger Zone</h3>
+                  </div>
+                  <div className="flex flex-col sm:flex-row items-center gap-4 bg-red-50/50 dark:bg-red-500/5 p-4 rounded-2xl border border-red-100 dark:border-red-900/30">
+                    <Button 
+                      type="button"
+                      variant="outline"
+                      className={cn(
+                        "h-12 w-full sm:w-auto px-6 rounded-xl font-bold flex-1 border-2",
+                        editConfigData.isActive 
+                          ? "text-amber-600 border-amber-200 hover:bg-amber-100 dark:border-amber-900/50 dark:hover:bg-amber-900/20" 
+                          : "text-green-600 border-green-200 hover:bg-green-100 dark:border-green-900/50 dark:hover:bg-green-900/20"
+                      )}
+                      onClick={() => {
+                        confirmToggleWorkspaceStatus(editConfigData.workspaceId, editConfigData.isActive);
+                        setEditConfigOpen(false);
+                      }}
+                    >
+                      {editConfigData.isActive ? <><ShieldOff className="h-4 w-4 mr-2" /> Suspend Center</> : <><Shield className="h-4 w-4 mr-2" /> Activate Center</>}
+                    </Button>
+                    <Button 
+                      type="button"
+                      variant="destructive"
+                      className="h-12 w-full sm:w-auto px-6 rounded-xl font-bold bg-red-500 hover:bg-red-600 text-white flex-1"
+                      onClick={() => {
+                        confirmDeleteWorkspace(editConfigData.workspaceId);
+                        setEditConfigOpen(false);
+                      }}
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" /> Delete Center
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="pt-6 mt-6 border-t border-slate-100 dark:border-slate-800 flex gap-3 sticky bottom-0 bg-white dark:bg-slate-900 pb-2 z-10">
                   <Button 
                     type="button"
                     variant="ghost" 
                     onClick={() => setEditConfigOpen(false)}
-                    className="h-12 flex-1 rounded-xl font-bold"
+                    className="h-12 flex-1 rounded-xl font-bold bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700"
                   >
                     Cancel
                   </Button>
@@ -1170,7 +1361,7 @@ export default function FranchiseApplicationsClient({
 
                         <TableCell>
                           <Badge variant="outline" className="text-xs font-bold px-3 py-1 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
-                            {owner?.username || "N/A"}
+                            {ws.centerCode || owner?.username || "N/A"}
                           </Badge>
                         </TableCell>
 
@@ -1250,10 +1441,13 @@ export default function FranchiseApplicationsClient({
                                   <Settings className="h-4 w-4 text-slate-400" /> Center Config
                                 </DropdownMenuItem>
                                 <DropdownMenuSeparator className="my-2 bg-slate-50 dark:bg-slate-800" />
-                                <DropdownMenuItem className={cn(
-                                  "gap-3 rounded-xl py-3 font-bold cursor-pointer",
-                                  isActive ? "text-amber-600 bg-amber-500/5" : "text-green-600 bg-green-500/5"
-                                )}>
+                                <DropdownMenuItem 
+                                  className={cn(
+                                    "gap-3 rounded-xl py-3 font-bold cursor-pointer",
+                                    isActive ? "text-amber-600 bg-amber-500/5" : "text-green-600 bg-green-500/5"
+                                  )}
+                                  onClick={() => confirmToggleWorkspaceStatus(ws.id, isActive)}
+                                >
                                   {isActive ? (
                                     <><ShieldOff className="h-4 w-4" /> Suspend Instance</>
                                   ) : (
@@ -1261,7 +1455,10 @@ export default function FranchiseApplicationsClient({
                                   )}
                                 </DropdownMenuItem>
                                 <DropdownMenuSeparator className="my-2 bg-slate-50 dark:bg-slate-800" />
-                                <DropdownMenuItem className="gap-3 rounded-xl py-3 font-bold cursor-pointer text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10">
+                                <DropdownMenuItem 
+                                  className="gap-3 rounded-xl py-3 font-bold cursor-pointer text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10"
+                                  onClick={() => confirmDeleteWorkspace(ws.id)}
+                                >
                                   <Trash2 className="h-4 w-4" /> Terminate Data
                                 </DropdownMenuItem>
                               </DropdownMenuContent>
@@ -1708,6 +1905,102 @@ export default function FranchiseApplicationsClient({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Suspend Confirmation Alert */}
+      <AlertDialog open={suspendAlertOpen} onOpenChange={setSuspendAlertOpen}>
+        <AlertDialogContent className="rounded-3xl border-none shadow-2xl p-6 sm:max-w-md">
+          <div className="flex flex-col items-center justify-center text-center space-y-4">
+            <div className={cn(
+              "flex h-16 w-16 items-center justify-center rounded-full mb-2",
+              workspaceToSuspend?.currentStatus ? "bg-amber-100 dark:bg-amber-900/30" : "bg-green-100 dark:bg-green-900/30"
+            )}>
+              {workspaceToSuspend?.currentStatus ? (
+                <ShieldOff className="h-8 w-8 text-amber-600 dark:text-amber-500" />
+              ) : (
+                <Shield className="h-8 w-8 text-green-600 dark:text-green-500" />
+              )}
+            </div>
+            
+            <div className="space-y-2 w-full">
+              <h2 className="text-xl font-bold text-slate-900 dark:text-white">
+                {workspaceToSuspend?.currentStatus ? "Suspend this Center?" : "Re-Activate Center?"}
+              </h2>
+              <p className="text-slate-500 text-sm leading-relaxed px-4">
+                {workspaceToSuspend?.currentStatus 
+                  ? "Suspending will instantly revoke login access for this center's admin and students until re-activated."
+                  : "Activating will restore login access and all operations for this center."}
+              </p>
+            </div>
+
+            <div className="flex flex-row w-full gap-3 mt-6 pt-2">
+              <Button 
+                variant="outline" 
+                className="h-12 flex-1 rounded-xl font-bold border-slate-200"
+                onClick={() => {
+                  setSuspendAlertOpen(false);
+                  setWorkspaceToSuspend(null);
+                }}
+              >
+                Cancel
+              </Button>
+              <Button 
+                className={cn(
+                  "h-12 flex-[1.5] rounded-xl font-bold text-white",
+                  workspaceToSuspend?.currentStatus ? "bg-amber-500 hover:bg-amber-600" : "bg-green-500 hover:bg-green-600"
+                )}
+                onClick={(e) => {
+                  e.preventDefault();
+                  handleToggleWorkspaceStatus();
+                }}
+              >
+                {workspaceToSuspend?.currentStatus ? "Yes, Suspend" : "Yes, Activate"}
+              </Button>
+            </div>
+          </div>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Delete Confirmation Alert */}
+      <AlertDialog open={deleteAlertOpen} onOpenChange={setDeleteAlertOpen}>
+        <AlertDialogContent className="rounded-3xl border-none shadow-2xl p-6 sm:max-w-md">
+          <div className="flex flex-col items-center justify-center text-center space-y-4">
+            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/30 mb-2">
+              <Trash2 className="h-8 w-8 text-red-600 dark:text-red-500" />
+            </div>
+            
+            <div className="space-y-2 w-full">
+              <h2 className="text-xl font-bold text-slate-900 dark:text-white">
+                Terminate Center?
+              </h2>
+              <p className="text-slate-500 text-sm leading-relaxed px-4">
+                This action is irreversible. All data, admin accounts, and records associated with this franchise will be permanently deleted.
+              </p>
+            </div>
+
+            <div className="flex flex-row w-full gap-3 mt-6 pt-2">
+              <Button 
+                variant="outline" 
+                className="h-12 flex-1 rounded-xl font-bold border-slate-200"
+                onClick={() => {
+                  setDeleteAlertOpen(false);
+                  setWorkspaceToDelete(null);
+                }}
+              >
+                Cancel
+              </Button>
+              <Button 
+                className="h-12 flex-[1.5] rounded-xl font-bold bg-red-600 hover:bg-red-700 text-white"
+                onClick={(e) => {
+                  e.preventDefault();
+                  handleDeleteWorkspace();
+                }}
+              >
+                Confirm Delete
+              </Button>
+            </div>
+          </div>
+        </AlertDialogContent>
+      </AlertDialog>
 
     </div>
   );

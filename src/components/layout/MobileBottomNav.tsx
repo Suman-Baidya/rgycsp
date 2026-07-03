@@ -49,7 +49,7 @@ export function MobileBottomNav({ tenant }: { tenant: string }) {
             </div>
             <span className={cn(
               "text-[10px] font-bold tracking-tight transition-colors",
-              isActive ? "text-primary" : "text-slate-500"
+              isActive ? "text-primary" : "text-slate-500 dark:text-slate-400"
             )}>
               {item.name}
             </span>

@@ -59,14 +59,24 @@ export async function createStudent(workspaceId: string, data: any) {
       fullName, enrollmentNo, phone, email, whatsapp, 
       dob, gender, religion, caste, bloodGroup, address,
       parentName, parentPhone, fatherName, motherName, guardianPhone, batchId, courseId, qualification,
-      photoUrl, signatureUrl, idProofUrl 
+      photoUrl, signatureUrl, idProofUrl, loginPassword: providedPassword 
     } = data;
+
+    let loginPassword = providedPassword;
+    if (!loginPassword && dob) {
+      const dobDate = new Date(dob);
+      const dd = String(dobDate.getDate()).padStart(2, '0');
+      const mm = String(dobDate.getMonth() + 1).padStart(2, '0');
+      const yyyy = dobDate.getFullYear();
+      loginPassword = `${dd}${mm}${yyyy}`;
+    }
 
     const student = await db.studentProfile.create({
       data: {
         workspaceId,
         fullName,
         enrollmentNo,
+        loginPassword: loginPassword || null,
         phone,
         email,
         whatsapp,
@@ -104,35 +114,40 @@ export async function updateStudent(id: string, data: any) {
       fullName, enrollmentNo, phone, email, whatsapp, 
       dob, gender, religion, caste, bloodGroup, address,
       parentName, parentPhone, fatherName, motherName, guardianPhone, batchId, courseId, qualification,
-      photoUrl, signatureUrl, idProofUrl 
+      photoUrl, signatureUrl, idProofUrl, loginPassword
     } = data;
+
+    const updateData: any = {
+      fullName,
+      enrollmentNo,
+      phone,
+      email,
+      whatsapp,
+      dob: dob ? new Date(dob) : null,
+      gender,
+      religion,
+      caste,
+      bloodGroup,
+      address,
+      fatherName: fatherName || null,
+      motherName: motherName || null,
+      guardianPhone: guardianPhone || null,
+      parentName: parentName || null,
+      parentPhone: parentPhone || null,
+      batchId: batchId === "none" ? null : (batchId || null),
+      courseId: courseId === "none" ? null : (courseId || null),
+      qualification: qualification || null,
+      photoUrl: photoUrl || null,
+      signatureUrl: signatureUrl || null,
+      idProofUrl: idProofUrl || null,
+    };
+    if (loginPassword !== undefined) {
+      updateData.loginPassword = loginPassword || null;
+    }
 
     const student = await db.studentProfile.update({
       where: { id },
-      data: {
-        fullName,
-        enrollmentNo,
-        phone,
-        email,
-        whatsapp,
-        dob: dob ? new Date(dob) : null,
-        gender,
-        religion,
-        caste,
-        bloodGroup,
-        address,
-        fatherName: fatherName || null,
-        motherName: motherName || null,
-        guardianPhone: guardianPhone || null,
-        parentName: parentName || null,
-        parentPhone: parentPhone || null,
-        batchId: batchId === "none" ? null : (batchId || null),
-        courseId: courseId === "none" ? null : (courseId || null),
-        qualification: qualification || null,
-        photoUrl: photoUrl || null,
-        signatureUrl: signatureUrl || null,
-        idProofUrl: idProofUrl || null,
-      }
+      data: updateData
     });
 
     revalidatePath(`/app/[tenant]/admin/students`, "page");

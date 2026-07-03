@@ -100,11 +100,11 @@ export function StudentSidebar({
                 <Building2 className="h-6 w-6 text-primary-foreground" />
               </div>
               <div>
-                <span className="font-black text-white tracking-tighter text-xl whitespace-nowrap block leading-none">
-                  PORTAL
+                <span className="font-extrabold text-white tracking-tight text-xl whitespace-nowrap block leading-none">
+                  Dashboard
                 </span>
-                <span className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">
-                  Student
+                <span className="text-[10px] font-bold text-primary uppercase tracking-widest mt-1 block">
+                  Student Portal
                 </span>
               </div>
             </motion.div>

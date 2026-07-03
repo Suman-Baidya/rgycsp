@@ -421,3 +421,18 @@ export async function getWorkspaceWallet(workspaceId: string) {
     return { success: false, error: error.message };
   }
 }
+
+export async function getPendingWalletRequestsCount() {
+  try {
+    const count = await prisma.walletTransaction.count({
+      where: {
+        status: 'PENDING',
+        type: 'CREDIT',
+        isCommission: false // Ensure we only count actual recharge requests, not pending commissions
+      }
+    });
+    return { success: true, count };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+}

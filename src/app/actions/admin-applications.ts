@@ -65,11 +65,20 @@ export async function approveApplication(applicationId: string, batchId: string)
         data: { status: "APPROVED" }
       });
 
-      // 2. Generate Enrollment No (Simple fallback logic)
-      const count = await tx.studentProfile.count({
-        where: { workspaceId: application.workspaceId }
-      });
-      const enrollmentNo = `ENR-${new Date().getFullYear()}-${String(count + 1).padStart(4, '0')}`;
+      // 2. Generate Enrollment No and Password
+      const config = await tx.registrationConfig.findFirst();
+      const prefix = config ? config.enrollmentPrefix : "RGY";
+      const globalCount = await tx.studentProfile.count();
+      const enrollmentNo = `${prefix}${String(globalCount + 1).padStart(8, '0')}`;
+
+      let loginPassword = "";
+      if (application.dob) {
+        const dobDate = new Date(application.dob);
+        const dd = String(dobDate.getDate()).padStart(2, '0');
+        const mm = String(dobDate.getMonth() + 1).padStart(2, '0');
+        const yyyy = dobDate.getFullYear();
+        loginPassword = `${dd}${mm}${yyyy}`;
+      }
 
       // 3. Create StudentProfile
       const student = await tx.studentProfile.create({
@@ -80,6 +89,7 @@ export async function approveApplication(applicationId: string, batchId: string)
           applicationId: application.id,
           fullName: application.fullName,
           enrollmentNo: enrollmentNo,
+          loginPassword: loginPassword || null,
           dob: application.dob,
           gender: application.gender,
           phone: application.mobile,

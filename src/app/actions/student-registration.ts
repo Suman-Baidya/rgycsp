@@ -70,7 +70,29 @@ export async function registerStudent(studentId: string, tenant: string) {
         });
       }
 
-      // 2. Update student status to REGISTERED
+      // 2. Generate Registration No
+      const config = await tx.registrationConfig.findFirst();
+      const series = config ? config.registrationSeries : "B";
+      
+      const rawCode = workspace.centerCode || workspace.subdomain;
+      const centerCode = rawCode.toUpperCase().replace(/[^A-Z0-9]/g, '');
+      const year = new Date().getFullYear();
+      
+      const regCount = await tx.studentRegistration.count();
+      const seqNumber = String(regCount + 1).padStart(5, '0');
+      
+      const registrationNo = `${centerCode}Y${year}${series}${seqNumber}`;
+
+      // Create Registration
+      await tx.studentRegistration.create({
+        data: {
+          studentProfileId: student.id,
+          courseId: course.id,
+          registrationNo: registrationNo
+        }
+      });
+
+      // 3. Update student status to REGISTERED
       await tx.studentProfile.update({
         where: { id: studentId },
         data: { status: "REGISTERED" }

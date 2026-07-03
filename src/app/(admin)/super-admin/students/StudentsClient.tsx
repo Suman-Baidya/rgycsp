@@ -3,7 +3,7 @@
 import React, { useState, useMemo, useRef } from "react";
 import {
   Users, GraduationCap, Building2, Search,
-  Eye, Pencil, ChevronLeft, ChevronRight, CheckCircle, FileText, Calendar, Mail, Phone, MoreHorizontal, User, UserCheck, Trash2, ShieldCheck, Download, ExternalLink
+  Eye, Pencil, ChevronLeft, ChevronRight, CheckCircle, FileText, Calendar, Mail, Phone, MoreHorizontal, User, UserCheck, Trash2, ShieldCheck, Download, ExternalLink, Settings, Save
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,6 +16,7 @@ import { ImageUpload } from "@/components/ui/ImageUpload";
 import { updateStudent } from "@/app/actions/students";
 import { issueStudentDocument } from "@/app/actions/student-documents";
 import { registerStudent } from "@/app/actions/student-registration";
+import { updateRegistrationConfig } from "@/app/actions/registration-config";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
@@ -38,9 +39,10 @@ import { DocumentRenderer, DocumentRendererRef } from "@/components/documents/Do
 interface StudentsClientProps {
   initialStudents: any[];
   initialWorkspaces: any[];
+  initialConfig: any;
 }
 
-export default function StudentsClient({ initialStudents, initialWorkspaces }: StudentsClientProps) {
+export default function StudentsClient({ initialStudents, initialWorkspaces, initialConfig }: StudentsClientProps) {
   const router = useRouter();
 
   // Filters
@@ -60,6 +62,13 @@ export default function StudentsClient({ initialStudents, initialWorkspaces }: S
   const [viewOpen, setViewOpen] = useState(false);
   const [selectedStudentForView, setSelectedStudentForView] = useState<any>(null);
 
+  // Config State
+  const [configData, setConfigData] = useState({
+    enrollmentPrefix: initialConfig?.enrollmentPrefix || "RGY",
+    registrationSeries: initialConfig?.registrationSeries || "B",
+  });
+  const [isSavingConfig, setIsSavingConfig] = useState(false);
+
   // Docs Modal State
   const [docsModalOpen, setDocsModalOpen] = useState(false);
   const [selectedStudentForDocs, setSelectedStudentForDocs] = useState<any>(null);
@@ -69,6 +78,7 @@ export default function StudentsClient({ initialStudents, initialWorkspaces }: S
   const [editFormData, setEditFormData] = useState({
     fullName: "",
     enrollmentNo: "",
+    loginPassword: "",
     phone: "",
     email: "",
     whatsapp: "",
@@ -120,6 +130,7 @@ export default function StudentsClient({ initialStudents, initialWorkspaces }: S
     setEditFormData({
       fullName: student.fullName,
       enrollmentNo: student.enrollmentNo,
+      loginPassword: student.loginPassword || "",
       phone: student.phone || "",
       email: student.email || "",
       whatsapp: student.whatsapp || "",
@@ -285,7 +296,19 @@ export default function StudentsClient({ initialStudents, initialWorkspaces }: S
     { id: "UNREGISTERED", label: "Current Unregistered", icon: User },
     { id: "REGISTERED", label: "Active Registered", icon: UserCheck },
     { id: "PASS_OUT", label: "Pass Out Students", icon: GraduationCap },
+    { id: "CONFIG", label: "Registration Config", icon: Settings },
   ];
+
+  const handleSaveConfig = async () => {
+    setIsSavingConfig(true);
+    const res = await updateRegistrationConfig(configData);
+    setIsSavingConfig(false);
+    if (res.success) {
+      toast.success(res.message);
+    } else {
+      toast.error(res.error);
+    }
+  };
 
   const renderPagination = (currentPage: number, totalPages: number, setPage: (p: number) => void) => {
     if (totalPages <= 1) return null;
@@ -382,6 +405,79 @@ export default function StudentsClient({ initialStudents, initialWorkspaces }: S
       </div>
 
       <Card className="border-none shadow-xl shadow-slate-200/50 dark:shadow-none bg-white dark:bg-slate-900 rounded-[2.5rem] overflow-hidden transition-all duration-500">
+        {statusFilter === "CONFIG" ? (
+          <div className="p-8">
+            <h2 className="text-xl font-bold mb-6 text-slate-800 dark:text-slate-100 flex items-center gap-2">
+              <Settings className="w-5 h-5 text-primary" />
+              Registration Number Configuration
+            </h2>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 w-full">
+              <div className="space-y-6">
+                <div className="p-6 rounded-2xl bg-slate-50/50 dark:bg-slate-800/30 border border-slate-100 dark:border-slate-800">
+                  <label className="text-sm font-bold text-slate-700 dark:text-slate-300 block mb-1">Enrollment Number Prefix</label>
+                  <p className="text-xs text-slate-500 mb-4">Used as the prefix for all generated Enrollment Numbers (e.g., RGY12345678)</p>
+                  <Input 
+                    value={configData.enrollmentPrefix} 
+                    onChange={e => setConfigData(prev => ({ ...prev, enrollmentPrefix: e.target.value.toUpperCase() }))}
+                    className="h-14 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-sm text-lg font-bold font-mono tracking-wider"
+                    placeholder="e.g. RGY"
+                  />
+                </div>
+                <div className="p-6 rounded-2xl bg-slate-50/50 dark:bg-slate-800/30 border border-slate-100 dark:border-slate-800">
+                  <label className="text-sm font-bold text-slate-700 dark:text-slate-300 block mb-1">Registration Number Series</label>
+                  <p className="text-xs text-slate-500 mb-4">Used in the Franchise Registration Number (e.g., WB002Y2026<span className="font-bold text-primary">B</span>12345)</p>
+                  <Input 
+                    value={configData.registrationSeries} 
+                    onChange={e => setConfigData(prev => ({ ...prev, registrationSeries: e.target.value.toUpperCase() }))}
+                    className="h-14 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-sm text-lg font-bold font-mono tracking-wider"
+                    placeholder="e.g. B"
+                  />
+                </div>
+                <Button 
+                  onClick={handleSaveConfig} 
+                  disabled={isSavingConfig}
+                  className="w-full h-14 rounded-xl text-lg font-bold shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-all hover:-translate-y-0.5"
+                >
+                  {isSavingConfig ? "Saving Configuration..." : <><Save className="w-5 h-5 mr-2" /> Save Configuration</>}
+                </Button>
+              </div>
+              <div className="bg-gradient-to-br from-slate-50 to-white dark:from-slate-800/50 dark:to-slate-900/50 rounded-[2rem] p-8 lg:p-10 border border-slate-100 dark:border-slate-800 shadow-sm flex flex-col justify-center h-full">
+                <div className="flex items-center gap-3 mb-8 pb-6 border-b border-slate-200/50 dark:border-slate-700/50">
+                  <div className="p-3 bg-primary/10 rounded-xl text-primary">
+                    <Eye className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <h3 className="font-black text-xl text-slate-800 dark:text-slate-100">Live Preview</h3>
+                    <p className="text-sm text-slate-500">How the generated IDs will look</p>
+                  </div>
+                </div>
+                
+                <div className="space-y-8">
+                  <div className="group">
+                    <p className="text-xs uppercase font-black tracking-[0.2em] text-slate-400 mb-3 group-hover:text-primary transition-colors">Sample Enrollment No</p>
+                    <div className="bg-white dark:bg-slate-950 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-inner flex items-center justify-center">
+                      <span className="text-2xl sm:text-3xl font-black font-mono tracking-widest text-slate-800 dark:text-slate-200">
+                        <span className="text-indigo-600 dark:text-indigo-400">{configData.enrollmentPrefix || "PREFIX"}</span>
+                        <span>12345678</span>
+                      </span>
+                    </div>
+                  </div>
+                  <div className="group">
+                    <p className="text-xs uppercase font-black tracking-[0.2em] text-slate-400 mb-3 group-hover:text-primary transition-colors">Sample Registration No</p>
+                    <div className="bg-white dark:bg-slate-950 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-inner flex items-center justify-center text-center">
+                      <span className="text-2xl sm:text-3xl font-black font-mono tracking-widest text-slate-800 dark:text-slate-200 break-all">
+                        <span>WB002Y2026</span>
+                        <span className="text-primary">{configData.registrationSeries || "SERIES"}</span>
+                        <span>12345</span>
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <>
         <CardHeader className="p-6 md:p-8 border-b border-slate-50 dark:border-slate-800/50">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <div className="relative w-full md:max-w-[450px] group">
@@ -584,6 +680,8 @@ export default function StudentsClient({ initialStudents, initialWorkspaces }: S
           )}
           {renderPagination(currentPage, totalPages, setCurrentPage)}
         </CardContent>
+        </>
+        )}
       </Card>
 
       {/* View Student Dialog */}
@@ -615,7 +713,14 @@ export default function StudentsClient({ initialStudents, initialWorkspaces }: S
                       </Badge>
                     </div>
                     <div className="flex flex-wrap items-center gap-4 text-sm font-medium text-slate-500">
-                      <div className="flex items-center gap-1.5"><Badge variant="outline" className="text-xs font-bold font-mono text-primary border-primary/20 bg-primary/5">{selectedStudentForView.enrollmentNo}</Badge></div>
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-xs font-bold uppercase tracking-widest text-slate-400">ENR:</span>
+                        <Badge variant="outline" className="text-xs font-bold font-mono text-primary border-primary/20 bg-primary/5">{selectedStudentForView.enrollmentNo}</Badge>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-xs font-bold uppercase tracking-widest text-slate-400">PWD:</span>
+                        <Badge variant="outline" className="text-xs font-bold font-mono text-amber-600 border-amber-600/20 bg-amber-600/5">{selectedStudentForView.loginPassword || "Not Set"}</Badge>
+                      </div>
                       <div className="flex items-center gap-1.5"><Calendar className="h-4 w-4" /> Joined {new Date(selectedStudentForView.admissionDate).toLocaleDateString()}</div>
                       {selectedStudentForView.phone && <div className="flex items-center gap-1.5"><Phone className="h-4 w-4" /> {selectedStudentForView.phone}</div>}
                     </div>
@@ -856,6 +961,13 @@ export default function StudentsClient({ initialStudents, initialWorkspaces }: S
                           <label className="text-xs font-bold text-slate-400">Enrollment No</label>
                           <Input required value={editFormData.enrollmentNo} onChange={e => setEditFormData({ ...editFormData, enrollmentNo: e.target.value })} className="h-11 rounded-xl" />
                         </div>
+                        <div className="space-y-1.5">
+                          <label className="text-xs font-bold text-slate-400">Login Password</label>
+                          <Input value={editFormData.loginPassword} onChange={e => setEditFormData({ ...editFormData, loginPassword: e.target.value })} className="h-11 rounded-xl" />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-1.5">
                           <label className="text-xs font-bold text-slate-400">Date of Birth</label>
                           <Input

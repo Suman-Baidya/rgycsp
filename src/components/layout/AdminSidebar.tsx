@@ -31,6 +31,7 @@ import { signOut } from "next-auth/react";
 import { isActivePath, getTenantLink, detectTenant } from "@/lib/routing";
 import { getPendingFranchiseCount } from "@/app/actions/franchise";
 import { getPendingOrdersCount } from "@/app/actions/product-order";
+import { getPendingWalletRequestsCount } from "@/app/actions/wallet";
 
 const navItems = [
   { name: "Overview", href: "/", icon: LayoutDashboard },
@@ -53,6 +54,7 @@ export function AdminSidebar() {
   const pathname = usePathname();
   const [pendingApplications, setPendingApplications] = useState(0);
   const [pendingOrders, setPendingOrders] = useState(0);
+  const [pendingWalletRequests, setPendingWalletRequests] = useState(0);
 
   // Close mobile drawer on navigation
   useEffect(() => {
@@ -63,13 +65,17 @@ export function AdminSidebar() {
   useEffect(() => {
     const fetchPendingCount = async () => {
       try {
-        const [franchiseCount, ordersResult] = await Promise.all([
+        const [franchiseCount, ordersResult, walletResult] = await Promise.all([
           getPendingFranchiseCount(),
-          getPendingOrdersCount()
+          getPendingOrdersCount(),
+          getPendingWalletRequestsCount()
         ]);
         setPendingApplications(franchiseCount);
         if (ordersResult.success && ordersResult.count !== undefined) {
           setPendingOrders(ordersResult.count);
+        }
+        if (walletResult.success && walletResult.count !== undefined) {
+          setPendingWalletRequests(walletResult.count);
         }
       } catch (e) {
         console.error(e);
@@ -116,7 +122,7 @@ export function AdminSidebar() {
                 <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center shadow-[0_0_15px_rgba(var(--primary),0.5)] shrink-0">
                   <ShieldCheck className="h-5 w-5 text-primary-foreground" />
                 </div>
-                <span className="font-bold text-white tracking-tight text-lg whitespace-nowrap">ABCD Admin</span>
+                <span className="font-bold text-white tracking-tight text-lg whitespace-nowrap">Super Admin</span>
               </motion.div>
             </AnimatePresence>
           )}
@@ -140,9 +146,10 @@ export function AdminSidebar() {
             const tenant = "super-admin";
             const href = getTenantLink(item.href, tenant, pathname);
             const isActive = isActivePath(pathname, href);
+            const Icon = item.icon;
             
             return (
-              <Link key={item.name} href={href} className="block w-full">
+              <Link key={item.href} href={href} className="block w-full">
                 <div
                   className={cn(
                     "flex items-center gap-3 transition-all duration-300 group relative overflow-hidden",
@@ -152,7 +159,7 @@ export function AdminSidebar() {
                     isCollapsed ? "justify-center h-10 w-10 mx-auto rounded-xl" : "px-3 py-2.5 rounded-xl"
                   )}
                 >
-                  <item.icon className={cn("h-5 w-5 flex-shrink-0 transition-colors", isActive ? "text-primary-foreground" : "group-hover:text-white")} />
+                  <Icon className={cn("h-5 w-5 flex-shrink-0 transition-colors", isActive ? "text-primary-foreground" : "group-hover:text-white")} />
                   
                   {!isCollapsed && (
                     <motion.span
@@ -161,14 +168,19 @@ export function AdminSidebar() {
                       className="font-medium whitespace-nowrap flex-1 flex justify-between items-center pr-2"
                     >
                       <span>{item.name}</span>
-                      {item.name === "Franchises" && pendingApplications > 0 && (
+                      {item.href === "/franchises" && pendingApplications > 0 && (
                         <span className="h-5 min-w-5 px-1.5 bg-amber-500 text-white text-[10px] font-black rounded flex items-center justify-center animate-pulse shadow-[0_0_10px_rgba(245,158,11,0.5)]">
                           {pendingApplications}
                         </span>
                       )}
-                      {item.name === "Products" && pendingOrders > 0 && (
+                      {item.href === "/products" && pendingOrders > 0 && (
                         <span className="h-5 min-w-5 px-1.5 bg-red-500 text-white text-[10px] font-black rounded flex items-center justify-center animate-pulse shadow-[0_0_10px_rgba(239,68,68,0.5)]">
                           {pendingOrders}
+                        </span>
+                      )}
+                      {item.href === "/wallet" && pendingWalletRequests > 0 && (
+                        <span className="h-5 min-w-5 px-1.5 bg-emerald-500 text-white text-[10px] font-black rounded flex items-center justify-center animate-pulse shadow-[0_0_10px_rgba(16,185,129,0.5)]">
+                          {pendingWalletRequests}
                         </span>
                       )}
                     </motion.span>
@@ -181,26 +193,35 @@ export function AdminSidebar() {
                     />
                   )}
 
-                  {isCollapsed && item.name === "Franchises" && pendingApplications > 0 && (
+                  {isCollapsed && item.href === "/franchises" && pendingApplications > 0 && (
                     <div className="absolute top-2 right-2 w-2.5 h-2.5 bg-amber-500 rounded-full animate-pulse shadow-[0_0_10px_rgba(245,158,11,0.5)] border-2 border-zinc-950"></div>
                   )}
 
-                  {isCollapsed && item.name === "Products" && pendingOrders > 0 && (
+                  {isCollapsed && item.href === "/products" && pendingOrders > 0 && (
                     <div className="absolute top-2 right-2 w-2.5 h-2.5 bg-red-500 rounded-full animate-pulse shadow-[0_0_10px_rgba(239,68,68,0.5)] border-2 border-zinc-950"></div>
+                  )}
+
+                  {isCollapsed && item.href === "/wallet" && pendingWalletRequests > 0 && (
+                    <div className="absolute top-2 right-2 w-2.5 h-2.5 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_10px_rgba(16,185,129,0.5)] border-2 border-zinc-950"></div>
                   )}
 
                   {isCollapsed && (
                     <div className="absolute left-full ml-4 px-2 py-1 bg-zinc-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50 whitespace-nowrap border border-white/10 shadow-xl flex items-center gap-2">
                       {item.name}
-                      {item.name === "Franchises" && pendingApplications > 0 && (
-                        <span className="h-4 min-w-4 px-1 bg-amber-500 text-white text-[9px] font-black rounded flex items-center justify-center">
+                      {item.href === "/franchises" && pendingApplications > 0 && (
+                        <div className="ml-auto flex h-5 min-w-[20px] items-center justify-center rounded-full bg-amber-500 px-1 text-[10px] font-bold text-white">
                           {pendingApplications}
-                        </span>
+                        </div>
                       )}
-                      {item.name === "Products" && pendingOrders > 0 && (
-                        <span className="h-4 min-w-4 px-1 bg-red-500 text-white text-[9px] font-black rounded flex items-center justify-center">
+                      {item.href === "/products" && pendingOrders > 0 && (
+                        <div className="ml-auto flex h-5 min-w-[20px] items-center justify-center rounded-full bg-rose-500 px-1 text-[10px] font-bold text-white">
                           {pendingOrders}
-                        </span>
+                        </div>
+                      )}
+                      {item.href === "/wallet" && pendingWalletRequests > 0 && (
+                        <div className="ml-auto flex h-5 min-w-[20px] items-center justify-center rounded-full bg-emerald-500 px-1 text-[10px] font-bold text-white">
+                          {pendingWalletRequests}
+                        </div>
                       )}
                     </div>
                   )}

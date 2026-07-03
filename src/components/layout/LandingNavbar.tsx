@@ -381,83 +381,69 @@ export function LandingNavbar({ settings, user, isHome }: { settings?: any, user
         <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setIsOpen(false)}></div>
 
         {/* Menu Content */}
-        <div className={`absolute top-[72px] left-0 w-full bg-background border-t p-6 shadow-2xl transition-transform duration-300 transform ${isOpen ? 'translate-y-0' : '-translate-y-full'}`}>
-          <div className="flex flex-col gap-6 font-semibold text-lg text-foreground">
-            {config.showMenus !== false && navLinks.map((link: any) => {
-              const currentPath = pathname || "/";
-              const isActive = currentPath === link.href ||
-                (link.href !== "/" && currentPath.startsWith(link.href));
+        <div className={`absolute top-[72px] left-0 w-full bg-background dark:bg-zinc-950 border-t shadow-2xl transition-transform duration-300 transform h-[calc(100vh-72px)] flex flex-col ${isOpen ? 'translate-y-0' : '-translate-y-full'}`}>
+          <div className="flex-1 overflow-y-auto p-6 custom-scrollbar">
+            <div className="flex flex-col gap-4 font-semibold text-base text-foreground pb-4">
+              {config.showMenus !== false && navLinks.map((link: any) => {
+                const currentPath = pathname || "/";
+                const isActive = currentPath === link.href ||
+                  (link.href !== "/" && currentPath.startsWith(link.href));
 
-              return (
-                <Link
-                  key={link.id}
-                  href={link.href}
-                  onClick={() => setIsOpen(false)}
-                  className={`transition-colors py-2 ${isActive ? 'text-primary font-black' : 'text-foreground/70 hover:text-primary'}`}
-                >
-                  {link.name}
-                </Link>
-              );
-            })}
-
-            {/* Mobile Action Buttons */}
-            <div className="flex flex-col gap-3 border-t border-border pt-6 mt-2">
-              {user ? (
-                <div className="space-y-3">
-                  <div className="flex items-center gap-3 px-2 py-4 rounded-2xl bg-slate-50 dark:bg-zinc-900 mb-2">
-                    <Avatar className="h-12 w-12 ring-2 ring-primary/20">
-                      <AvatarImage src={user.image} />
-                      <AvatarFallback className="bg-primary text-primary-foreground font-bold">{user.name?.charAt(0)}</AvatarFallback>
-                    </Avatar>
-                    <div className="flex flex-col">
-                      <p className="text-base font-bold text-foreground leading-tight">{user.name}</p>
-                      <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">{user.role}</p>
-                    </div>
-                  </div>
-
-                  <Link href={dashboardHref} onClick={() => setIsOpen(false)}>
-                    <Button className="w-full h-14 rounded-2xl bg-primary text-primary-foreground font-bold gap-3 shadow-xl shadow-primary/20 dark:text-white">
-                      <LayoutDashboard className="h-5 w-5" />
-                      Go to Dashboard
-                    </Button>
+                return (
+                  <Link
+                    key={link.id}
+                    href={link.href}
+                    onClick={() => setIsOpen(false)}
+                    className={`transition-colors py-1.5 ${isActive ? 'text-primary font-black' : 'text-foreground/70 hover:text-primary'}`}
+                  >
+                    {link.name}
                   </Link>
-
-                  <div className="grid grid-cols-2 gap-3 pt-2">
-                    <Link href={user?.role === "SUPER_ADMIN" ? "/super-admin/profile" : "/profile"} onClick={() => setIsOpen(false)}>
-                      <Button variant="outline" className="w-full h-12 rounded-xl font-bold gap-2">
-                        <UserIcon className="h-4 w-4" />
-                        Profile
-                      </Button>
-                    </Link>
-                    <button onClick={() => signOut({ callbackUrl: "/" })} className="w-full h-12 rounded-xl bg-red-500/5 text-red-500 border border-red-500/20 font-bold flex items-center justify-center gap-2 transition-all active:scale-95">
-                      <LogOut className="h-4 w-4" />
-                      Logout
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <>
-                  <Link href={`tel:${contactPhone}`} onClick={() => setIsOpen(false)} className="w-full">
-                    <Button variant="outline" className="w-full h-14 text-lg border-2 border-primary/20 rounded-2xl font-bold gap-3 text-foreground">
-                      <Phone className="h-5 w-5 text-primary dark:text-white" />
-                      Call Support
-                    </Button>
-                  </Link>
-                  <Link href="/login" onClick={() => setIsOpen(false)} className="w-full">
-                    <Button className="w-full bg-primary text-primary-foreground h-14 text-lg rounded-2xl font-bold shadow-xl shadow-primary/20 dark:text-white">Login to Account</Button>
-                  </Link>
-                </>
-              )}
+                );
+              })}
             </div>
+          </div>
 
-            {/* Mobile Footer Tools */}
-            <div className="flex items-center justify-between border-t border-border pt-6 mt-2 text-muted-foreground">
-              <div className="flex items-center gap-6">
-                <Link href={`tel:${contactPhone}`}><Phone className="w-5 h-5 cursor-pointer hover:text-primary" /></Link>
-                <Link href={`mailto:${settings?.contactEmail || "sb.abcd321@gmail.com"}`}><Mail className="w-5 h-5 cursor-pointer hover:text-primary" /></Link>
+          {/* Sticky Mobile Action Buttons & Footer */}
+          <div className="sticky bottom-0 bg-background dark:bg-zinc-950 p-4 border-t border-border flex flex-col gap-4 pb-safe shadow-[0_-10px_30px_rgba(0,0,0,0.05)] dark:shadow-[0_-10px_30px_rgba(0,0,0,0.5)]">
+            {user ? (
+              <Link href={dashboardHref} onClick={() => setIsOpen(false)}>
+                <Button className="w-full h-12 rounded-xl bg-primary text-primary-foreground font-bold gap-3 shadow-xl shadow-primary/20 dark:text-white">
+                  <LayoutDashboard className="h-4 w-4" />
+                  Go to Dashboard
+                </Button>
+              </Link>
+            ) : (
+              <Link href="/login" onClick={() => setIsOpen(false)}>
+                <Button className="w-full bg-primary text-primary-foreground h-12 text-lg rounded-xl font-bold shadow-xl shadow-primary/20 dark:text-white">
+                  Login
+                </Button>
+              </Link>
+            )}
+            
+            {/* Minimal Icon Footer */}
+            <div className="flex items-center justify-between text-muted-foreground pt-2 border-t border-border/50">
+              <div className="flex items-center gap-4">
+                {user && (
+                  <>
+                    <Link href="/profile" onClick={() => setIsOpen(false)} className="p-2.5 bg-slate-100 dark:bg-zinc-900 rounded-full hover:text-primary transition-colors">
+                      <UserIcon className="w-4 h-4" />
+                    </Link>
+                    <button onClick={() => signOut({ callbackUrl: "/" })} className="p-2.5 bg-red-500/10 text-red-500 rounded-full hover:bg-red-500/20 transition-colors">
+                      <LogOut className="w-4 h-4" />
+                    </button>
+                  </>
+                )}
+                {!user && (
+                  <Link href={`tel:${contactPhone}`} className="p-2.5 bg-slate-100 dark:bg-zinc-900 rounded-full hover:text-primary transition-colors">
+                    <Phone className="w-4 h-4" />
+                  </Link>
+                )}
+                <Link href={`mailto:${settings?.contactEmail || "sb.abcd321@gmail.com"}`} className="p-2.5 bg-slate-100 dark:bg-zinc-900 rounded-full hover:text-primary transition-colors">
+                  <Mail className="w-4 h-4" />
+                </Link>
               </div>
-              <button suppressHydrationWarning onClick={toggleTheme} className="px-4 py-2 bg-zinc-100 dark:bg-zinc-800 rounded-full text-foreground flex items-center gap-2 text-sm font-bold shadow-sm">
-                {mounted ? (theme === "light" ? <><Moon className="w-4 h-4" /> Dark</> : <><Sun className="w-4 h-4" /> Light</>) : <div className="w-4 h-4" />}
+              <button suppressHydrationWarning onClick={toggleTheme} className="p-2.5 bg-slate-100 dark:bg-zinc-900 rounded-full text-foreground hover:text-primary transition-colors">
+                {mounted ? (theme === "light" ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />) : <div className="w-4 h-4" />}
               </button>
             </div>
           </div>
