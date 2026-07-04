@@ -1,6 +1,7 @@
 import { db } from "@/lib/prisma";
 import { getProducts } from "@/app/actions/product";
 import { getWorkspaceOrders } from "@/app/actions/product-order";
+import { getStoreConfig } from "@/app/actions/store-config";
 import { AdminPageHeader } from "@/components/layout/AdminPageHeader";
 import FranchiseProductsClient from "./FranchiseProductsClient";
 import { notFound } from "next/navigation";
@@ -19,9 +20,10 @@ export default async function FranchiseProductsPage({
 
   if (!workspace) notFound();
 
-  const [productsRes, ordersRes] = await Promise.all([
+  const [productsRes, ordersRes, configRes] = await Promise.all([
     getProducts(),
-    getWorkspaceOrders(workspace.id)
+    getWorkspaceOrders(workspace.id),
+    getStoreConfig()
   ]);
 
   return (
@@ -34,6 +36,7 @@ export default async function FranchiseProductsPage({
         workspaceId={workspace.id}
         initialProducts={productsRes.success ? (productsRes.data || []) : []} 
         initialOrders={ordersRes.success ? (ordersRes.data || []) : []} 
+        initialConfig={configRes.success ? (configRes.data || null) : null}
       />
     </div>
   );

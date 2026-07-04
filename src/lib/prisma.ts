@@ -43,4 +43,5 @@ if (process.env.NODE_ENV !== "production") globalThis.prisma = db;
 // Trigger Next.js recompile to load the updated Prisma Client (Product and ProductOrder added)
 // Last Updated: 2026-06-26T14:05:00Z
 
-// trigger reload for registration config
+// trigger reload for new schema models: ProductVariant, StoreConfig, ProductOrderItem
+// Last Updated: 2026-07-04T09:28:01+05:30

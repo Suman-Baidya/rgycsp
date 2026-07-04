@@ -7,6 +7,9 @@ import { revalidatePath } from "next/cache";
 export async function getProducts() {
   try {
     const products = await db.product.findMany({
+      include: {
+        variants: true
+      },
       orderBy: { createdAt: "desc" },
     });
     return { success: true, data: products };
@@ -20,6 +23,9 @@ export async function getProductById(id: string) {
   try {
     const product = await db.product.findUnique({
       where: { id },
+      include: {
+        variants: true
+      }
     });
     return { success: true, data: product };
   } catch (error: any) {
@@ -38,11 +44,17 @@ export async function createProduct(data: any) {
       data: {
         title: data.title,
         description: data.description,
-        price: parseFloat(data.price),
-        stock: parseInt(data.stock, 10),
         category: data.category,
         image: data.image,
         isActive: data.isActive ?? true,
+        variants: {
+          create: data.variants?.map((v: any) => ({
+            name: v.name,
+            price: parseFloat(v.price),
+            stock: parseInt(v.stock, 10),
+            isActive: v.isActive ?? true
+          })) || []
+        }
       },
     });
 
@@ -66,13 +78,28 @@ export async function updateProduct(id: string, data: any) {
       data: {
         title: data.title,
         description: data.description,
-        price: parseFloat(data.price),
-        stock: parseInt(data.stock, 10),
         category: data.category,
         image: data.image,
         isActive: data.isActive,
       },
     });
+
+    if (data.variants) {
+      // Simplest way: delete all existing variants and recreate
+      await db.productVariant.deleteMany({
+        where: { productId: id }
+      });
+
+      await db.productVariant.createMany({
+        data: data.variants.map((v: any) => ({
+          productId: id,
+          name: v.name,
+          price: parseFloat(v.price),
+          stock: parseInt(v.stock, 10),
+          isActive: v.isActive ?? true
+        }))
+      });
+    }
 
     revalidatePath("/super-admin/products");
     return { success: true, data: product };

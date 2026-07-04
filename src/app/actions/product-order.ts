@@ -9,7 +9,15 @@ export async function getWorkspaceOrders(workspaceId: string) {
     const orders = await db.productOrder.findMany({
       where: { workspaceId },
       include: {
-        product: true,
+        items: {
+          include: {
+            productVariant: {
+              include: {
+                product: true
+              }
+            }
+          }
+        }
       },
       orderBy: { createdAt: "desc" },
     });
@@ -29,7 +37,15 @@ export async function getAllOrders() {
 
     const orders = await db.productOrder.findMany({
       include: {
-        product: true,
+        items: {
+          include: {
+            productVariant: {
+              include: {
+                product: true
+              }
+            }
+          }
+        },
         workspace: {
           select: {
             name: true,
@@ -66,35 +82,52 @@ export async function getPendingOrdersCount() {
   }
 }
 
-export async function createOrder(workspaceId: string, productId: string, quantity: number) {
+export async function placeOrder(workspaceId: string, cartItems: { variantId: string, quantity: number }[], shippingCost: number) {
   try {
     const session = await auth();
     if (!session?.user) {
       return { success: false, error: "Unauthorized" };
     }
 
-    // Verify product exists and has enough stock (optional check, but good practice)
-    const product = await db.product.findUnique({
-      where: { id: productId },
+    if (!cartItems.length) {
+      return { success: false, error: "Cart is empty." };
+    }
+
+    // Fetch variant details to calculate total securely
+    const variantIds = cartItems.map(item => item.variantId);
+    const variants = await db.productVariant.findMany({
+      where: { id: { in: variantIds } },
+      include: { product: true }
     });
 
-    if (!product) {
-      return { success: false, error: "Product not found." };
+    if (variants.length !== cartItems.length) {
+      return { success: false, error: "Some products are no longer available." };
     }
-    
-    // We do NOT reduce stock here based on user requirement: "When approve".
 
-    const totalPrice = product.price * quantity;
+    let itemsTotal = 0;
+    const orderItemsData = cartItems.map(cartItem => {
+      const variant = variants.find(v => v.id === cartItem.variantId)!;
+      itemsTotal += variant.price * cartItem.quantity;
+      return {
+        productVariantId: variant.id,
+        quantity: cartItem.quantity,
+        priceAtTime: variant.price
+      };
+    });
+
+    const totalAmount = itemsTotal + shippingCost;
 
     // Create the order
     const order = await db.productOrder.create({
       data: {
         workspaceId,
-        productId,
-        quantity,
-        totalPrice,
+        totalAmount,
+        shippingCost,
         status: "PENDING",
         paymentStatus: "PENDING",
+        items: {
+          create: orderItemsData
+        }
       },
       include: {
         workspace: {
@@ -107,7 +140,7 @@ export async function createOrder(workspaceId: string, productId: string, quanti
     await db.notification.create({
       data: {
         title: "New Product Order",
-        message: `${order.workspace?.name} ordered ${quantity}x ${product.title}.`,
+        message: `${order.workspace?.name} placed a new order for ${cartItems.length} items.`,
         type: "INFO",
         link: "/super-admin/products?tab=orders"
       }
@@ -118,8 +151,8 @@ export async function createOrder(workspaceId: string, productId: string, quanti
     
     return { success: true, data: order };
   } catch (error: any) {
-    console.error("Failed to create order:", error);
-    return { success: false, error: "Failed to create order." };
+    console.error("Failed to place order:", error);
+    return { success: false, error: "Failed to place order." };
   }
 }
 
@@ -130,10 +163,9 @@ export async function updateOrderStatus(orderId: string, status: any, paymentSta
       return { success: false, error: "Unauthorized" };
     }
 
-    // Get current order state to check if we are transitioning to APPROVED
     const currentOrder = await db.productOrder.findUnique({
       where: { id: orderId },
-      include: { product: true }
+      include: { items: true }
     });
 
     if (!currentOrder) {
@@ -141,36 +173,29 @@ export async function updateOrderStatus(orderId: string, status: any, paymentSta
     }
 
     // If moving to APPROVED for the first time, reduce stock
-    let stockUpdate = {};
     if (status === "APPROVED" && currentOrder.status !== "APPROVED" && currentOrder.status !== "SHIPPED" && currentOrder.status !== "DELIVERED") {
-      if (currentOrder.product.stock < currentOrder.quantity) {
-         // Optionally block approval if stock is insufficient
-         // return { success: false, error: "Insufficient stock to approve this order" };
-      }
-      stockUpdate = {
-        product: {
-          update: {
+      // Loop through items and decrement stock
+      for (const item of currentOrder.items) {
+        await db.productVariant.update({
+          where: { id: item.productVariantId },
+          data: {
             stock: {
-              decrement: currentOrder.quantity
+              decrement: item.quantity
             }
           }
-        }
-      };
+        });
+      }
     }
 
     const order = await db.productOrder.update({
       where: { id: orderId },
       data: {
         status,
-        paymentStatus,
-        ...stockUpdate
+        paymentStatus
       },
     });
 
     revalidatePath("/super-admin/products");
-    
-    // Attempt to revalidate franchise dashboard too (we don't easily have tenant here, but we can try)
-    // Next.js might struggle with dynamic paths in revalidatePath without the actual path, so we'll rely on client-side fetching or soft-revalidations.
     
     return { success: true, data: order };
   } catch (error: any) {

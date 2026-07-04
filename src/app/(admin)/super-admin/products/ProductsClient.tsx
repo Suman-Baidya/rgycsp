@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Search, Plus, Package, Edit, Trash2, CheckCircle2, XCircle, Clock, ShoppingBag, Loader2, IndianRupee } from "lucide-react";
+import { Search, Plus, Package, Edit, Trash2, CheckCircle2, XCircle, Clock, ShoppingBag, Loader2, IndianRupee, Settings, Printer } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -20,19 +20,22 @@ import { useRouter } from "next/navigation";
 import { createProduct, updateProduct, deleteProduct } from "@/app/actions/product";
 import { createProductCategory, deleteProductCategory, updateProductCategory } from "@/app/actions/product-category";
 import { updateOrderStatus } from "@/app/actions/product-order";
+import { updateStoreConfig } from "@/app/actions/store-config";
 import { cn } from "@/lib/utils";
 
 import { ImageUpload } from "@/components/ui/ImageUpload";
 export default function ProductsClient({ 
   initialProducts, 
   initialOrders,
-  initialCategories
+  initialCategories,
+  initialConfig
 }: { 
   initialProducts: any[];
   initialOrders: any[];
   initialCategories: any[];
+  initialConfig: any;
 }) {
-  const [activeTab, setActiveTab] = useState<"catalog" | "categories" | "orders">("catalog");
+  const [activeTab, setActiveTab] = useState<"catalog" | "categories" | "orders" | "config">("catalog");
   const [searchTerm, setSearchTerm] = useState("");
   const [open, setOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
@@ -76,12 +79,26 @@ export default function ProductsClient({
   const [formData, setFormData] = useState({
     title: "",
     description: "",
-    price: "",
-    stock: "",
     category: initialCategories[0]?.name || "Uniforms",
     image: "",
-    isActive: true
+    isActive: true,
+    variants: [{ name: "Standard", price: "0", stock: "0" }]
   });
+
+  const [configForm, setConfigForm] = useState({ shippingCost: initialConfig?.shippingCost || 0 });
+
+  const handleConfigSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    const result = await updateStoreConfig(configForm.shippingCost);
+    setIsSubmitting(false);
+    if (result.success) {
+      toast.success("Store config updated!");
+      router.refresh();
+    } else {
+      toast.error(result.error);
+    }
+  };
 
   const filteredProducts = initialProducts.filter(p => p.title.toLowerCase().includes(searchTerm.toLowerCase()));
   const filteredOrders = initialOrders.filter(o => 
@@ -98,7 +115,7 @@ export default function ProductsClient({
     if (result.success) {
       toast.success("Product created successfully!");
       setOpen(false);
-      setFormData({ title: "", description: "", price: "", stock: "", category: initialCategories[0]?.name || "Uniforms", image: "", isActive: true });
+      setFormData({ title: "", description: "", category: initialCategories[0]?.name || "Uniforms", image: "", isActive: true, variants: [{ name: "Standard", price: "0", stock: "0" }] });
       router.refresh();
     } else {
       toast.error(result.error);
@@ -215,7 +232,95 @@ export default function ProductsClient({
   // Calculate Statistics
   const totalProducts = initialProducts.length;
   const activeOrders = initialOrders.filter(o => o.status === "PENDING" || o.status === "APPROVED").length;
-  const totalRevenue = initialOrders.filter(o => o.paymentStatus === "PAID").reduce((sum, o) => sum + o.totalPrice, 0);
+  const totalRevenue = initialOrders.filter(o => o.paymentStatus === "PAID").reduce((sum, o) => sum + (o.totalAmount || 0), 0);
+
+  const printInvoice = (order: any) => {
+    const invoiceWindow = window.open('', '_blank');
+    if (!invoiceWindow) return;
+
+    const html = `
+      <html>
+        <head>
+          <title>Invoice - ${order.id}</title>
+          <style>
+            body { font-family: 'Inter', sans-serif; padding: 40px; color: #1e293b; }
+            .header { text-align: center; margin-bottom: 40px; }
+            .header h1 { margin: 0; font-size: 24px; color: #0f172a; }
+            .header p { margin: 5px 0; color: #64748b; }
+            .details { margin-bottom: 40px; display: flex; justify-content: space-between; }
+            .details div { flex: 1; }
+            table { w-full; width: 100%; border-collapse: collapse; margin-bottom: 40px; }
+            th, td { padding: 12px; text-align: left; border-bottom: 1px solid #e2e8f0; }
+            th { font-weight: bold; color: #475569; background: #f8fafc; }
+            .totals { width: 300px; margin-left: auto; }
+            .totals .row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f1f5f9; }
+            .totals .row.bold { font-weight: bold; border-top: 2px solid #e2e8f0; border-bottom: none; font-size: 18px; }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <h1>TAX INVOICE</h1>
+            <p>Order ID: #${order.id.toUpperCase()}</p>
+            <p>Date: ${new Date(order.createdAt).toLocaleDateString()}</p>
+          </div>
+          <div class="details">
+            <div>
+              <strong>Billed To:</strong><br/>
+              ${order.workspace.name}<br/>
+              ${order.workspace.subdomain ? `Subdomain: ${order.workspace.subdomain}` : ''}
+            </div>
+            <div style="text-align: right;">
+              <strong>Status:</strong> ${order.status}<br/>
+              <strong>Payment:</strong> ${order.paymentStatus}
+            </div>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>Item</th>
+                <th>Quantity</th>
+                <th>Price</th>
+                <th>Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${order.items.map((item: any) => 
+                "<tr>" +
+                  "<td>" +
+                    item.productVariant.product.title + "<br/>" +
+                    "<small style='color: #64748b;'>Variant: " + item.productVariant.name + "</small>" +
+                  "</td>" +
+                  "<td>" + item.quantity + "</td>" +
+                  "<td>Rs. " + item.priceAtTime + "</td>" +
+                  "<td>Rs. " + (item.quantity * item.priceAtTime) + "</td>" +
+                "</tr>"
+              ).join('')}
+            </tbody>
+          </table>
+          <div class="totals">
+            <div class="row">
+              <span>Subtotal:</span>
+              <span>Rs. \${order.totalAmount - order.shippingCost}</span>
+            </div>
+            <div class="row">
+              <span>Shipping:</span>
+              <span>Rs. \${order.shippingCost}</span>
+            </div>
+            <div class="row bold">
+              <span>Total:</span>
+              <span>Rs. \${order.totalAmount}</span>
+            </div>
+          </div>
+          <script>
+            window.onload = () => { window.print(); }
+          </script>
+        </body>
+      </html>
+    `;
+
+    invoiceWindow.document.write(html);
+    invoiceWindow.document.close();
+  };
 
   return (
     <div className="space-y-6">
@@ -281,6 +386,19 @@ export default function ProductsClient({
               {initialOrders.filter(o => o.status === "PENDING").length}
             </span>
           )}
+        </button>
+
+        <button
+          onClick={() => setActiveTab("config")}
+          className={cn(
+            "flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 whitespace-nowrap shrink-0",
+            activeTab === "config"
+              ? "bg-slate-100 dark:bg-slate-800 text-primary shadow-inner"
+              : "text-slate-500 hover:text-slate-900 hover:bg-slate-50 dark:hover:text-white dark:hover:bg-slate-800/50"
+          )}
+        >
+          <Settings className="w-4 h-4" />
+          Store Config
         </button>
       </div>
 
@@ -422,14 +540,76 @@ export default function ProductsClient({
                       </SelectContent>
                     </Select>
                   </div>
-                  <div className="space-y-2">
-                    <Label className="text-xs font-bold text-slate-500">Stock Quantity</Label>
-                    <Input type="number" required value={formData.stock} onChange={e => setFormData({...formData, stock: e.target.value})} className="h-11 rounded-xl" />
-                  </div>
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-xs font-bold text-slate-500">Price (₹)</Label>
-                  <Input type="number" step="0.01" required value={formData.price} onChange={e => setFormData({...formData, price: e.target.value})} className="h-11 rounded-xl" />
+                  <div className="flex justify-between items-center">
+                    <Label className="text-xs font-bold text-slate-500">Product Variants (Sizes/Types)</Label>
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => setFormData({...formData, variants: [...formData.variants, { name: "", price: "0", stock: "0" }]})}
+                      className="h-8 rounded-lg text-xs"
+                    >
+                      <Plus className="h-3 w-3 mr-1" /> Add Variant
+                    </Button>
+                  </div>
+                  <div className="space-y-3">
+                    {formData.variants.map((variant, idx) => (
+                      <div key={idx} className="flex items-center gap-2 bg-slate-50 dark:bg-slate-900 p-2 rounded-xl border border-slate-100 dark:border-slate-800">
+                        <Input 
+                          placeholder="Name (e.g. S Size)" 
+                          required 
+                          value={variant.name} 
+                          onChange={e => {
+                            const newVariants = [...formData.variants];
+                            newVariants[idx].name = e.target.value;
+                            setFormData({...formData, variants: newVariants});
+                          }} 
+                          className="h-9 rounded-lg" 
+                        />
+                        <Input 
+                          type="number" 
+                          step="0.01" 
+                          placeholder="Price" 
+                          required 
+                          value={variant.price} 
+                          onChange={e => {
+                            const newVariants = [...formData.variants];
+                            newVariants[idx].price = e.target.value;
+                            setFormData({...formData, variants: newVariants});
+                          }} 
+                          className="h-9 rounded-lg w-24" 
+                        />
+                        <Input 
+                          type="number" 
+                          placeholder="Stock" 
+                          required 
+                          value={variant.stock} 
+                          onChange={e => {
+                            const newVariants = [...formData.variants];
+                            newVariants[idx].stock = e.target.value;
+                            setFormData({...formData, variants: newVariants});
+                          }} 
+                          className="h-9 rounded-lg w-20" 
+                        />
+                        {formData.variants.length > 1 && (
+                          <Button 
+                            type="button" 
+                            variant="ghost" 
+                            size="sm" 
+                            onClick={() => {
+                              const newVariants = formData.variants.filter((_, i) => i !== idx);
+                              setFormData({...formData, variants: newVariants});
+                            }}
+                            className="text-red-500 h-9 w-9 p-0 shrink-0 rounded-lg"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
                 </div>
                 <div className="space-y-2">
                   <Label className="text-xs font-bold text-slate-500">Description</Label>
@@ -464,12 +644,12 @@ export default function ProductsClient({
                   </div>
                   <div className="px-6 flex justify-between items-center mb-3">
                     <div className={cn("flex items-center gap-2 text-[10px] font-black px-3 py-1.5 rounded-xl border-2", 
-                      product.stock > 10 ? "bg-green-50 text-green-700 border-green-200 dark:bg-green-500/10 dark:border-green-500/20" : 
-                      product.stock > 0 ? "bg-orange-50 text-orange-700 border-orange-200 dark:bg-orange-500/10 dark:border-orange-500/20" : 
+                      (product.variants?.reduce((acc: number, v: any) => acc + v.stock, 0) || 0) > 10 ? "bg-green-50 text-green-700 border-green-200 dark:bg-green-500/10 dark:border-green-500/20" : 
+                      (product.variants?.reduce((acc: number, v: any) => acc + v.stock, 0) || 0) > 0 ? "bg-orange-50 text-orange-700 border-orange-200 dark:bg-orange-500/10 dark:border-orange-500/20" : 
                       "bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:border-red-500/20"
                     )}>
                       <Package className="h-3.5 w-3.5" />
-                      {product.stock > 0 ? `${product.stock} IN STOCK` : "OUT OF STOCK"}
+                      {(product.variants?.reduce((acc: number, v: any) => acc + v.stock, 0) || 0) > 0 ? `${product.variants?.reduce((acc: number, v: any) => acc + v.stock, 0)} IN STOCK` : "OUT OF STOCK"}
                     </div>
                   </div>
                   <h3 className="font-bold text-xl text-slate-900 dark:text-white mb-2 px-6 group-hover:text-primary transition-colors line-clamp-1">{product.title}</h3>
@@ -477,7 +657,7 @@ export default function ProductsClient({
                 </div>
                 <div className="flex items-center justify-between mt-auto px-6 pb-6 pt-4 border-t border-slate-100 dark:border-slate-800/50 bg-slate-50/30 dark:bg-slate-950/30">
                   <span className="font-black text-2xl flex items-center text-slate-900 dark:text-white">
-                    <IndianRupee className="h-6 w-6" /> {product.price}
+                    <IndianRupee className="h-6 w-6" /> {product.variants && product.variants.length > 0 ? product.variants[0].price : "0"}
                   </span>
                   <Button 
                     onClick={() => { setSelectedProduct({...product}); setEditOpen(true); }}
@@ -499,11 +679,11 @@ export default function ProductsClient({
 
       {activeTab === "orders" && (
         <div className="bg-slate-50/50 dark:bg-slate-950/50 rounded-[2.5rem] border-2 border-slate-100 dark:border-slate-800/50 p-8 shadow-inner">
-          <div className="bg-white border-2 border-slate-100 rounded-[2rem] overflow-hidden">
+          <div className="bg-white dark:bg-slate-900 border-2 border-slate-100 dark:border-slate-800/60 rounded-[2rem] overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse min-w-[800px]">
                 <thead>
-                  <tr className="bg-slate-50 text-slate-500 text-xs uppercase tracking-wider font-bold">
+                  <tr className="bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 text-xs uppercase tracking-wider font-bold">
                     <th className="p-5 pl-8 w-16">Sl.</th>
                     <th className="p-5">Order ID & Date</th>
                     <th className="p-5">Franchise Details</th>
@@ -513,34 +693,36 @@ export default function ProductsClient({
                     <th className="p-5 pr-8 text-right">Action</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100">
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
                   {filteredOrders.slice((currentPageOrders - 1) * itemsPerPage, currentPageOrders * itemsPerPage).map((order, index) => (
-                    <tr key={order.id} className="hover:bg-slate-50/50 transition-colors">
-                      <td className="p-5 pl-8 font-bold text-slate-500">
+                    <tr key={order.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors">
+                      <td className="p-5 pl-8 font-bold text-slate-500 dark:text-slate-400">
                         {(currentPageOrders - 1) * itemsPerPage + index + 1}
                       </td>
                       <td className="p-5">
-                        <div className="font-mono text-xs font-bold text-slate-700">#{order.id.slice(-6).toUpperCase()}</div>
-                        <div className="text-[10px] font-medium text-slate-400 mt-1">{new Date(order.createdAt).toLocaleDateString()}</div>
+                        <div className="font-mono text-xs font-bold text-slate-700 dark:text-slate-300">#{order.id.slice(-6).toUpperCase()}</div>
+                        <div className="text-[10px] font-medium text-slate-400 dark:text-slate-500 mt-1">{new Date(order.createdAt).toLocaleDateString()}</div>
                       </td>
-                      <td className="p-5 font-bold text-slate-800">
+                      <td className="p-5 font-bold text-slate-800 dark:text-slate-200">
                         {order.workspace.name}
                       </td>
                       <td className="p-5">
-                        <div className="font-bold text-slate-800">{order.product.title}</div>
-                        <div className="text-xs font-medium text-slate-500 mt-1">Quantity: {order.quantity}</div>
+                        <div className="font-bold text-slate-800 dark:text-slate-200">{order.items?.length || 0} Items</div>
+                        <div className="text-xs font-medium text-slate-500 dark:text-slate-400 mt-1">
+                          {order.items?.map((item: any) => `${item.productVariant?.product?.title} (${item.productVariant?.name}) x${item.quantity}`).join(', ')}
+                        </div>
                       </td>
-                      <td className="p-5 font-black text-slate-800 flex items-center mt-2.5">
-                        <IndianRupee className="h-3 w-3 mr-0.5" />{order.totalPrice}
+                      <td className="p-5 font-black text-slate-800 dark:text-slate-200 flex items-center mt-2.5">
+                        <IndianRupee className="h-3 w-3 mr-0.5" />{order.totalAmount}
                       </td>
                       <td className="p-5">
                         <Badge className={cn(
                           "font-bold text-[10px] uppercase rounded-md px-2 py-0.5 shadow-none",
-                          order.status === "PENDING" ? "bg-orange-100 text-orange-700 hover:bg-orange-200" :
-                          order.status === "APPROVED" ? "bg-blue-100 text-blue-700 hover:bg-blue-200" :
-                          order.status === "SHIPPED" ? "bg-purple-100 text-purple-700 hover:bg-purple-200" :
-                          order.status === "DELIVERED" ? "bg-green-100 text-green-700 hover:bg-green-200" :
-                          "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                          order.status === "PENDING" ? "bg-orange-100 text-orange-700 hover:bg-orange-200 dark:bg-orange-500/10 dark:text-orange-500 dark:hover:bg-orange-500/20" :
+                          order.status === "APPROVED" ? "bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-blue-500/10 dark:text-blue-500 dark:hover:bg-blue-500/20" :
+                          order.status === "SHIPPED" ? "bg-purple-100 text-purple-700 hover:bg-purple-200 dark:bg-purple-500/10 dark:text-purple-500 dark:hover:bg-purple-500/20" :
+                          order.status === "DELIVERED" ? "bg-green-100 text-green-700 hover:bg-green-200 dark:bg-green-500/10 dark:text-green-500 dark:hover:bg-green-500/20" :
+                          "bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
                         )}>
                           {order.status}
                         </Badge>
@@ -557,7 +739,7 @@ export default function ProductsClient({
                   ))}
                   {filteredOrders.length === 0 && (
                     <tr>
-                      <td colSpan={7} className="p-16 text-center text-slate-500 font-medium">No orders found.</td>
+                      <td colSpan={7} className="p-16 text-center text-slate-500 dark:text-slate-400 font-medium">No orders found.</td>
                     </tr>
                   )}
                 </tbody>
@@ -566,9 +748,9 @@ export default function ProductsClient({
 
             {/* Pagination Controls */}
             {filteredOrders.length > 0 && (
-              <div className="p-5 border-t border-slate-100 bg-slate-50 flex items-center justify-between">
-                <div className="text-sm font-medium text-slate-500">
-                  Showing <span className="font-bold text-slate-800">{(currentPageOrders - 1) * itemsPerPage + 1}</span> to <span className="font-bold text-slate-800">{Math.min(currentPageOrders * itemsPerPage, filteredOrders.length)}</span> of <span className="font-bold text-slate-800">{filteredOrders.length}</span> orders
+              <div className="p-5 border-t border-slate-100 dark:border-slate-800/60 bg-slate-50 dark:bg-slate-900 flex items-center justify-between">
+                <div className="text-sm font-medium text-slate-500 dark:text-slate-400">
+                  Showing <span className="font-bold text-slate-800 dark:text-slate-200">{(currentPageOrders - 1) * itemsPerPage + 1}</span> to <span className="font-bold text-slate-800 dark:text-slate-200">{Math.min(currentPageOrders * itemsPerPage, filteredOrders.length)}</span> of <span className="font-bold text-slate-800 dark:text-slate-200">{filteredOrders.length}</span> orders
                 </div>
                 <div className="flex gap-2">
                   <Button 
@@ -593,6 +775,29 @@ export default function ProductsClient({
               </div>
             )}
           </div>
+        </div>
+      )}
+
+      {activeTab === "config" && (
+        <div className="bg-slate-50/50 dark:bg-slate-950/50 rounded-[2.5rem] border-2 border-slate-100 dark:border-slate-800/50 p-8 shadow-inner max-w-2xl">
+          <h2 className="text-2xl font-bold mb-6">Store Configuration</h2>
+          <form onSubmit={handleConfigSubmit} className="bg-white dark:bg-slate-900 border border-slate-200 rounded-2xl p-6 shadow-sm space-y-6">
+            <div className="space-y-2">
+              <Label className="text-sm font-bold text-slate-700">Global Shipping Cost (₹)</Label>
+              <Input 
+                type="number" 
+                step="0.01" 
+                required 
+                value={configForm.shippingCost} 
+                onChange={e => setConfigForm({...configForm, shippingCost: parseFloat(e.target.value) || 0})} 
+                className="h-12 rounded-xl text-lg font-medium" 
+              />
+              <p className="text-xs text-slate-500">This shipping cost will be applied to all franchise product orders during checkout.</p>
+            </div>
+            <Button type="submit" disabled={isSubmitting} className="w-full h-12 rounded-xl font-bold text-base">
+              {isSubmitting ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : "Save Settings"}
+            </Button>
+          </form>
         </div>
       )}
 
@@ -651,15 +856,77 @@ export default function ProductsClient({
                     </SelectContent>
                   </Select>
                 </div>
+              </div>
                 <div className="space-y-2">
-                  <Label className="text-xs font-bold text-slate-500">Stock Quantity</Label>
-                  <Input type="number" required value={selectedProduct.stock} onChange={e => setSelectedProduct({...selectedProduct, stock: e.target.value})} className="h-11 rounded-xl" />
+                  <div className="flex justify-between items-center">
+                    <Label className="text-xs font-bold text-slate-500">Product Variants (Sizes/Types)</Label>
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => setSelectedProduct({...selectedProduct, variants: [...(selectedProduct.variants || []), { name: "", price: "0", stock: "0" }]})}
+                      className="h-8 rounded-lg text-xs"
+                    >
+                      <Plus className="h-3 w-3 mr-1" /> Add Variant
+                    </Button>
+                  </div>
+                  <div className="space-y-3">
+                    {selectedProduct.variants?.map((variant: any, idx: number) => (
+                      <div key={idx} className="flex items-center gap-2 bg-slate-50 dark:bg-slate-900 p-2 rounded-xl border border-slate-100 dark:border-slate-800">
+                        <Input 
+                          placeholder="Name (e.g. S Size)" 
+                          required 
+                          value={variant.name} 
+                          onChange={e => {
+                            const newVariants = [...selectedProduct.variants];
+                            newVariants[idx].name = e.target.value;
+                            setSelectedProduct({...selectedProduct, variants: newVariants});
+                          }} 
+                          className="h-9 rounded-lg" 
+                        />
+                        <Input 
+                          type="number" 
+                          step="0.01" 
+                          placeholder="Price" 
+                          required 
+                          value={variant.price} 
+                          onChange={e => {
+                            const newVariants = [...selectedProduct.variants];
+                            newVariants[idx].price = e.target.value;
+                            setSelectedProduct({...selectedProduct, variants: newVariants});
+                          }} 
+                          className="h-9 rounded-lg w-24" 
+                        />
+                        <Input 
+                          type="number" 
+                          placeholder="Stock" 
+                          required 
+                          value={variant.stock} 
+                          onChange={e => {
+                            const newVariants = [...selectedProduct.variants];
+                            newVariants[idx].stock = e.target.value;
+                            setSelectedProduct({...selectedProduct, variants: newVariants});
+                          }} 
+                          className="h-9 rounded-lg w-20" 
+                        />
+                        {selectedProduct.variants.length > 1 && (
+                          <Button 
+                            type="button" 
+                            variant="ghost" 
+                            size="sm" 
+                            onClick={() => {
+                              const newVariants = selectedProduct.variants.filter((_: any, i: number) => i !== idx);
+                              setSelectedProduct({...selectedProduct, variants: newVariants});
+                            }}
+                            className="text-red-500 h-9 w-9 p-0 shrink-0 rounded-lg"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              </div>
-              <div className="space-y-2">
-                <Label className="text-xs font-bold text-slate-500">Price (₹)</Label>
-                <Input type="number" step="0.01" required value={selectedProduct.price} onChange={e => setSelectedProduct({...selectedProduct, price: e.target.value})} className="h-11 rounded-xl" />
-              </div>
               <div className="space-y-2">
                 <Label className="text-xs font-bold text-slate-500">Description</Label>
                 <Textarea value={selectedProduct.description || ""} onChange={e => setSelectedProduct({...selectedProduct, description: e.target.value})} className="rounded-xl resize-none" rows={3} />
@@ -693,19 +960,28 @@ export default function ProductsClient({
               </div>
               
               <div className="p-4 bg-slate-50 rounded-2xl space-y-2 border border-slate-100">
-                <div className="flex justify-between">
-                  <span className="text-sm font-medium text-slate-500">Product</span>
-                  <span className="font-bold">{selectedOrder.product.title}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-sm font-medium text-slate-500">Quantity</span>
-                  <span className="font-bold">{selectedOrder.quantity} units</span>
-                </div>
+                {selectedOrder.items?.map((item: any, idx: number) => (
+                  <div key={idx} className="flex justify-between border-b border-slate-200 pb-2 mb-2 last:border-0 last:pb-0 last:mb-0">
+                    <div className="flex flex-col">
+                      <span className="font-bold">{item.productVariant?.product?.title}</span>
+                      <span className="text-xs text-slate-500">{item.productVariant?.name} (x{item.quantity})</span>
+                    </div>
+                    <span className="font-medium text-slate-700 flex items-center"><IndianRupee className="h-3 w-3" />{item.quantity * item.priceAtTime}</span>
+                  </div>
+                ))}
                 <div className="flex justify-between pt-2 border-t border-slate-200">
-                  <span className="text-sm font-medium text-slate-500">Total Amount</span>
-                  <span className="font-black flex items-center text-primary"><IndianRupee className="h-4 w-4" /> {selectedOrder.totalPrice}</span>
+                  <span className="text-sm font-medium text-slate-500">Shipping Cost</span>
+                  <span className="font-medium text-slate-700 flex items-center"><IndianRupee className="h-4 w-4" /> {selectedOrder.shippingCost}</span>
+                </div>
+                <div className="flex justify-between pt-2">
+                  <span className="text-sm font-bold text-slate-900">Total Amount</span>
+                  <span className="font-black flex items-center text-primary"><IndianRupee className="h-4 w-4" /> {selectedOrder.totalAmount}</span>
                 </div>
               </div>
+              
+              <Button onClick={() => printInvoice(selectedOrder)} variant="outline" className="w-full h-12 rounded-xl font-bold border-primary text-primary hover:bg-primary/5 gap-2">
+                <Printer className="h-4 w-4" /> Print Invoice Bill
+              </Button>
 
               <div className="space-y-4 pt-4 border-t border-slate-100">
                 <div className="space-y-2">
