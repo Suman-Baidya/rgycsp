@@ -27,73 +27,89 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { cn } from "@/lib/utils";
 import { AdminPageHeader } from "@/components/layout/AdminPageHeader";
 import { motion } from "framer-motion";
-
-const mockLogs = [
-  { 
-    id: "LOG-001", 
-    level: "INFO", 
-    module: "AUTH", 
-    message: "Super admin login successful from IP 192.168.1.1", 
-    timestamp: "2 mins ago",
-    user: "Suman Kumar"
-  },
-  { 
-    id: "LOG-002", 
-    level: "WARNING", 
-    module: "API", 
-    message: "Rate limit reached for workspace 'Zenith Academy'", 
-    timestamp: "15 mins ago",
-    user: "System"
-  },
-  { 
-    id: "LOG-003", 
-    level: "ERROR", 
-    module: "DATABASE", 
-    message: "Connection timeout on Mumbai edge node (ap-south-1)", 
-    timestamp: "45 mins ago",
-    user: "Prisma Runner"
-  },
-  { 
-    id: "LOG-004", 
-    level: "CRITICAL", 
-    module: "SECURITY", 
-    message: "Brute force attack detected on subdomain 'elite-coding'", 
-    timestamp: "1 hour ago",
-    user: "Firewall"
-  },
-  { 
-    id: "LOG-005", 
-    level: "INFO", 
-    module: "BILLING", 
-    message: "Subscription auto-renewal processed for 12 workspaces", 
-    timestamp: "2 hours ago",
-    user: "Stripe Webhook"
-  },
-  { 
-    id: "LOG-006", 
-    level: "INFO", 
-    module: "WORKSPACE", 
-    message: "New workspace 'Global Tech' initialized successfully", 
-    timestamp: "3 hours ago",
-    user: "System"
-  },
-];
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import { getLogs, clearLogs, getDeveloperEmail } from "@/app/actions/logs";
+import { toast } from "sonner";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 export default function LogsPage() {
   const [mounted, setMounted] = useState(false);
   const [filter, setFilter] = useState("ALL");
+  const [logs, setLogs] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
+
+  const { data: session } = useSession();
+  const router = useRouter();
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  if (!mounted) return null;
+  useEffect(() => {
+    const checkAuth = async () => {
+      const devEmail = await getDeveloperEmail();
+      if (!session?.user?.email) return;
+      
+      if (session.user.email !== devEmail || !devEmail) {
+        setIsAuthorized(false);
+        router.push("/super-admin");
+      } else {
+        setIsAuthorized(true);
+      }
+    };
+    if (session) {
+      checkAuth();
+    }
+  }, [session, router]);
+
+  const fetchLogs = async () => {
+    setIsLoading(true);
+    try {
+      const data = await getLogs(filter);
+      setLogs(data);
+    } catch (e) {
+      toast.error("Failed to fetch logs");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (isAuthorized) {
+      fetchLogs();
+    }
+  }, [filter, isAuthorized]);
+
+  const handleClearLogs = async (timeframe: 'WEEKLY' | 'MONTHLY' | 'ALL') => {
+    const confirmMessage = timeframe === 'ALL' 
+      ? "Are you sure you want to clear ALL logs? This cannot be undone." 
+      : `Are you sure you want to clear logs older than 1 ${timeframe === 'WEEKLY' ? 'week' : 'month'}?`;
+      
+    if (!confirm(confirmMessage)) return;
+
+    toast.loading("Clearing logs...", { id: "clear-logs" });
+    const result = await clearLogs(timeframe);
+    if (result.success) {
+      toast.success(`Successfully cleared ${result.count} logs`, { id: "clear-logs" });
+      fetchLogs();
+    } else {
+      toast.error("Failed to clear logs", { id: "clear-logs" });
+    }
+  };
+
+  if (!mounted || isAuthorized === null) return null;
+  
+  if (isAuthorized === false) {
+    return <div className="p-8 text-center text-red-500 font-bold">Unauthorized Access. You do not have developer privileges to view this page.</div>;
+  }
 
   const logMetrics = [
-    { title: "Total Events", value: "24,850", icon: Terminal, color: "text-slate-500", bg: "bg-slate-500/10" },
-    { title: "Security Alerts", value: "12", icon: ShieldAlert, color: "text-red-500", bg: "bg-red-500/10" },
-    { title: "System Uptime", value: "99.98%", icon: Activity, color: "text-green-500", bg: "bg-green-500/10" },
-    { title: "Avg. Latency", value: "124ms", icon: Zap, color: "text-amber-500", bg: "bg-amber-500/10" },
+    { title: "Total Events", value: logs.length.toString(), icon: Terminal, color: "text-slate-500", bg: "bg-slate-500/10" },
+    { title: "Security Alerts", value: logs.filter(l => l.level === 'CRITICAL' || l.level === 'ERROR').length.toString(), icon: ShieldAlert, color: "text-red-500", bg: "bg-red-500/10" },
+    { title: "System Warnings", value: logs.filter(l => l.level === 'WARNING').length.toString(), icon: AlertTriangle, color: "text-amber-500", bg: "bg-amber-500/10" },
+    { title: "Recent (24h)", value: logs.filter(l => new Date(l.createdAt).getTime() > Date.now() - 24 * 60 * 60 * 1000).length.toString(), icon: Activity, color: "text-blue-500", bg: "bg-blue-500/10" },
   ];
 
   return (
@@ -103,11 +119,7 @@ export default function LogsPage() {
         description="Centralized global audit trail and real-time system performance monitoring."
       >
         <div className="flex items-center gap-3">
-          <Button variant="outline" className="h-11 rounded-xl gap-2 font-bold border-2 border-slate-100 dark:border-slate-800">
-            <Download className="h-4 w-4" />
-            Export Audit
-          </Button>
-          <Button className="h-11 px-6 rounded-xl gap-2 shadow-lg shadow-primary/20 bg-primary font-bold text-primary-foreground hover:scale-[1.02] active:scale-95 transition-all">
+          <Button onClick={fetchLogs} className="h-11 px-6 rounded-xl gap-2 shadow-lg shadow-primary/20 bg-primary font-bold text-primary-foreground hover:scale-[1.02] active:scale-95 transition-all">
             <RefreshCcw className="h-4 w-4" />
             Live Stream
           </Button>
@@ -149,19 +161,28 @@ export default function LogsPage() {
             <div className="relative w-full max-w-[400px]">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
               <Input 
-                placeholder="Search by module, message or ID..." 
+                placeholder="Search logs..." 
                 className="pl-11 bg-slate-50 dark:bg-slate-800/50 border-2 border-slate-50 dark:border-slate-800 rounded-2xl h-11 font-medium" 
               />
             </div>
             <div className="flex items-center gap-3">
-              <Button variant="outline" className="h-11 rounded-xl gap-2 font-bold border-2 border-slate-100 dark:border-slate-800">
-                <Filter className="h-4 w-4" />
-                Severity
-              </Button>
-              <Button variant="outline" className="h-11 rounded-xl gap-2 font-bold border-2 border-red-50 text-red-600 hover:bg-red-50 hover:text-red-700 transition-all">
-                <Trash2 className="h-4 w-4" />
-                Clear Logs
-              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger className="inline-flex items-center justify-center whitespace-nowrap text-sm h-11 px-4 rounded-xl gap-2 font-bold border-2 border-red-50 text-red-600 bg-white hover:bg-red-50 hover:text-red-700 transition-all focus:outline-none">
+                  <Trash2 className="h-4 w-4" />
+                  Clear Logs
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56 font-medium rounded-xl p-2">
+                  <DropdownMenuItem onClick={() => handleClearLogs('WEEKLY')} className="cursor-pointer py-2 px-3 rounded-lg hover:bg-slate-100">
+                    Clear Older Than 1 Week
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleClearLogs('MONTHLY')} className="cursor-pointer py-2 px-3 rounded-lg hover:bg-slate-100">
+                    Clear Older Than 1 Month
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleClearLogs('ALL')} className="cursor-pointer py-2 px-3 rounded-lg text-red-600 hover:bg-red-50 hover:text-red-700 font-bold">
+                    Clear All Logs Now
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
         </CardHeader>
@@ -178,10 +199,17 @@ export default function LogsPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {mockLogs.map((log) => (
+              {logs.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center py-12 text-slate-500 font-medium">
+                    {isLoading ? "Loading logs..." : "No system logs found."}
+                  </TableCell>
+                </TableRow>
+              )}
+              {logs.map((log) => (
                 <TableRow key={log.id} className="group hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-all border-b border-slate-50 dark:border-slate-800 last:border-none">
                   <TableCell className="px-8 py-5">
-                    <span className="font-mono text-xs font-bold text-slate-500">{log.id}</span>
+                    <span className="font-mono text-xs font-bold text-slate-500">#{log.id.slice(-6).toUpperCase()}</span>
                   </TableCell>
                   <TableCell>
                     <Badge 
@@ -211,12 +239,12 @@ export default function LogsPage() {
                     </p>
                   </TableCell>
                   <TableCell>
-                    <span className="text-xs font-bold text-slate-500">{log.user}</span>
+                    <span className="text-xs font-bold text-slate-500">{log.user || 'System'}</span>
                   </TableCell>
                   <TableCell className="text-right px-8">
                     <div className="flex items-center justify-end gap-2 text-slate-400">
                       <Clock className="h-3 w-3" />
-                      <span className="text-[10px] font-bold">{log.timestamp}</span>
+                      <span className="text-[10px] font-bold">{new Date(log.createdAt).toLocaleString()}</span>
                     </div>
                   </TableCell>
                 </TableRow>
@@ -224,11 +252,6 @@ export default function LogsPage() {
             </TableBody>
           </Table>
         </CardContent>
-        <div className="p-6 border-t border-slate-50 dark:border-slate-800 bg-slate-50/30 dark:bg-slate-800/10">
-           <Button variant="ghost" className="w-full text-[10px] font-black uppercase tracking-[0.2em] py-6 rounded-2xl hover:bg-primary/5 hover:text-primary transition-all">
-              Load Previous 50 Audit Events
-           </Button>
-        </div>
       </Card>
     </div>
   );

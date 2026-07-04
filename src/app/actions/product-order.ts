@@ -82,7 +82,7 @@ export async function getPendingOrdersCount() {
   }
 }
 
-export async function placeOrder(workspaceId: string, cartItems: { variantId: string, quantity: number }[], shippingCost: number) {
+export async function placeOrder(workspaceId: string, cartItems: { variantId: string, quantity: number }[], shippingCost: number, shippingAddress?: string, paymentProof?: string) {
   try {
     const session = await auth();
     if (!session?.user) {
@@ -105,9 +105,16 @@ export async function placeOrder(workspaceId: string, cartItems: { variantId: st
     }
 
     let itemsTotal = 0;
+    for (const cartItem of cartItems) {
+      const variant = variants.find(v => v.id === cartItem.variantId)!;
+      if (variant.stock < cartItem.quantity) {
+        return { success: false, error: `Not enough stock for ${variant.product.title} - ${variant.name}. Available: ${variant.stock}` };
+      }
+      itemsTotal += variant.price * cartItem.quantity;
+    }
+
     const orderItemsData = cartItems.map(cartItem => {
       const variant = variants.find(v => v.id === cartItem.variantId)!;
-      itemsTotal += variant.price * cartItem.quantity;
       return {
         productVariantId: variant.id,
         quantity: cartItem.quantity,
@@ -117,24 +124,36 @@ export async function placeOrder(workspaceId: string, cartItems: { variantId: st
 
     const totalAmount = itemsTotal + shippingCost;
 
-    // Create the order
-    const order = await db.productOrder.create({
-      data: {
-        workspaceId,
-        totalAmount,
-        shippingCost,
-        status: "PENDING",
-        paymentStatus: "PENDING",
-        items: {
-          create: orderItemsData
+    // Create the order AND deduct stock in a transaction
+    const [order] = await db.$transaction([
+      db.productOrder.create({
+        data: {
+          workspaceId,
+          totalAmount,
+          shippingCost,
+          shippingAddress,
+          paymentProof,
+          status: "PENDING",
+          paymentStatus: "PENDING",
+          items: {
+            create: orderItemsData
+          }
+        },
+        include: {
+          workspace: {
+            select: { name: true }
+          }
         }
-      },
-      include: {
-        workspace: {
-          select: { name: true }
-        }
-      }
-    });
+      }),
+      ...cartItems.map(cartItem => 
+        db.productVariant.update({
+          where: { id: cartItem.variantId },
+          data: {
+            stock: { decrement: cartItem.quantity }
+          }
+        })
+      )
+    ]);
 
     // Notify Super Admin
     await db.notification.create({
@@ -170,21 +189,6 @@ export async function updateOrderStatus(orderId: string, status: any, paymentSta
 
     if (!currentOrder) {
       return { success: false, error: "Order not found" };
-    }
-
-    // If moving to APPROVED for the first time, reduce stock
-    if (status === "APPROVED" && currentOrder.status !== "APPROVED" && currentOrder.status !== "SHIPPED" && currentOrder.status !== "DELIVERED") {
-      // Loop through items and decrement stock
-      for (const item of currentOrder.items) {
-        await db.productVariant.update({
-          where: { id: item.productVariantId },
-          data: {
-            stock: {
-              decrement: item.quantity
-            }
-          }
-        });
-      }
     }
 
     const order = await db.productOrder.update({

@@ -266,3 +266,16 @@ export async function deleteWorkspace(workspaceId: string) {
   }
 }
 
+
+export async function updateWorkspaceShippingAddress(workspaceId: string, shippingAddress: string) {
+  try {
+    const updated = await db.workspace.update({
+      where: { id: workspaceId },
+      data: { shippingAddress }
+    });
+    return { success: true, data: updated };
+  } catch (error: any) {
+    console.error("Failed to update shipping address:", error);
+    return { success: false, error: "Failed to update shipping address" };
+  }
+}

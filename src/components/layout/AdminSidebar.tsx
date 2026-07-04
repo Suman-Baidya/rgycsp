@@ -27,11 +27,12 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { signOut } from "next-auth/react";
+import { signOut, useSession } from "next-auth/react";
 import { isActivePath, getTenantLink, detectTenant } from "@/lib/routing";
 import { getPendingFranchiseCount } from "@/app/actions/franchise";
 import { getPendingOrdersCount } from "@/app/actions/product-order";
 import { getPendingWalletRequestsCount } from "@/app/actions/wallet";
+import { getDeveloperEmail } from "@/app/actions/logs";
 
 const navItems = [
   { name: "Overview", href: "/", icon: LayoutDashboard },
@@ -56,10 +57,26 @@ export function AdminSidebar() {
   const [pendingOrders, setPendingOrders] = useState(0);
   const [pendingWalletRequests, setPendingWalletRequests] = useState(0);
 
+  const { data: session } = useSession();
+  const [developerEmail, setDeveloperEmail] = useState("");
+
   // Close mobile drawer on navigation
   useEffect(() => {
     setIsMoreOpen(false);
   }, [pathname]);
+
+  // Fetch developer email securely
+  useEffect(() => {
+    const fetchDevEmail = async () => {
+      try {
+        const email = await getDeveloperEmail();
+        setDeveloperEmail(email);
+      } catch (e) {
+        console.error(e);
+      }
+    };
+    fetchDevEmail();
+  }, []);
 
   // Fetch pending applications and orders count periodically
   useEffect(() => {
@@ -89,8 +106,14 @@ export function AdminSidebar() {
   const toggleSidebar = () => setIsCollapsed(!isCollapsed);
   const toggleMore = () => setIsMoreOpen(!isMoreOpen);
 
-  const mainNavItems = navItems.slice(0, 4);
-  const moreNavItems = navItems.slice(4);
+  const isDeveloper = !!(session?.user?.email && developerEmail && session.user.email === developerEmail);
+
+  const filteredNavItems = navItems.filter(item => 
+    item.name !== "System Logs" || isDeveloper
+  );
+
+  const mainNavItems = filteredNavItems.slice(0, 4);
+  const moreNavItems = filteredNavItems.slice(4);
 
   return (
     <>

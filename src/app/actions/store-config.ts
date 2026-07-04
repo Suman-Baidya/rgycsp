@@ -20,7 +20,7 @@ export async function getStoreConfig() {
   }
 }
 
-export async function updateStoreConfig(shippingCost: number) {
+export async function updateStoreConfig(shippingCost: number, paymentQrCode?: string, paymentDetails?: string) {
   try {
     const session = await auth();
     if (session?.user?.role !== "SUPER_ADMIN") {
@@ -31,12 +31,12 @@ export async function updateStoreConfig(shippingCost: number) {
     if (config) {
       const updated = await db.storeConfig.update({
         where: { id: config.id },
-        data: { shippingCost }
+        data: { shippingCost, paymentQrCode, paymentDetails }
       });
       return { success: true, data: updated };
     } else {
       const created = await db.storeConfig.create({
-        data: { shippingCost }
+        data: { shippingCost, paymentQrCode, paymentDetails }
       });
       return { success: true, data: created };
     }

@@ -85,20 +85,43 @@ export async function updateProduct(id: string, data: any) {
     });
 
     if (data.variants) {
-      // Simplest way: delete all existing variants and recreate
-      await db.productVariant.deleteMany({
-        where: { productId: id }
-      });
+      const existingVariants = await db.productVariant.findMany({ where: { productId: id } });
+      const incomingIds = data.variants.map((v: any) => v.id).filter(Boolean);
 
-      await db.productVariant.createMany({
-        data: data.variants.map((v: any) => ({
-          productId: id,
-          name: v.name,
-          price: parseFloat(v.price),
-          stock: parseInt(v.stock, 10),
-          isActive: v.isActive ?? true
-        }))
-      });
+      // Deactivate variants that were removed in the UI
+      for (const ev of existingVariants) {
+        if (!incomingIds.includes(ev.id)) {
+          await db.productVariant.update({
+            where: { id: ev.id },
+            data: { isActive: false }
+          });
+        }
+      }
+
+      // Upsert incoming variants
+      for (const v of data.variants) {
+        if (v.id) {
+          await db.productVariant.update({
+            where: { id: v.id },
+            data: {
+              name: v.name,
+              price: parseFloat(v.price),
+              stock: parseInt(v.stock, 10),
+              isActive: v.isActive ?? true
+            }
+          });
+        } else {
+          await db.productVariant.create({
+            data: {
+              productId: id,
+              name: v.name,
+              price: parseFloat(v.price),
+              stock: parseInt(v.stock, 10),
+              isActive: v.isActive ?? true
+            }
+          });
+        }
+      }
     }
 
     revalidatePath("/super-admin/products");

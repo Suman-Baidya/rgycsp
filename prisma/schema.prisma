@@ -97,6 +97,8 @@ model Workspace {
 
   // Documents
   registrationCertificateApproved Boolean @default(false)
+  
+  shippingAddress String? @db.Text
 }
 
 // ============================================
@@ -752,10 +754,13 @@ model ProductVariant {
 model ProductOrder {
   id           String   @id @default(cuid())
   workspaceId  String
-  totalAmount  Float
+  totalAmount  Float    @default(0)
   shippingCost Float    @default(0)
   status       OrderStatus @default(PENDING)
   paymentStatus PaymentStatus @default(PENDING) 
+  
+  shippingAddress String? @db.Text
+  paymentProof    String? // Image URL of the payment screenshot
   
   items        ProductOrderItem[]
   workspace    Workspace  @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
@@ -779,9 +784,11 @@ model ProductOrderItem {
 }
 
 model StoreConfig {
-  id           String   @id @default(cuid())
-  shippingCost Float    @default(0)
-  updatedAt    DateTime @updatedAt
+  id               String   @id @default(cuid())
+  shippingCost     Float    @default(0)
+  paymentQrCode    String?
+  paymentDetails   String?  @db.Text
+  updatedAt        DateTime @updatedAt
 }
 
 enum OrderStatus {
@@ -934,4 +941,17 @@ model StudentRegistration {
   
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+// ============================================
+// System Logs
+// ============================================
+
+model SystemLog {
+  id        String   @id @default(cuid())
+  level     String   // INFO, WARNING, ERROR, CRITICAL
+  module    String   // AUTH, API, DATABASE, SECURITY, WORKSPACE, etc.
+  message   String
+  user      String?  // Optional user identifier or email
+  createdAt DateTime @default(now())
 }

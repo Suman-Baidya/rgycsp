@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Search, Plus, Package, Edit, Trash2, CheckCircle2, XCircle, Clock, ShoppingBag, Loader2, IndianRupee, Settings, Printer } from "lucide-react";
+import { Search, Plus, Package, Edit, Trash2, CheckCircle2, XCircle, Clock, ShoppingBag, Loader2, IndianRupee, Settings, Printer, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -12,6 +12,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -85,12 +86,16 @@ export default function ProductsClient({
     variants: [{ name: "Standard", price: "0", stock: "0" }]
   });
 
-  const [configForm, setConfigForm] = useState({ shippingCost: initialConfig?.shippingCost || 0 });
+  const [configForm, setConfigForm] = useState({ 
+    shippingCost: initialConfig?.shippingCost || 0,
+    paymentQrCode: initialConfig?.paymentQrCode || "",
+    paymentDetails: initialConfig?.paymentDetails || ""
+  });
 
   const handleConfigSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-    const result = await updateStoreConfig(configForm.shippingCost);
+    const result = await updateStoreConfig(configForm.shippingCost, configForm.paymentQrCode, configForm.paymentDetails);
     setIsSubmitting(false);
     if (result.success) {
       toast.success("Store config updated!");
@@ -234,92 +239,194 @@ export default function ProductsClient({
   const activeOrders = initialOrders.filter(o => o.status === "PENDING" || o.status === "APPROVED").length;
   const totalRevenue = initialOrders.filter(o => o.paymentStatus === "PAID").reduce((sum, o) => sum + (o.totalAmount || 0), 0);
 
-  const printInvoice = (order: any) => {
-    const invoiceWindow = window.open('', '_blank');
-    if (!invoiceWindow) return;
+  const renderShippingAddress = (addrString: string) => {
+    if (!addrString) return "Not provided.";
+    try {
+      const parsed = JSON.parse(addrString);
+      if (parsed.pin) {
+        return (
+          <div className="text-sm font-medium text-slate-700 space-y-1 mt-2">
+            {parsed.phone && <div><span className="text-slate-400 font-bold text-[10px] uppercase tracking-wide">Phone:</span> {parsed.phone}</div>}
+            <div>{parsed.vill}</div>
+            {parsed.landmark && <div><span className="text-slate-400 font-bold text-[10px] uppercase tracking-wide">Landmark:</span> {parsed.landmark}</div>}
+            <div>PO: {parsed.po}</div>
+            <div>{parsed.district}, {parsed.state} - <span className="font-bold">{parsed.pin}</span></div>
+          </div>
+        );
+      }
+    } catch {}
+    // Fallback to plain string
+    return <span className="font-medium text-sm text-slate-700 whitespace-pre-wrap leading-tight block mt-1">{addrString}</span>;
+  };
+
+  const downloadPdf = async (htmlContent: string, filename: string) => {
+    toast.loading("Generating PDF...", { id: "pdf-gen" });
+    try {
+      const html2pdf = (await import('html2pdf.js')).default;
+      const opt = {
+        margin:       10,
+        filename:     filename,
+        image:        { type: 'jpeg', quality: 0.98 },
+        html2canvas:  { scale: 2, useCORS: true },
+        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+      };
+
+      await html2pdf().set(opt).from(htmlContent).save();
+      toast.success("Downloaded successfully!", { id: "pdf-gen" });
+    } catch (e) {
+      console.error(e);
+      toast.error("Failed to generate PDF.", { id: "pdf-gen" });
+    }
+  };
+
+  const printDeliveryLabel = (order: any) => {
+    let addressHtml = order.shippingAddress || "Not provided.";
+    let phoneHtml = "";
+    try {
+      const parsed = JSON.parse(order.shippingAddress);
+      if (parsed.pin) {
+        phoneHtml = parsed.phone ? `<div style="font-size: 16px; margin-bottom: 8px;"><strong>Phone:</strong> ${parsed.phone}</div>` : '';
+        addressHtml = `
+          <div style="font-size: 18px; line-height: 1.6;">
+            <div>${parsed.vill}</div>
+            ${parsed.landmark ? `<div><strong>Landmark:</strong> ${parsed.landmark}</div>` : ''}
+            <div><strong>PO:</strong> ${parsed.po}</div>
+            <div>${parsed.district}, ${parsed.state}</div>
+            <div style="font-size: 24px; font-weight: 800; margin-top: 8px;">PIN: ${parsed.pin}</div>
+          </div>
+        `;
+      }
+    } catch {}
 
     const html = `
-      <html>
-        <head>
-          <title>Invoice - ${order.id}</title>
-          <style>
-            body { font-family: 'Inter', sans-serif; padding: 40px; color: #1e293b; }
-            .header { text-align: center; margin-bottom: 40px; }
-            .header h1 { margin: 0; font-size: 24px; color: #0f172a; }
-            .header p { margin: 5px 0; color: #64748b; }
-            .details { margin-bottom: 40px; display: flex; justify-content: space-between; }
-            .details div { flex: 1; }
-            table { w-full; width: 100%; border-collapse: collapse; margin-bottom: 40px; }
-            th, td { padding: 12px; text-align: left; border-bottom: 1px solid #e2e8f0; }
-            th { font-weight: bold; color: #475569; background: #f8fafc; }
-            .totals { width: 300px; margin-left: auto; }
-            .totals .row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f1f5f9; }
-            .totals .row.bold { font-weight: bold; border-top: 2px solid #e2e8f0; border-bottom: none; font-size: 18px; }
-          </style>
-        </head>
-        <body>
+      <div style="padding: 40px; background: white; font-family: 'Arial', sans-serif; color: #000;">
+        <style>
+          .label-container { 
+            max-width: 500px; 
+            margin: 0 auto; 
+            border: 3px solid #000; 
+            border-radius: 12px; 
+            padding: 40px; 
+            box-sizing: border-box;
+          }
+          .title { font-size: 24px; font-weight: 900; text-align: center; text-transform: uppercase; border-bottom: 2px solid #000; padding-bottom: 16px; margin-bottom: 24px; letter-spacing: 2px; }
+          .section-title { font-size: 14px; font-weight: 700; text-transform: uppercase; color: #666; margin-bottom: 12px; }
+          .to-section { margin-bottom: 40px; }
+          .recipient-name { font-size: 28px; font-weight: 800; margin-bottom: 12px; }
+          .meta { margin-top: 40px; padding-top: 20px; border-top: 2px dashed #ccc; font-size: 14px; color: #555; display: flex; justify-content: space-between; }
+        </style>
+        <div class="label-container">
+          <div class="title">DELIVERY ADDRESS</div>
+          <div class="to-section">
+            <div class="section-title">TO</div>
+            <div class="recipient-name">${order.workspace.name}</div>
+            ${order.workspace.centerCode ? `<div style="font-size: 16px; margin-bottom: 8px; color: #444;"><strong>Center Code:</strong> ${order.workspace.centerCode}</div>` : ''}
+            ${phoneHtml}
+            ${addressHtml}
+          </div>
+          
+          <div class="meta">
+            <div>Order No: #${order.id.slice(-8).toUpperCase()}</div>
+            <div>Date: ${new Date().toLocaleDateString()}</div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    downloadPdf(html, `Delivery-Label-${order.id.slice(-8)}.pdf`);
+  };
+
+  const printInvoice = (order: any) => {
+    const html = `
+      <div style="padding: 40px; font-family: 'Inter', -apple-system, sans-serif; color: #1e293b; background: #fff;">
+        <style>
+          .invoice-container { max-width: 800px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 12px; padding: 40px; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); }
+          .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 40px; border-bottom: 2px solid #f1f5f9; padding-bottom: 20px; }
+          .header h1 { margin: 0 0 10px 0; font-size: 32px; color: #0f172a; font-weight: 900; letter-spacing: -1px; }
+          .header .meta { text-align: right; color: #64748b; font-size: 14px; }
+          .header .meta p { margin: 4px 0; }
+          .details { display: flex; justify-content: space-between; margin-bottom: 40px; background: #f8fafc; padding: 24px; border-radius: 8px; }
+          .details .bill-to h3 { margin: 0 0 8px 0; color: #475569; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; }
+          .details .bill-to p { margin: 4px 0; color: #0f172a; font-weight: 600; font-size: 16px; }
+          .details .status { text-align: right; }
+          .details .status p { margin: 4px 0; font-size: 14px; color: #64748b; }
+          .details .status span { font-weight: 700; color: #0f172a; }
+          table { width: 100%; border-collapse: collapse; margin-bottom: 40px; }
+          th { padding: 16px 12px; text-align: left; border-bottom: 2px solid #e2e8f0; color: #475569; font-size: 13px; text-transform: uppercase; letter-spacing: 1px; }
+          td { padding: 16px 12px; border-bottom: 1px solid #f1f5f9; color: #334155; vertical-align: middle; }
+          .item-title { font-weight: 700; color: #0f172a; display: block; margin-bottom: 4px; }
+          .item-variant { color: #64748b; font-size: 13px; background: #f1f5f9; padding: 2px 8px; border-radius: 4px; display: inline-block; }
+          .totals { width: 350px; margin-left: auto; background: #f8fafc; padding: 24px; border-radius: 8px; }
+          .totals .row { display: flex; justify-content: space-between; margin-bottom: 12px; color: #64748b; font-size: 15px; }
+          .totals .row:last-child { margin-bottom: 0; }
+          .totals .row.bold { font-weight: 800; font-size: 20px; color: #0f172a; border-top: 2px solid #e2e8f0; padding-top: 16px; margin-top: 16px; }
+        </style>
+        <div class="invoice-container">
           <div class="header">
-            <h1>TAX INVOICE</h1>
-            <p>Order ID: #${order.id.toUpperCase()}</p>
-            <p>Date: ${new Date(order.createdAt).toLocaleDateString()}</p>
-          </div>
-          <div class="details">
             <div>
-              <strong>Billed To:</strong><br/>
-              ${order.workspace.name}<br/>
-              ${order.workspace.subdomain ? `Subdomain: ${order.workspace.subdomain}` : ''}
+              <h1>INVOICE</h1>
+              <p style="color: #64748b; margin: 0;">Thank you for your order.</p>
             </div>
-            <div style="text-align: right;">
-              <strong>Status:</strong> ${order.status}<br/>
-              <strong>Payment:</strong> ${order.paymentStatus}
+            <div class="meta">
+              <p><strong>Invoice No:</strong> #${order.id.slice(-8).toUpperCase()}</p>
+              <p><strong>Date:</strong> ${new Date(order.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
             </div>
           </div>
+          
+          <div class="details">
+            <div class="bill-to">
+              <h3>Billed To</h3>
+              <p>${order.workspace.name}</p>
+              ${order.workspace.subdomain ? `<p style="font-size: 14px; font-weight: 400; color: #64748b;">Domain: ${order.workspace.subdomain}</p>` : ''}
+            </div>
+            <div class="status">
+              <p>Payment Status: <span>${order.paymentStatus}</span></p>
+            </div>
+          </div>
+
           <table>
             <thead>
               <tr>
-                <th>Item</th>
-                <th>Quantity</th>
-                <th>Price</th>
-                <th>Total</th>
+                <th>Item Details</th>
+                <th style="text-align: center;">Qty</th>
+                <th style="text-align: right;">Unit Price</th>
+                <th style="text-align: right;">Amount</th>
               </tr>
             </thead>
             <tbody>
-              ${order.items.map((item: any) => 
-                "<tr>" +
-                  "<td>" +
-                    item.productVariant.product.title + "<br/>" +
-                    "<small style='color: #64748b;'>Variant: " + item.productVariant.name + "</small>" +
-                  "</td>" +
-                  "<td>" + item.quantity + "</td>" +
-                  "<td>Rs. " + item.priceAtTime + "</td>" +
-                  "<td>Rs. " + (item.quantity * item.priceAtTime) + "</td>" +
-                "</tr>"
-              ).join('')}
+              ${order.items.map((item: any) => `
+                <tr>
+                  <td>
+                    <span class="item-title">${item.productVariant.product.title}</span>
+                    <span class="item-variant">Variant: ${item.productVariant.name}</span>
+                  </td>
+                  <td style="text-align: center; font-weight: 500;">${item.quantity}</td>
+                  <td style="text-align: right;">Rs. ${item.priceAtTime.toFixed(2)}</td>
+                  <td style="text-align: right; font-weight: 600;">Rs. ${(item.quantity * item.priceAtTime).toFixed(2)}</td>
+                </tr>
+              `).join('')}
             </tbody>
           </table>
+
           <div class="totals">
             <div class="row">
-              <span>Subtotal:</span>
-              <span>Rs. \${order.totalAmount - order.shippingCost}</span>
+              <span>Subtotal</span>
+              <span>Rs. ${(order.totalAmount - (order.shippingCost || 0)).toFixed(2)}</span>
             </div>
             <div class="row">
-              <span>Shipping:</span>
-              <span>Rs. \${order.shippingCost}</span>
+              <span>Shipping Cost</span>
+              <span>Rs. ${(order.shippingCost || 0).toFixed(2)}</span>
             </div>
             <div class="row bold">
-              <span>Total:</span>
-              <span>Rs. \${order.totalAmount}</span>
+              <span>Total Amount</span>
+              <span>Rs. ${order.totalAmount.toFixed(2)}</span>
             </div>
           </div>
-          <script>
-            window.onload = () => { window.print(); }
-          </script>
-        </body>
-      </html>
+        </div>
+      </div>
     `;
 
-    invoiceWindow.document.write(html);
-    invoiceWindow.document.close();
+    downloadPdf(html, `Invoice-${order.id.slice(-8)}.pdf`);
   };
 
   return (
@@ -554,8 +661,17 @@ export default function ProductsClient({
                       <Plus className="h-3 w-3 mr-1" /> Add Variant
                     </Button>
                   </div>
-                  <div className="space-y-3">
-                    {formData.variants.map((variant, idx) => (
+                  <div className="flex flex-col gap-1">
+                    {formData.variants.length > 0 && (
+                      <div className="flex items-center gap-2 px-2">
+                        <div className="flex-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Variant Name</div>
+                        <div className="w-24 text-[10px] font-bold text-slate-400 uppercase tracking-wider shrink-0">Price (₹)</div>
+                        <div className="w-20 text-[10px] font-bold text-slate-400 uppercase tracking-wider shrink-0">Stock</div>
+                        {formData.variants.length > 1 && <div className="w-9 shrink-0"></div>}
+                      </div>
+                    )}
+                    <div className="space-y-2">
+                      {formData.variants.map((variant, idx) => (
                       <div key={idx} className="flex items-center gap-2 bg-slate-50 dark:bg-slate-900 p-2 rounded-xl border border-slate-100 dark:border-slate-800">
                         <Input 
                           placeholder="Name (e.g. S Size)" 
@@ -566,7 +682,7 @@ export default function ProductsClient({
                             newVariants[idx].name = e.target.value;
                             setFormData({...formData, variants: newVariants});
                           }} 
-                          className="h-9 rounded-lg" 
+                          className="h-9 rounded-lg flex-1 min-w-0" 
                         />
                         <Input 
                           type="number" 
@@ -579,7 +695,7 @@ export default function ProductsClient({
                             newVariants[idx].price = e.target.value;
                             setFormData({...formData, variants: newVariants});
                           }} 
-                          className="h-9 rounded-lg w-24" 
+                          className="h-9 rounded-lg w-24 shrink-0" 
                         />
                         <Input 
                           type="number" 
@@ -591,7 +707,7 @@ export default function ProductsClient({
                             newVariants[idx].stock = e.target.value;
                             setFormData({...formData, variants: newVariants});
                           }} 
-                          className="h-9 rounded-lg w-20" 
+                          className="h-9 rounded-lg w-20 shrink-0" 
                         />
                         {formData.variants.length > 1 && (
                           <Button 
@@ -609,6 +725,7 @@ export default function ProductsClient({
                         )}
                       </div>
                     ))}
+                    </div>
                   </div>
                 </div>
                 <div className="space-y-2">
@@ -704,13 +821,37 @@ export default function ProductsClient({
                         <div className="text-[10px] font-medium text-slate-400 dark:text-slate-500 mt-1">{new Date(order.createdAt).toLocaleDateString()}</div>
                       </td>
                       <td className="p-5 font-bold text-slate-800 dark:text-slate-200">
-                        {order.workspace.name}
-                      </td>
-                      <td className="p-5">
-                        <div className="font-bold text-slate-800 dark:text-slate-200">{order.items?.length || 0} Items</div>
-                        <div className="text-xs font-medium text-slate-500 dark:text-slate-400 mt-1">
-                          {order.items?.map((item: any) => `${item.productVariant?.product?.title} (${item.productVariant?.name}) x${item.quantity}`).join(', ')}
+                        <div className="truncate max-w-[180px] cursor-help" title={order.workspace.name}>
+                          {order.workspace.name}
                         </div>
+                      </td>
+                      <td className="p-5 align-top">
+                        <div className="font-bold text-slate-800 dark:text-slate-200 mb-1">{order.items?.length || 0} Items</div>
+                        {order.items?.length <= 1 ? (
+                          <div className="text-xs font-medium text-slate-500 dark:text-slate-400 truncate max-w-[220px]" title={order.items?.[0] ? `${order.items[0].productVariant?.product?.title} (${order.items[0].productVariant?.name})` : ''}>
+                            {order.items?.[0] ? `${order.items[0].productVariant?.product?.title} (${order.items[0].productVariant?.name}) x${order.items[0].quantity}` : 'No items'}
+                          </div>
+                        ) : (
+                          <details className="group">
+                            <summary className="text-xs font-medium text-slate-500 dark:text-slate-400 cursor-pointer list-none flex items-center">
+                              <span className="truncate max-w-[180px] group-open:hidden">
+                                {order.items?.map((item: any) => `${item.productVariant?.product?.title} (${item.productVariant?.name}) x${item.quantity}`).join(', ')}
+                              </span>
+                              <span className="text-[9px] font-bold bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded text-slate-500 hover:text-primary transition-colors group-open:hidden ml-2 shrink-0">View All</span>
+                              <span className="text-[9px] font-bold text-primary hover:text-primary/80 transition-colors hidden group-open:inline mt-1">Hide List</span>
+                            </summary>
+                            <div className="text-xs font-medium text-slate-600 dark:text-slate-400 mt-2 space-y-1.5">
+                              {order.items?.map((item: any, idx: number) => (
+                                <div key={idx} className="flex justify-between items-center bg-slate-50 dark:bg-slate-800/50 p-1.5 rounded border border-slate-100 dark:border-slate-800">
+                                  <span className="truncate pr-2" title={`${item.productVariant?.product?.title} - ${item.productVariant?.name}`}>
+                                    {item.productVariant?.product?.title} <span className="text-slate-400">({item.productVariant?.name})</span>
+                                  </span>
+                                  <span className="font-bold text-slate-700 dark:text-slate-300 shrink-0 bg-white dark:bg-slate-900 px-1 rounded">x{item.quantity}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </details>
+                        )}
                       </td>
                       <td className="p-5 font-black text-slate-800 dark:text-slate-200 flex items-center mt-2.5">
                         <IndianRupee className="h-3 w-3 mr-0.5" />{order.totalAmount}
@@ -728,12 +869,27 @@ export default function ProductsClient({
                         </Badge>
                       </td>
                       <td className="p-5 pr-8 text-right">
-                        <Button 
-                          onClick={() => { setSelectedOrder(order); setOrderModalOpen(true); }}
-                          variant="outline" size="sm" className="rounded-xl h-8 text-[10px] font-bold"
-                        >
-                          Manage
-                        </Button>
+                        <div className="flex items-center justify-end gap-2">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger className="h-8 w-8 inline-flex items-center justify-center text-slate-500 hover:text-primary hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-800 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/20">
+                              <Download className="h-4 w-4" />
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-48 rounded-xl font-medium">
+                              <DropdownMenuItem onClick={() => printInvoice(order)} className="cursor-pointer gap-2 py-2.5">
+                                <Printer className="h-4 w-4" /> Download Invoice
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => printDeliveryLabel(order)} className="cursor-pointer gap-2 py-2.5">
+                                <Package className="h-4 w-4" /> Download Label
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                          <Button 
+                            onClick={() => { setSelectedOrder(order); setOrderModalOpen(true); }}
+                            variant="outline" size="sm" className="rounded-xl h-8 text-[10px] font-bold"
+                          >
+                            Manage
+                          </Button>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -782,17 +938,39 @@ export default function ProductsClient({
         <div className="bg-slate-50/50 dark:bg-slate-950/50 rounded-[2.5rem] border-2 border-slate-100 dark:border-slate-800/50 p-8 shadow-inner max-w-2xl">
           <h2 className="text-2xl font-bold mb-6">Store Configuration</h2>
           <form onSubmit={handleConfigSubmit} className="bg-white dark:bg-slate-900 border border-slate-200 rounded-2xl p-6 shadow-sm space-y-6">
-            <div className="space-y-2">
-              <Label className="text-sm font-bold text-slate-700">Global Shipping Cost (₹)</Label>
-              <Input 
-                type="number" 
-                step="0.01" 
-                required 
-                value={configForm.shippingCost} 
-                onChange={e => setConfigForm({...configForm, shippingCost: parseFloat(e.target.value) || 0})} 
-                className="h-12 rounded-xl text-lg font-medium" 
-              />
-              <p className="text-xs text-slate-500">This shipping cost will be applied to all franchise product orders during checkout.</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <Label className="text-sm font-bold text-slate-700">Global Shipping Cost (₹)</Label>
+                <Input 
+                  type="number" 
+                  step="0.01" 
+                  required 
+                  value={configForm.shippingCost} 
+                  onChange={e => setConfigForm({...configForm, shippingCost: parseFloat(e.target.value) || 0})} 
+                  className="h-12 rounded-xl text-lg font-medium" 
+                />
+                <p className="text-xs text-slate-500">Applied to all franchise orders.</p>
+              </div>
+              <div className="space-y-2">
+                <Label className="text-sm font-bold text-slate-700">Payment Details (Bank/UPI)</Label>
+                <Textarea 
+                  value={configForm.paymentDetails} 
+                  onChange={e => setConfigForm({...configForm, paymentDetails: e.target.value})} 
+                  className="rounded-xl min-h-[100px] resize-none" 
+                  placeholder="Enter bank account details, UPI ID, or other payment instructions for manual verification..."
+                />
+              </div>
+            </div>
+            <div className="space-y-2 pb-4">
+              <Label className="text-sm font-bold text-slate-700">Payment QR Code (Optional)</Label>
+              <div className="max-w-xs">
+                <ImageUpload
+                  value={configForm.paymentQrCode}
+                  onChange={(url) => setConfigForm({ ...configForm, paymentQrCode: url })}
+                  folder="RGYCSP/Store"
+                  label="Upload QR Code"
+                />
+              </div>
             </div>
             <Button type="submit" disabled={isSubmitting} className="w-full h-12 rounded-xl font-bold text-base">
               {isSubmitting ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : "Save Settings"}
@@ -870,8 +1048,17 @@ export default function ProductsClient({
                       <Plus className="h-3 w-3 mr-1" /> Add Variant
                     </Button>
                   </div>
-                  <div className="space-y-3">
-                    {selectedProduct.variants?.map((variant: any, idx: number) => (
+                  <div className="flex flex-col gap-1">
+                    {selectedProduct.variants?.length > 0 && (
+                      <div className="flex items-center gap-2 px-2">
+                        <div className="flex-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Variant Name</div>
+                        <div className="w-24 text-[10px] font-bold text-slate-400 uppercase tracking-wider shrink-0">Price (₹)</div>
+                        <div className="w-20 text-[10px] font-bold text-slate-400 uppercase tracking-wider shrink-0">Stock</div>
+                        {selectedProduct.variants.length > 1 && <div className="w-9 shrink-0"></div>}
+                      </div>
+                    )}
+                    <div className="space-y-2">
+                      {selectedProduct.variants?.map((variant: any, idx: number) => (
                       <div key={idx} className="flex items-center gap-2 bg-slate-50 dark:bg-slate-900 p-2 rounded-xl border border-slate-100 dark:border-slate-800">
                         <Input 
                           placeholder="Name (e.g. S Size)" 
@@ -882,7 +1069,7 @@ export default function ProductsClient({
                             newVariants[idx].name = e.target.value;
                             setSelectedProduct({...selectedProduct, variants: newVariants});
                           }} 
-                          className="h-9 rounded-lg" 
+                          className="h-9 rounded-lg flex-1 min-w-0" 
                         />
                         <Input 
                           type="number" 
@@ -895,7 +1082,7 @@ export default function ProductsClient({
                             newVariants[idx].price = e.target.value;
                             setSelectedProduct({...selectedProduct, variants: newVariants});
                           }} 
-                          className="h-9 rounded-lg w-24" 
+                          className="h-9 rounded-lg w-24 shrink-0" 
                         />
                         <Input 
                           type="number" 
@@ -907,7 +1094,7 @@ export default function ProductsClient({
                             newVariants[idx].stock = e.target.value;
                             setSelectedProduct({...selectedProduct, variants: newVariants});
                           }} 
-                          className="h-9 rounded-lg w-20" 
+                          className="h-9 rounded-lg w-20 shrink-0" 
                         />
                         {selectedProduct.variants.length > 1 && (
                           <Button 
@@ -925,6 +1112,7 @@ export default function ProductsClient({
                         )}
                       </div>
                     ))}
+                    </div>
                   </div>
                 </div>
               <div className="space-y-2">
@@ -946,77 +1134,193 @@ export default function ProductsClient({
 
 
 
+
       {/* Order Management Modal */}
       <Dialog open={orderModalOpen} onOpenChange={setOrderModalOpen}>
-        <DialogContent className="sm:max-w-xl rounded-[2.5rem] p-0 overflow-hidden">
-          <DialogHeader className="p-8 pb-4 border-b bg-slate-50">
-            <DialogTitle className="text-2xl font-bold">Manage Order</DialogTitle>
+        <DialogContent className="sm:max-w-5xl rounded-[2.5rem] p-0 overflow-hidden bg-slate-50/50 dark:bg-slate-950/50 border-2 border-slate-200/60 dark:border-slate-800 shadow-2xl">
+          <DialogHeader className="p-8 pb-6 border-b border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm z-10 relative">
+            <div className="flex justify-between items-center">
+              <div>
+                <DialogTitle className="text-3xl font-black text-slate-900 dark:text-white tracking-tight mb-1">Manage Order</DialogTitle>
+                <p className="text-sm font-bold text-slate-500">Review details and update fulfillment statuses.</p>
+              </div>
+              {selectedOrder && (
+                <div className="text-right bg-slate-50 dark:bg-slate-800/50 px-4 py-2 rounded-2xl border border-slate-100 dark:border-slate-800">
+                  <div className="font-mono text-sm font-black text-slate-900 dark:text-white tracking-wider">#{selectedOrder.id.slice(-8).toUpperCase()}</div>
+                  <div className="text-xs font-bold text-slate-400 mt-0.5">{new Date(selectedOrder.createdAt).toLocaleString()}</div>
+                </div>
+              )}
+            </div>
           </DialogHeader>
+          
           {selectedOrder && (
-            <div className="p-8 pt-6 space-y-6">
-              <div className="space-y-1">
-                <Label className="text-[10px] uppercase font-bold text-slate-400">Franchise</Label>
-                <p className="font-bold text-lg">{selectedOrder.workspace.name}</p>
-              </div>
+            <div className="grid grid-cols-1 lg:grid-cols-5 h-full max-h-[75vh] overflow-hidden">
               
-              <div className="p-4 bg-slate-50 rounded-2xl space-y-2 border border-slate-100">
-                {selectedOrder.items?.map((item: any, idx: number) => (
-                  <div key={idx} className="flex justify-between border-b border-slate-200 pb-2 mb-2 last:border-0 last:pb-0 last:mb-0">
-                    <div className="flex flex-col">
-                      <span className="font-bold">{item.productVariant?.product?.title}</span>
-                      <span className="text-xs text-slate-500">{item.productVariant?.name} (x{item.quantity})</span>
-                    </div>
-                    <span className="font-medium text-slate-700 flex items-center"><IndianRupee className="h-3 w-3" />{item.quantity * item.priceAtTime}</span>
+              {/* Left Column - Order Info & Items */}
+              <div className="lg:col-span-3 p-8 space-y-8 overflow-y-auto custom-scrollbar bg-white dark:bg-slate-900">
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="h-8 w-1.5 rounded-full bg-primary shadow-sm shadow-primary/30"></div>
+                    <h3 className="text-xl font-bold text-slate-900 dark:text-white">Delivery Details</h3>
                   </div>
-                ))}
-                <div className="flex justify-between pt-2 border-t border-slate-200">
-                  <span className="text-sm font-medium text-slate-500">Shipping Cost</span>
-                  <span className="font-medium text-slate-700 flex items-center"><IndianRupee className="h-4 w-4" /> {selectedOrder.shippingCost}</span>
-                </div>
-                <div className="flex justify-between pt-2">
-                  <span className="text-sm font-bold text-slate-900">Total Amount</span>
-                  <span className="font-black flex items-center text-primary"><IndianRupee className="h-4 w-4" /> {selectedOrder.totalAmount}</span>
-                </div>
-              </div>
-              
-              <Button onClick={() => printInvoice(selectedOrder)} variant="outline" className="w-full h-12 rounded-xl font-bold border-primary text-primary hover:bg-primary/5 gap-2">
-                <Printer className="h-4 w-4" /> Print Invoice Bill
-              </Button>
-
-              <div className="space-y-4 pt-4 border-t border-slate-100">
-                <div className="space-y-2">
-                  <Label className="text-xs font-bold text-slate-500">Update Order Status</Label>
-                  <Select value={selectedOrder.status} onValueChange={(val) => setSelectedOrder({...selectedOrder, status: val})}>
-                    <SelectTrigger className="h-11 rounded-xl font-bold"><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="PENDING">Pending Approval</SelectItem>
-                      <SelectItem value="APPROVED">Approved (Deducts Stock)</SelectItem>
-                      <SelectItem value="SHIPPED">Shipped</SelectItem>
-                      <SelectItem value="DELIVERED">Delivered</SelectItem>
-                      <SelectItem value="CANCELLED">Cancelled</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <div className="bg-gradient-to-br from-slate-50 to-white dark:from-slate-800/50 dark:to-slate-900 p-6 rounded-[2rem] border-2 border-slate-100 dark:border-slate-800 shadow-sm">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-2">
+                        <Label className="text-[10px] uppercase font-black text-slate-400 tracking-widest bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-md inline-block">Franchise Info</Label>
+                        <p className="font-black text-xl text-slate-800 dark:text-slate-100 leading-tight">{selectedOrder.workspace.name}</p>
+                        {selectedOrder.workspace.centerCode && <p className="text-xs font-bold text-slate-500 flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-slate-300"></span> Center Code: {selectedOrder.workspace.centerCode}</p>}
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-[10px] uppercase font-black text-slate-400 tracking-widest bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-md inline-block">Shipping Address</Label>
+                        {renderShippingAddress(selectedOrder.shippingAddress)}
+                      </div>
+                    </div>
+                  </div>
                 </div>
                 
-                <div className="space-y-2">
-                  <Label className="text-xs font-bold text-slate-500">Payment Status (Offline)</Label>
-                  <Select value={selectedOrder.paymentStatus} onValueChange={(val) => setSelectedOrder({...selectedOrder, paymentStatus: val})}>
-                    <SelectTrigger className="h-11 rounded-xl font-bold"><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="PENDING">Unpaid / Pending</SelectItem>
-                      <SelectItem value="PAID">Paid (Manually Verified)</SelectItem>
-                    </SelectContent>
-                  </Select>
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="h-8 w-1.5 rounded-full bg-primary shadow-sm shadow-primary/30"></div>
+                    <h3 className="text-xl font-bold text-slate-900 dark:text-white">Order Items</h3>
+                  </div>
+                  <div className="p-6 bg-slate-50 dark:bg-slate-800/30 rounded-[2rem] border-2 border-slate-100 dark:border-slate-800 shadow-inner">
+                    <div className="space-y-4">
+                      {selectedOrder.items?.map((item: any, idx: number) => (
+                        <div key={idx} className="flex justify-between items-center pb-4 border-b-2 border-slate-200/50 dark:border-slate-700/50 last:border-0 last:pb-0">
+                          <div className="flex flex-col gap-1.5">
+                            <span className="font-bold text-base text-slate-800 dark:text-slate-200 leading-none">{item.productVariant?.product?.title}</span>
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs font-bold text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-800 px-2.5 py-1 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700">
+                                Variant: {item.productVariant?.name}
+                              </span>
+                              <span className="text-xs font-bold text-slate-400">
+                                &times; {item.quantity}
+                              </span>
+                            </div>
+                          </div>
+                          <span className="font-black text-slate-900 dark:text-slate-100 flex items-center bg-white dark:bg-slate-800 px-4 py-2 rounded-xl shadow-sm border-2 border-slate-100 dark:border-slate-700">
+                            <IndianRupee className="h-4 w-4 mr-0.5 text-slate-400" />{item.quantity * item.priceAtTime}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                    
+                    <div className="mt-6 pt-6 border-t-2 border-slate-200 dark:border-slate-700 space-y-3">
+                      <div className="flex justify-between items-center px-2">
+                        <span className="text-sm font-bold text-slate-500 uppercase tracking-wider">Shipping Cost</span>
+                        <span className="font-bold text-slate-600 dark:text-slate-400 flex items-center bg-white dark:bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700">
+                          <IndianRupee className="h-3.5 w-3.5 mr-0.5 text-slate-400" /> {selectedOrder.shippingCost}
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center bg-white dark:bg-slate-900 p-5 rounded-2xl shadow-sm border-2 border-primary/20">
+                        <span className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-widest">Total Amount</span>
+                        <span className="font-black text-2xl flex items-center text-primary">
+                          <IndianRupee className="h-6 w-6 mr-1" /> {selectedOrder.totalAmount}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
+
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="h-8 w-1.5 rounded-full bg-slate-800 dark:bg-slate-200 shadow-sm shadow-slate-900/30"></div>
+                    <h3 className="text-xl font-bold text-slate-900 dark:text-white">Print Actions</h3>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <Button onClick={() => printInvoice(selectedOrder)} variant="outline" className="w-full h-14 rounded-2xl font-bold border-2 border-slate-200 text-slate-700 hover:border-primary hover:bg-primary/5 hover:text-primary transition-all shadow-sm gap-2 text-base">
+                      <Download className="h-5 w-5" /> Download Invoice
+                    </Button>
+                    <Button onClick={() => printDeliveryLabel(selectedOrder)} variant="outline" className="w-full h-14 rounded-2xl font-bold border-2 border-slate-900 bg-slate-900 text-white hover:bg-slate-800 hover:border-slate-800 dark:border-white dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100 transition-all shadow-md gap-2 text-base">
+                      <Download className="h-5 w-5" /> Download Label
+                    </Button>
+                  </div>
+                </div>
+
               </div>
 
-              <Button 
-                onClick={() => handleOrderUpdate(selectedOrder.status, selectedOrder.paymentStatus)} 
-                disabled={isSubmitting} 
-                className="w-full h-12 rounded-xl font-bold text-base mt-2"
-              >
-                {isSubmitting ? <Loader2 className="h-5 w-5 animate-spin" /> : "Confirm Updates"}
-              </Button>
+              {/* Right Column - Status & Payment */}
+              <div className="lg:col-span-2 bg-slate-50/50 dark:bg-slate-900/50 p-8 border-l-2 border-slate-200/80 dark:border-slate-800 overflow-y-auto custom-scrollbar flex flex-col justify-between">
+                <div className="space-y-10">
+                  <div className="space-y-5">
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="h-6 w-1.5 rounded-full bg-slate-400"></div>
+                      <h3 className="text-xl font-black text-slate-900 dark:text-white">Order Status</h3>
+                    </div>
+                    
+                    <div className="space-y-6">
+                      <div className="space-y-2.5">
+                        <Label className="text-xs font-black text-slate-500 uppercase tracking-widest bg-white dark:bg-slate-800 px-2 py-1 rounded-md shadow-sm border border-slate-200 dark:border-slate-700">Fulfillment</Label>
+                        <Select value={selectedOrder.status} onValueChange={(val) => setSelectedOrder({...selectedOrder, status: val})}>
+                          <SelectTrigger className={cn("h-14 rounded-2xl font-bold border-2 transition-all shadow-sm text-base",
+                            selectedOrder.status === "PENDING" ? "border-orange-300 bg-orange-50 text-orange-700 dark:border-orange-900/50 dark:bg-orange-900/20" :
+                            selectedOrder.status === "APPROVED" ? "border-blue-300 bg-blue-50 text-blue-700 dark:border-blue-900/50 dark:bg-blue-900/20" :
+                            selectedOrder.status === "SHIPPED" ? "border-purple-300 bg-purple-50 text-purple-700 dark:border-purple-900/50 dark:bg-purple-900/20" :
+                            selectedOrder.status === "DELIVERED" ? "border-green-300 bg-green-50 text-green-700 dark:border-green-900/50 dark:bg-green-900/20" :
+                            "border-slate-200 bg-white"
+                          )}>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="PENDING" className="font-bold text-orange-600">Pending Approval</SelectItem>
+                            <SelectItem value="APPROVED" className="font-bold text-blue-600">Approved (Deducts Stock)</SelectItem>
+                            <SelectItem value="SHIPPED" className="font-bold text-purple-600">Shipped</SelectItem>
+                            <SelectItem value="DELIVERED" className="font-bold text-green-600">Delivered</SelectItem>
+                            <SelectItem value="CANCELLED" className="font-bold text-red-600">Cancelled</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      
+                      <div className="space-y-2.5">
+                        <Label className="text-xs font-black text-slate-500 uppercase tracking-widest bg-white dark:bg-slate-800 px-2 py-1 rounded-md shadow-sm border border-slate-200 dark:border-slate-700">Payment</Label>
+                        <Select value={selectedOrder.paymentStatus} onValueChange={(val) => setSelectedOrder({...selectedOrder, paymentStatus: val})}>
+                          <SelectTrigger className={cn("h-14 rounded-2xl font-bold border-2 transition-all shadow-sm text-base",
+                            selectedOrder.paymentStatus === "PAID" ? "border-green-300 bg-green-50 text-green-700 dark:border-green-900/50 dark:bg-green-900/20" :
+                            "border-slate-200 bg-white"
+                          )}>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="PENDING" className="font-bold">Unpaid / Pending</SelectItem>
+                            <SelectItem value="PAID" className="font-bold text-green-600">Paid (Verified)</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                  </div>
+
+                  {selectedOrder.paymentProof && (
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-3 mb-2">
+                        <div className="h-6 w-1.5 rounded-full bg-slate-400"></div>
+                        <h3 className="text-xl font-black text-slate-900 dark:text-white">Payment Proof</h3>
+                      </div>
+                      <div 
+                        className="relative rounded-3xl overflow-hidden border-2 border-slate-200 dark:border-slate-700 cursor-pointer hover:shadow-2xl hover:border-primary/50 hover:-translate-y-1 transition-all duration-300 group bg-white" 
+                        onClick={() => window.open(selectedOrder.paymentProof, '_blank')} 
+                        title="Click to view full size"
+                      >
+                        <img src={selectedOrder.paymentProof} alt="Payment Proof" className="w-full max-h-56 object-contain bg-slate-100/50 p-2" />
+                        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center backdrop-blur-sm">
+                          <span className="bg-white text-black font-black px-5 py-2.5 rounded-xl text-sm shadow-2xl flex items-center gap-2 transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
+                            View Full Size
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <div className="pt-8 mt-8 border-t-2 border-slate-200/80 dark:border-slate-800">
+                  <Button 
+                    onClick={() => handleOrderUpdate(selectedOrder.status, selectedOrder.paymentStatus)} 
+                    disabled={isSubmitting} 
+                    className="w-full h-16 rounded-2xl font-black text-lg shadow-xl shadow-primary/20 hover:shadow-primary/40 hover:-translate-y-0.5 transition-all"
+                  >
+                    {isSubmitting ? <Loader2 className="h-6 w-6 animate-spin mr-2" /> : <><CheckCircle2 className="h-6 w-6 mr-2" /> Confirm Updates</>}
+                  </Button>
+                </div>
+              </div>
             </div>
           )}
         </DialogContent>

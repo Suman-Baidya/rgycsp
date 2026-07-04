@@ -15,7 +15,7 @@ export default async function FranchiseProductsPage({
   
   const workspace = await db.workspace.findUnique({
     where: { subdomain: tenant.toLowerCase() },
-    select: { id: true, name: true }
+    select: { id: true, name: true, shippingAddress: true }
   });
 
   if (!workspace) notFound();
@@ -34,6 +34,7 @@ export default async function FranchiseProductsPage({
       />
       <FranchiseProductsClient 
         workspaceId={workspace.id}
+        initialShippingAddress={workspace.shippingAddress || ""}
         initialProducts={productsRes.success ? (productsRes.data || []) : []} 
         initialOrders={ordersRes.success ? (ordersRes.data || []) : []} 
         initialConfig={configRes.success ? (configRes.data || null) : null}
