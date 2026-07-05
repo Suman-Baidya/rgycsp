@@ -40,11 +40,6 @@ export function getRoutingConfig(pathname: string, hostname?: string, tenantOver
     return { mode, tenant, workspaceBase };
   }
 
-  if (isSubdirectoryPath) {
-    setSubdirectoryMode(tenantOverride || pathname.split('/')[2] || null);
-    return { mode, tenant, workspaceBase };
-  }
-
   if (hostname) {
     const rootEnv = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "";
     const cleanHost = hostname.split(':')[0]; // Remove port if present
@@ -75,21 +70,20 @@ export function getRoutingConfig(pathname: string, hostname?: string, tenantOver
       mode = "subdomain";
       tenant = tenantOverride || cleanHost.replace(`.${localDomain}`, "").toLowerCase();
       workspaceBase = ""; // Subdomains don't use prefixes
-    } else {
-      // Fallback
-      if (tenantOverride) {
-        setSubdirectoryMode(tenantOverride);
-      } else {
-        mode = "root";
-      }
+      return { mode, tenant, workspaceBase };
     }
+  }
+
+  if (isSubdirectoryPath) {
+    setSubdirectoryMode(tenantOverride || pathname.split('/')[2] || null);
+    return { mode, tenant, workspaceBase };
+  }
+
+  // Fallback if not subdomain and not subdirectory
+  if (tenantOverride) {
+    setSubdirectoryMode(tenantOverride);
   } else {
-    // Fallback if hostname is missing (e.g. SSR)
-    if (tenantOverride) {
-      setSubdirectoryMode(tenantOverride);
-    } else {
-      mode = "root";
-    }
+    mode = "root";
   }
 
   return { mode, tenant, workspaceBase };

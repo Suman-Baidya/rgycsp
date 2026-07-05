@@ -109,19 +109,19 @@ export async function getStudentDashboardData(workspaceId: string, studentProfil
     const profile = await db.studentProfile.findUnique({
       where: { id: studentProfileId },
       select: {
-        admitCardApproved: true,
-        registrationCardApproved: true,
-        certificateApproved: true,
-        marksheetApproved: true
+        admitCardIssuedToStudent: true,
+        registrationCardIssuedToStudent: true,
+        certificateIssuedToStudent: true,
+        marksheetIssuedToStudent: true
       }
     });
 
     const issuedDocuments = [];
     if (profile) {
-      if (profile.admitCardApproved) issuedDocuments.push({ name: 'Admit Card', type: 'DOCUMENT' });
-      if (profile.registrationCardApproved) issuedDocuments.push({ name: 'Registration Card', type: 'DOCUMENT' });
-      if (profile.certificateApproved) issuedDocuments.push({ name: 'Course Certificate', type: 'DOCUMENT' });
-      if (profile.marksheetApproved) issuedDocuments.push({ name: 'Marksheet', type: 'DOCUMENT' });
+      if (profile.admitCardIssuedToStudent) issuedDocuments.push({ name: 'Admit Card', type: 'DOCUMENT' });
+      if (profile.registrationCardIssuedToStudent) issuedDocuments.push({ name: 'Registration Card', type: 'DOCUMENT' });
+      if (profile.certificateIssuedToStudent) issuedDocuments.push({ name: 'Course Certificate', type: 'DOCUMENT' });
+      if (profile.marksheetIssuedToStudent) issuedDocuments.push({ name: 'Marksheet', type: 'DOCUMENT' });
     }
 
     return {

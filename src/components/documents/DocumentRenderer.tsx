@@ -45,8 +45,6 @@ export const DocumentRenderer = forwardRef<DocumentRendererRef, DocumentRenderer
     useEffect(() => {
       if (!isLoading) {
         if (!template) {
-          toast.dismiss();
-          toast.error("Admit Card template not found! Please ask Super Admin to create one.");
           if (onReadyRef.current && !hasCalledOnReady.current) {
             hasCalledOnReady.current = true;
             onReadyRef.current();
@@ -201,7 +199,13 @@ export const DocumentRenderer = forwardRef<DocumentRendererRef, DocumentRenderer
           scale: 2, 
           useCORS: true,
           allowTaint: true,
-          backgroundColor: '#ffffff'
+          backgroundColor: '#ffffff',
+          windowWidth: template.width,
+          windowHeight: template.height,
+          x: 0,
+          y: 0,
+          scrollX: 0,
+          scrollY: 0
         });
         return canvas.toDataURL("image/jpeg", 1.0);
       } catch (err) {
@@ -211,10 +215,13 @@ export const DocumentRenderer = forwardRef<DocumentRendererRef, DocumentRenderer
       }
     };
 
-    useImperativeHandle(ref, () => ({
+    useImperativeHandle(ref, () => {
+      const formatType = (t: string) => t.split('_').map(w => w.charAt(0) + w.slice(1).toLowerCase()).join(' ');
+      
+      return {
       downloadPDF: async () => {
         if (!template) {
-          toast.error("No template found to download.");
+          toast.error(`${formatType(type)} template not found! Please ask Super Admin to create one.`);
           return;
         }
         const loadingToast = toast.loading("Generating PDF...");
@@ -235,7 +242,7 @@ export const DocumentRenderer = forwardRef<DocumentRendererRef, DocumentRenderer
       },
       preview: async () => {
         if (!template) {
-          toast.error("No template found to preview.");
+          toast.error(`${formatType(type)} template not found! Please ask Super Admin to create one.`);
           return;
         }
         const loadingToast = toast.loading("Generating Preview...");
@@ -260,7 +267,8 @@ export const DocumentRenderer = forwardRef<DocumentRendererRef, DocumentRenderer
         };
       },
       hasTemplate: () => !!template
-    }));
+    };
+  });
 
     if (isLoading) {
       return (
@@ -279,7 +287,7 @@ export const DocumentRenderer = forwardRef<DocumentRendererRef, DocumentRenderer
     return (
       <>
         {/* Hidden Render Canvas */}
-        <div style={{ position: 'absolute', top: 0, left: 0, pointerEvents: 'none', zIndex: -9999 }}>
+        <div style={{ position: 'fixed', top: 0, left: '-9999px', pointerEvents: 'none', zIndex: -9999 }}>
           <div
             ref={canvasRef}
             style={{
@@ -345,11 +353,13 @@ export const DocumentRenderer = forwardRef<DocumentRendererRef, DocumentRenderer
             <DialogHeader className="p-6 pb-2 shrink-0">
               <DialogTitle className="text-xl font-bold">{type.replace('_', ' ')} Preview</DialogTitle>
             </DialogHeader>
-            <div className="flex-1 overflow-y-auto p-6 bg-slate-50 dark:bg-slate-900/50 flex items-center justify-center">
+            <div className="flex-1 overflow-y-auto p-6 bg-slate-50 dark:bg-slate-900/50 text-center">
               {previewDataUrl ? (
-                <img src={previewDataUrl} alt="Preview" className="max-w-full h-auto shadow-2xl rounded-lg" />
+                <img src={previewDataUrl} alt="Preview" className="max-w-full h-auto shadow-2xl rounded-lg mx-auto" />
               ) : (
-                <Loader2 className="animate-spin w-8 h-8 text-slate-400" />
+                <div className="h-full flex items-center justify-center">
+                  <Loader2 className="animate-spin w-8 h-8 text-slate-400" />
+                </div>
               )}
             </div>
             <div className="p-4 border-t border-slate-100 dark:border-slate-800 flex justify-end">

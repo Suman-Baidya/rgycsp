@@ -281,11 +281,17 @@ model StudentProfile {
   admissionDate DateTime      @default(now())
   applicationId String?       @unique
 
-  // Document Approvals
+  // Document Approvals (Tier 1: Super Admin to Franchise)
   admitCardApproved        Boolean @default(false)
   registrationCardApproved Boolean @default(false)
   marksheetApproved        Boolean @default(false)
   certificateApproved      Boolean @default(false)
+
+  // Document Approvals (Tier 2: Franchise to Student)
+  admitCardIssuedToStudent        Boolean @default(false)
+  registrationCardIssuedToStudent Boolean @default(false)
+  marksheetIssuedToStudent        Boolean @default(false)
+  certificateIssuedToStudent      Boolean @default(false)
 
   admissionApp AdmissionApplication? @relation(fields: [applicationId], references: [id], onDelete: SetNull)
 

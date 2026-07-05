@@ -25,6 +25,28 @@ export async function issueStudentDocument(studentId: string, documentType: "MAR
   }
 }
 
+export async function issueDocumentToStudent(studentId: string, documentType: "MARKSHEET" | "CERTIFICATE" | "STUDENT_ID" | "ADMIT_CARD", status: boolean) {
+  try {
+    let data: any = {};
+    switch (documentType) {
+      case "MARKSHEET": data = { marksheetIssuedToStudent: status }; break;
+      case "CERTIFICATE": data = { certificateIssuedToStudent: status }; break;
+      case "STUDENT_ID": data = { registrationCardIssuedToStudent: status }; break;
+      case "ADMIT_CARD": data = { admitCardIssuedToStudent: status }; break;
+    }
+
+    await db.studentProfile.update({
+      where: { id: studentId },
+      data
+    });
+    
+    revalidatePath("/");
+    return { success: true };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+}
+
 export async function saveStudentMarks(studentId: string, semesterNumber: number, marksData: { unitName: string, marksObtained: number }[]) {
   try {
     let totalMarks = 0;

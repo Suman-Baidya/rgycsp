@@ -11,6 +11,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Checkbox } from "@/components/ui/checkbox";
 import { AdminPageHeader } from "@/components/layout/AdminPageHeader";
 import { ImageUpload } from "@/components/ui/ImageUpload";
 import { updateStudent } from "@/app/actions/students";
@@ -35,6 +36,7 @@ import {
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DocumentRenderer, DocumentRendererRef } from "@/components/documents/DocumentRenderer";
+import { BulkDocumentGenerator } from "@/components/documents/BulkDocumentGenerator";
 
 interface StudentsClientProps {
   initialStudents: any[];
@@ -45,11 +47,8 @@ interface StudentsClientProps {
 export default function StudentsClient({ initialStudents, initialWorkspaces, initialConfig }: StudentsClientProps) {
   const router = useRouter();
 
-  // Filters
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("UNREGISTERED");
-
-  // Pagination
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
 
@@ -267,16 +266,24 @@ export default function StudentsClient({ initialStudents, initialWorkspaces, ini
         (s.applicationId && s.applicationId.toLowerCase().includes(searchLower)) ||
         (s.phone && s.phone.includes(searchLower)) ||
         (s.email && s.email.toLowerCase().includes(searchLower)) ||
+        (s.workspace?.name && s.workspace.name.toLowerCase().includes(searchLower)) ||
         dobStr.includes(searchLower) ||
         adminDateStr.includes(searchLower);
 
-      return matchesSearch && s.status === statusFilter;
+      const matchesStatus = s.status === statusFilter;
+
+      return matchesSearch && matchesStatus;
     });
   }, [initialStudents, searchTerm, statusFilter]);
 
   const totalPages = Math.ceil(filteredStudents.length / itemsPerPage);
   const paginatedStudents = filteredStudents.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+  
+  // Add state for selected students (for bulk actions)
+  const [selectedStudentIds, setSelectedStudentIds] = useState<string[]>([]);
+  const [bulkDownloadOpen, setBulkDownloadOpen] = useState(false);
 
+  // Stats for cards
   const stats = useMemo(() => {
     let registered = 0, unregistered = 0, passout = 0;
     initialStudents.forEach(s => {
@@ -480,16 +487,43 @@ export default function StudentsClient({ initialStudents, initialWorkspaces, ini
           <>
         <CardHeader className="p-6 md:p-8 border-b border-slate-50 dark:border-slate-800/50">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-            <div className="relative w-full md:max-w-[450px] group">
-              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                <Search className="h-4 w-4 text-slate-400" />
+            <div className="flex items-center gap-4 w-full md:w-auto">
+              {statusFilter !== "CONFIG" && (
+                <div className="flex items-center gap-3 pr-4 border-r border-slate-200 dark:border-slate-800 h-14">
+                  <Checkbox 
+                    checked={filteredStudents.length > 0 && selectedStudentIds.length === filteredStudents.length}
+                    onCheckedChange={(checked) => {
+                      if (checked) {
+                        setSelectedStudentIds(filteredStudents.map(s => s.id));
+                      } else {
+                        setSelectedStudentIds([]);
+                      }
+                    }}
+                    className="rounded-md w-5 h-5 border-slate-300 dark:border-slate-600 data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
+                    title="Select all filtered students"
+                  />
+                  {selectedStudentIds.length > 0 && (
+                    <Button 
+                      variant="default" 
+                      onClick={() => setBulkDownloadOpen(true)}
+                      className="bg-primary hover:bg-primary/90 text-white font-bold h-10 px-4 rounded-xl shadow-lg shadow-primary/20 hover:-translate-y-0.5 transition-all text-xs flex items-center gap-2"
+                    >
+                      <Download className="w-4 h-4" /> Bulk Download ({selectedStudentIds.length})
+                    </Button>
+                  )}
+                </div>
+              )}
+              <div className="relative w-full md:max-w-[350px] group">
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                  <Search className="h-4 w-4 text-slate-400" />
+                </div>
+                <Input
+                  placeholder="Search by ID, Name, Phone, Franchise..."
+                  value={searchTerm}
+                  onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
+                  className="pl-11 pr-4 bg-slate-50 dark:bg-slate-800/40 border-none rounded-2xl h-14 font-bold text-sm transition-all focus-visible:ring-2 focus-visible:ring-primary/20 placeholder:text-slate-400 placeholder:font-medium"
+                />
               </div>
-              <Input
-                placeholder="Search by ID, Name, Phone, Email, Date..."
-                value={searchTerm}
-                onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
-                className="pl-11 pr-4 bg-slate-50 dark:bg-slate-800/40 border-none rounded-2xl h-14 font-bold text-sm transition-all focus-visible:ring-2 focus-visible:ring-primary/20 placeholder:text-slate-400 placeholder:font-medium"
-              />
             </div>
             <div className="flex items-center gap-3 self-end md:self-auto w-full md:w-auto">
               <span className="text-xs font-bold text-slate-400 uppercase tracking-widest hidden md:inline">Show</span>
@@ -529,6 +563,17 @@ export default function StudentsClient({ initialStudents, initialWorkspaces, ini
                 return (
                   <div key={student.id} className={cn("flex flex-col lg:flex-row items-start lg:items-center justify-between p-6 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-all gap-6 group border-l-4", borderColor)}>
                     <div className="flex items-center gap-4">
+                      <Checkbox 
+                        checked={selectedStudentIds.includes(student.id)}
+                        onCheckedChange={(checked) => {
+                          if (checked) {
+                            setSelectedStudentIds(prev => [...prev, student.id]);
+                          } else {
+                            setSelectedStudentIds(prev => prev.filter(id => id !== student.id));
+                          }
+                        }}
+                        className="rounded-md w-5 h-5 border-slate-300 dark:border-slate-600 data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground mr-2 shrink-0"
+                      />
                       <Avatar className="h-14 w-14 rounded-2xl border border-slate-200/50 dark:border-slate-700/50 shrink-0 shadow-sm">
                         <AvatarImage src={student.photoUrl || student.admissionApp?.photoUrl || undefined} className="object-cover" />
                         <AvatarFallback className="bg-primary/5 text-primary font-bold rounded-2xl">
@@ -1269,6 +1314,12 @@ export default function StudentsClient({ initialStudents, initialWorkspaces, ini
         </DialogContent>
       </Dialog>
 
+      <BulkDocumentGenerator 
+        open={bulkDownloadOpen}
+        onOpenChange={setBulkDownloadOpen}
+        selectedStudentIds={selectedStudentIds}
+        students={initialStudents}
+      />
       </div>
     </TooltipProvider>
   );

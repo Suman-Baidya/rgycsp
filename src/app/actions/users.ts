@@ -2,10 +2,22 @@
 
 import { db } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { auth } from "@/auth";
 
 export async function getUsers() {
   try {
+    const session = await auth();
+    const devEmail = process.env.DEVELOPER_EMAIL || "";
+    const isDev = session?.user?.email === devEmail;
+
+    const whereClause = isDev ? {} : {
+      email: {
+        not: devEmail
+      }
+    };
+
     const users = await db.user.findMany({
+      where: whereClause,
       include: {
         workspaceRoles: {
           include: {

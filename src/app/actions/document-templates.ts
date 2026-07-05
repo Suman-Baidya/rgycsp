@@ -17,10 +17,19 @@ export async function getDocumentTemplates(workspaceId: string | null = null) {
 
 export async function getDocumentTemplateByType(type: string, workspaceId: string | null = null) {
   try {
-    return await db.documentTemplate.findFirst({
+    let template = await db.documentTemplate.findFirst({
       where: { type, workspaceId, isActive: true },
       orderBy: { updatedAt: "desc" }
     });
+
+    if (!template && workspaceId !== null) {
+      template = await db.documentTemplate.findFirst({
+        where: { type, workspaceId: null, isActive: true },
+        orderBy: { updatedAt: "desc" }
+      });
+    }
+
+    return template;
   } catch (error) {
     console.error("Failed to fetch template by type:", error);
     return null;

@@ -157,8 +157,8 @@ export async function markStudentAsPassOut(studentId: string, tenant: string) {
       return { success: false, error: "Only active registered students can be marked as passed out." };
     }
 
-    if (!student.admitCardApproved || !student.registrationCardApproved || !student.marksheetApproved || !student.certificateApproved) {
-      return { success: false, error: "All documents must be approved before marking the student as pass out." };
+    if (!student.admitCardIssuedToStudent || !student.registrationCardIssuedToStudent || !student.marksheetIssuedToStudent || !student.certificateIssuedToStudent) {
+      return { success: false, error: "All documents must be issued to the student before marking them as pass out." };
     }
 
     await db.studentProfile.update({

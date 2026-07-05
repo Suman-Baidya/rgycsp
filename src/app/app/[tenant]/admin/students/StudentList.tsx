@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Plus, Search, MoreVertical, UserPlus, Phone, Mail, GraduationCap, FileText, Eye, Pencil, Database, Download, Loader2, CheckCircle } from "lucide-react";
+import { Plus, Search, MoreVertical, UserPlus, Phone, Mail, GraduationCap, FileText, Eye, Pencil, Database, Download, Loader2, CheckCircle, Calendar, User, Award } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -32,6 +32,9 @@ import { toast } from "sonner";
 import { useRouter, usePathname, useParams } from "next/navigation";
 import Link from "next/link";
 import { ImageUpload } from "@/components/ui/ImageUpload";
+import { Switch } from "@/components/ui/switch";
+import { DocumentRenderer, DocumentRendererRef } from "@/components/documents/DocumentRenderer";
+import { issueDocumentToStudent } from "@/app/actions/student-documents";
 
 export default function StudentList({ 
   workspaceId, 
@@ -90,6 +93,27 @@ export default function StudentList({
     signatureUrl: "",
     idProofUrl: "",
   });
+
+  const [docsModalOpen, setDocsModalOpen] = useState(false);
+  const docRefs = React.useRef<Record<string, DocumentRendererRef | null>>({});
+
+  const handleIssueToStudent = async (studentId: string, docType: "MARKSHEET" | "CERTIFICATE" | "STUDENT_ID" | "ADMIT_CARD", status: boolean) => {
+    const res = await issueDocumentToStudent(studentId, docType, status);
+    if (res.success) {
+      toast.success(`${docType.replace('_', ' ')} ${status ? 'Issued' : 'Revoked'} successfully`);
+      if (selectedStudent) {
+        setSelectedStudent({
+          ...selectedStudent,
+          ...(docType === "MARKSHEET" && { marksheetIssuedToStudent: status }),
+          ...(docType === "CERTIFICATE" && { certificateIssuedToStudent: status }),
+          ...(docType === "STUDENT_ID" && { registrationCardIssuedToStudent: status }),
+          ...(docType === "ADMIT_CARD" && { admitCardIssuedToStudent: status }),
+        });
+      }
+    } else {
+      toast.error(res.error || "Failed to update document status");
+    }
+  };
 
   const handleCSVUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -644,36 +668,14 @@ export default function StudentList({
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="w-56 rounded-xl">
                           <DropdownMenuItem 
-                            onClick={() => handleDocumentApproval(student, 'admitCard')}
-                            disabled={isActioning === `${student.id}-admitCard`}
+                            onClick={() => {
+                              setSelectedStudent(student);
+                              setDocsModalOpen(true);
+                            }}
                             className="text-xs font-bold cursor-pointer py-2"
                           >
-                            {isActioning === `${student.id}-admitCard` ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-2" /> : (student.admitCardApproved ? <CheckCircle className="h-3.5 w-3.5 mr-2 text-indigo-500" /> : <FileText className="h-3.5 w-3.5 mr-2 text-slate-400" />)}
-                            Admit Card {student.admitCardApproved && <span className="ml-auto text-[9px] bg-indigo-100 text-indigo-700 px-1.5 py-0.5 rounded">Approved</span>}
-                          </DropdownMenuItem>
-                          <DropdownMenuItem 
-                            onClick={() => handleDocumentApproval(student, 'registrationCard')}
-                            disabled={isActioning === `${student.id}-registrationCard`}
-                            className="text-xs font-bold cursor-pointer py-2"
-                          >
-                            {isActioning === `${student.id}-registrationCard` ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-2" /> : (student.registrationCardApproved ? <CheckCircle className="h-3.5 w-3.5 mr-2 text-indigo-500" /> : <FileText className="h-3.5 w-3.5 mr-2 text-slate-400" />)}
-                            Registration Card {student.registrationCardApproved && <span className="ml-auto text-[9px] bg-indigo-100 text-indigo-700 px-1.5 py-0.5 rounded">Approved</span>}
-                          </DropdownMenuItem>
-                          <DropdownMenuItem 
-                            onClick={() => handleDocumentApproval(student, 'marksheet')}
-                            disabled={isActioning === `${student.id}-marksheet`}
-                            className="text-xs font-bold cursor-pointer py-2"
-                          >
-                            {isActioning === `${student.id}-marksheet` ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-2" /> : (student.marksheetApproved ? <CheckCircle className="h-3.5 w-3.5 mr-2 text-indigo-500" /> : <FileText className="h-3.5 w-3.5 mr-2 text-slate-400" />)}
-                            Marksheet {student.marksheetApproved && <span className="ml-auto text-[9px] bg-indigo-100 text-indigo-700 px-1.5 py-0.5 rounded">Approved</span>}
-                          </DropdownMenuItem>
-                          <DropdownMenuItem 
-                            onClick={() => handleDocumentApproval(student, 'certificate')}
-                            disabled={isActioning === `${student.id}-certificate`}
-                            className="text-xs font-bold cursor-pointer py-2"
-                          >
-                            {isActioning === `${student.id}-certificate` ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-2" /> : (student.certificateApproved ? <CheckCircle className="h-3.5 w-3.5 mr-2 text-indigo-500" /> : <FileText className="h-3.5 w-3.5 mr-2 text-slate-400" />)}
-                            Certificate {student.certificateApproved && <span className="ml-auto text-[9px] bg-indigo-100 text-indigo-700 px-1.5 py-0.5 rounded">Approved</span>}
+                            <FileText className="h-3.5 w-3.5 mr-2 text-slate-400" />
+                            Manage Documents
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
@@ -1026,6 +1028,116 @@ export default function StudentList({
         confirmText="Mark Pass Out"
         destructive={true}
       />
+
+      {/* Docs Modal for Franchise Admin */}
+      <Dialog open={docsModalOpen} onOpenChange={setDocsModalOpen}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto rounded-[2.5rem] p-8 bg-slate-50/50 dark:bg-slate-950/50 border-2 border-slate-100 dark:border-slate-800">
+          <DialogHeader className="mb-6">
+            <div className="w-12 h-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mb-4">
+              <FileText className="w-6 h-6" />
+            </div>
+            <DialogTitle className="text-3xl font-black tracking-tight text-slate-900 dark:text-white">
+              Document Management
+            </DialogTitle>
+            <p className="text-base text-slate-500 font-medium mt-2">
+              View and issue documents for <strong className="text-slate-900 dark:text-white font-black">{selectedStudent?.fullName}</strong>.
+              <br />
+              <span className="text-sm">Note: You can only issue documents that have been approved by the Super Admin.</span>
+            </p>
+          </DialogHeader>
+
+          <div className="border border-slate-200 dark:border-slate-800 rounded-3xl overflow-hidden bg-white dark:bg-slate-900">
+            <Table>
+              <TableHeader className="bg-slate-50 dark:bg-slate-900/50">
+                <TableRow>
+                  <TableHead className="font-bold">Document Type</TableHead>
+                  <TableHead className="font-bold">Status</TableHead>
+                  <TableHead className="font-bold text-center">Issue to Student</TableHead>
+                  <TableHead className="font-bold text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {[
+                  { id: 'STUDENT_ID', label: 'Student ID Card', isSuperAdminApproved: selectedStudent?.registrationCardApproved, isIssued: selectedStudent?.registrationCardIssuedToStudent, icon: <User className="w-4 h-4 text-blue-500" /> },
+                  { id: 'ADMIT_CARD', label: 'Admit Card', isSuperAdminApproved: selectedStudent?.admitCardApproved, isIssued: selectedStudent?.admitCardIssuedToStudent, icon: <Calendar className="w-4 h-4 text-indigo-500" /> },
+                  { id: 'MARKSHEET', label: 'Marksheet', isSuperAdminApproved: selectedStudent?.marksheetApproved, isIssued: selectedStudent?.marksheetIssuedToStudent, icon: <FileText className="w-4 h-4 text-emerald-500" /> },
+                  { id: 'CERTIFICATE', label: 'Final Certificate', isSuperAdminApproved: selectedStudent?.certificateApproved, isIssued: selectedStudent?.certificateIssuedToStudent, icon: <Award className="w-4 h-4 text-amber-500" /> }
+                ].map((doc) => (
+                  <TableRow key={doc.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                    <TableCell className="py-5">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+                          {doc.icon}
+                        </div>
+                        <span className="font-bold text-slate-900 dark:text-white">{doc.label}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="py-5">
+                      {doc.isIssued ? (
+                        <Badge className="bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 hover:bg-emerald-100 border-0 rounded-xl px-3 py-1 font-bold">Issued to Student</Badge>
+                      ) : !doc.isSuperAdminApproved ? (
+                        <Badge className="bg-red-50 text-red-600 dark:bg-red-500/10 hover:bg-red-100 border-0 rounded-xl px-3 py-1 font-bold">Pending Super Admin</Badge>
+                      ) : (
+                        <Badge className="bg-amber-50 text-amber-600 dark:bg-amber-500/10 hover:bg-amber-100 border-0 rounded-xl px-3 py-1 font-bold">Ready to Issue</Badge>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-center py-5">
+                      {doc.isSuperAdminApproved ? (
+                        <Switch 
+                          checked={!!doc.isIssued} 
+                          onCheckedChange={(checked) => {
+                            if (docRefs.current[doc.id] && !docRefs.current[doc.id]?.hasTemplate()) {
+                              toast.error(`Design template for ${doc.label} does not exist yet!`);
+                              return;
+                            }
+                            handleIssueToStudent(selectedStudent?.id, doc.id as any, checked);
+                          }}
+                          className={doc.isIssued ? "data-[state=checked]:bg-emerald-500" : ""}
+                        />
+                      ) : (
+                        <span className="text-xs text-slate-400 font-medium">-</span>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-right py-5">
+                      {doc.isSuperAdminApproved && (
+                        <div className="flex items-center justify-end gap-2">
+                          <DocumentRenderer 
+                            ref={el => { docRefs.current[doc.id] = el; }} 
+                            type={doc.id} 
+                            student={selectedStudent} 
+                          />
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="rounded-xl h-8 w-8 text-slate-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                            title="Preview Document"
+                            onClick={() => {
+                              if (docRefs.current[doc.id]) docRefs.current[doc.id]?.preview();
+                            }}
+                          >
+                            <Eye className="w-4 h-4" />
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="rounded-xl h-8 w-8 text-slate-500 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/20"
+                            title="Download PDF"
+                            onClick={() => {
+                              if (docRefs.current[doc.id]) docRefs.current[doc.id]?.downloadPDF();
+                            }}
+                          >
+                            <Download className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
