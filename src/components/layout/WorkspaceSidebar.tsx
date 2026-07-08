@@ -87,7 +87,7 @@ export function WorkspaceSidebar({
     ? allNavItems 
     : allNavItems.filter(item => 
         // Staff page is typically admin only unless specifically allowed (which we didn't add to checkbox array, but let's say it's admin only)
-        item.id === "staff" ? userRole === "ADMIN" : userPermissions.includes(item.id) || item.id === "dashboard"
+        item.id === "staff" ? userRole === "ADMIN" : userPermissions.includes(item.id) || item.id === "dashboard" || item.id === "profile"
       );
 
   if (isStateManager) {

@@ -71,8 +71,8 @@ export function LandingNavbar({ settings, user, isHome }: { settings?: any, user
   const contactPhone = settings?.contactPhone || "8944899747";
   const logoUrl = settings?.logoUrl || "/logo.png";
 
-  const dashboardHref = user?.role === "SUPER_ADMIN" ? "/super-admin" : "/workspaces";
-  const dashboardLabel = user?.role === "SUPER_ADMIN" ? "Global Admin" : "My Workspaces";
+  const dashboardHref = (user?.role === "SUPER_ADMIN" || user?.role === "SUPER_ADMIN_MANAGER") ? "/super-admin" : "/workspaces";
+  const dashboardLabel = (user?.role === "SUPER_ADMIN" || user?.role === "SUPER_ADMIN_MANAGER") ? "Global Admin" : "My Workspaces";
 
   // Navbar Logic Config with deep fallbacks
   const config = {
@@ -157,7 +157,7 @@ export function LandingNavbar({ settings, user, isHome }: { settings?: any, user
     return (
       <div className="flex items-center gap-4">
         <DropdownMenu>
-          <DropdownMenuTrigger className="outline-none">
+          <DropdownMenuTrigger className="outline-none" suppressHydrationWarning>
             <div className="flex items-center gap-3 cursor-pointer group">
               <Avatar className="h-11 w-11 ring-2 ring-primary/10 group-hover:ring-primary transition-all duration-300 shadow-lg">
                 <AvatarImage src={user.image} />
@@ -183,7 +183,7 @@ export function LandingNavbar({ settings, user, isHome }: { settings?: any, user
                 <LayoutDashboard className="h-4 w-4" /> {dashboardLabel}
               </DropdownMenuItem>
             </Link>
-            <Link href={user?.role === "SUPER_ADMIN" ? "/super-admin/profile" : "/profile"}>
+            <Link href={(user?.role === "SUPER_ADMIN" || user?.role === "SUPER_ADMIN_MANAGER") ? "/super-admin/profile" : "/profile"}>
               <DropdownMenuItem className="rounded-xl h-11 gap-3 font-bold text-xs uppercase tracking-widest cursor-pointer">
                 <UserIcon className="h-4 w-4" /> My Profile
               </DropdownMenuItem>

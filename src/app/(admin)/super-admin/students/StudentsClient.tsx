@@ -622,6 +622,12 @@ export default function StudentsClient({ initialStudents, initialWorkspaces, ini
                           <p className="font-bold font-mono text-sm text-indigo-600 dark:text-indigo-400">{student.enrollmentNo}</p>
                           <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mt-1">Enrollment No</p>
                         </div>
+                        {(student.status === "REGISTERED" || student.status === "PASS_OUT") && student.registrations && student.registrations.length > 0 && (
+                          <div className="text-left md:text-right w-1/2 md:w-auto">
+                            <p className="font-bold font-mono text-sm text-emerald-600 dark:text-emerald-400">{student.registrations[student.registrations.length - 1].registrationNo}</p>
+                            <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mt-1">Reg No</p>
+                          </div>
+                        )}
                         <div className="text-left md:text-right w-1/2 md:w-auto md:w-32 min-w-0">
                           <Tooltip>
                             <TooltipTrigger className="cursor-help text-left p-0 border-none bg-transparent">

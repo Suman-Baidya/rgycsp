@@ -2,6 +2,7 @@
 
 import { db } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { auth } from "@/auth";
 import bcrypt from "bcryptjs";
 
 export async function getStaff(workspaceId: string) {
@@ -36,7 +37,14 @@ export async function addStaff(
   }
 ) {
   try {
+    const session = await auth();
+    const isSuperAdmin = session?.user?.role === "SUPER_ADMIN" || session?.user?.role === "SUPER_ADMIN_MANAGER" || session?.user?.email === process.env.DEVELOPER_EMAIL;
+
     const { name, email, password, role, permissions } = data;
+
+    if (role === "ADMIN" && !isSuperAdmin) {
+      return { success: false, error: "Only global admins can assign the ADMIN role." };
+    }
     
     // 1. Find user by email
     let user = await db.user.findUnique({ where: { email } });
@@ -87,11 +95,18 @@ export async function addStaff(
 export async function updateStaffRole(
   roleId: string,
   data: {
-    role?: "ADMIN" | "STAFF" | "TEACHER",
+    role?: "ADMIN" | "STAFF" | "TEACHER" | "MANAGER",
     permissions?: string[]
   }
 ) {
   try {
+    const session = await auth();
+    const isSuperAdmin = session?.user?.role === "SUPER_ADMIN" || session?.user?.role === "SUPER_ADMIN_MANAGER" || session?.user?.email === process.env.DEVELOPER_EMAIL;
+
+    if (data.role === "ADMIN" && !isSuperAdmin) {
+      return { success: false, error: "Only global admins can assign the ADMIN role." };
+    }
+
     const updatedRole = await db.workspaceRole.update({
       where: { id: roleId },
       data: {

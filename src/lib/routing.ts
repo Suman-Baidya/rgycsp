@@ -142,7 +142,7 @@ export const WORKSPACE_ROUTES = {
   STUDENT_PROFILE: "/student/profile",
   STUDENT_COURSES: "/student/courses",
   STUDENT_ATTENDANCE: "/student/attendance",
-  STUDENT_FEES: "/student/fees",
+  STUDENT_FEES: "/student/dashboard/fees",
   STUDENT_NOTICES: "/student/notices",
   STUDENT_EXAMS: "/student/exams",
   COURSES: "/courses",

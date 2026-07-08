@@ -49,7 +49,13 @@ const navItems = [
   { name: "Profile", href: "/profile", icon: ShieldCheck },
 ];
 
-export function AdminSidebar() {
+export function AdminSidebar({
+  serverRole,
+  serverPermissions
+}: {
+  serverRole?: string;
+  serverPermissions?: string[];
+} = {}) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMoreOpen, setIsMoreOpen] = useState(false);
   const pathname = usePathname();
@@ -58,6 +64,7 @@ export function AdminSidebar() {
   const [pendingWalletRequests, setPendingWalletRequests] = useState(0);
 
   const { data: session } = useSession();
+
   const [developerEmail, setDeveloperEmail] = useState("");
 
   // Close mobile drawer on navigation
@@ -105,12 +112,27 @@ export function AdminSidebar() {
 
   const toggleSidebar = () => setIsCollapsed(!isCollapsed);
   const toggleMore = () => setIsMoreOpen(!isMoreOpen);
+  
+  const isDeveloper = !!session?.user?.isDeveloper || !!(session?.user?.email && developerEmail && session.user.email === developerEmail);
+  const isManager = serverRole ? serverRole === "SUPER_ADMIN_MANAGER" : session?.user?.role === "SUPER_ADMIN_MANAGER";
+  const permissions: string[] = serverPermissions || (session?.user as any)?.systemPermissions || [];
 
-  const isDeveloper = !!(session?.user?.email && developerEmail && session.user.email === developerEmail);
-
-  const filteredNavItems = navItems.filter(item => 
-    item.name !== "System Logs" || isDeveloper
-  );
+  const filteredNavItems = navItems.filter(item => {
+    // Hide System Logs unless developer
+    if (item.name === "System Logs" && !isDeveloper) return false;
+    
+    // For SUPER_ADMIN_MANAGER, hide if not in permissions array
+    if (isManager) {
+      // Overview/Dashboard could be mapped to "Overview", so we match exactly
+      // If it's Profile, let them see it always? "Profile" isn't in ALL_GLOBAL_PAGES but let's allow it
+      const requiresPermission = ["Wallet Economy", "Franchises", "State Managers", "Students", "Users", "Courses", "Products", "Documents", "Settings"];
+      if (requiresPermission.includes(item.name)) {
+        return permissions.includes(item.name);
+      }
+    }
+    
+    return true;
+  });
 
   const mainNavItems = filteredNavItems.slice(0, 4);
   const moreNavItems = filteredNavItems.slice(4);
@@ -165,7 +187,7 @@ export function AdminSidebar() {
 
         {/* Navigation */}
         <nav className={cn("flex-1 py-6 space-y-2 overflow-y-auto overflow-x-hidden", isCollapsed ? "px-2 scrollbar-hide" : "px-4 custom-scrollbar")}>
-          {navItems.map((item) => {
+          {filteredNavItems.map((item) => {
             const tenant = "super-admin";
             const href = getTenantLink(item.href, tenant, pathname);
             const isActive = isActivePath(pathname, href);

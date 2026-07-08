@@ -18,8 +18,10 @@ model User {
   emailVerified DateTime?
   image         String?
   passwordHash  String?
-  role          SystemRole @default(USER)
-  lastSeen      DateTime?
+  role               SystemRole @default(USER)
+  systemPermissions  Json?
+  lastSeen           DateTime?
+  isActive           Boolean    @default(true)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -33,6 +35,7 @@ model User {
 
 enum SystemRole {
   SUPER_ADMIN
+  SUPER_ADMIN_MANAGER
   USER
 }
 
@@ -99,6 +102,8 @@ model Workspace {
   registrationCertificateApproved Boolean @default(false)
   
   shippingAddress String? @db.Text
+
+  franchisePaymentConfig FranchisePaymentConfig?
 }
 
 // ============================================
@@ -209,6 +214,15 @@ model Course {
   priceDisplay String?
   discountText String?
   showFee      Boolean @default(true)
+
+  // Local Pricing for Franchise
+  admissionFee       Float   @default(0)
+  registrationFee    Float   @default(0)
+  examFee            Float   @default(0)
+  isInstallmentBased Boolean @default(false)
+  installmentAmount  Float?
+  totalInstallments  Int?
+  totalCourseFee     Float   @default(0)
 
   workspace     Workspace              @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   batches       Batch[]
@@ -354,6 +368,13 @@ model Invoice {
   dueDate  DateTime
   paidDate DateTime?
   notes    String? // E.g., "Monthly Tuition Fee - July"
+  
+  // Enhanced Payment Tracking
+  feeType       String? // ADMISSION, REGISTRATION, EXAM, INSTALLMENT, FULL_COURSE
+  installmentNo Int?
+  paymentMethod String? // CASH, UPI, BANK_TRANSFER
+  paymentProof  String? // Image URL for student uploaded screenshot
+  rejectionReason String? @db.Text
 
   workspace Workspace      @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   student   StudentProfile @relation(fields: [studentProfileId], references: [id], onDelete: Cascade)
@@ -717,6 +738,24 @@ model WalletPaymentConfig {
 // ============================================
 // Franchise Product System
 // ============================================
+
+model FranchisePaymentConfig {
+  id                String   @id @default(cuid())
+  workspaceId       String   @unique
+  
+  upiId             String?
+  qrCodeUrl         String?
+  bankName          String?
+  accountHolderName String?
+  accountNumber     String?
+  ifscCode          String?
+  instructions      String?  @db.Text
+  
+  workspace         Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
 
 model ProductCategory {
   id          String   @id @default(cuid())

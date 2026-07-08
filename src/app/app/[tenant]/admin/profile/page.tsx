@@ -19,34 +19,41 @@ export default async function ProfilePage(props: { params: Promise<{ tenant: str
 
   const workspace = await db.workspace.findUnique({
     where: { subdomain: tenant.toLowerCase() },
-    include: {
-      roles: {
-        where: { role: "ADMIN" },
-        include: { user: true }
-      }
-    }
   });
 
   if (!workspace) {
     redirect("/login");
   }
 
-  // Find the franchise owner
-  const franchiseOwner = workspace.roles[0]?.user;
-  
-  if (!franchiseOwner) {
-    return <div>Error: No franchise admin found for this workspace.</div>;
+  // Find the currently logged in user's role in this workspace
+  const userRole = await db.workspaceRole.findFirst({
+    where: {
+      workspaceId: workspace.id,
+      userId: session.user.id
+    },
+    include: {
+      user: true
+    }
+  });
+
+  if (!userRole) {
+    return <div>Error: You are not a staff member of this workspace.</div>;
   }
 
+  const currentUser = userRole.user;
+
   const user = {
-    id: franchiseOwner.id,
-    name: franchiseOwner.name,
-    email: franchiseOwner.email,
-    username: franchiseOwner.username,
-    image: franchiseOwner.image,
+    id: currentUser.id,
+    name: currentUser.name,
+    email: currentUser.email,
+    username: currentUser.username,
+    image: currentUser.image,
   };
 
-  const roleName = "Franchise Owner";
+  const roleName = userRole.role === "ADMIN" ? "Franchise Owner" : 
+                   userRole.role === "MANAGER" ? "Franchise Manager" :
+                   userRole.role === "TEACHER" ? "Teacher / Staff" : 
+                   "Staff Member";
 
   return (
     <div className="p-4 lg:p-10 max-w-7xl mx-auto space-y-8 w-full">

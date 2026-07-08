@@ -71,7 +71,12 @@ export async function toggleCourseActivation(workspaceId: string, globalCourseId
   }
 }
 
-export async function updateFranchiseCoursePricing(courseId: string, data: { feeAmount: number, priceDisplay: string, discountText: string, showFee: boolean }) {
+export async function updateFranchiseCoursePricing(courseId: string, data: { 
+  feeAmount: number, priceDisplay: string, discountText: string, showFee: boolean,
+  admissionFee: number, registrationFee: number, examFee: number, 
+  isInstallmentBased: boolean, installmentAmount: number | null, 
+  totalInstallments: number | null, totalCourseFee: number 
+}) {
   try {
     const course = await db.course.update({
       where: { id: courseId },
@@ -79,7 +84,14 @@ export async function updateFranchiseCoursePricing(courseId: string, data: { fee
         feeAmount: data.feeAmount,
         priceDisplay: data.priceDisplay,
         discountText: data.discountText,
-        showFee: data.showFee
+        showFee: data.showFee,
+        admissionFee: data.admissionFee,
+        registrationFee: data.registrationFee,
+        examFee: data.examFee,
+        isInstallmentBased: data.isInstallmentBased,
+        installmentAmount: data.installmentAmount,
+        totalInstallments: data.totalInstallments,
+        totalCourseFee: data.totalCourseFee
       }
     });
 

@@ -83,6 +83,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             email: user.email,
             username: user.username,
             role: user.role,
+            systemPermissions: (user as any).systemPermissions,
           };
         } catch (error) {
           console.error("AUTH_ERROR in authorize callback:", error);

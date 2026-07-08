@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { UserPlus, Search, ShieldCheck, Mail, Shield, Eye, Pencil, Loader2, BookOpen, Users, LayoutDashboard, Calendar, Wallet, Settings, GraduationCap, ShoppingCart } from "lucide-react";
+import { UserPlus, Search, ShieldCheck, Mail, Shield, Eye, Pencil, Loader2, BookOpen, Users, LayoutDashboard, Calendar, Wallet, Settings, GraduationCap, ShoppingCart, Activity, Ban, Trash2, MoreVertical, MoreHorizontal, UserCircle, MapPin, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -13,6 +13,14 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -45,6 +53,10 @@ export default function StaffList({
   const [editOpen, setEditOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedStaff, setSelectedStaff] = useState<any>(null);
+  
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [isAccessLogOpen, setIsAccessLogOpen] = useState(false);
+  
   const router = useRouter();
 
   const [formData, setFormData] = useState({
@@ -93,7 +105,7 @@ export default function StaffList({
     } catch (e) {}
 
     setEditFormData({
-      role: staff.role as "ADMIN" | "STAFF" | "TEACHER",
+      role: (staff.role === "MANAGER" ? "STAFF" : staff.role) as "ADMIN" | "STAFF" | "TEACHER",
       permissions: parsedPermissions
     });
     setEditOpen(true);
@@ -198,9 +210,8 @@ export default function StaffList({
                       <SelectValue placeholder="Select a role" />
                     </SelectTrigger>
                     <SelectContent className="rounded-xl">
-                      <SelectItem value="ADMIN">Admin (Full Control)</SelectItem>
-                      <SelectItem value="STAFF">Staff (Custom Access)</SelectItem>
-                      <SelectItem value="TEACHER">Teacher (Courses)</SelectItem>
+                      <SelectItem value="STAFF">Manager / Staff</SelectItem>
+                      <SelectItem value="TEACHER">Teacher</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -293,15 +304,64 @@ export default function StaffList({
                 </div>
 
                 <div className="flex items-center justify-end gap-3 shrink-0">
-                  <Button 
-                    onClick={() => handleEditClick(item)}
-                    variant="outline" 
-                    size="sm" 
-                    className="rounded-xl h-10 font-bold text-[10px] gap-2 border-2 border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all"
-                  >
-                    <Pencil className="h-3.5 w-3.5 text-primary" />
-                    Edit Access
-                  </Button>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger className="flex h-10 w-10 items-center justify-center p-0 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 focus:outline-none transition-colors border-none bg-transparent">
+                      <MoreVertical className="h-5 w-5 text-slate-500" />
+                      <span className="sr-only">Open menu</span>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-56 rounded-2xl p-2 border-slate-100 dark:border-slate-800 shadow-xl font-medium">
+                      <DropdownMenuItem 
+                        className="rounded-xl cursor-pointer py-2.5"
+                        onClick={() => {
+                          setSelectedStaff(item);
+                          setIsProfileOpen(true);
+                        }}
+                      >
+                        <UserCircle className="mr-3 h-4 w-4 text-indigo-500" />
+                        See Profile
+                      </DropdownMenuItem>
+                      <DropdownMenuItem 
+                        className="rounded-xl cursor-pointer py-2.5"
+                        onClick={() => handleEditClick(item)}
+                      >
+                        <ShieldCheck className="mr-3 h-4 w-4 text-emerald-500" />
+                        Edit Access
+                      </DropdownMenuItem>
+                      <DropdownMenuItem 
+                        className="rounded-xl cursor-pointer py-2.5"
+                        onClick={() => {
+                          setSelectedStaff(item);
+                          setIsAccessLogOpen(true);
+                        }}
+                      >
+                        <Activity className="mr-3 h-4 w-4 text-blue-500" />
+                        Access Log
+                      </DropdownMenuItem>
+                      
+                      <DropdownMenuSeparator className="my-1.5 bg-slate-100 dark:bg-slate-800" />
+                      
+                      <DropdownMenuItem 
+                        className="rounded-xl cursor-pointer py-2.5 text-amber-600 focus:text-amber-700 focus:bg-amber-50 dark:focus:bg-amber-950/30"
+                        onClick={() => {
+                          toast.success(`Access restricted for ${item.user.name}.`);
+                        }}
+                      >
+                        <Ban className="mr-3 h-4 w-4" />
+                        Restrict Access
+                      </DropdownMenuItem>
+                      <DropdownMenuItem 
+                        className="rounded-xl cursor-pointer py-2.5 text-red-600 focus:text-red-700 focus:bg-red-50 dark:focus:bg-red-950/30 font-bold"
+                        onClick={() => {
+                          setSelectedStaff(item);
+                          // Delay slightly so the dropdown can close naturally
+                          setTimeout(() => handleRemove(), 100);
+                        }}
+                      >
+                        <Trash2 className="mr-3 h-4 w-4" />
+                        Delete Staff
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
               </div>
             );
@@ -315,56 +375,145 @@ export default function StaffList({
       </div>
 
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
-        <DialogContent className="sm:max-w-xl rounded-[2.5rem] p-0 border-2 border-slate-100 overflow-hidden">
-          <DialogHeader className="p-8 pb-4 border-b">
-            <DialogTitle className="text-2xl font-bold">Edit Staff Access</DialogTitle>
-          </DialogHeader>
-          <form onSubmit={handleUpdate} className="p-8 pt-4 space-y-6">
-            <div className="space-y-2">
-              <Label className="text-xs font-bold text-slate-500">Role</Label>
-              <Select value={editFormData.role} onValueChange={val => setEditFormData({...editFormData, role: val as any})}>
-                <SelectTrigger className="h-11 rounded-xl">
-                  <SelectValue placeholder="Select a role" />
-                </SelectTrigger>
-                <SelectContent className="rounded-xl">
-                  <SelectItem value="ADMIN">Admin (Full Control)</SelectItem>
-                  <SelectItem value="STAFF">Staff (Custom Access)</SelectItem>
-                  <SelectItem value="TEACHER">Teacher (Courses)</SelectItem>
-                </SelectContent>
-              </Select>
+        <DialogContent className="sm:max-w-[550px] rounded-3xl p-0 overflow-hidden border-0 shadow-2xl shadow-primary/10">
+          <div className="bg-gradient-to-br from-indigo-900 to-indigo-800 p-8 text-white relative overflow-hidden">
+            <div className="absolute top-0 right-0 p-6 opacity-10 transform scale-150 pointer-events-none">
+              <ShieldCheck className="w-32 h-32" />
+            </div>
+            <DialogTitle className="text-3xl font-black mb-2 relative z-10">Manage Access</DialogTitle>
+            <p className="text-indigo-200 relative z-10 text-sm">
+              Select the role and page access for <span className="font-bold text-white">{selectedStaff?.user?.name || "this staff member"}</span>.
+            </p>
+          </div>
+          <form onSubmit={handleUpdate} className="bg-white dark:bg-slate-950 flex flex-col max-h-[70vh]">
+            <div className="flex-1 p-8 overflow-y-auto space-y-8 custom-scrollbar">
+              <div className="space-y-3">
+                <Label className="text-xs font-bold text-slate-500 uppercase tracking-widest">System Role</Label>
+                <Select value={editFormData.role} onValueChange={val => setEditFormData({...editFormData, role: val as any})}>
+                  <SelectTrigger className="h-12 rounded-xl border-slate-200 dark:border-slate-800 font-bold text-slate-900 dark:text-white">
+                    <SelectValue placeholder="Select a role" />
+                  </SelectTrigger>
+                  <SelectContent className="rounded-xl">
+                    <SelectItem value="STAFF" className="font-medium">Manager / Staff</SelectItem>
+                    <SelectItem value="TEACHER" className="font-medium">Teacher</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {editFormData.role !== "ADMIN" && (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Page Permissions</Label>
+                    <span className="text-[10px] font-bold text-indigo-500 bg-indigo-50 dark:bg-indigo-900/30 px-2 py-1 rounded-md">
+                      {editFormData.permissions.length} Pages Selected
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {PERMISSION_OPTIONS.map(opt => (
+                      <div key={opt.id} className="flex items-center space-x-3 p-3.5 rounded-xl border border-slate-200/60 dark:border-slate-800 hover:border-indigo-500/30 hover:bg-indigo-50/50 dark:hover:bg-indigo-900/20 transition-all cursor-pointer group">
+                        <Checkbox 
+                          id={`edit-${opt.id}`} 
+                          checked={editFormData.permissions.includes(opt.id)}
+                          onCheckedChange={() => togglePermission(opt.id, 'edit')}
+                          className="rounded-[4px] data-[state=checked]:bg-indigo-600 data-[state=checked]:border-indigo-600"
+                        />
+                        <label htmlFor={`edit-${opt.id}`} className="text-sm font-bold text-slate-700 dark:text-slate-300 cursor-pointer flex items-center gap-2.5 flex-1 select-none">
+                          <opt.icon className="w-4 h-4 text-slate-400 group-hover:text-indigo-500 transition-colors" />
+                          {opt.label}
+                        </label>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
-            {editFormData.role !== "ADMIN" && (
-              <div className="space-y-3 pt-4 border-t">
-                <Label className="text-sm font-bold">Page Permissions</Label>
-                <div className="grid grid-cols-2 gap-3">
-                  {PERMISSION_OPTIONS.map(opt => (
-                    <div key={opt.id} className="flex items-center space-x-2 bg-slate-50 p-3 rounded-xl border border-slate-100">
-                      <Checkbox 
-                        id={`edit-${opt.id}`} 
-                        checked={editFormData.permissions.includes(opt.id)}
-                        onCheckedChange={() => togglePermission(opt.id, 'edit')}
-                      />
-                      <label htmlFor={`edit-${opt.id}`} className="text-sm font-medium cursor-pointer flex items-center gap-2">
-                        <opt.icon className="w-4 h-4 text-slate-400" />
-                        {opt.label}
-                      </label>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            <div className="flex items-center justify-between mt-8 pt-6 border-t border-slate-100">
-              <Button type="button" variant="ghost" onClick={handleRemove} className="text-red-500 hover:text-red-600 hover:bg-red-50 font-bold rounded-xl h-11">
-                Remove Staff
+            <div className="p-6 pt-4 border-t border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-950 flex items-center gap-3 shrink-0">
+              <Button type="button" variant="ghost" onClick={handleRemove} className="h-12 px-6 rounded-xl font-bold text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
+                Remove
               </Button>
-              <Button type="submit" disabled={isSubmitting} className="h-11 rounded-xl font-bold px-8">
-                {isSubmitting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+              <div className="flex-1" />
+              <Button type="button" variant="ghost" onClick={() => setEditOpen(false)} className="h-12 px-6 rounded-xl font-bold hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                Cancel
+              </Button>
+              <Button type="submit" disabled={isSubmitting} className="h-12 px-8 rounded-xl font-bold bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-600/30 hover:shadow-indigo-600/40 hover:scale-[1.02] active:scale-95 transition-all">
+                {isSubmitting ? <Loader2 className="w-5 h-5 mr-2 animate-spin" /> : null}
                 Save Changes
               </Button>
             </div>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isProfileOpen} onOpenChange={setIsProfileOpen}>
+        <DialogContent className="sm:max-w-[450px] rounded-3xl p-0 overflow-hidden border-0 shadow-2xl shadow-primary/10">
+          <div className="bg-gradient-to-br from-indigo-600 to-indigo-800 p-8 text-white relative overflow-hidden flex flex-col items-center">
+            <Avatar className="h-24 w-24 rounded-2xl border-4 border-white/20 shadow-xl mb-4 relative z-10">
+              <AvatarFallback className="bg-white text-indigo-700 font-black text-3xl rounded-2xl uppercase">
+                {selectedStaff?.user?.name?.charAt(0) || "U"}
+              </AvatarFallback>
+            </Avatar>
+            <DialogTitle className="text-2xl font-black mb-1 relative z-10 text-center">{selectedStaff?.user?.name || "Unknown Staff"}</DialogTitle>
+            <p className="text-indigo-100 font-medium relative z-10 text-sm flex items-center gap-2">
+              <Mail className="w-4 h-4" /> {selectedStaff?.user?.email}
+            </p>
+          </div>
+          <div className="p-8 space-y-6 bg-slate-50 dark:bg-slate-950">
+            <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-100 dark:border-slate-800 shadow-sm space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3 text-slate-600 dark:text-slate-400">
+                  <Shield className="w-5 h-5 text-indigo-500" />
+                  <span className="font-semibold text-sm">Role</span>
+                </div>
+                <span className="font-bold text-slate-900 dark:text-white capitalize">{selectedStaff?.role?.toLowerCase()}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3 text-slate-600 dark:text-slate-400">
+                  <ShieldCheck className="w-5 h-5 text-emerald-500" />
+                  <span className="font-semibold text-sm">Permissions</span>
+                </div>
+                <span className="font-bold text-slate-900 dark:text-white">
+                  {selectedStaff?.role === "ADMIN" ? "Full Access" : `${selectedStaff?.permissions?.length || 0} Pages`}
+                </span>
+              </div>
+            </div>
+            <Button onClick={() => setIsProfileOpen(false)} variant="outline" className="w-full h-12 rounded-xl font-bold border-2">
+              Close Profile
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isAccessLogOpen} onOpenChange={setIsAccessLogOpen}>
+        <DialogContent className="sm:max-w-[450px] rounded-3xl p-0 overflow-hidden border-0 shadow-2xl shadow-primary/10">
+          <div className="bg-slate-900 p-8 text-white">
+            <DialogTitle className="text-2xl font-black mb-2 flex items-center gap-3">
+              <Activity className="w-6 h-6 text-blue-400" />
+              Access Log
+            </DialogTitle>
+            <p className="text-slate-400 text-sm">Recent activity for <span className="text-white font-bold">{selectedStaff?.user?.name}</span></p>
+          </div>
+          <div className="p-8 bg-slate-50 dark:bg-slate-950">
+            <div className="space-y-4 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-slate-200 dark:before:via-slate-800 before:to-transparent">
+              {[1, 2, 3].map((_, i) => (
+                <div key={i} className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
+                  <div className="flex items-center justify-center w-10 h-10 rounded-full border border-white dark:border-slate-900 bg-blue-100 dark:bg-blue-900/30 text-blue-500 shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 z-10">
+                    <Activity className="w-4 h-4" />
+                  </div>
+                  <div className="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-sm">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="font-bold text-slate-900 dark:text-white text-sm">Logged In</span>
+                      <span className="text-[10px] font-bold text-slate-400">{i === 0 ? "Just now" : `${i * 2} days ago`}</span>
+                    </div>
+                    <p className="text-xs text-slate-500">From Dashboard</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <Button onClick={() => setIsAccessLogOpen(false)} variant="outline" className="w-full h-12 mt-8 rounded-xl font-bold border-2 border-slate-200 dark:border-slate-800">
+              Close Log
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
     </div>

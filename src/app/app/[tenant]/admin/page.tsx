@@ -2,9 +2,10 @@ import { db } from "@/lib/prisma";
 import { Button } from "@/components/ui/button";
 import { AdminPageHeader } from "@/components/layout/AdminPageHeader";
 import { AdminDashboardCharts } from "@/components/admin/AdminDashboardCharts";
-import { Users, BookOpen, UserCheck, Wallet, Sparkles, Plus } from "lucide-react";
+import { Users, BookOpen, UserCheck, Wallet, Sparkles, Plus, ShieldAlert } from "lucide-react";
 import Link from "next/link";
 import { getServerTenantLink } from "@/lib/routing-server";
+import { auth } from "@/auth";
 
 export default async function WorkspaceAdminDashboard({
   params
@@ -29,6 +30,28 @@ export default async function WorkspaceAdminDashboard({
   if (!workspace) {
     return <div>Workspace not found</div>;
   }
+
+  // Get user session and permissions
+  const session = await auth();
+  let userRole = "UNAUTHORIZED";
+  let userPermissions: string[] = [];
+  
+  if (session?.user?.role === "SUPER_ADMIN" || session?.user?.role === "SUPER_ADMIN_MANAGER" || session?.user?.email === process.env.DEVELOPER_EMAIL) {
+    userRole = "ADMIN";
+  } else if (session?.user) {
+    const roleRecord = await db.workspaceRole.findFirst({
+      where: { userId: session.user.id, workspaceId: workspace.id }
+    });
+    if (roleRecord) {
+      userRole = roleRecord.role;
+      try {
+        if (Array.isArray(roleRecord.permissions)) userPermissions = roleRecord.permissions as string[];
+        else if (typeof roleRecord.permissions === 'string') userPermissions = JSON.parse(roleRecord.permissions);
+      } catch (e) {}
+    }
+  }
+
+  const hasAccess = (page: string) => userRole === "ADMIN" || userPermissions.includes(page);
 
   // Fetch trend data (Last 6 months of admissions)
   const sixMonthsAgo = new Date();
@@ -72,12 +95,19 @@ export default async function WorkspaceAdminDashboard({
       }))
     : [{ name: "General", value: workspace._count.studentProfiles }];
 
-  const stats = [
-    { label: "Total Students", value: workspace._count.studentProfiles, icon: Users, color: "text-blue-600", bg: "bg-blue-50" },
-    { label: "Active Courses", value: workspace._count.courses, icon: BookOpen, color: "text-emerald-600", bg: "bg-emerald-50" },
-    { label: "Staff Members", value: workspace._count.roles, icon: UserCheck, color: "text-amber-600", bg: "bg-amber-50" },
-    { label: "AI Tokens", value: workspace.tokensBalance, icon: Sparkles, color: "text-purple-600", bg: "bg-purple-50" },
-  ];
+  let stats = [];
+  if (hasAccess("students")) {
+    stats.push({ label: "Total Students", value: workspace._count.studentProfiles, icon: Users, color: "text-blue-600", bg: "bg-blue-50" });
+  }
+  if (hasAccess("courses")) {
+    stats.push({ label: "Active Courses", value: workspace._count.courses, icon: BookOpen, color: "text-emerald-600", bg: "bg-emerald-50" });
+  }
+  if (hasAccess("staff")) {
+    stats.push({ label: "Staff Members", value: workspace._count.roles, icon: UserCheck, color: "text-amber-600", bg: "bg-amber-50" });
+  }
+  if (hasAccess("wallet")) {
+    stats.push({ label: "AI Tokens", value: workspace.tokensBalance, icon: Sparkles, color: "text-purple-600", bg: "bg-purple-50" });
+  }
 
   const studentLink = await getServerTenantLink("/admin/students", tenant);
 
@@ -88,14 +118,18 @@ export default async function WorkspaceAdminDashboard({
         description={`Welcome back to ${workspace.name}. Here's what's happening in your institute today.`}
       >
         <div className="flex items-center gap-3">
-          <Button variant="outline" className="rounded-xl font-bold h-11 border-2">
-            <Wallet className="w-4 h-4 mr-2" /> Buy Tokens
-          </Button>
-          <Link href={studentLink}>
-            <Button className="rounded-xl font-bold h-11 shadow-lg shadow-primary/20">
-              <Plus className="w-4 h-4 mr-2" /> New Student
+          {hasAccess("wallet") && (
+            <Button variant="outline" className="rounded-xl font-bold h-11 border-2">
+              <Wallet className="w-4 h-4 mr-2" /> Buy Tokens
             </Button>
-          </Link>
+          )}
+          {hasAccess("students") && (
+            <Link href={studentLink}>
+              <Button className="rounded-xl font-bold h-11 shadow-lg shadow-primary/20">
+                <Plus className="w-4 h-4 mr-2" /> New Student
+              </Button>
+            </Link>
+          )}
         </div>
       </AdminPageHeader>
 
@@ -116,7 +150,17 @@ export default async function WorkspaceAdminDashboard({
       </div>
 
       {/* Reports Section */}
-      <AdminDashboardCharts admissionData={admissionTrend} studentDistData={studentDistData} />
+      {hasAccess("students") || hasAccess("admissions") ? (
+        <AdminDashboardCharts admissionData={admissionTrend} studentDistData={studentDistData} />
+      ) : (
+        <div className="p-12 text-center border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-3xl bg-slate-50/50 dark:bg-slate-900/50">
+          <ShieldAlert className="w-12 h-12 text-slate-300 mx-auto mb-4" />
+          <h3 className="text-lg font-bold text-slate-900 dark:text-white">Restricted View</h3>
+          <p className="text-sm font-medium text-slate-500 mt-1 max-w-sm mx-auto">
+            You do not have permission to view detailed analytics and student charts. Please contact your administrator if you need access.
+          </p>
+        </div>
+      )}
 
       {/* Quick Actions / Welcome Card */}
       <div className="relative overflow-hidden rounded-[2.5rem] bg-slate-900 p-10 lg:p-16 text-white shadow-2xl">
@@ -130,14 +174,18 @@ export default async function WorkspaceAdminDashboard({
             Keep building your landing page or manage your staff members to optimize operations.
           </p>
           <div className="flex flex-wrap gap-4">
-            <Button size="lg" className="rounded-2xl font-bold bg-white text-slate-900 hover:bg-slate-100 h-14 px-10">
-              Launch Setup Guide
-            </Button>
-            <Link href={await getServerTenantLink("/admin/settings", tenant)}>
-              <Button size="lg" variant="outline" className="rounded-2xl font-bold border-white/20 hover:bg-white/10 h-14 px-10">
-                Landing Page Settings
+            {hasAccess("settings") && (
+              <Button size="lg" className="rounded-2xl font-bold bg-white text-slate-900 hover:bg-slate-100 h-14 px-10">
+                Launch Setup Guide
               </Button>
-            </Link>
+            )}
+            {hasAccess("settings") && (
+              <Link href={await getServerTenantLink("/admin/settings", tenant)}>
+                <Button size="lg" variant="outline" className="rounded-2xl font-bold border-white/20 hover:bg-white/10 h-14 px-10">
+                  Landing Page Settings
+                </Button>
+              </Link>
+            )}
           </div>
         </div>
       </div>

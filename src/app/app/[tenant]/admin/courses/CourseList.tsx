@@ -49,7 +49,11 @@ export default function CourseList({
   
   const [pricingOpen, setPricingOpen] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState<any>(null);
-  const [pricingForm, setPricingForm] = useState({ feeAmount: 0, priceDisplay: "", discountText: "", showFee: true });
+  const [pricingForm, setPricingForm] = useState({ 
+    feeAmount: 0, priceDisplay: "", discountText: "", showFee: true,
+    admissionFee: 0, registrationFee: 0, examFee: 0,
+    isInstallmentBased: false, installmentAmount: 0, totalInstallments: 0, totalCourseFee: 0
+  });
   const [isUpdating, setIsUpdating] = useState(false);
   
   const [batchOpen, setBatchOpen] = useState(false);
@@ -140,6 +144,13 @@ export default function CourseList({
       priceDisplay: localOverride?.priceDisplay ?? course.priceDisplay ?? "",
       discountText: localOverride?.discountText ?? course.discountText ?? "",
       showFee: localOverride?.showFee ?? course.showFee ?? true,
+      admissionFee: localOverride?.admissionFee ?? 0,
+      registrationFee: localOverride?.registrationFee ?? 0,
+      examFee: localOverride?.examFee ?? 0,
+      isInstallmentBased: localOverride?.isInstallmentBased ?? false,
+      installmentAmount: localOverride?.installmentAmount ?? 0,
+      totalInstallments: localOverride?.totalInstallments ?? 0,
+      totalCourseFee: localOverride?.totalCourseFee ?? 0
     });
     setPricingOpen(true);
   };
@@ -154,7 +165,13 @@ export default function CourseList({
     setIsUpdating(true);
     const res = await updateFranchiseCoursePricing(selectedCourse.localOverride.id, {
       ...pricingForm,
-      feeAmount: Number(pricingForm.feeAmount)
+      feeAmount: Number(pricingForm.feeAmount),
+      admissionFee: Number(pricingForm.admissionFee),
+      registrationFee: Number(pricingForm.registrationFee),
+      examFee: Number(pricingForm.examFee),
+      installmentAmount: pricingForm.isInstallmentBased ? Number(pricingForm.installmentAmount) : null,
+      totalInstallments: pricingForm.isInstallmentBased ? Number(pricingForm.totalInstallments) : null,
+      totalCourseFee: Number(pricingForm.totalCourseFee)
     });
     setIsUpdating(false);
 
@@ -369,22 +386,102 @@ export default function CourseList({
 
       {/* Pricing Override Modal */}
       <Dialog open={pricingOpen} onOpenChange={setPricingOpen}>
-        <DialogContent className="sm:max-w-[500px] rounded-[2rem] p-8 border-none shadow-2xl">
-          <DialogHeader className="mb-6">
+        <DialogContent className="sm:max-w-[600px] rounded-[2rem] p-8 border-none shadow-2xl">
+          <DialogHeader className="mb-2">
             <DialogTitle className="text-2xl font-black text-slate-900 dark:text-white">Edit Local Pricing</DialogTitle>
             <p className="text-sm text-muted-foreground">Override the pricing details for your franchise landing page.</p>
           </DialogHeader>
 
-          <form onSubmit={handleUpdatePricing} className="space-y-6">
-            <div className="space-y-2">
-              <Label>Custom Price (₹)</Label>
-              <Input 
-                type="number" 
-                value={pricingForm.feeAmount}
-                onChange={e => setPricingForm({...pricingForm, feeAmount: Number(e.target.value)})}
-                className="h-12 rounded-xl"
-              />
+          <form onSubmit={handleUpdatePricing} className="flex flex-col gap-6">
+            <div className="max-h-[60vh] overflow-y-auto custom-scrollbar pr-4 px-2 -mx-2 py-2 -my-2 space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Admission Fee (₹)</Label>
+                <Input 
+                  type="number" 
+                  value={pricingForm.admissionFee}
+                  onChange={e => setPricingForm({...pricingForm, admissionFee: Number(e.target.value)})}
+                  className="h-12 rounded-xl bg-slate-50 focus:bg-white transition-colors"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Registration Fee (₹)</Label>
+                <Input 
+                  type="number" 
+                  value={pricingForm.registrationFee}
+                  onChange={e => setPricingForm({...pricingForm, registrationFee: Number(e.target.value)})}
+                  className="h-12 rounded-xl bg-slate-50 focus:bg-white transition-colors"
+                />
+              </div>
             </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Exam Fee (₹)</Label>
+                <p className="text-[10px] text-muted-foreground">Multiplied by number of semesters</p>
+                <Input 
+                  type="number" 
+                  value={pricingForm.examFee}
+                  onChange={e => setPricingForm({...pricingForm, examFee: Number(e.target.value)})}
+                  className="h-12 rounded-xl bg-slate-50 focus:bg-white transition-colors"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Public Display Price (Optional)</Label>
+                <p className="text-[10px] text-muted-foreground">Legacy fallback display amount</p>
+                <Input 
+                  type="number" 
+                  value={pricingForm.feeAmount}
+                  onChange={e => setPricingForm({...pricingForm, feeAmount: Number(e.target.value)})}
+                  className="h-12 rounded-xl bg-slate-50 focus:bg-white transition-colors"
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3 p-4 bg-indigo-50/50 dark:bg-indigo-900/10 rounded-xl border border-indigo-100 dark:border-indigo-900/30">
+              <Switch 
+                checked={pricingForm.isInstallmentBased}
+                onCheckedChange={v => setPricingForm({...pricingForm, isInstallmentBased: v})}
+                className="data-[state=checked]:bg-indigo-600"
+              />
+              <div>
+                <Label className="font-bold block text-indigo-900 dark:text-indigo-200">Installment Based Course (EMI)</Label>
+                <span className="text-xs text-indigo-600/70 dark:text-indigo-400">If disabled, it's a one-time total course fee.</span>
+              </div>
+            </div>
+
+            {pricingForm.isInstallmentBased ? (
+              <div className="grid grid-cols-2 gap-4 p-4 bg-slate-50 dark:bg-zinc-900/50 rounded-xl border border-border">
+                <div className="space-y-2">
+                  <Label>EMI Amount (₹/mo)</Label>
+                  <Input 
+                    type="number" 
+                    value={pricingForm.installmentAmount}
+                    onChange={e => setPricingForm({...pricingForm, installmentAmount: Number(e.target.value)})}
+                    className="h-12 rounded-xl"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Total EMIs</Label>
+                  <Input 
+                    type="number" 
+                    value={pricingForm.totalInstallments}
+                    onChange={e => setPricingForm({...pricingForm, totalInstallments: Number(e.target.value)})}
+                    className="h-12 rounded-xl"
+                  />
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-2 p-4 bg-slate-50 dark:bg-zinc-900/50 rounded-xl border border-border">
+                <Label>Total Course Fee (₹)</Label>
+                <Input 
+                  type="number" 
+                  value={pricingForm.totalCourseFee}
+                  onChange={e => setPricingForm({...pricingForm, totalCourseFee: Number(e.target.value)})}
+                  className="h-12 rounded-xl"
+                />
+              </div>
+            )}
             
             <div className="space-y-2">
               <Label>Price Display Text (e.g. ₹5,000 / month)</Label>
@@ -413,11 +510,12 @@ export default function CourseList({
                 <Label className="font-bold block">Show Course Fee</Label>
                 <span className="text-xs text-muted-foreground">Toggle public visibility of the price.</span>
               </div>
+              </div>
             </div>
 
-            <div className="flex gap-3 pt-4">
+            <div className="flex gap-3 pt-2">
               <Button type="button" variant="outline" onClick={() => setPricingOpen(false)} className="flex-1 h-12 rounded-xl">Cancel</Button>
-              <Button type="submit" disabled={isUpdating} className="flex-1 h-12 rounded-xl font-bold">
+              <Button type="submit" disabled={isUpdating} className="flex-1 h-12 rounded-xl font-bold shadow-lg shadow-primary/20">
                 {isUpdating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Save Pricing
               </Button>

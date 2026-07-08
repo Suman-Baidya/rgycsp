@@ -16,7 +16,8 @@ export async function getStudents(workspaceId: string) {
         },
         admissionApp: {
           select: { appliedCourse: true, createdAt: true, email: true, photoUrl: true, signatureUrl: true, idProofUrl: true }
-        }
+        },
+        registrations: true
       },
       orderBy: { createdAt: "desc" }
     });
@@ -42,7 +43,8 @@ export async function getAllPlatformStudents() {
         },
         admissionApp: {
           select: { appliedCourse: true, createdAt: true, email: true, photoUrl: true, signatureUrl: true, idProofUrl: true }
-        }
+        },
+        registrations: true
       },
       orderBy: { createdAt: "desc" }
     });
@@ -62,6 +64,16 @@ export async function createStudent(workspaceId: string, data: any) {
       photoUrl, signatureUrl, idProofUrl, loginPassword: providedPassword 
     } = data;
 
+    // Generate Enrollment Number (e.g., RGY12345678)
+    let finalEnrollmentNo = enrollmentNo;
+    if (!finalEnrollmentNo) {
+      const config = await db.registrationConfig.findFirst();
+      const prefix = config ? config.enrollmentPrefix : "RGY";
+      const count = await db.studentProfile.count();
+      const seq = String(count + 1).padStart(8, '0');
+      finalEnrollmentNo = `${prefix}${seq}`;
+    }
+
     let loginPassword = providedPassword;
     if (!loginPassword && dob) {
       const dobDate = new Date(dob);
@@ -75,7 +87,7 @@ export async function createStudent(workspaceId: string, data: any) {
       data: {
         workspaceId,
         fullName,
-        enrollmentNo,
+        enrollmentNo: finalEnrollmentNo,
         loginPassword: loginPassword || null,
         phone,
         email,

@@ -33,12 +33,17 @@ export default async function StudentsPage({
     select: { id: true, title: true }
   });
 
+  const paymentConfig = await db.franchisePaymentConfig.findUnique({
+    where: { workspaceId: workspace.id }
+  });
+
   return (
     <StudentsManagementClient 
       workspaceId={workspace.id}
       initialStudents={studentsResult.data ?? []}
       batches={batches}
       courses={courses}
+      paymentConfig={paymentConfig}
     />
   );
 }

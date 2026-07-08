@@ -7,17 +7,20 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import StudentList from "./StudentList";
 import BatchManagement from "./BatchManagement";
+import FeesManagementClient from "./FeesManagementClient";
 
 export default function StudentsManagementClient({ 
   workspaceId, 
   initialStudents, 
   batches,
-  courses
+  courses,
+  paymentConfig
 }: { 
   workspaceId: string;
   initialStudents: any[];
   batches: any[];
   courses: any[];
+  paymentConfig: any;
 }) {
   const [activeTab, setActiveTab] = useState("registered");
   const [mounted, setMounted] = useState(false);
@@ -81,18 +84,11 @@ export default function StudentsManagementClient({
         )}
         
         {activeTab === "invoices" && (
-          <div className="p-12 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-[2.5rem] flex flex-col items-center justify-center text-center space-y-4">
-            <div className="w-16 h-16 rounded-3xl bg-slate-100 dark:bg-slate-900 flex items-center justify-center">
-              <Receipt className="w-8 h-8 text-slate-400" />
-            </div>
-            <div className="space-y-1">
-              <h3 className="text-xl font-bold">Invoices & Fee Tracking</h3>
-              <p className="text-slate-500 max-w-sm">Generate monthly invoices, track payment status, and manage student accounts.</p>
-            </div>
-            <Button className="rounded-xl font-bold h-11 px-8">
-              <Plus className="w-4 h-4 mr-2" /> Generate Invoices
-            </Button>
-          </div>
+          <FeesManagementClient 
+            workspaceId={workspaceId} 
+            students={initialStudents} 
+            paymentConfig={paymentConfig} 
+          />
         )}
       </div>
     </div>

@@ -24,14 +24,23 @@ export default {
       if (token?.role && session.user) {
         session.user.role = token.role as string;
       }
+      if (token?.systemPermissions && session.user) {
+        session.user.systemPermissions = token.systemPermissions;
+      }
+      if (token?.isDeveloper !== undefined && session.user) {
+        session.user.isDeveloper = token.isDeveloper as boolean;
+      }
       return session;
     },
     async jwt({ token, user, trigger, session }) {
       if (user) {
         token.role = user.role as string;
+        token.systemPermissions = (user as any).systemPermissions;
+        token.isDeveloper = user.email === process.env.DEVELOPER_EMAIL;
       }
       if (trigger === 'update' && session?.user) {
         token.role = session.user.role;
+        token.systemPermissions = session.user.systemPermissions;
       }
       return token;
     },
