@@ -67,7 +67,7 @@ export function AdmissionPDFView({ application, workspace, settings, config }: A
             </div>
 
             <div className="text-right shrink-0">
-              <div className="bg-white/10 backdrop-blur-md border border-white/20 p-5 rounded-3xl">
+              <div className="bg-white/10 backdrop-blur-sm border border-white/20 p-5 rounded-3xl">
                 <span className="text-[10px] font-bold uppercase block opacity-60 mb-1 tracking-widest">Application No</span>
                 <span className="text-2xl font-bold tracking-tighter">{application.applicationNo}</span>
               </div>

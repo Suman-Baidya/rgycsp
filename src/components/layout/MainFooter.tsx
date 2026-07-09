@@ -69,7 +69,7 @@ export function MainFooter({ settings }: { settings?: any }) {
           {/* Brand Info */}
           <div className="lg:col-span-4 space-y-10">
             <Link href="/" className="flex items-center gap-1 w-fit group">
-              <div className="relative w-20 h-20 flex items-center justify-center rounded overflow-hidden p-2 shadow-2xl shadow-white/10 group-hover:scale-105 transition-all duration-500">
+              <div className="relative w-20 h-20 flex items-center justify-center rounded overflow-hidden p-2 shadow-2xl shadow-white/10 group- transition-all duration-500">
                 <Image
                   src={logoUrl}
                   alt={siteName}

@@ -118,14 +118,14 @@ export function LoginForm({
               <div className="absolute -inset-2 bg-primary/20 rounded-[2.5rem] blur-2xl group-hover:blur-3xl transition-all duration-700 opacity-0 group-hover:opacity-100 group-hover:bg-primary/30" style={{ backgroundColor: primaryColor ? `${primaryColor}40` : undefined }} />
 
               {/* Logo Container */}
-              <div className="relative w-25 h-25 rounded-[2rem] bg-gradient-to-br from-white to-slate-50 dark:from-zinc-800 dark:to-zinc-950 border border-white dark:border-zinc-700 flex items-center justify-center overflow-hidden p-4 shadow-xl transition-all duration-500 group-hover:scale-105 group-hover:-translate-y-1">
+              <div className="relative w-25 h-25 rounded-[2rem] bg-gradient-to-br from-white to-slate-50 dark:from-zinc-800 dark:to-zinc-950 border border-white dark:border-zinc-700 flex items-center justify-center overflow-hidden p-4 shadow-xl transition-all duration-500 group- group-hover:-translate-y-1">
                 {/* Inner shadow/highlight ring */}
                 <div className="absolute inset-0 rounded-[2rem] border border-white/50 dark:border-white/5 pointer-events-none shadow-[inset_0_2px_15px_rgba(0,0,0,0.03)] dark:shadow-[inset_0_2px_20px_rgba(255,255,255,0.05)]" />
 
                 {tenantLogo ? (
-                  <img src={tenantLogo} alt={tenantName} className="w-full h-full object-contain drop-shadow-md transition-transform duration-500 group-hover:scale-110" />
+                  <img src={tenantLogo} alt={tenantName} className="w-full h-full object-contain drop-shadow-md transition-transform duration-500 group-hover:brightness-110" />
                 ) : (
-                  <GraduationCap className="w-10 h-10 text-primary drop-shadow-md transition-transform duration-500 group-hover:scale-110" style={{ color: primaryColor || undefined }} />
+                  <GraduationCap className="w-10 h-10 text-primary drop-shadow-md transition-transform duration-500 group-hover:brightness-110" style={{ color: primaryColor || undefined }} />
                 )}
               </div>
             </Link>

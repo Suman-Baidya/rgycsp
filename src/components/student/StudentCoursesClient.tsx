@@ -99,7 +99,7 @@ export default function StudentCoursesClient({
                {/* Left: Course Image/Preview */}
                <div className="lg:col-span-4 relative h-72 lg:h-auto overflow-hidden">
                   {currentCourse.image ? (
-                    <img src={currentCourse.image} alt={currentCourse.title} className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                    <img src={currentCourse.image} alt={currentCourse.title} className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:brightness-110" />
                   ) : (
                     <div className="absolute inset-0 bg-primary/10 flex items-center justify-center">
                       <BookOpen className="w-20 h-20 text-primary/20" />
@@ -225,12 +225,12 @@ export default function StudentCoursesClient({
                 <img 
                   src={course.image || "https://images.unsplash.com/photo-1509228468518-180dd48a5f5f?q=80&w=2070"} 
                   alt={course.title} 
-                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
+                  className="w-full h-full object-cover transition-transform duration-700 group-hover:brightness-110" 
                 />
                 
                 {/* Badges */}
                 <div className="absolute top-6 left-6">
-                  <span className="bg-white/90 dark:bg-zinc-900/90 backdrop-blur-md text-primary px-4 py-1.5 rounded-full text-[10px] font-black tracking-[0.2em] shadow-xl uppercase border border-white/20">
+                  <span className="bg-white/90 dark:bg-zinc-900/90 backdrop-blur-sm text-primary px-4 py-1.5 rounded-full text-[10px] font-black tracking-[0.2em] shadow-xl uppercase border border-white/20">
                     {idx === 0 ? "TOP TRENDING" : "TRENDING"}
                   </span>
                 </div>

@@ -52,7 +52,7 @@ export function EventsListClient({ events }: { events: any[] }) {
             <img 
               src={event.image} 
               alt={event.title} 
-              className={`w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 ${isPast ? 'grayscale opacity-80 group-hover:grayscale-0 group-hover:opacity-100' : ''}`}
+              className={`w-full h-full object-cover transition-transform duration-500 group- ${isPast ? 'grayscale opacity-80 group-hover:grayscale-0 group-hover:opacity-100' : ''}`}
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center bg-primary/5">
@@ -65,7 +65,7 @@ export function EventsListClient({ events }: { events: any[] }) {
             </div>
           )}
           {isPast && (
-            <div className="absolute top-4 right-4 bg-black/60 backdrop-blur-md text-white px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest shadow-sm border border-white/10">
+            <div className="absolute top-4 right-4 bg-black/60 backdrop-blur-sm text-white px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest shadow-sm border border-white/10">
               Completed
             </div>
           )}

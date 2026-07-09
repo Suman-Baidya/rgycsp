@@ -107,7 +107,7 @@ export function LandingNavbar({ settings, user, isHome }: { settings?: any, user
 
   const Logo = ({ size = "w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20", showName = true }: { size?: string, showName?: boolean }) => (
     <div className="flex items-center gap-2 shrink-0 group">
-      <div className={cn("relative flex items-center justify-center shrink-0 rounded-lg transition-transform group-hover:scale-105", size)}>
+      <div className={cn("relative flex items-center justify-center shrink-0 rounded-lg transition-transform group-", size)}>
         <Image
           src={logoUrl}
           alt={`${siteName} Logo`}
@@ -209,7 +209,7 @@ export function LandingNavbar({ settings, user, isHome }: { settings?: any, user
 
       {/* TIER 1: Top Bar (Icons, Theme) - Absolute (Scrolls away) */}
       {config.showTopBar !== false && (
-        <div className="hidden lg:flex w-full bg-primary/95 dark:bg-zinc-950/90 dark:border-b dark:border-white/5 backdrop-blur-md py-1 px-6 justify-between items-center text-xs text-primary-foreground dark:text-zinc-400 transition-all duration-300">
+        <div className="hidden lg:flex w-full bg-primary/95 dark:bg-zinc-950/90 dark:border-b dark:border-white/5 backdrop-blur-sm py-1 px-6 justify-between items-center text-xs text-primary-foreground dark:text-zinc-400 transition-all duration-300">
           {/* Top Left: Social Logos only */}
           <div className="flex items-center gap-4">
             {settings?.socialLinks?.youtube && <Link href={settings.socialLinks.youtube} target="_blank" aria-label="Youtube" className="hover:text-muted transition-colors"><Youtube className="w-4 h-4" /></Link>}
@@ -243,7 +243,7 @@ export function LandingNavbar({ settings, user, isHome }: { settings?: any, user
 
       {/* TIER 2: Branding Bar */}
       <div className={cn(
-        "w-full bg-background/95 backdrop-blur-xl border-b border-border/50 py-1 overflow-hidden transition-all duration-500 mb-2",
+        "w-full bg-background/95 backdrop-blur-sm border-b border-border/50 py-1 overflow-hidden transition-all duration-500 mb-2",
         isScrolled ? "lg:hidden fixed left-0 top-0 shadow-md z-[150]" : "relative"
       )}>
         <div className="max-w-7xl mx-auto px-4 lg:px-6 flex items-center justify-between gap-2 lg:gap-4">
@@ -306,7 +306,7 @@ export function LandingNavbar({ settings, user, isHome }: { settings?: any, user
         <nav className={cn(
           "hidden lg:flex w-full transition-all duration-500 z-[90] py-1",
           isScrolled
-            ? "fixed top-0 left-0 bg-background/95 backdrop-blur-2xl border-b border-border shadow-md"
+            ? "fixed top-0 left-0 bg-background/95 backdrop-blur-sm border-b border-border shadow-md"
             : "bg-transparent"
         )}>
           <div className="max-w-7xl mx-auto px-6 w-full grid grid-cols-3 items-center">

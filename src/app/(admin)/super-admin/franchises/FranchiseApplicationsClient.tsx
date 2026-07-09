@@ -1337,7 +1337,7 @@ export default function FranchiseApplicationsClient({
                         <TableCell className="px-8 py-6">
                           <div className="flex items-center gap-5">
                             <div className="relative">
-                              <Avatar className="h-14 w-14 shadow rounded-2xl group-hover:scale-105 transition-transform duration-500">
+                              <Avatar className="h-14 w-14 shadow rounded-2xl group- transition-transform duration-500">
                                 <AvatarImage src={ws.logoUrl} />
                                 <AvatarFallback className="bg-primary/10 text-primary font-bold text-xl rounded-2xl">
                                   {ws.name.charAt(0)}
@@ -1721,7 +1721,7 @@ export default function FranchiseApplicationsClient({
                     <div className="h-48 w-full rounded-2xl border border-slate-200 dark:border-slate-700 shadow-inner overflow-hidden bg-slate-50/80 dark:bg-slate-800/80 flex items-center justify-center relative group transition-all duration-300 hover:shadow-lg hover:border-emerald-500/30">
                       {selectedApp.photoUrl ? (
                         <>
-                          <img src={selectedApp.photoUrl} alt="Photo" className="w-full h-full object-contain p-2 transition-transform duration-500 group-hover:scale-105" />
+                          <img src={selectedApp.photoUrl} alt="Photo" className="w-full h-full object-contain p-2 transition-transform duration-500 group-" />
                           <a href={selectedApp.photoUrl} target="_blank" className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center text-white font-bold gap-2 backdrop-blur-[2px]">
                             <div className="bg-white/20 p-3 rounded-full flex items-center gap-2 hover:bg-white/30 transition-colors">
                               <ExternalLink className="w-5 h-5" /> <span>View Full</span>
@@ -1742,7 +1742,7 @@ export default function FranchiseApplicationsClient({
                     <div className="h-48 w-full rounded-2xl border border-slate-200 dark:border-slate-700 shadow-inner overflow-hidden bg-slate-50/80 dark:bg-slate-800/80 flex items-center justify-center relative group transition-all duration-300 hover:shadow-lg hover:border-emerald-500/30">
                       {selectedApp.signatureUrl ? (
                         <>
-                          <img src={selectedApp.signatureUrl} alt="Signature" className="w-full h-full object-contain p-2 transition-transform duration-500 group-hover:scale-105" />
+                          <img src={selectedApp.signatureUrl} alt="Signature" className="w-full h-full object-contain p-2 transition-transform duration-500 group-" />
                           <a href={selectedApp.signatureUrl} target="_blank" className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center text-white font-bold gap-2 backdrop-blur-[2px]">
                             <div className="bg-white/20 p-3 rounded-full flex items-center gap-2 hover:bg-white/30 transition-colors">
                               <ExternalLink className="w-5 h-5" /> <span>View Full</span>
@@ -1763,7 +1763,7 @@ export default function FranchiseApplicationsClient({
                     <div className="h-48 w-full rounded-2xl border border-slate-200 dark:border-slate-700 shadow-inner overflow-hidden bg-slate-50/80 dark:bg-slate-800/80 flex items-center justify-center relative group transition-all duration-300 hover:shadow-lg hover:border-emerald-500/30">
                       {selectedApp.idProofUrl ? (
                         <>
-                          <img src={selectedApp.idProofUrl} alt="ID Proof" className="w-full h-full object-contain p-2 transition-transform duration-500 group-hover:scale-105" />
+                          <img src={selectedApp.idProofUrl} alt="ID Proof" className="w-full h-full object-contain p-2 transition-transform duration-500 group-" />
                           <a href={selectedApp.idProofUrl} target="_blank" className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center text-white font-bold gap-2 backdrop-blur-[2px]">
                             <div className="bg-white/20 p-3 rounded-full flex items-center gap-2 hover:bg-white/30 transition-colors">
                               <ExternalLink className="w-5 h-5" /> <span>View Full</span>

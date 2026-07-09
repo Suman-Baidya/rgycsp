@@ -62,7 +62,7 @@ export function WhyChooseUs({ data }: { data?: any }) {
               const Icon = iconMap[feat.icon] || Cpu;
               return (
                 <div key={i} className="p-6 border rounded-2xl bg-zinc-50 dark:bg-zinc-900 shadow-sm hover:shadow-md transition-shadow group">
-                  <div className="w-12 h-12 bg-primary/10 text-primary rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                  <div className="w-12 h-12 bg-primary/10 text-primary rounded-xl flex items-center justify-center mb-4 group-hover:brightness-110 transition-transform">
                     <Icon className="w-6 h-6" />
                   </div>
                   <h3 className="text-lg font-bold mb-2">{feat.title}</h3>

@@ -48,7 +48,7 @@ export function CustomSolution({ data }: { data?: any }) {
         {/* Contact Details Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
           <a href={`tel:${contact.phone.replace(/\s+/g, '')}`} className="group p-6 rounded-3xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/30 transition-all">
-            <div className="w-12 h-12 rounded-2xl bg-blue-500/20 text-blue-400 flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
+            <div className="w-12 h-12 rounded-2xl bg-blue-500/20 text-blue-400 flex items-center justify-center mx-auto mb-4 group-hover:brightness-110 transition-transform">
               <Phone className="w-6 h-6" />
             </div>
             <p className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-1">Call Support</p>
@@ -56,7 +56,7 @@ export function CustomSolution({ data }: { data?: any }) {
           </a>
 
           <a href={`mailto:${contact.email}`} className="group p-6 rounded-3xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/30 transition-all">
-            <div className="w-12 h-12 rounded-2xl bg-pink-500/20 text-pink-400 flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
+            <div className="w-12 h-12 rounded-2xl bg-pink-500/20 text-pink-400 flex items-center justify-center mx-auto mb-4 group-hover:brightness-110 transition-transform">
               <Mail className="w-6 h-6" />
             </div>
             <p className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-1">Email Inquiries</p>
@@ -64,7 +64,7 @@ export function CustomSolution({ data }: { data?: any }) {
           </a>
 
           <a href={`https://wa.me/${contact.whatsapp.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer" className="group p-6 rounded-3xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/30 transition-all">
-            <div className="w-12 h-12 rounded-2xl bg-green-500/20 text-green-400 flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
+            <div className="w-12 h-12 rounded-2xl bg-green-500/20 text-green-400 flex items-center justify-center mx-auto mb-4 group-hover:brightness-110 transition-transform">
               <div className="relative">
                 <Phone className="w-6 h-6" />
                 <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-zinc-950 animate-pulse"></div>
@@ -76,7 +76,7 @@ export function CustomSolution({ data }: { data?: any }) {
         </div>
 
         <div className="flex flex-col sm:flex-row gap-6 justify-center">
-          <a href={primaryBtn.link} className="inline-flex items-center justify-center h-16 px-12 bg-primary shadow-white/40 shadow-sm text-primary-foreground font-black rounded-2xl hover:scale-105 active:scale-95 transition-all shadow-[0_20px_40px_rgba(var(--primary),0.3)]">
+          <a href={primaryBtn.link} className="inline-flex items-center justify-center h-16 px-12 bg-primary shadow-white/40 shadow-sm text-primary-foreground font-black rounded-2xl  active:scale-95 transition-all shadow-[0_20px_40px_rgba(var(--primary),0.3)]">
             {primaryBtn.label}
           </a>
           <a href={secondaryBtn.link} className="inline-flex items-center justify-center h-16 px-12 border-2 border-white/20 text-white font-bold rounded-2xl hover:bg-white hover:text-zinc-950 transition-all">

@@ -70,7 +70,7 @@ export function GuideResources({ data }: { data?: any }) {
                   {docs.description}
                 </p>
                 
-                <a href={docs.btnLink} className="inline-flex items-center gap-4 h-16 px-10 bg-zinc-950 dark:bg-zinc-100 text-white dark:text-zinc-950 font-black rounded-2xl hover:scale-105 active:scale-95 transition-all shadow-xl group/btn">
+                <a href={docs.btnLink} className="inline-flex items-center gap-4 h-16 px-10 bg-zinc-950 dark:bg-zinc-100 text-white dark:text-zinc-950 font-black rounded-2xl  active:scale-95 transition-all shadow-xl group/btn">
                   <FileDown className="w-6 h-6 group-hover/btn:animate-bounce" />
                   {docs.btnLabel}
                 </a>

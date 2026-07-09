@@ -71,7 +71,7 @@ export function FaqSection({ data }: { data?: any }) {
             <img
               src={image}
               alt="Call Centre Support"
-              className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 hover:scale-105"
+              className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 "
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end p-8">
               <div className="text-white">
@@ -98,7 +98,7 @@ export function FaqSection({ data }: { data?: any }) {
               </p>
             </div>
 
-            <div className="bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md p-6 md:p-8 rounded-3xl border border-zinc-200 dark:border-zinc-800 shadow-xl">
+            <div className="bg-white/80 dark:bg-zinc-900/80 backdrop-blur-sm p-6 md:p-8 rounded-3xl border border-zinc-200 dark:border-zinc-800 shadow-xl">
               <Accordion className="w-full">
                 {items.map((faq: any, i: number) => (
                   <AccordionItem key={i} value={`item-${i}`} className="border-b border-border/60 py-4 last:border-0 group">

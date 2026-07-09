@@ -21,7 +21,7 @@ export default function CourseDetailsModal({ isOpen, onClose, course }: { isOpen
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent showCloseButton={false} className="max-w-4xl max-h-[90vh] flex flex-col rounded-[2rem] p-0 border-0 gap-0 shadow-2xl overflow-hidden bg-white dark:bg-zinc-950">
         <DialogTitle className="sr-only">{course.name}</DialogTitle>
-        <DialogClose className="absolute right-4 top-4 z-50 flex h-12 w-12 items-center justify-center rounded-full bg-black/20 hover:bg-black/40 backdrop-blur-md text-white transition-all shadow-lg hover:scale-105 border border-white/10 outline-none focus-visible:ring-2 focus-visible:ring-primary">
+        <DialogClose className="absolute right-4 top-4 z-50 flex h-12 w-12 items-center justify-center rounded-full bg-black/20 hover:bg-black/40 backdrop-blur-sm text-white transition-all shadow-lg  border border-white/10 outline-none focus-visible:ring-2 focus-visible:ring-primary">
           <X className="h-6 w-6" />
           <span className="sr-only">Close</span>
         </DialogClose>
@@ -43,7 +43,7 @@ export default function CourseDetailsModal({ isOpen, onClose, course }: { isOpen
                 </span>
               )}
               {course.groupId && (
-                <span className="inline-flex items-center px-4 py-1.5 rounded-xl text-sm sm:text-base font-bold bg-white/20 backdrop-blur-md text-white border border-white/20">
+                <span className="inline-flex items-center px-4 py-1.5 rounded-xl text-sm sm:text-base font-bold bg-white/20 backdrop-blur-sm text-white border border-white/20">
                   {course.groupId.toUpperCase()}
                 </span>
               )}

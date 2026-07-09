@@ -1,9 +1,11 @@
 import { LandingNavbar } from "@/components/layout/LandingNavbar";
 import { MainFooter } from "@/components/layout/MainFooter";
 import { PageHeader } from "@/components/layout/PageHeader";
-import { PricingSection } from "@/components/landing/PricingSection";
-import { CustomSolution } from "@/components/landing/CustomSolution";
-import { Testimonials } from "@/components/landing/Testimonials";
+import dynamic from "next/dynamic";
+
+const PricingSection = dynamic(() => import("@/components/landing/PricingSection").then(mod => mod.PricingSection));
+const CustomSolution = dynamic(() => import("@/components/landing/CustomSolution").then(mod => mod.CustomSolution));
+const Testimonials = dynamic(() => import("@/components/landing/Testimonials").then(mod => mod.Testimonials));
 import { db } from "@/lib/prisma";
 import { auth } from "@/auth";
 

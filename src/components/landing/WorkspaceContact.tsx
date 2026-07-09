@@ -72,7 +72,7 @@ export function WorkspaceContact({ data, settings }: { data?: any, settings?: an
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                      <div className="p-6 rounded-3xl bg-white dark:bg-zinc-900 border border-border shadow-sm group hover:border-primary/20 transition-all hover:shadow-md">
-                        <div className="w-10 h-10 bg-primary/10 text-primary rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                        <div className="w-10 h-10 bg-primary/10 text-primary rounded-xl flex items-center justify-center mb-4 group-hover:brightness-110 transition-transform">
                            <MapPin className="w-5 h-5" />
                         </div>
                         <h4 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">{content.addressLabel || "Our Campus"}</h4>
@@ -80,7 +80,7 @@ export function WorkspaceContact({ data, settings }: { data?: any, settings?: an
                      </div>
 
                      <div className="p-6 rounded-3xl bg-white dark:bg-zinc-900 border border-border shadow-sm group hover:border-primary/20 transition-all hover:shadow-md">
-                        <div className="w-10 h-10 bg-primary/10 text-primary rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                        <div className="w-10 h-10 bg-primary/10 text-primary rounded-xl flex items-center justify-center mb-4 group-hover:brightness-110 transition-transform">
                            <Phone className="w-5 h-5" />
                         </div>
                         <h4 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">{content.phoneLabel || "Call Us"}</h4>
@@ -88,7 +88,7 @@ export function WorkspaceContact({ data, settings }: { data?: any, settings?: an
                      </div>
 
                      <div className="p-6 rounded-3xl bg-white dark:bg-zinc-900 border border-border shadow-sm group hover:border-primary/20 transition-all hover:shadow-md">
-                        <div className="w-10 h-10 bg-primary/10 text-primary rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                        <div className="w-10 h-10 bg-primary/10 text-primary rounded-xl flex items-center justify-center mb-4 group-hover:brightness-110 transition-transform">
                            <Mail className="w-5 h-5" />
                         </div>
                         <h4 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">{content.emailLabel || "Email Us"}</h4>
@@ -96,7 +96,7 @@ export function WorkspaceContact({ data, settings }: { data?: any, settings?: an
                      </div>
 
                      <div className="p-6 rounded-3xl bg-white dark:bg-zinc-900 border border-border shadow-sm group hover:border-primary/20 transition-all hover:shadow-md">
-                        <div className="w-10 h-10 bg-primary/10 text-primary rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                        <div className="w-10 h-10 bg-primary/10 text-primary rounded-xl flex items-center justify-center mb-4 group-hover:brightness-110 transition-transform">
                            <Clock className="w-5 h-5" />
                         </div>
                         <h4 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">{content.hoursLabel || "Office Hours"}</h4>

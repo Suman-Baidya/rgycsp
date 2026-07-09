@@ -70,7 +70,7 @@ export function WorkspaceAchievements({ data }: { data?: any }) {
                 src={(item.src && item.src.trim() !== "") ? item.src : (item.image && item.image.trim() !== "") ? item.image : "https://cdn.pixabay.com/photo/2015/02/24/00/43/medal-646943_1280.jpg"}
                 alt={item.title}
                 fill
-                className="object-cover group-hover:scale-110 transition-transform duration-1000"
+                className="object-cover group-hover:brightness-110 transition-transform duration-1000"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-80 group-hover:opacity-90 transition-opacity" />
               <div className="absolute bottom-0 left-0 p-10 space-y-3 transform translate-y-4 group-hover:translate-y-0 transition-transform duration-500">

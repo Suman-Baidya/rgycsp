@@ -43,7 +43,7 @@ export function WorkspaceWhyChooseUs({ data }: { data?: any }) {
               src={image || "https://cdn.pixabay.com/photo/2019/11/25/18/01/unknown-4652690_1280.jpg"}
               alt={title || "Why Choose Us"}
               fill
-              className="object-cover group-hover:scale-105 transition-transform duration-700"
+              className="object-cover group- transition-transform duration-700"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-primary/40 to-transparent" />
           </div>

@@ -50,7 +50,7 @@ export function OfflineIndicator() {
           transition={{ type: "spring", stiffness: 300, damping: 25 }}
           className="fixed bottom-6 right-6 z-[9999] pointer-events-auto"
         >
-          <div className="w-[calc(100vw-3rem)] sm:w-[380px] bg-white/80 dark:bg-zinc-950/80 backdrop-blur-2xl border border-red-500/20 dark:border-red-500/10 rounded-3xl shadow-[0_20px_40px_-15px_rgba(220,38,38,0.15)] overflow-hidden">
+          <div className="w-[calc(100vw-3rem)] sm:w-[380px] bg-white/80 dark:bg-zinc-950/80 backdrop-blur-sm border border-red-500/20 dark:border-red-500/10 rounded-3xl shadow-[0_20px_40px_-15px_rgba(220,38,38,0.15)] overflow-hidden">
             {/* Header with gradient */}
             <div className="relative bg-gradient-to-b from-red-500/10 to-transparent p-5 flex items-center gap-4">
               <div className="relative w-12 h-12 rounded-2xl bg-white dark:bg-zinc-900 border border-red-100 dark:border-red-900/30 flex items-center justify-center shrink-0 shadow-sm">

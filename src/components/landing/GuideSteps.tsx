@@ -102,7 +102,7 @@ export function GuideSteps({ data }: { data?: any }) {
                 </div>
 
                 {/* Floating Icon Container */}
-                <div className="relative z-10 w-16 h-16 rounded-2xl bg-white dark:bg-zinc-800 shadow-xl border border-border flex items-center justify-center mb-8 group-hover:scale-110 group-hover:-rotate-6 transition-all duration-500">
+                <div className="relative z-10 w-16 h-16 rounded-2xl bg-white dark:bg-zinc-800 shadow-xl border border-border flex items-center justify-center mb-8 group-hover:brightness-110 group-hover:-rotate-6 transition-all duration-500">
                   <div className="w-12 h-12 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-black dark:text-white flex items-center justify-center shadow-inner">
                     <Icon className="w-6 h-6" />
                   </div>

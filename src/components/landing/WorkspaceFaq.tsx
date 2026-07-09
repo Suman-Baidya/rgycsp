@@ -105,12 +105,12 @@ export function WorkspaceFaq({ data }: { data?: any }) {
            </div>
            {content.ctaButtonLink ? (
              <a href={content.ctaButtonLink}>
-                <Button className="relative z-10 h-14 px-10 rounded-2xl font-black text-lg bg-primary hover:scale-105 transition-transform shadow-lg shadow-primary/20 border-none">
+                <Button className="relative z-10 h-14 px-10 rounded-2xl font-black text-lg bg-primary  transition-transform shadow-lg shadow-primary/20 border-none">
                    {content.ctaButtonText || "Chat with Admissions"}
                 </Button>
              </a>
            ) : (
-              <Button className="relative z-10 h-14 px-10 rounded-2xl font-black text-lg bg-primary hover:scale-105 transition-transform shadow-lg shadow-primary/20 border-none">
+              <Button className="relative z-10 h-14 px-10 rounded-2xl font-black text-lg bg-primary  transition-transform shadow-lg shadow-primary/20 border-none">
                  {content.ctaButtonText || "Chat with Admissions"}
               </Button>
            )}

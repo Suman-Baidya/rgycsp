@@ -61,7 +61,7 @@ export function QuickLinksSection({ data, tenant }: QuickLinksSectionProps) {
                 {/* Hover gradient background effect */}
                 <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                 
-                <div className="relative w-20 h-20 mb-6 rounded-full bg-primary/10 text-primary flex items-center justify-center group-hover:scale-110 group-hover:bg-primary group-hover:text-white transition-all duration-500 shadow-inner">
+                <div className="relative w-20 h-20 mb-6 rounded-full bg-primary/10 text-primary flex items-center justify-center group-hover:brightness-110 group-hover:bg-primary group-hover:text-white transition-all duration-500 shadow-inner">
                   <Icon className="w-8 h-8" strokeWidth={1.5} />
                 </div>
                 

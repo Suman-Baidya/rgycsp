@@ -35,7 +35,7 @@ export function Achievements({ data }: { data?: any }) {
                       src={item.src || ""}
                       alt={item.title}
                       fill
-                      className="object-cover transition-transform duration-700 group-hover:scale-110"
+                      className="object-cover transition-transform duration-700 group-hover:brightness-110"
                    />
                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex flex-col justify-end p-8">
                       <h3 className="text-2xl font-bold text-white mb-2">{item.title}</h3>

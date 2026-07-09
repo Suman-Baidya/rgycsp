@@ -35,7 +35,7 @@ export function MissionSection({ data }: { data?: any }) {
               src={image || ""}
               alt={title}
               fill
-              className="object-cover transition-transform duration-700 group-hover:scale-110"
+              className="object-cover transition-transform duration-700 group-hover:brightness-110"
             />
             <div className="absolute inset-0 bg-gradient-to-tr from-primary/40 to-transparent mix-blend-overlay"></div>
           </div>

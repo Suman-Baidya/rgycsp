@@ -29,7 +29,7 @@ export function PartnersMarquee({ data }: { data?: any }) {
                         src={logo || ""}
                         alt={`Partner ${index}`}
                         fill
-                        className="object-contain grayscale opacity-40 hover:grayscale-0 hover:opacity-100 transition-all duration-300 drop-shadow-sm hover:drop-shadow-xl hover:scale-110"
+                        className="object-contain grayscale opacity-40 hover:grayscale-0 hover:opacity-100 transition-all duration-300 drop-shadow-sm hover:drop-shadow-xl hover:brightness-110"
                      />
                   </div>
                ))}

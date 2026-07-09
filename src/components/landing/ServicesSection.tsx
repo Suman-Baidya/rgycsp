@@ -108,7 +108,7 @@ export function ServicesSection({ data }: { data?: any }) {
               const Icon = ICON_MAP[h.icon] || Globe;
               return (
                 <div key={i} className="p-8 rounded-[2rem] bg-white dark:bg-zinc-900 border border-border/50 hover:shadow-xl transition-all group">
-                  <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary mb-6 group-hover:scale-110 transition-transform">
+                  <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary mb-6 group-hover:brightness-110 transition-transform">
                     <Icon className="w-6 h-6" />
                   </div>
                   <h4 className="text-lg font-bold mb-3">{h.title}</h4>
@@ -192,7 +192,7 @@ export function ServicesSection({ data }: { data?: any }) {
                     <div className="absolute top-8 right-10 text-8xl font-black text-zinc-100 dark:text-zinc-800/50 select-none group-hover:text-primary/10 transition-colors duration-500">
                       0{i + 1}
                     </div>
-                    <div className={`relative z-10 w-20 h-20 rounded-[2rem] ${role.color || "bg-primary/10 text-primary"} flex items-center justify-center mb-10 shadow-lg group-hover:scale-110 group-hover:rotate-6 transition-all duration-500 group-hover:shadow-[0_0_30px_rgba(var(--primary),0.3)]`}>
+                    <div className={`relative z-10 w-20 h-20 rounded-[2rem] ${role.color || "bg-primary/10 text-primary"} flex items-center justify-center mb-10 shadow-lg group-hover:brightness-110 group-hover:rotate-6 transition-all duration-500 group-hover:shadow-[0_0_30px_rgba(var(--primary),0.3)]`}>
                       <Icon className="w-6 h-6" />
                     </div>
                     <div className="relative z-10">

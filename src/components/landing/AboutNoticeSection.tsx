@@ -41,7 +41,7 @@ export function AboutNoticeSection({ data }: { data: any }) {
           
           <div className="pt-4 flex flex-wrap gap-4">
             <Link href={getLink(content.btnLink || "/about")}>
-              <Button size="lg" className="rounded-full gap-3 px-10 h-14 font-black shadow-xl shadow-primary/20 hover:scale-105 transition-all group">
+              <Button size="lg" className="rounded-full gap-3 px-10 h-14 font-black shadow-xl shadow-primary/20  transition-all group">
                 {content.btnText || "Discover More"}
                 <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
               </Button>

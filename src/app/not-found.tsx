@@ -47,7 +47,7 @@ export default function GlobalNotFound() {
           <Button 
             variant="outline" 
             onClick={() => window.history.back()} 
-            className="w-full sm:w-60 h-16 rounded-[2rem] font-bold border-2 border-slate-200 dark:border-zinc-800 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-xl hover:bg-slate-50 dark:hover:bg-zinc-800 text-[18px] transition-all duration-300 hover:-translate-y-1 shadow-lg shadow-black/5"
+            className="w-full sm:w-60 h-16 rounded-[2rem] font-bold border-2 border-slate-200 dark:border-zinc-800 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-sm hover:bg-slate-50 dark:hover:bg-zinc-800 text-[18px] transition-all duration-300 hover:-translate-y-1 shadow-lg shadow-black/5"
           >
              <ArrowLeft className="w-5 h-5 mr-3" /> 
              Go Back

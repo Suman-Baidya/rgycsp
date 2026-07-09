@@ -748,14 +748,14 @@ export default function ProductsClient({
             {filteredProducts.map(product => (
               <div key={product.id} className="bg-white dark:bg-slate-900 border-2 border-slate-100 dark:border-slate-800/50 rounded-[2.5rem] hover:shadow-[0_20px_50px_-12px_rgba(0,0,0,0.1)] dark:hover:shadow-[0_20px_50px_-12px_rgba(0,0,0,0.3)] hover:border-primary/30 transition-all duration-300 flex flex-col justify-between group overflow-hidden relative">
                 <div className="absolute top-4 right-4 z-10 flex flex-col gap-2">
-                  <Badge variant="secondary" className="rounded-xl px-3 py-1 text-xs shadow-sm backdrop-blur-md bg-white/80 dark:bg-slate-900/80 border-0">{product.category}</Badge>
+                  <Badge variant="secondary" className="rounded-xl px-3 py-1 text-xs shadow-sm backdrop-blur-sm bg-white/80 dark:bg-slate-900/80 border-0">{product.category}</Badge>
                 </div>
                 <div>
                   <div className="relative h-56 w-full mb-6 bg-slate-50 dark:bg-slate-800/50 flex items-center justify-center overflow-hidden">
                     {product.image ? (
-                      <img src={product.image} alt={product.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                      <img src={product.image} alt={product.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:brightness-110" />
                     ) : (
-                      <Package className="h-12 w-12 text-slate-300 dark:text-slate-600 transition-transform duration-700 group-hover:scale-110" />
+                      <Package className="h-12 w-12 text-slate-300 dark:text-slate-600 transition-transform duration-700 group-hover:brightness-110" />
                     )}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                   </div>

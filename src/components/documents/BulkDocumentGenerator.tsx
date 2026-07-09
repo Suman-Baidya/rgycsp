@@ -242,7 +242,7 @@ export function BulkDocumentGenerator({ open, onOpenChange, selectedStudentIds, 
                             : "border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-slate-300 dark:hover:border-slate-700 hover:shadow-sm"
                         )}
                       >
-                        <div className={cn("p-2 rounded-lg mr-3 transition-transform duration-300 group-hover:scale-110", type.bg, type.color)}>
+                        <div className={cn("p-2 rounded-lg mr-3 transition-transform duration-300 group-hover:brightness-110", type.bg, type.color)}>
                           <type.icon className="w-5 h-5" />
                         </div>
                         <span className={cn(

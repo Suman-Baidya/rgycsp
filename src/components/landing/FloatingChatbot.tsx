@@ -111,7 +111,7 @@ export function FloatingChatbot({ config }: FloatingChatbotProps) {
               <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 mix-blend-overlay pointer-events-none" />
               
               <div className="flex items-center gap-4 relative z-10">
-                <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center backdrop-blur-md border border-white/30 shadow-[0_0_15px_rgba(255,255,255,0.2)]">
+                <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center backdrop-blur-sm border border-white/30 shadow-[0_0_15px_rgba(255,255,255,0.2)]">
                   <BotMessageSquare className="w-6 h-6 text-white" />
                 </div>
                 <div>
@@ -127,7 +127,7 @@ export function FloatingChatbot({ config }: FloatingChatbotProps) {
               </div>
               <button
                 onClick={() => setIsOpen(false)}
-                className="w-9 h-9 flex items-center justify-center rounded-full bg-black/10 hover:bg-black/20 text-white transition-all backdrop-blur-md relative z-10"
+                className="w-9 h-9 flex items-center justify-center rounded-full bg-black/10 hover:bg-black/20 text-white transition-all backdrop-blur-sm relative z-10"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -160,7 +160,7 @@ export function FloatingChatbot({ config }: FloatingChatbotProps) {
             </div>
 
             {/* Input Area */}
-            <div className="p-4 bg-background/50 backdrop-blur-xl border-t border-white/10">
+            <div className="p-4 bg-background/50 backdrop-blur-sm border-t border-white/10">
               <div className="relative flex items-center">
                 <input
                   type="text"
@@ -173,7 +173,7 @@ export function FloatingChatbot({ config }: FloatingChatbotProps) {
                 <button
                   onClick={handleSend}
                   disabled={!input.trim()}
-                  className="absolute right-2 w-10 h-10 flex items-center justify-center bg-primary text-primary-foreground rounded-full disabled:opacity-50 disabled:cursor-not-allowed hover:scale-110 active:scale-95 transition-all shadow-lg shadow-primary/30"
+                  className="absolute right-2 w-10 h-10 flex items-center justify-center bg-primary text-primary-foreground rounded-full disabled:opacity-50 disabled:cursor-not-allowed hover:brightness-110 active:scale-95 transition-all shadow-lg shadow-primary/30"
                 >
                   <Send className="w-4 h-4 ml-[-2px]" />
                 </button>

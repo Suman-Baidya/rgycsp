@@ -173,7 +173,7 @@ export function SettingsForm({ settings, isSuperAdmin = true }: { settings: any,
     <div className="w-full pb-24">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full flex flex-col gap-12">
         {/* ROW 1: Navigation (Refined Professional Top Bar) */}
-        <div className="sticky top-0 z-30 w-full bg-background/80 backdrop-blur-xl border-b border-border/40 py-4 transition-all duration-300">
+        <div className="sticky top-0 z-30 w-full bg-background/80 backdrop-blur-sm border-b border-border/40 py-4 transition-all duration-300">
           <TabsList className="flex w-full h-12 bg-transparent p-0 gap-8 overflow-x-auto no-scrollbar justify-start border-none shadow-none">
             {[
               { value: "branding", label: "Branding & Contact", icon: Palette },
@@ -190,7 +190,7 @@ export function SettingsForm({ settings, isSuperAdmin = true }: { settings: any,
                 value={tab.value}
                 className="group relative flex items-center gap-2.5 px-2 h-full rounded-none bg-transparent data-[state=active]:bg-transparent text-muted-foreground data-[state=active]:text-primary transition-all text-sm font-semibold border-none shadow-none overflow-visible"
               >
-                <tab.icon className="h-4 w-4 transition-transform group-hover:scale-110" />
+                <tab.icon className="h-4 w-4 transition-transform group-hover:brightness-110" />
                 {tab.label}
                 <div className="absolute -bottom-4 left-0 w-full h-0.5 bg-primary scale-x-0 data-[state=active]:group-[]:scale-x-100 transition-transform origin-left" />
               </TabsTrigger>
@@ -236,7 +236,7 @@ export function SettingsForm({ settings, isSuperAdmin = true }: { settings: any,
               </Accordion>
               
               {/* Save Button for Documents Tab */}
-              <div className="fixed bottom-0 left-0 lg:left-[280px] right-0 p-6 bg-background/80 backdrop-blur-xl border-t border-border/50 z-40">
+              <div className="fixed bottom-0 left-0 lg:left-[280px] right-0 p-6 bg-background/80 backdrop-blur-sm border-t border-border/50 z-40">
                 <div className="max-w-[1200px] mx-auto flex justify-between items-center">
                   <p className="text-sm text-muted-foreground hidden sm:block">
                     Remember to save your changes to apply them to your site.

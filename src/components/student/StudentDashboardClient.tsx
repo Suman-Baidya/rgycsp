@@ -92,7 +92,7 @@ export default function StudentDashboardClient({ student, tenant, settings, noti
               </div>
             </div>
 
-            <div className="flex items-center gap-4 bg-white/10 backdrop-blur-md px-6 py-4 rounded-2xl border border-white/10 self-start md:self-center">
+            <div className="flex items-center gap-4 bg-white/10 backdrop-blur-sm px-6 py-4 rounded-2xl border border-white/10 self-start md:self-center">
               <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center">
                 <Clock className="w-5 h-5" />
               </div>
@@ -312,7 +312,7 @@ function StatsCard({ label, value, subtext, icon, color }: any) {
 
         <div className="flex flex-col gap-3">
           <div
-            className="w-10 h-10 rounded-xl flex items-center justify-center text-white shadow-lg transition-all duration-500 group-hover:scale-110 group-hover:rotate-3"
+            className="w-10 h-10 rounded-xl flex items-center justify-center text-white shadow-lg transition-all duration-500 group-hover:brightness-110 group-hover:rotate-3"
             style={{
               backgroundColor: color,
               boxShadow: `0 8px 20px -6px ${color}60`

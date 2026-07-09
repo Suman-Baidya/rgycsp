@@ -136,7 +136,7 @@ export function HeroSection({ data }: { data?: any }) {
                         className="max-w-3xl"
                       >
                         <motion.div variants={itemVariants}>
-                          <div className="inline-flex items-center gap-2 py-2 px-6 rounded-full bg-white/5 backdrop-blur-md border border-white/20 text-white font-bold text-xs tracking-[0.25em] uppercase mb-8 shadow-[0_0_20px_rgba(255,255,255,0.1)] relative overflow-hidden group">
+                          <div className="inline-flex items-center gap-2 py-2 px-6 rounded-full bg-white/5 backdrop-blur-sm border border-white/20 text-white font-bold text-xs tracking-[0.25em] uppercase mb-8 shadow-[0_0_20px_rgba(255,255,255,0.1)] relative overflow-hidden group">
                             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-[shimmer_2s_infinite]"></div>
                             <span className="relative z-10 flex items-center gap-2">
                               <span className="w-2 h-2 rounded-full bg-white animate-pulse"></span>
@@ -179,13 +179,13 @@ export function HeroSection({ data }: { data?: any }) {
                               href={slide.secondaryButtonLink || "#"}
                               className={cn(
                                 buttonVariants({ variant: "outline", size: "lg" }),
-                                "h-14 w-full sm:w-[220px] text-lg bg-white/5 backdrop-blur-md border border-white/20 text-white hover:bg-white/20 hover:border-white/40 transition-all duration-300 rounded-xl font-bold shadow-lg hover:-translate-y-1 flex items-center justify-center hover:text-white"
+                                "h-14 w-full sm:w-[220px] text-lg bg-white/5 backdrop-blur-sm border border-white/20 text-white hover:bg-white/20 hover:border-white/40 transition-all duration-300 rounded-xl font-bold shadow-lg hover:-translate-y-1 flex items-center justify-center hover:text-white"
                               )}
                             >
                               {slide.secondaryButtonText}
                             </a>
                           ) : (
-                            <Button size="lg" variant="outline" className="h-14 w-full sm:w-[220px] text-lg bg-white/5 backdrop-blur-md border border-white/20 text-white hover:bg-white/20 hover:border-white/40 transition-all duration-300 rounded-xl font-bold shadow-lg hover:-translate-y-1 hover:text-white">
+                            <Button size="lg" variant="outline" className="h-14 w-full sm:w-[220px] text-lg bg-white/5 backdrop-blur-sm border border-white/20 text-white hover:bg-white/20 hover:border-white/40 transition-all duration-300 rounded-xl font-bold shadow-lg hover:-translate-y-1 hover:text-white">
                               Book a Demo
                             </Button>
                           )}
@@ -216,8 +216,8 @@ export function HeroSection({ data }: { data?: any }) {
         </CarouselContent>
         {/* Navigation Buttons */}
         <div className="absolute bottom-12 right-12 flex gap-2 z-10 hidden md:flex">
-          <CarouselPrevious className="relative inset-0 translate-y-0 h-12 w-12 bg-background/50 backdrop-blur-md border-border/50 hover:bg-primary hover:text-white" />
-          <CarouselNext className="relative inset-0 translate-y-0 h-12 w-12 bg-background/50 backdrop-blur-md border-border/50 hover:bg-primary hover:text-white" />
+          <CarouselPrevious className="relative inset-0 translate-y-0 h-12 w-12 bg-background/50 backdrop-blur-sm border-border/50 hover:bg-primary hover:text-white" />
+          <CarouselNext className="relative inset-0 translate-y-0 h-12 w-12 bg-background/50 backdrop-blur-sm border-border/50 hover:bg-primary hover:text-white" />
         </div>
       </Carousel>
     </section>

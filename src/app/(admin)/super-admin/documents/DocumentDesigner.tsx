@@ -560,7 +560,7 @@ export default function DocumentDesigner() {
                   {template.background ? (
                     <img 
                       src={template.background || ""} 
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000 ease-out" 
+                      className="w-full h-full object-cover group- transition-transform duration-1000 ease-out" 
                       alt={template.name} 
                     />
                   ) : (
@@ -590,7 +590,7 @@ export default function DocumentDesigner() {
                   </div>
 
                   <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-500">
-                    <div className="px-5 py-2.5 rounded-2xl bg-white/90 dark:bg-zinc-900/90 backdrop-blur-md border border-white/20 shadow-2xl transform scale-90 group-hover:scale-100 transition-transform duration-500">
+                    <div className="px-5 py-2.5 rounded-2xl bg-white/90 dark:bg-zinc-900/90 backdrop-blur-sm border border-white/20 shadow-2xl transform scale-90 group-hover:scale-100 transition-transform duration-500">
                       <span className="text-[10px] font-black uppercase tracking-tighter text-slate-900 dark:text-white flex items-center gap-2">
                         <Settings2 className="h-3 w-3" />
                         Modify Design

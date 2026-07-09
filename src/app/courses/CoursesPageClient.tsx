@@ -120,7 +120,7 @@ export default function CoursesPageClient({ initialData, initialGroups = [] }: {
                     src={course.banner} 
                     alt={course.name} 
                     fill 
-                    className="object-cover group-hover:scale-105 transition-transform duration-500"
+                    className="object-cover group- transition-transform duration-500"
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center">

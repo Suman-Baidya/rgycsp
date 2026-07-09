@@ -82,7 +82,7 @@ export function WorkspaceCourses({ data, dbCourses }: { data: any, dbCourses?: a
             </p>
           </div>
           <Link href={getLink("/courses")}>
-            <Button size="lg" className="rounded-full gap-2 px-10 h-14 font-black shadow-xl shadow-primary/20 hover:scale-105 transition-all">
+            <Button size="lg" className="rounded-full gap-2 px-10 h-14 font-black shadow-xl shadow-primary/20  transition-all">
               View All Courses
               <ArrowRight className="h-5 w-5" />
             </Button>
@@ -104,7 +104,7 @@ export function WorkspaceCourses({ data, dbCourses }: { data: any, dbCourses?: a
                     src={course.image || "https://images.unsplash.com/photo-1509228468518-180dd48a5f5f?q=80&w=2070"} 
                     alt={course.title} 
                     fill
-                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
+                    className="w-full h-full object-cover transition-transform duration-700 group-hover:brightness-110" 
                   />
                   <div className="absolute top-4 left-4">
                     <span className="bg-primary text-primary-foreground px-3 py-1 rounded-full text-[10px] font-black tracking-widest shadow-lg uppercase">

@@ -58,7 +58,7 @@ export function WorkspaceEvents({ data }: { data: any }) {
             </p>
           </div>
           <Link href={getLink("/events")}>
-            <Button size="lg" className="rounded-full gap-2 px-10 h-14 font-black shadow-xl shadow-primary/20 hover:scale-105 transition-all">
+            <Button size="lg" className="rounded-full gap-2 px-10 h-14 font-black shadow-xl shadow-primary/20  transition-all">
               View All Events
               <ArrowRight className="h-5 w-5" />
             </Button>
@@ -79,7 +79,7 @@ export function WorkspaceEvents({ data }: { data: any }) {
                   <img
                     src={event.image || "https://images.unsplash.com/photo-1514525253361-bee8718a74a2?q=80&w=2070"}
                     alt={event.title}
-                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                    className="w-full h-full object-cover transition-transform duration-700 group-hover:brightness-110"
                   />
                   <div className="absolute top-4 left-4">
                     <div className="bg-white/90 dark:bg-zinc-900/90 backdrop-blur-sm p-3 rounded-2xl text-center shadow-lg border border-white/20">

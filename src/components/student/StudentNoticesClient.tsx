@@ -109,7 +109,7 @@ export default function StudentNoticesClient({
                 
                 <div className="p-8 lg:p-10 flex flex-col md:flex-row items-start gap-8">
                   {/* Date Block */}
-                  <div className="w-16 h-16 rounded-3xl bg-slate-50 dark:bg-white/5 flex flex-col items-center justify-center shrink-0 border border-slate-100 dark:border-white/5 transition-transform duration-500 group-hover:scale-110">
+                  <div className="w-16 h-16 rounded-3xl bg-slate-50 dark:bg-white/5 flex flex-col items-center justify-center shrink-0 border border-slate-100 dark:border-white/5 transition-transform duration-500 group-hover:brightness-110">
                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none mb-1">
                       {new Date(notice.date).toLocaleDateString('en-IN', { month: 'short' })}
                     </p>

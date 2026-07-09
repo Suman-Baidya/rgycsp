@@ -72,7 +72,7 @@ export async function WorkspaceLegalPage({ tenant, type, title, defaultContent }
         <div className="max-w-4xl mx-auto px-6 py-24 relative z-10">
           <div className="bg-white dark:bg-zinc-900 rounded-[3rem] p-10 lg:p-20 shadow-2xl shadow-black/5 border border-border/40 relative overflow-hidden group">
              {/* Decorative Icon */}
-             <div className="absolute -top-10 -right-10 opacity-[0.03] dark:opacity-[0.05] group-hover:scale-110 transition-transform duration-700 pointer-events-none">
+             <div className="absolute -top-10 -right-10 opacity-[0.03] dark:opacity-[0.05] group-hover:brightness-110 transition-transform duration-700 pointer-events-none">
                 <Icon className="w-80 h-80 text-primary" />
              </div>
 

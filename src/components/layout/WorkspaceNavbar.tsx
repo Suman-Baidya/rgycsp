@@ -110,7 +110,7 @@ export function WorkspaceNavbar({ settings, user, tenant: propTenant }: { settin
 
   const Logo = ({ size = "w-10 h-10 lg:w-12 lg:h-12", iconSize = "text-xl lg:text-2xl", showName = true }: { size?: string, iconSize?: string, showName?: boolean }) => (
     <div className="flex items-center gap-3 lg:gap-5 group min-w-0">
-      <div className={cn(size, "rounded-xl bg-primary flex items-center justify-center shadow-2xl shadow-primary/20 group-hover:scale-105 transition-transform overflow-hidden shrink-0 relative")}>
+      <div className={cn(size, "rounded-xl bg-primary flex items-center justify-center shadow-2xl shadow-primary/20 group- transition-transform overflow-hidden shrink-0 relative")}>
         {settings.logoUrl ? (
           <Image src={settings.logoUrl} alt={settings.siteName} fill sizes="(max-width: 768px) 150px, 200px" className="object-contain p-1" />
         ) : (
@@ -188,20 +188,20 @@ export function WorkspaceNavbar({ settings, user, tenant: propTenant }: { settin
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            className="hidden lg:flex w-full bg-slate-950/40 backdrop-blur-md border-b border-white/5 py-3 items-center text-[10px] font-bold tracking-[0.2em] text-zinc-400 overflow-hidden"
+            className="hidden lg:flex w-full bg-slate-950/40 backdrop-blur-sm border-b border-white/5 py-3 items-center text-[10px] font-bold tracking-[0.2em] text-zinc-400 overflow-hidden"
           >
             <div className="max-w-7xl mx-auto px-6 w-full flex items-center justify-between">
               <div className="flex items-center gap-5">
-                {socialLinks.facebook && <Link href={socialLinks.facebook} className="hover:text-white transition-all hover:scale-110"><Facebook className="h-3.5 w-3.5" /></Link>}
-                {socialLinks.twitter && <Link href={socialLinks.twitter} className="hover:text-white transition-all hover:scale-110"><Twitter className="h-3.5 w-3.5" /></Link>}
-                {socialLinks.instagram && <Link href={socialLinks.instagram} className="hover:text-white transition-all hover:scale-110"><Instagram className="h-3.5 w-3.5" /></Link>}
-                {socialLinks.linkedin && <Link href={socialLinks.linkedin} className="hover:text-white transition-all hover:scale-110"><Linkedin className="h-3.5 w-3.5" /></Link>}
-                {socialLinks.youtube && <Link href={socialLinks.youtube} className="hover:text-white transition-all hover:scale-110"><Youtube className="h-3.5 w-3.5" /></Link>}
+                {socialLinks.facebook && <Link href={socialLinks.facebook} className="hover:text-white transition-all hover:brightness-110"><Facebook className="h-3.5 w-3.5" /></Link>}
+                {socialLinks.twitter && <Link href={socialLinks.twitter} className="hover:text-white transition-all hover:brightness-110"><Twitter className="h-3.5 w-3.5" /></Link>}
+                {socialLinks.instagram && <Link href={socialLinks.instagram} className="hover:text-white transition-all hover:brightness-110"><Instagram className="h-3.5 w-3.5" /></Link>}
+                {socialLinks.linkedin && <Link href={socialLinks.linkedin} className="hover:text-white transition-all hover:brightness-110"><Linkedin className="h-3.5 w-3.5" /></Link>}
+                {socialLinks.youtube && <Link href={socialLinks.youtube} className="hover:text-white transition-all hover:brightness-110"><Youtube className="h-3.5 w-3.5" /></Link>}
               </div>
 
               <div className="flex items-center gap-8">
                 <Link href={getLink("/catalog")} className="flex items-center gap-2 hover:text-white transition-colors group">
-                  <BookOpen className="h-3 w-3 text-primary group-hover:scale-110 transition-transform" />
+                  <BookOpen className="h-3 w-3 text-primary group-hover:brightness-110 transition-transform" />
                   <span>Course Catalog</span>
                 </Link>
                 <div className="flex items-center gap-2 border-l border-white/10 pl-8">
@@ -219,7 +219,7 @@ export function WorkspaceNavbar({ settings, user, tenant: propTenant }: { settin
 
       {/* Tier 2: Branding Bar */}
       <div className={cn(
-        "w-full bg-white/5 backdrop-blur-xl border-b border-white/5 py-4 overflow-hidden transition-all duration-500",
+        "w-full bg-white/5 backdrop-blur-sm border-b border-white/5 py-4 overflow-hidden transition-all duration-500",
         isScrolled ? "lg:hidden fixed top-0 bg-zinc-950/90 border-b border-white/10 py-3 shadow-2xl z-[150]" : "relative"
       )}>
         <div className="max-w-7xl mx-auto px-4 lg:px-6 flex items-center justify-between gap-2 lg:gap-4">
@@ -258,7 +258,7 @@ export function WorkspaceNavbar({ settings, user, tenant: propTenant }: { settin
       <nav className={cn(
         "hidden lg:flex w-full transition-all duration-500 z-[90] py-4",
         isScrolled
-          ? "fixed top-0 bg-zinc-950/90 backdrop-blur-2xl border-b border-white/5 py-3 shadow-2xl"
+          ? "fixed top-0 bg-zinc-950/90 backdrop-blur-sm border-b border-white/5 py-3 shadow-2xl"
           : "bg-transparent"
       )}>
         <div className="max-w-7xl mx-auto px-6 w-full grid grid-cols-3 items-center">

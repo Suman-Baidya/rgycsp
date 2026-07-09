@@ -122,7 +122,7 @@ export default function StudentProfileClient({
       <div className="relative rounded-b-[2.5rem] lg:rounded-[3rem] overflow-hidden bg-slate-950 shadow-2xl mx-0 lg:mx-8 lg:mt-8 p-8 lg:p-14 group">
         {/* Abstract Background Elements */}
         <div className="absolute inset-0 opacity-40">
-          <div className="absolute top-0 right-0 w-[40rem] h-[40rem] bg-primary/30 rounded-full blur-[100px] -mr-40 -mt-40 transition-transform duration-1000 group-hover:scale-110" />
+          <div className="absolute top-0 right-0 w-[40rem] h-[40rem] bg-primary/30 rounded-full blur-[100px] -mr-40 -mt-40 transition-transform duration-1000 group-hover:brightness-110" />
           <div className="absolute bottom-0 left-0 w-[30rem] h-[30rem] bg-indigo-500/20 rounded-full blur-[80px] -ml-20 -mb-20 transition-transform duration-1000 group-hover:translate-x-10" />
         </div>
         
@@ -130,7 +130,7 @@ export default function StudentProfileClient({
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]"></div>
 
         <div className="relative z-10 flex flex-col md:flex-row items-center md:items-end gap-8 md:gap-10">
-          <Avatar className="h-32 w-32 md:h-44 md:w-44 ring-[6px] ring-white/10 shadow-2xl shadow-black/50 transition-transform duration-500 hover:scale-105">
+          <Avatar className="h-32 w-32 md:h-44 md:w-44 ring-[6px] ring-white/10 shadow-2xl shadow-black/50 transition-transform duration-500 ">
             <AvatarImage src={student.image || profile?.admissionApp?.photoUrl || undefined} />
             <AvatarFallback className="text-5xl md:text-7xl font-bold bg-gradient-to-br from-primary to-indigo-600 text-white">
               {student.name?.charAt(0) || 'L'}
@@ -143,7 +143,7 @@ export default function StudentProfileClient({
                 <h1 className="text-4xl md:text-5xl font-extrabold text-white tracking-tight drop-shadow-lg">
                   {student.name || "Learner Profile"}
                 </h1>
-                <div className="md:mt-2 text-emerald-400 bg-emerald-400/10 border border-emerald-400/20 px-2.5 py-1 rounded-xl flex items-center gap-1.5 backdrop-blur-md shadow-sm" title="Verified Learner">
+                <div className="md:mt-2 text-emerald-400 bg-emerald-400/10 border border-emerald-400/20 px-2.5 py-1 rounded-xl flex items-center gap-1.5 backdrop-blur-sm shadow-sm" title="Verified Learner">
                   <CheckCircle2 className="w-4 h-4" />
                   <span className="text-[11px] uppercase font-bold tracking-widest">Verified</span>
                 </div>
@@ -156,7 +156,7 @@ export default function StudentProfileClient({
             <div className="flex flex-wrap justify-center md:justify-start gap-6 md:gap-8 pt-5 border-t border-white/10">
               
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center backdrop-blur-md">
+                <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center backdrop-blur-sm">
                   <BookOpen className="w-4 h-4 text-white/80" />
                 </div>
                 <div className="flex flex-col text-left">
@@ -169,7 +169,7 @@ export default function StudentProfileClient({
               </div>
 
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center backdrop-blur-md">
+                <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center backdrop-blur-sm">
                   <Clock className="w-4 h-4 text-white/80" />
                 </div>
                 <div className="flex flex-col text-left">
@@ -182,7 +182,7 @@ export default function StudentProfileClient({
               </div>
 
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center backdrop-blur-md">
+                <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center backdrop-blur-sm">
                   <CalendarDays className="w-4 h-4 text-white/80" />
                 </div>
                 <div className="flex flex-col text-left">
@@ -203,7 +203,7 @@ export default function StudentProfileClient({
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 px-4 lg:px-8">
         
         {/* Personal Details (Spans 2 columns on large screens) */}
-        <Card className="lg:col-span-2 rounded-[2rem] border-none shadow-xl bg-white/80 dark:bg-zinc-900/80 backdrop-blur-xl overflow-hidden group hover:shadow-2xl transition-all duration-500">
+        <Card className="lg:col-span-2 rounded-[2rem] border-none shadow-xl bg-white/80 dark:bg-zinc-900/80 backdrop-blur-sm overflow-hidden group hover:shadow-2xl transition-all duration-500">
           <CardHeader className="px-8 pt-8 pb-4 border-b border-slate-100/50 dark:border-white/5">
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 rounded-2xl bg-indigo-50 dark:bg-indigo-500/10 flex items-center justify-center text-indigo-500">
@@ -284,7 +284,7 @@ export default function StudentProfileClient({
         </Card>
 
         {/* Security & Authentication (Spans full width) */}
-        <Card className="lg:col-span-3 rounded-[2rem] border-none shadow-xl bg-white/80 dark:bg-zinc-900/80 backdrop-blur-xl overflow-hidden group hover:shadow-2xl transition-all duration-500">
+        <Card className="lg:col-span-3 rounded-[2rem] border-none shadow-xl bg-white/80 dark:bg-zinc-900/80 backdrop-blur-sm overflow-hidden group hover:shadow-2xl transition-all duration-500">
           <CardHeader className="px-8 pt-8 pb-4 border-b border-slate-100/50 dark:border-white/5">
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 rounded-2xl bg-rose-50 dark:bg-rose-500/10 flex items-center justify-center text-rose-500">
@@ -420,7 +420,7 @@ export default function StudentProfileClient({
         </Card>
 
         {/* Official Documents Section (Spans full width) */}
-        <Card className="lg:col-span-3 rounded-[2rem] border-none shadow-xl bg-white/80 dark:bg-zinc-900/80 backdrop-blur-xl overflow-hidden group hover:shadow-2xl transition-all duration-500">
+        <Card className="lg:col-span-3 rounded-[2rem] border-none shadow-xl bg-white/80 dark:bg-zinc-900/80 backdrop-blur-sm overflow-hidden group hover:shadow-2xl transition-all duration-500">
           <CardHeader className="px-8 pt-8 pb-4 border-b border-slate-100/50 dark:border-white/5">
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 rounded-2xl bg-amber-50 dark:bg-amber-500/10 flex items-center justify-center text-amber-500">
@@ -452,7 +452,7 @@ export default function StudentProfileClient({
 function DocumentCard({ icon, title, description, status, isAvailable = true }: { icon: React.ReactNode, title: string, description: string, status: string, isAvailable?: boolean }) {
   return (
     <div className={`p-5 rounded-[1.5rem] border flex flex-col sm:flex-row sm:items-center gap-5 transition-all duration-300 group ${isAvailable ? 'bg-slate-50 dark:bg-zinc-800/50 border-slate-200 dark:border-white/10 hover:border-primary/40 hover:shadow-md hover:bg-white dark:hover:bg-zinc-900' : 'bg-slate-50/50 dark:bg-zinc-900/50 border-slate-100 dark:border-white/5 opacity-70'}`}>
-      <div className={`w-14 h-14 shrink-0 rounded-2xl flex items-center justify-center shadow-sm transition-transform duration-500 group-hover:scale-105 ${isAvailable ? 'bg-white dark:bg-zinc-950 text-primary border border-slate-100 dark:border-white/5' : 'bg-slate-100 dark:bg-zinc-800 text-slate-400'}`}>
+      <div className={`w-14 h-14 shrink-0 rounded-2xl flex items-center justify-center shadow-sm transition-transform duration-500 group- ${isAvailable ? 'bg-white dark:bg-zinc-950 text-primary border border-slate-100 dark:border-white/5' : 'bg-slate-100 dark:bg-zinc-800 text-slate-400'}`}>
         {React.cloneElement(icon as React.ReactElement<any>, { className: "w-7 h-7" })}
       </div>
       
@@ -483,7 +483,7 @@ function DocumentCard({ icon, title, description, status, isAvailable = true }: 
 function PremiumDataField({ icon, label, value }: { icon: React.ReactNode, label: string, value: string | null | undefined }) {
   return (
     <div className="flex gap-4 group items-center">
-      <div className="w-12 h-12 rounded-2xl bg-slate-50 dark:bg-zinc-800 flex items-center justify-center text-slate-400 shrink-0 transition-all duration-500 group-hover:bg-primary/10 group-hover:text-primary group-hover:scale-110 group-hover:shadow-md border border-slate-100 dark:border-white/5">
+      <div className="w-12 h-12 rounded-2xl bg-slate-50 dark:bg-zinc-800 flex items-center justify-center text-slate-400 shrink-0 transition-all duration-500 group-hover:bg-primary/10 group-hover:text-primary group-hover:brightness-110 group-hover:shadow-md border border-slate-100 dark:border-white/5">
          {React.cloneElement(icon as React.ReactElement<any>, { className: "w-5 h-5" })}
       </div>
       <div className="space-y-0.5">

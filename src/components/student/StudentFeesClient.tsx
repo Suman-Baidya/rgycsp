@@ -42,7 +42,7 @@ export default function StudentFeesClient({
           <p className="text-slate-500 font-medium text-lg">Manage your invoices and track your payment history.</p>
         </div>
         <div className="flex gap-4">
-          <Button className="rounded-2xl font-bold gap-3 h-14 px-10 shadow-2xl shadow-primary/30 transition-transform hover:scale-105" style={{ backgroundColor: primaryColor }}>
+          <Button className="rounded-2xl font-bold gap-3 h-14 px-10 shadow-2xl shadow-primary/30 transition-transform " style={{ backgroundColor: primaryColor }}>
             <CreditCard className="w-5 h-5" /> Pay Now
           </Button>
         </div>
@@ -205,7 +205,7 @@ function StatsCard({ label, value, subtext, icon, color, isDark }: any) {
         
         <div className="flex flex-col gap-6 relative z-10">
           <div 
-            className="w-12 h-12 rounded-2xl flex items-center justify-center text-white shadow-lg transition-transform duration-500 group-hover:scale-110 group-hover:rotate-3" 
+            className="w-12 h-12 rounded-2xl flex items-center justify-center text-white shadow-lg transition-transform duration-500 group-hover:brightness-110 group-hover:rotate-3" 
             style={{ 
               backgroundColor: color,
               boxShadow: `0 8px 25px -6px ${color}80`

@@ -24,7 +24,7 @@ export function WorkspacePageHeader({
       {/* Background with Animation */}
       <div className="absolute inset-0 z-0 overflow-hidden">
         <div
-          className="absolute inset-0 transition-transform duration-[10s] ease-linear group-hover:scale-110"
+          className="absolute inset-0 transition-transform duration-[10s] ease-linear group-hover:brightness-110"
           style={{
             backgroundImage: `url(${bgImage})`,
             backgroundSize: 'cover',
@@ -45,7 +45,7 @@ export function WorkspacePageHeader({
         <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-10">
           <div className="space-y-6 max-w-3xl">
             {/* Advanced Breadcrumbs */}
-            <nav className="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-md text-[10px] font-black uppercase tracking-[0.2em] text-white/60">
+            <nav className="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-sm text-[10px] font-black uppercase tracking-[0.2em] text-white/60">
               <Link href="/" className="hover:text-primary transition-colors flex items-center gap-2">
                 <Home className="w-3 h-3" />
                 Home

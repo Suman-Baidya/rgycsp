@@ -953,12 +953,12 @@ export default function UsersClient({ initialUsers }: { initialUsers: any[] }) {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         {/* Overall Users Card */}
         <Card className="border-none shadow-xl shadow-blue-900/5 dark:shadow-none rounded-[2rem] overflow-hidden bg-gradient-to-br from-white to-slate-50 dark:from-slate-900 dark:to-slate-950 relative group border border-slate-100 dark:border-slate-800">
-          <div className="absolute top-0 right-0 p-8 opacity-[0.03] group-hover:opacity-[0.05] transition-opacity scale-150 transform group-hover:scale-110 duration-500 pointer-events-none">
+          <div className="absolute top-0 right-0 p-8 opacity-[0.03] group-hover:opacity-[0.05] transition-opacity scale-150 transform group-hover:brightness-110 duration-500 pointer-events-none">
             <Users className="w-28 h-28 text-blue-500" />
           </div>
           <CardContent className="p-5 h-full flex flex-col justify-center relative z-10">
             <div className="flex items-center gap-4 mb-3">
-              <div className="p-3.5 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-500/20 group-hover:scale-110 transition-transform duration-300">
+              <div className="p-3.5 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-500/20 group-hover:brightness-110 transition-transform duration-300">
                 <Users className="h-5 w-5" />
               </div>
               <div>
@@ -981,12 +981,12 @@ export default function UsersClient({ initialUsers }: { initialUsers: any[] }) {
           onClick={() => router.push("/super-admin/students")}
           className="border-none shadow-xl shadow-purple-900/5 dark:shadow-none rounded-[2rem] overflow-hidden bg-gradient-to-br from-white to-slate-50 dark:from-slate-900 dark:to-slate-950 relative group border border-slate-100 dark:border-slate-800 cursor-pointer hover:border-purple-500/30 hover:shadow-purple-500/10 transition-all duration-300"
         >
-          <div className="absolute top-0 right-0 p-8 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity scale-150 transform group-hover:scale-110 duration-500 pointer-events-none">
+          <div className="absolute top-0 right-0 p-8 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity scale-150 transform group-hover:brightness-110 duration-500 pointer-events-none">
             <GraduationCap className="w-28 h-28 text-purple-500" />
           </div>
           <CardContent className="p-5 h-full flex flex-col justify-center relative z-10">
             <div className="flex items-center gap-4 mb-3">
-              <div className="p-3.5 rounded-2xl bg-gradient-to-br from-purple-500 to-purple-600 text-white shadow-lg shadow-purple-500/20 group-hover:scale-110 transition-transform duration-300">
+              <div className="p-3.5 rounded-2xl bg-gradient-to-br from-purple-500 to-purple-600 text-white shadow-lg shadow-purple-500/20 group-hover:brightness-110 transition-transform duration-300">
                 <GraduationCap className="h-5 w-5" />
               </div>
               <div>
@@ -1009,12 +1009,12 @@ export default function UsersClient({ initialUsers }: { initialUsers: any[] }) {
           onClick={() => router.push("/super-admin/franchises")}
           className="border-none shadow-xl shadow-emerald-900/5 dark:shadow-none rounded-[2rem] overflow-hidden bg-gradient-to-br from-white to-slate-50 dark:from-slate-900 dark:to-slate-950 relative group border border-slate-100 dark:border-slate-800 cursor-pointer hover:border-emerald-500/30 hover:shadow-emerald-500/10 transition-all duration-300"
         >
-          <div className="absolute top-0 right-0 p-8 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity scale-150 transform group-hover:scale-110 duration-500 pointer-events-none">
+          <div className="absolute top-0 right-0 p-8 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity scale-150 transform group-hover:brightness-110 duration-500 pointer-events-none">
             <Building2 className="w-28 h-28 text-emerald-500" />
           </div>
           <CardContent className="p-5 h-full flex flex-col justify-center relative z-10">
             <div className="flex items-center gap-4 mb-3">
-              <div className="p-3.5 rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-600 text-white shadow-lg shadow-emerald-500/20 group-hover:scale-110 transition-transform duration-300">
+              <div className="p-3.5 rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-600 text-white shadow-lg shadow-emerald-500/20 group-hover:brightness-110 transition-transform duration-300">
                 <Building2 className="h-5 w-5" />
               </div>
               <div>
@@ -1034,12 +1034,12 @@ export default function UsersClient({ initialUsers }: { initialUsers: any[] }) {
 
         {/* Online Now Card */}
         <Card className="border-none shadow-xl shadow-green-900/5 dark:shadow-none rounded-[2rem] overflow-hidden bg-gradient-to-br from-white to-slate-50 dark:from-slate-900 dark:to-slate-950 relative group border border-slate-100 dark:border-slate-800">
-          <div className="absolute top-0 right-0 p-8 opacity-[0.03] group-hover:opacity-[0.05] transition-opacity scale-150 transform group-hover:scale-110 duration-500 pointer-events-none">
+          <div className="absolute top-0 right-0 p-8 opacity-[0.03] group-hover:opacity-[0.05] transition-opacity scale-150 transform group-hover:brightness-110 duration-500 pointer-events-none">
             <Activity className="w-28 h-28 text-green-500" />
           </div>
           <CardContent className="p-5 h-full flex flex-col justify-center relative z-10">
             <div className="flex items-center gap-4">
-              <div className="p-3.5 rounded-2xl bg-gradient-to-br from-green-500 to-green-600 text-white shadow-lg shadow-green-500/20 relative group-hover:scale-110 transition-transform duration-300">
+              <div className="p-3.5 rounded-2xl bg-gradient-to-br from-green-500 to-green-600 text-white shadow-lg shadow-green-500/20 relative group-hover:brightness-110 transition-transform duration-300">
                 <Activity className="h-5 w-5 animate-pulse" />
               </div>
               <div>

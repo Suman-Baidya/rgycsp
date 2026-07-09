@@ -122,14 +122,14 @@ export function FranchisePageClient({ settings, initialWorkspaces }: FranchisePa
             >
               <button 
                 onClick={() => setShowOfferBanner(false)}
-                className="absolute top-4 right-4 z-20 w-10 h-10 bg-black/20 hover:bg-black/40 text-white rounded-full flex items-center justify-center backdrop-blur-md transition-colors"
+                className="absolute top-4 right-4 z-20 w-10 h-10 bg-black/20 hover:bg-black/40 text-white rounded-full flex items-center justify-center backdrop-blur-sm transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
               
               <div className="absolute inset-0 z-0">
                 {bannerSection.content?.bannerUrl && (
-                  <img src={bannerSection.content.bannerUrl} alt="Offer Banner" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000" />
+                  <img src={bannerSection.content.bannerUrl} alt="Offer Banner" className="w-full h-full object-cover group- transition-transform duration-1000" />
                 )}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-black/20"></div>
               </div>
@@ -142,7 +142,7 @@ export function FranchisePageClient({ settings, initialWorkspaces }: FranchisePa
                 <div className="flex gap-4 w-full mt-4">
                   {bannerSection.content?.link && (
                     <a href={bannerSection.content.link} className="flex-1" onClick={() => setShowOfferBanner(false)}>
-                      <Button className="w-full h-12 rounded-xl font-black text-sm shadow-xl shadow-primary/30 hover:scale-105 transition-transform">
+                      <Button className="w-full h-12 rounded-xl font-black text-sm shadow-xl shadow-primary/30  transition-transform">
                         Claim Offer
                       </Button>
                     </a>
@@ -224,7 +224,7 @@ export function FranchisePageClient({ settings, initialWorkspaces }: FranchisePa
                 <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-[80px] -z-10 group-hover:bg-primary/10 transition-colors duration-500"></div>
                 
                 <div className="flex gap-6 items-start mb-6">
-                  <div className="w-16 h-16 shrink-0 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20 flex items-center justify-center text-primary group-hover:scale-110 group-hover:rotate-3 transition-transform duration-500 shadow-inner">
+                  <div className="w-16 h-16 shrink-0 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20 flex items-center justify-center text-primary group-hover:brightness-110 group-hover:rotate-3 transition-transform duration-500 shadow-inner">
                     <FileText className="w-8 h-8" strokeWidth={1.5} />
                   </div>
                   <div className="space-y-2">
@@ -248,7 +248,7 @@ export function FranchisePageClient({ settings, initialWorkspaces }: FranchisePa
                 <div className="absolute top-0 right-0 w-64 h-64 bg-amber-500/5 rounded-full blur-[80px] -z-10 group-hover:bg-amber-500/10 transition-colors duration-500"></div>
                 
                 <div className="flex gap-6 items-start mb-6">
-                  <div className="w-16 h-16 shrink-0 rounded-2xl bg-gradient-to-br from-amber-500/20 to-amber-500/5 border border-amber-500/20 flex items-center justify-center text-amber-500 group-hover:scale-110 group-hover:-rotate-3 transition-transform duration-500 shadow-inner">
+                  <div className="w-16 h-16 shrink-0 rounded-2xl bg-gradient-to-br from-amber-500/20 to-amber-500/5 border border-amber-500/20 flex items-center justify-center text-amber-500 group-hover:brightness-110 group-hover:-rotate-3 transition-transform duration-500 shadow-inner">
                     <Clock className="w-8 h-8" strokeWidth={1.5} />
                   </div>
                   <div className="space-y-2">
@@ -278,7 +278,7 @@ export function FranchisePageClient({ settings, initialWorkspaces }: FranchisePa
                   <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/5 rounded-full blur-[80px] -z-10 group-hover:bg-indigo-500/10 transition-colors duration-500"></div>
                   
                   <div className="flex gap-6 items-start mb-6">
-                    <div className="w-16 h-16 shrink-0 rounded-2xl bg-gradient-to-br from-indigo-500/20 to-indigo-500/5 border border-indigo-500/20 flex items-center justify-center text-indigo-500 group-hover:scale-110 transition-transform duration-500 shadow-inner">
+                    <div className="w-16 h-16 shrink-0 rounded-2xl bg-gradient-to-br from-indigo-500/20 to-indigo-500/5 border border-indigo-500/20 flex items-center justify-center text-indigo-500 group-hover:brightness-110 transition-transform duration-500 shadow-inner">
                       <Download className="w-8 h-8" strokeWidth={1.5} />
                     </div>
                     <div className="space-y-2">
@@ -318,7 +318,7 @@ export function FranchisePageClient({ settings, initialWorkspaces }: FranchisePa
 
         <div className="w-full max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
            {/* The Main Verification Card - Crisp, official, white */}
-           <Card className="rounded-3xl border-0 overflow-hidden shadow-[0_20px_60px_-15px_rgba(0,0,0,0.5)] bg-white/95 backdrop-blur-md relative">
+           <Card className="rounded-3xl border-0 overflow-hidden shadow-[0_20px_60px_-15px_rgba(0,0,0,0.5)] bg-white/95 backdrop-blur-sm relative">
               {/* Subtle top brand color accent line */}
               <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-primary via-blue-500 to-primary"></div>
 

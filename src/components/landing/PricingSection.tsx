@@ -75,7 +75,7 @@ export function PricingSection({ data }: { data?: any }) {
                   <span className="text-5xl font-black">₹0</span>
                   <span className="text-muted-foreground text-sm font-bold">/30 Days</span>
                 </div>
-                <button className="w-full h-14 bg-zinc-950 dark:bg-white text-white dark:text-zinc-950 font-black rounded-2xl hover:scale-105 transition-all shadow-xl">
+                <button className="w-full h-14 bg-zinc-950 dark:bg-white text-white dark:text-zinc-950 font-black rounded-2xl  transition-all shadow-xl">
                   Get Instant Access
                 </button>
               </div>
@@ -102,7 +102,7 @@ export function PricingSection({ data }: { data?: any }) {
               <span className={`text-sm font-bold transition-all duration-300 ${!isYearly ? "text-primary scale-110" : "text-muted-foreground opacity-50"}`}>Monthly</span>
               <button
                 onClick={() => setIsYearly(!isYearly)}
-                className="relative w-20 h-10 bg-zinc-200 dark:bg-zinc-800 rounded-full p-1.5 transition-all duration-500 hover:scale-105 active:scale-95 shadow-inner group"
+                className="relative w-20 h-10 bg-zinc-200 dark:bg-zinc-800 rounded-full p-1.5 transition-all duration-500  active:scale-95 shadow-inner group"
               >
                 <div className={`h-full aspect-square bg-primary rounded-full shadow-lg transition-all duration-500 ease-in-out transform ${isYearly ? "translate-x-10" : "translate-x-0"}`}>
                   <div className="absolute inset-0 bg-zinc-950 dark:bg-white rounded-full group-hover:opacity-100 transition-opacity"></div>
@@ -158,7 +158,7 @@ export function PricingSection({ data }: { data?: any }) {
                     )}
                   </div>
 
-                  <button className={`relative z-10 w-full h-14 font-black rounded-2xl hover:scale-105 active:scale-95 transition-all mb-10 ${isMain
+                  <button className={`relative z-10 w-full h-14 font-black rounded-2xl  active:scale-95 transition-all mb-10 ${isMain
                     ? "bg-white text-black shadow-[0_15px_30px_rgba(var(--primary),0.3)]"
                     : "bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white hover:bg-zinc-200 dark:hover:bg-zinc-700"
                     }`}>

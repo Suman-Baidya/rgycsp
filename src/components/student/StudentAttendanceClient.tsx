@@ -259,7 +259,7 @@ export default function StudentAttendanceClient({
                     <div key={record.id} className="p-6 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-white/5 transition-colors group">
                       <div className="flex items-center gap-6">
                         <div className={cn(
-                          "w-12 h-12 rounded-2xl flex items-center justify-center text-white shadow-lg transition-transform duration-500 group-hover:scale-110",
+                          "w-12 h-12 rounded-2xl flex items-center justify-center text-white shadow-lg transition-transform duration-500 group-hover:brightness-110",
                           record.status === "PRESENT" ? "bg-emerald-500" : record.status === "ABSENT" ? "bg-red-500" : "bg-amber-500"
                         )} style={{ 
                           boxShadow: `0 8px 20px -6px ${record.status === "PRESENT" ? "#10b981" : record.status === "ABSENT" ? "#ef4444" : "#f59e0b"}60`
@@ -316,7 +316,7 @@ function StatsCard({ label, value, subtext, icon, color }: any) {
         
         <div className="flex flex-col gap-6">
           <div 
-            className="w-12 h-12 rounded-2xl flex items-center justify-center text-white shadow-lg transition-all duration-500 group-hover:scale-110 group-hover:rotate-3" 
+            className="w-12 h-12 rounded-2xl flex items-center justify-center text-white shadow-lg transition-all duration-500 group-hover:brightness-110 group-hover:rotate-3" 
             style={{ 
               backgroundColor: color,
               boxShadow: `0 8px 20px -6px ${color}60`

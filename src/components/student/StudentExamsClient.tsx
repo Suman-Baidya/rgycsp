@@ -142,7 +142,7 @@ export default function StudentExamsClient({
           <p className="text-slate-500 font-medium text-lg">Analyze your preparation and track academic excellence.</p>
         </div>
         <div className="flex gap-4">
-          <Button className="rounded-2xl font-bold gap-3 h-14 px-10 shadow-2xl shadow-primary/30 transition-transform hover:scale-105" style={{ backgroundColor: primaryColor }}>
+          <Button className="rounded-2xl font-bold gap-3 h-14 px-10 shadow-2xl shadow-primary/30 transition-transform " style={{ backgroundColor: primaryColor }}>
             <Award className="w-5 h-5" /> View Certificates
           </Button>
         </div>
@@ -156,7 +156,7 @@ export default function StudentExamsClient({
           <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-3xl -mr-10 -mt-10 group-hover:scale-150 transition-transform duration-700" />
           <CardContent className="p-6 relative z-10 flex flex-col h-full">
             <div className="flex justify-between items-start mb-4">
-              <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-500 shadow-sm border border-emerald-500/20 group-hover:scale-110 transition-transform">
+              <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-500 shadow-sm border border-emerald-500/20 group-hover:brightness-110 transition-transform">
                 <BarChart3 className="w-5 h-5" />
               </div>
               <Badge className="bg-emerald-500 text-white font-black px-3 py-1 text-[10px] uppercase tracking-widest shadow-lg border-none animate-in fade-in zoom-in duration-500">
@@ -177,7 +177,7 @@ export default function StudentExamsClient({
           <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/10 rounded-full blur-3xl -mr-10 -mt-10 group-hover:scale-150 transition-transform duration-700" />
           <CardContent className="p-6 relative z-10 flex flex-col h-full">
             <div className="flex justify-between items-start mb-4">
-              <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-500 shadow-sm border border-amber-500/20 group-hover:scale-110 transition-transform">
+              <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-500 shadow-sm border border-amber-500/20 group-hover:brightness-110 transition-transform">
                 <Trophy className="w-5 h-5" />
               </div>
               <div className="text-right">
@@ -201,7 +201,7 @@ export default function StudentExamsClient({
           <div className="absolute top-0 right-0 w-32 h-32 rounded-full blur-3xl -mr-10 -mt-10 group-hover:scale-150 transition-transform duration-700 opacity-10" style={{ backgroundColor: primaryColor }} />
           <CardContent className="p-6 relative z-10 flex flex-col h-full">
             <div className="flex justify-between items-start mb-4">
-              <div className="w-10 h-10 rounded-xl flex items-center justify-center text-white shadow-md group-hover:scale-110 transition-transform" style={{ backgroundColor: primaryColor }}>
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center text-white shadow-md group-hover:brightness-110 transition-transform" style={{ backgroundColor: primaryColor }}>
                 <Calendar className="w-5 h-5" />
               </div>
               <Badge variant="outline" className="font-bold px-2 py-0.5 text-[9px] uppercase tracking-widest shadow-sm bg-white dark:bg-zinc-900">
@@ -221,7 +221,7 @@ export default function StudentExamsClient({
           <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-3xl -mr-10 -mt-10 group-hover:scale-150 transition-transform duration-700" />
           <CardContent className="p-6 relative z-10 flex flex-col h-full text-white">
             <div className="flex justify-between items-start mb-4">
-              <div className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center text-white shadow-sm border border-white/20 group-hover:scale-110 transition-transform">
+              <div className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center text-white shadow-sm border border-white/20 group-hover:brightness-110 transition-transform">
                 <ShieldCheck className="w-5 h-5" />
               </div>
               <Badge className="bg-emerald-400 text-emerald-950 font-black px-3 py-1 text-[10px] uppercase tracking-widest shadow-lg border-none animate-pulse">

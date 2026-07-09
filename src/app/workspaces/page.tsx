@@ -73,7 +73,7 @@ export default async function WorkspacesPage() {
               const dashboardUrl = `${protocol}://${workspace.subdomain}.${rootDomain}/admin`;
               
               return (
-                <Card key={workspace.id} className="group rounded-[2.5rem] border-white/20 dark:border-white/5 shadow-xl bg-white/80 dark:bg-zinc-900/80 backdrop-blur-xl overflow-hidden hover:shadow-2xl hover:-translate-y-1 transition-all duration-300">
+                <Card key={workspace.id} className="group rounded-[2.5rem] border-white/20 dark:border-white/5 shadow-xl bg-white/80 dark:bg-zinc-900/80 backdrop-blur-sm overflow-hidden hover:shadow-2xl hover:-translate-y-1 transition-all duration-300">
                   <div 
                     className="h-3 w-full" 
                     style={{ backgroundColor: workspace.siteSettings?.primaryColor || 'var(--primary)' }}

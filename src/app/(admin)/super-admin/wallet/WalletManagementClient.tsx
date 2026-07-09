@@ -398,7 +398,7 @@ export default function WalletManagementClient({
                       {req.receiptUrl && (
                         <div className="shrink-0 w-32 h-32 relative rounded-2xl overflow-hidden border-2 border-slate-200">
                           <a href={req.receiptUrl} target="_blank" rel="noopener noreferrer">
-                            <Image src={req.receiptUrl} alt="Receipt" fill className="object-cover hover:scale-105 transition-transform" />
+                            <Image src={req.receiptUrl} alt="Receipt" fill className="object-cover  transition-transform" />
                           </a>
                         </div>
                       )}

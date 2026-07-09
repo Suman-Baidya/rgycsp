@@ -53,7 +53,7 @@ export function VisionSection({ data }: { data?: any }) {
               const Icon = ICON_MAP[item.icon] || Sparkles;
               return (
                 <div key={i} className="p-6 rounded-2xl bg-zinc-50 dark:bg-zinc-900 border border-border group hover:border-primary/30 transition-colors">
-                  <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4 text-primary group-hover:scale-110 transition-transform">
+                  <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4 text-primary group-hover:brightness-110 transition-transform">
                     <Icon className="w-6 h-6" />
                   </div>
                   <h4 className="font-bold text-lg mb-2">{item.title}</h4>
@@ -71,7 +71,7 @@ export function VisionSection({ data }: { data?: any }) {
               src={image || ""} 
               alt={title} 
               fill
-              className="object-cover transition-transform duration-700 group-hover:scale-110"
+              className="object-cover transition-transform duration-700 group-hover:brightness-110"
             />
             <div className="absolute inset-0 bg-gradient-to-bl from-primary/30 to-transparent mix-blend-overlay"></div>
           </div>

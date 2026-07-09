@@ -1,9 +1,11 @@
 import { LandingNavbar } from "@/components/layout/LandingNavbar";
 import { MainFooter } from "@/components/layout/MainFooter";
 import { PageHeader } from "@/components/layout/PageHeader";
-import { WhyChooseUs } from "@/components/landing/WhyChooseUs";
-import { ServicesSection } from "@/components/landing/ServicesSection";
-import { ReadyToModernize } from "@/components/landing/ReadyToModernize";
+import dynamic from "next/dynamic";
+
+const WhyChooseUs = dynamic(() => import("@/components/landing/WhyChooseUs").then(mod => mod.WhyChooseUs));
+const ServicesSection = dynamic(() => import("@/components/landing/ServicesSection").then(mod => mod.ServicesSection));
+const ReadyToModernize = dynamic(() => import("@/components/landing/ReadyToModernize").then(mod => mod.ReadyToModernize));
 import { db } from "@/lib/prisma";
 import { auth } from "@/auth";
 

@@ -62,7 +62,7 @@ export function LandingFooter({ settings }: { settings?: any }) {
           {/* Brand Column */}
           <div className="space-y-6">
             <Link href="/" className="flex items-center gap-4 shrink-0 group w-fit">
-              <div className="relative w-14 h-14 flex items-center justify-center shrink-0 bg-white rounded-xl overflow-hidden shadow-lg p-2 group-hover:shadow-primary/20 group-hover:scale-105 transition-all duration-300">
+              <div className="relative w-14 h-14 flex items-center justify-center shrink-0 bg-white rounded-xl overflow-hidden shadow-lg p-2 group-hover:shadow-primary/20 group- transition-all duration-300">
                 <Image
                   src={logoUrl}
                   alt={`${siteName} Logo`}

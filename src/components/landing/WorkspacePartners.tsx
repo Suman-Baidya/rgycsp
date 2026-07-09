@@ -44,7 +44,7 @@ export function WorkspacePartners({ data }: { data?: any }) {
                            src={logo || "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"}
                            alt={`Partner ${index}`}
                            fill
-                           className="object-contain p-6 grayscale opacity-30 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-500 hover:scale-110"
+                           className="object-contain p-6 grayscale opacity-30 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-500 hover:brightness-110"
                         />
                      </div>
                   ))}
@@ -61,7 +61,7 @@ export function WorkspacePartners({ data }: { data?: any }) {
                            src={logo || "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"}
                            alt={`Partner ${index}`}
                            fill
-                           className="object-contain p-6 grayscale opacity-30 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-500 hover:scale-110"
+                           className="object-contain p-6 grayscale opacity-30 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-500 hover:brightness-110"
                         />
                      </div>
                   ))}

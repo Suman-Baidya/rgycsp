@@ -183,7 +183,7 @@ export function StudentSidebar({
       </motion.aside>
 
       {/* Mobile Bottom Navigation */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-[60] bg-slate-900/95 backdrop-blur-md border-t border-white/10 pb-safe pb-4 pt-2">
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-[60] bg-slate-900/95 backdrop-blur-sm border-t border-white/10 pb-safe pb-4 pt-2">
         <div className="flex items-center justify-around px-2">
           {mainNavItems.map((item) => {
             const isActive = isActivePath(pathname, item.href);

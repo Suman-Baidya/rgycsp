@@ -65,7 +65,7 @@ export function AdminRouteGuard({
   if (!isRestricted) return null;
 
   return (
-    <div className="fixed inset-0 z-[100] bg-zinc-950/80 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-300">
+    <div className="fixed inset-0 z-[100] bg-zinc-950/80 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-300">
       <div className="bg-white dark:bg-slate-900 max-w-md w-full rounded-[2.5rem] p-10 text-center shadow-2xl border border-red-500/20 dark:border-red-500/30">
         <div className="w-20 h-20 bg-red-50 dark:bg-red-500/10 rounded-3xl flex items-center justify-center mx-auto mb-6">
           <ShieldAlert className="w-10 h-10 text-red-500" />

@@ -1,16 +1,19 @@
 import { LandingNavbar } from "@/components/layout/LandingNavbar";
 import { MainFooter } from "@/components/layout/MainFooter";
 import { HeroSection } from "@/components/landing/HeroSection";
-import { QuickLinksSection } from "@/components/landing/QuickLinksSection";
-import { AboutSection } from "@/components/landing/AboutSection";
-import { WhyChooseUs } from "@/components/landing/WhyChooseUs";
-import { Achievements } from "@/components/landing/Achievements";
-import { PartnersMarquee } from "@/components/landing/PartnersMarquee";
-import { Testimonials } from "@/components/landing/Testimonials";
-import { FaqSection } from "@/components/landing/FaqSection";
-import { ContactSection } from "@/components/landing/ContactSection";
-import { CoursesSection } from "@/components/landing/CoursesSection";
-import { FloatingWhatsApp } from "@/components/landing/FloatingWhatsApp";
+import dynamic from "next/dynamic";
+
+const QuickLinksSection = dynamic(() => import("@/components/landing/QuickLinksSection").then(mod => mod.QuickLinksSection));
+const AboutSection = dynamic(() => import("@/components/landing/AboutSection").then(mod => mod.AboutSection));
+const WhyChooseUs = dynamic(() => import("@/components/landing/WhyChooseUs").then(mod => mod.WhyChooseUs));
+const Achievements = dynamic(() => import("@/components/landing/Achievements").then(mod => mod.Achievements));
+const PartnersMarquee = dynamic(() => import("@/components/landing/PartnersMarquee").then(mod => mod.PartnersMarquee));
+const Testimonials = dynamic(() => import("@/components/landing/Testimonials").then(mod => mod.Testimonials));
+const FaqSection = dynamic(() => import("@/components/landing/FaqSection").then(mod => mod.FaqSection));
+const ContactSection = dynamic(() => import("@/components/landing/ContactSection").then(mod => mod.ContactSection));
+const CoursesSection = dynamic(() => import("@/components/landing/CoursesSection").then(mod => mod.CoursesSection));
+const FloatingWhatsApp = dynamic(() => import("@/components/landing/FloatingWhatsApp").then(mod => mod.FloatingWhatsApp));
+
 import { db } from "@/lib/prisma";
 import { CustomThemeStyle } from "@/components/providers/CustomThemeStyle";
 import { GlobalPremiumBackground } from "@/components/layout/GlobalPremiumBackground";

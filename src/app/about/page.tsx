@@ -1,11 +1,13 @@
 import { LandingNavbar } from "@/components/layout/LandingNavbar";
 import { MainFooter } from "@/components/layout/MainFooter";
-import { AboutSection } from "@/components/landing/AboutSection";
-import { Achievements } from "@/components/landing/Achievements";
 import { PageHeader } from "@/components/layout/PageHeader";
-import { MissionSection } from "@/components/landing/MissionSection";
-import { VisionSection } from "@/components/landing/VisionSection";
-import { OurMessage } from "@/components/landing/OurMessage";
+import dynamic from "next/dynamic";
+
+const AboutSection = dynamic(() => import("@/components/landing/AboutSection").then(mod => mod.AboutSection));
+const Achievements = dynamic(() => import("@/components/landing/Achievements").then(mod => mod.Achievements));
+const MissionSection = dynamic(() => import("@/components/landing/MissionSection").then(mod => mod.MissionSection));
+const VisionSection = dynamic(() => import("@/components/landing/VisionSection").then(mod => mod.VisionSection));
+const OurMessage = dynamic(() => import("@/components/landing/OurMessage").then(mod => mod.OurMessage));
 import { db } from "@/lib/prisma";
 import { auth } from "@/auth";
 

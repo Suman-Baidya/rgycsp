@@ -41,7 +41,7 @@ export function ContactSection({ data, settings }: { data?: any, settings?: any 
                <div className="space-y-8">
                   {showAddress && (
                      <div className="flex items-start gap-4 group">
-                        <div className="w-12 h-12 bg-primary/10 text-primary rounded-xl flex items-center justify-center shrink-0 border border-primary/20 shadow-sm transition-all group-hover:scale-110">
+                        <div className="w-12 h-12 bg-primary/10 text-primary rounded-xl flex items-center justify-center shrink-0 border border-primary/20 shadow-sm transition-all group-hover:brightness-110">
                            <MapPin className="w-6 h-6" />
                         </div>
                         <div>
@@ -53,7 +53,7 @@ export function ContactSection({ data, settings }: { data?: any, settings?: any 
 
                   {showPhone && (
                      <div className="flex items-start gap-4 group">
-                        <div className="w-12 h-12 bg-primary/10 text-primary rounded-xl flex items-center justify-center shrink-0 border border-primary/20 shadow-sm transition-all group-hover:scale-110">
+                        <div className="w-12 h-12 bg-primary/10 text-primary rounded-xl flex items-center justify-center shrink-0 border border-primary/20 shadow-sm transition-all group-hover:brightness-110">
                            <Phone className="w-6 h-6" />
                         </div>
                         <div>
@@ -64,7 +64,7 @@ export function ContactSection({ data, settings }: { data?: any, settings?: any 
                   )}
 
                   <div className="flex items-start gap-4 group">
-                     <div className="w-12 h-12 bg-primary/10 text-primary rounded-xl flex items-center justify-center shrink-0 border border-primary/20 shadow-sm transition-all group-hover:scale-110">
+                     <div className="w-12 h-12 bg-primary/10 text-primary rounded-xl flex items-center justify-center shrink-0 border border-primary/20 shadow-sm transition-all group-hover:brightness-110">
                         <Mail className="w-6 h-6" />
                      </div>
                      <div>
