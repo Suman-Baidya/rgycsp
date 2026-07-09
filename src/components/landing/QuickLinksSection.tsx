@@ -24,7 +24,7 @@ export function QuickLinksSection({ data, tenant }: QuickLinksSectionProps) {
   // Since we don't have it imported, we'll import it from "@/lib/routing"
   
   return (
-    <section className="py-12 md:py-20 relative bg-background overflow-hidden z-10">
+    <section className="py-12 md:py-20 relative overflow-hidden z-10 bg-transparent">
       {/* Decorative background elements */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden -z-10">
         <div className="absolute top-[-10%] right-[-5%] w-[40%] h-[40%] rounded-full bg-primary/5 blur-3xl" />

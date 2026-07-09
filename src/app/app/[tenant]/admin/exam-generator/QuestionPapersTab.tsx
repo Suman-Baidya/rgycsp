@@ -30,8 +30,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { createChapter, addManualQuestion, bulkImportQuestions } from "@/app/actions/question-bank";
 import { toast } from "sonner";
 import { Textarea } from "@/components/ui/textarea";
-import Papa from "papaparse";
-
 export default function QuestionPapersTab({ workspaceId, workspaceTokens, courses, chapters }: { workspaceId: string, workspaceTokens: number, courses: any[], chapters: any[] }) {
    const [mode, setMode] = useState<"manual" | "csv" | "ai">("manual");
    
@@ -69,7 +67,7 @@ export default function QuestionPapersTab({ workspaceId, workspaceTokens, course
             setIsCreateChapterOpen(false);
             setNewChapterName("");
             if (selectedCourse === newChapterCourseId) {
-               setSelectedChapter(res.data.id);
+               if (res.data?.id) setSelectedChapter(res.data.id);
             }
          } else {
             toast.error(res.error);
@@ -123,13 +121,15 @@ export default function QuestionPapersTab({ workspaceId, workspaceTokens, course
       document.body.removeChild(link);
    };
 
-   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
       if (!selectedChapter) return toast.error("Please select a chapter first.");
       
       const file = e.target.files?.[0];
       if (!file) return;
 
       setIsUploadingCSV(true);
+
+      const Papa = (await import("papaparse")).default;
 
       Papa.parse(file, {
          header: true,

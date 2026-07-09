@@ -29,8 +29,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ImageUpload } from "@/components/ui/ImageUpload";
 import { AdminPageHeader } from "@/components/layout/AdminPageHeader";
 import { cn } from "@/lib/utils";
-import { jsPDF } from "jspdf";
-import html2canvas from "html2canvas";
 import { toast } from "sonner";
 import { saveDocumentTemplate, getDocumentTemplates, deleteDocumentTemplate, checkActiveTemplateExists, toggleTemplateStatus } from "@/app/actions/document-templates";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
@@ -444,6 +442,7 @@ export default function DocumentDesigner() {
 
       // 2. Capture canvas with high scale for printing (300 DPI target)
       // Standard 96 DPI * 3.125 = 300 DPI. Scale 4 is ~384 DPI.
+      const html2canvas = (await import("html2canvas")).default;
       const canvas = await html2canvas(canvasRef.current, {
         scale: 4, 
         useCORS: true,
@@ -455,6 +454,7 @@ export default function DocumentDesigner() {
       const imgData = canvas.toDataURL("image/jpeg", 1.0);
       
       // 3. Create PDF with precise unit dimensions
+      const { jsPDF } = await import("jspdf");
       const pdf = new jsPDF({
         orientation: canvasSize.width > canvasSize.height ? "l" : "p",
         unit: "mm",

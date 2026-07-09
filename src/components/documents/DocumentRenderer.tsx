@@ -2,8 +2,6 @@
 
 import React, { useState, useEffect, forwardRef, useImperativeHandle, useRef } from "react";
 import { getDocumentTemplateByType } from "@/app/actions/document-templates";
-import { jsPDF } from "jspdf";
-import html2canvas from "html2canvas";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -195,6 +193,7 @@ export const DocumentRenderer = forwardRef<DocumentRendererRef, DocumentRenderer
         // Give layout 100ms to stabilize after images load
         await new Promise(r => setTimeout(r, 100));
 
+        const html2canvas = (await import("html2canvas")).default;
         const canvas = await html2canvas(canvasRef.current, { 
           scale: 2, 
           useCORS: true,
@@ -231,6 +230,7 @@ export const DocumentRenderer = forwardRef<DocumentRendererRef, DocumentRenderer
           return;
         }
 
+        const { jsPDF } = await import("jspdf");
         const pdf = new jsPDF({
           orientation: template.width > template.height ? "landscape" : "portrait",
           unit: "px",

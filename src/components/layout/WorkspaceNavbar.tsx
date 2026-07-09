@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useParams } from "next/navigation";
+import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Phone,
@@ -109,9 +110,9 @@ export function WorkspaceNavbar({ settings, user, tenant: propTenant }: { settin
 
   const Logo = ({ size = "w-10 h-10 lg:w-12 lg:h-12", iconSize = "text-xl lg:text-2xl", showName = true }: { size?: string, iconSize?: string, showName?: boolean }) => (
     <div className="flex items-center gap-3 lg:gap-5 group min-w-0">
-      <div className={cn(size, "rounded-xl bg-primary flex items-center justify-center shadow-2xl shadow-primary/20 group-hover:scale-105 transition-transform overflow-hidden shrink-0")}>
+      <div className={cn(size, "rounded-xl bg-primary flex items-center justify-center shadow-2xl shadow-primary/20 group-hover:scale-105 transition-transform overflow-hidden shrink-0 relative")}>
         {settings.logoUrl ? (
-          <img src={settings.logoUrl} alt={settings.siteName} className="w-full h-full object-contain p-1" />
+          <Image src={settings.logoUrl} alt={settings.siteName} fill sizes="(max-width: 768px) 150px, 200px" className="object-contain p-1" />
         ) : (
           <span className={cn("text-primary-foreground font-black tracking-tighter uppercase", iconSize)}>
             {settings.siteName?.charAt(0) || "W"}

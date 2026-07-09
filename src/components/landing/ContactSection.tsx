@@ -23,7 +23,7 @@ export function ContactSection({ data, settings }: { data?: any, settings?: any 
    const buttonText = content.buttonText || "Submit Request";
 
    return (
-      <section id="support" className="py-24 px-6 bg-zinc-50 dark:bg-black/20">
+      <section id="support" className="py-24 px-6 bg-transparent">
          <div className="max-w-7xl mx-auto flex flex-col lg:flex-row gap-16">
             {/* Details Side */}
             <div className="flex-1 flex flex-col items-start text-left">

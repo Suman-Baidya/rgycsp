@@ -6,7 +6,6 @@ import { ArrowLeft, Download, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useParams, usePathname } from "next/navigation";
 import { toPng } from "html-to-image";
-import jsPDF from "jspdf";
 import { toast } from "sonner";
 
 export function PrintControlBar() {
@@ -45,6 +44,7 @@ export function PrintControlBar() {
       // Capture Page 2
       const img2 = await toPng(page2, options);
 
+      const jsPDF = (await import("jspdf")).default;
       const pdf = new jsPDF({
         orientation: "portrait",
         unit: "mm",

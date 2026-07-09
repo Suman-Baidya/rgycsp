@@ -32,7 +32,7 @@ export function AboutSection({ data }: { data?: any }) {
   const isLongDescription = description.length > 250;
 
   return (
-    <section id="about" className="py-24 px-6 bg-zinc-50 dark:bg-black/20">
+    <section id="about" className="py-24 px-6 bg-transparent">
       <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
         {/* Left Side: Image with Overlay */}
         <div className="relative">
@@ -41,6 +41,7 @@ export function AboutSection({ data }: { data?: any }) {
               src={image || ""}
               alt={title}
               fill
+              sizes="(max-width: 768px) 100vw, 50vw"
               className="object-cover"
             />
           </div>

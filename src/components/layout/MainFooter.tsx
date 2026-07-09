@@ -8,6 +8,9 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
+import { FloatingWhatsApp } from "@/components/landing/FloatingWhatsApp";
+import { FloatingChatbot } from "@/components/landing/FloatingChatbot";
+
 export function MainFooter({ settings }: { settings?: any }) {
   const siteName = settings?.siteName || "ABCD Edu Hub";
   const footerBrandName = settings?.navbarConfig?.footerBrandName || siteName;
@@ -15,9 +18,11 @@ export function MainFooter({ settings }: { settings?: any }) {
   const footerTagline = settings?.navbarConfig?.footerTagline || "Global Education Platform";
   const contactEmail = settings?.contactEmail || "sb.abcd321@gmail.com";
   const contactPhone = settings?.contactPhone || "8944899747";
+  const whatsappNumber = settings?.whatsapp || contactPhone;
   const address = settings?.address || "Kolkata, West Bengal, India - 700001";
   const brandDescription = settings?.brandDescription || "The ultimate platform for modern educational management. Empowering institutes worldwide with cutting-edge technology and seamless digital transformation.";
   const socialLinks = settings?.socialLinks || {};
+  const floatingConfig = settings?.floatingConfig || {};
 
   // Dynamic Navigation from settings
   const navLinks = settings?.navigation?.length > 0
@@ -55,8 +60,11 @@ export function MainFooter({ settings }: { settings?: any }) {
   ];
 
   return (
-    <footer className="w-full bg-black text-white border-t border-white/20 transition-colors">
-      <div className="max-w-7xl mx-auto px-6 py-20">
+    <>
+      <FloatingWhatsApp phoneNumber={whatsappNumber} config={floatingConfig} />
+      <FloatingChatbot config={floatingConfig} />
+      <footer className="w-full bg-black text-white border-t border-white/20 transition-colors">
+        <div className="max-w-7xl mx-auto px-6 py-20">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-16 lg:gap-12">
           {/* Brand Info */}
           <div className="lg:col-span-4 space-y-10">
@@ -206,9 +214,8 @@ export function MainFooter({ settings }: { settings?: any }) {
           </div>
         </div>
       </div>
-    </footer>
-
-
+      </footer>
+    </>
   );
 }
 

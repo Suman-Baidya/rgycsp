@@ -23,6 +23,7 @@ export const metadata: Metadata = {
 import { SessionProvider } from "@/components/providers/SessionProvider";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
 import { UserHeartbeat } from "@/components/providers/UserHeartbeat";
+import { OfflineIndicator } from "@/components/OfflineIndicator";
 import { Toaster } from "sonner";
 
 export default function RootLayout({
@@ -39,6 +40,7 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col font-sans" suppressHydrationWarning>
         <SessionProvider>
           <UserHeartbeat />
+          <OfflineIndicator />
           <ThemeProvider
             attribute="class"
             defaultTheme="system"

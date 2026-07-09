@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Button } from "./button";
 import { Input } from "./input";
 import { Upload, X, Loader2, Image as ImageIcon } from "lucide-react";
+import NextImage from "next/image";
 import { uploadImage } from "@/app/actions/upload";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -155,7 +156,7 @@ export function ImageUpload({
         </div>
       ) : (
         <div className="relative w-full max-w-sm aspect-video rounded-2xl overflow-hidden border-2 border-primary/20 bg-muted/30 group shadow-xl">
-          <img src={value} alt="Preview" className="w-full h-full object-contain" />
+          <NextImage src={value} alt="Preview" fill className="object-contain" />
           <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
              <Button
               type="button"

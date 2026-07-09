@@ -84,7 +84,7 @@ export function ServicesSection({ data }: { data?: any }) {
   if (!ecosystem.roles || ecosystem.roles.length === 0) ecosystem.roles = ecosystemDefaults.roles;
 
   return (
-    <section id="services" className="py-24 px-6 bg-zinc-50 dark:bg-black/20 overflow-hidden">
+    <section id="services" className="py-24 px-6 overflow-hidden bg-transparent">
       <div className="max-w-7xl mx-auto">
         
         {/* 1. Main Header (Always Visible) */}

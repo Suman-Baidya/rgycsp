@@ -95,7 +95,7 @@ export function HeroSection({ data }: { data?: any }) {
   }, [api]);
 
   return (
-    <section id="home" className="w-full relative bg-zinc-950">
+    <section id="home" className="w-full relative bg-transparent">
       <Carousel
         setApi={setApi}
         plugins={[plugin.current]}

@@ -71,7 +71,6 @@ import { AdminPageHeader } from "@/components/layout/AdminPageHeader";
 import { updateFranchiseApplicationStatus } from "@/app/actions/franchise";
 import { createWorkspace, updateCenterConfig, toggleWorkspaceStatus, deleteWorkspace } from "@/app/actions/workspaces";
 import { importWorkspacesCSV } from "@/app/actions/workspaces-import";
-import Papa from "papaparse";
 import { ImageUpload } from "@/components/ui/ImageUpload";
 import { getRootDomain } from "@/lib/domain";
 import { toast } from "sonner";
@@ -440,12 +439,14 @@ export default function FranchiseApplicationsClient({
     document.body.removeChild(link);
   };
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
       setCsvFile(file);
       setIsParsing(true);
       
+      const Papa = (await import("papaparse")).default;
+
       Papa.parse(file, {
         header: true,
         skipEmptyLines: true,

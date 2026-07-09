@@ -59,7 +59,7 @@ export function FaqSection({ data }: { data?: any }) {
   ];
 
   return (
-    <section className="py-24 px-6 bg-zinc-50 dark:bg-zinc-950 relative border-t border-border overflow-hidden">
+    <section className="py-24 px-6 relative border-t border-border overflow-hidden bg-transparent">
       {/* Background Decor */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[400px] bg-primary/5 rounded-[100%] blur-[100px] pointer-events-none"></div>
 

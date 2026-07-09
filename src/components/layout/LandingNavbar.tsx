@@ -331,14 +331,13 @@ export function LandingNavbar({ settings, user, isHome }: { settings?: any, user
                       href={link.href}
                       className={cn(
                         "text-[14px] font-bold transition-all relative group uppercase",
-                        isActive
-                          ? "text-primary"
-                          : (isScrolled ? "text-foreground/70 hover:text-foreground" : "text-white/80 hover:text-white")
+                        isActive ? (isScrolled ? "text-foreground" : "text-white") : (isScrolled ? "text-foreground/70 hover:text-foreground" : "text-white/80 hover:text-white")
                       )}
                     >
                       {link.name}
                       <span className={cn(
-                        "absolute -bottom-2 left-1/2 -translate-x-1/2 h-1.5 bg-primary rounded-full transition-all duration-300",
+                        "absolute -bottom-2 left-1/2 -translate-x-1/2 h-1.5 rounded-full transition-all duration-300",
+                        isScrolled ? "bg-foreground" : "bg-white",
                         isActive ? "w-6 opacity-100" : "w-0 opacity-0 group-hover:w-4 group-hover:opacity-50"
                       )} />
                     </Link>
@@ -394,9 +393,15 @@ export function LandingNavbar({ settings, user, isHome }: { settings?: any, user
                     key={link.id}
                     href={link.href}
                     onClick={() => setIsOpen(false)}
-                    className={`transition-colors py-1.5 ${isActive ? 'text-primary font-black' : 'text-foreground/70 hover:text-primary'}`}
+                    className={cn(
+                      "transition-colors py-1.5 relative w-fit",
+                      isActive ? 'text-foreground font-black' : 'text-foreground/70 hover:text-foreground'
+                    )}
                   >
                     {link.name}
+                    {isActive && (
+                      <span className="absolute -bottom-1 left-0 w-8 h-1 bg-foreground rounded-full" />
+                    )}
                   </Link>
                 );
               })}

@@ -22,8 +22,7 @@ import {
 import { useParams, usePathname, useRouter } from "next/navigation";
 import { getTenantLink } from "@/lib/routing";
 import { DocumentRenderer, DocumentRendererRef } from "@/components/documents/DocumentRenderer";
-import { jsPDF } from "jspdf";
-
+import type { jsPDF } from "jspdf";
 export default function AdmitCardTab({ students, courses, batches, exams }: { students: any[], courses: any[], batches: any[], exams: any[] }) {
   const router = useRouter();
   const params = useParams();
@@ -261,6 +260,7 @@ export default function AdmitCardTab({ students, courses, batches, exams }: { st
       const dims = rendererRef.current.getTemplateDimensions();
       if (imgData && dims) {
         if (!pdfRef.current) {
+          const { jsPDF } = await import("jspdf");
           pdfRef.current = new jsPDF({
             orientation: dims.orientation,
             unit: "px",

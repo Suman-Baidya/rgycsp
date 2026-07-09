@@ -26,7 +26,7 @@ export function MissionSection({ data }: { data?: any }) {
   const items = final.items;
 
   return (
-    <section className="py-24 px-6 bg-zinc-50 dark:bg-black/20 overflow-hidden">
+    <section className="py-24 px-6 overflow-hidden bg-transparent">
       <div className="max-w-7xl mx-auto flex flex-col lg:flex-row items-center gap-16">
         {/* Image Side */}
         <div className="flex-1 relative group">

@@ -19,8 +19,10 @@ export async function uploadImage(file: string, folder: string = "RGYCSP/Uncateg
       folder: finalFolder,
       resource_type: "auto",
     });
-    console.log("Upload successful:", result.secure_url);
-    return { success: true, url: result.secure_url };
+    const optimizedUrl = result.secure_url.replace('/upload/', '/upload/f_auto,q_auto/');
+    
+    console.log("Upload successful:", optimizedUrl);
+    return { success: true, url: optimizedUrl };
   } catch (error: any) {
     console.error("Cloudinary upload error details:", error);
     return { success: false, error: error.message || "Failed to upload image" };

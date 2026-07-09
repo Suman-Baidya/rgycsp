@@ -43,6 +43,12 @@ export function SettingsForm({ settings, isSuperAdmin = true }: { settings: any,
     ctaPrimary: { text: "Login", link: "/login" },
     ctaSecondary: { text: "Call Now", link: `tel:${settings.contactPhone || "8944899747"}` }
   });
+  const [floatingConfig, setFloatingConfig] = useState(settings.floatingConfig || {
+    enableWhatsApp: true,
+    enableChatbot: true,
+    chatbotName: "AI Assistant",
+    welcomeMessage: "Hi there! How can I help you today?"
+  });
   const [navigation, setNavigation] = useState(settings.navigation || [
     { name: "Home", href: "/", id: "home", isActive: true },
     { name: "About", href: "/about", id: "about", isActive: true },
@@ -80,6 +86,12 @@ export function SettingsForm({ settings, isSuperAdmin = true }: { settings: any,
       showMenus: true,
       ctaPrimary: { text: "Login", link: "/login" },
       ctaSecondary: { text: "Call Now", link: `tel:${settings.contactPhone || "8944899747"}` }
+    });
+    setFloatingConfig(settings.floatingConfig || {
+      enableWhatsApp: true,
+      enableChatbot: true,
+      chatbotName: "AI Assistant",
+      welcomeMessage: "Hi there! How can I help you today?"
     });
     const baseNav = [...(settings.navigation || (isSuperAdmin ? [
       { name: "Home", href: "/", id: "home", isActive: true },
@@ -138,6 +150,7 @@ export function SettingsForm({ settings, isSuperAdmin = true }: { settings: any,
         brandDescription,
         socialLinks,
         navbarConfig,
+        floatingConfig,
         navigation,
         globalIdCardAccess,
         globalAdmitCardAccess,
@@ -480,6 +493,61 @@ export function SettingsForm({ settings, isSuperAdmin = true }: { settings: any,
                   </div>
                 </AccordionContent>
               </AccordionItem>
+
+              {/* 3.5 Floating Controls (Super Admin Only) */}
+              {isSuperAdmin && (
+              <AccordionItem value="floating" className="border border-border/50 bg-card/50 rounded-3xl overflow-hidden">
+                <AccordionTrigger className="hover:no-underline py-8 px-6 sm:px-8">
+                  <div className="flex items-center gap-4 text-left">
+                    <div className="w-12 h-12 rounded-2xl bg-green-500/10 text-green-600 flex items-center justify-center">
+                      <Zap className="w-6 h-6" />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-bold tracking-tight">Floating Widget Controls</h3>
+                      <p className="text-sm text-muted-foreground font-medium">WhatsApp and AI Chatbot visibility and configuration.</p>
+                    </div>
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="pb-8 px-6 sm:px-8 space-y-8">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="flex items-center justify-between p-5 bg-background rounded-2xl border border-border/40">
+                      <div>
+                        <span className="text-sm font-bold block">Enable WhatsApp Widget</span>
+                        <span className="text-xs text-muted-foreground">Floating icon at the bottom left.</span>
+                      </div>
+                      <Switch checked={!!floatingConfig.enableWhatsApp} onCheckedChange={(val) => setFloatingConfig({...floatingConfig, enableWhatsApp: val})} />
+                    </div>
+                    <div className="flex items-center justify-between p-5 bg-background rounded-2xl border border-border/40">
+                      <div>
+                        <span className="text-sm font-bold block">Enable Chatbot Widget</span>
+                        <span className="text-xs text-muted-foreground">Automated quick response system.</span>
+                      </div>
+                      <Switch checked={!!floatingConfig.enableChatbot} onCheckedChange={(val) => setFloatingConfig({...floatingConfig, enableChatbot: val})} />
+                    </div>
+                  </div>
+
+                  <div className="space-y-4 pt-4 border-t border-border/40">
+                    <h4 className="font-bold text-lg">Chatbot Configuration</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-3">
+                        <Label className="text-sm font-semibold text-foreground/80">Chatbot Name</Label>
+                        <Input value={floatingConfig.chatbotName || ""} onChange={(e) => setFloatingConfig({...floatingConfig, chatbotName: e.target.value})} placeholder="e.g. AI Assistant" className="h-12 bg-background border-border/40 rounded-2xl" />
+                      </div>
+                      <div className="space-y-3 md:col-span-2">
+                        <Label className="text-sm font-semibold text-foreground/80">Welcome Message</Label>
+                        <Textarea value={floatingConfig.welcomeMessage || ""} onChange={(e) => setFloatingConfig({...floatingConfig, welcomeMessage: e.target.value})} placeholder="Initial greeting..." className="min-h-[48px] bg-background border-border/40 rounded-2xl" />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="pt-4 flex justify-end">
+                    <Button onClick={handleSaveGeneral} disabled={isSaving} className="h-11 px-8 gap-2 rounded-xl font-bold bg-green-600 hover:bg-green-700 text-white shadow-xl shadow-green-500/20">
+                      <Save className="h-4 w-4" /> {isSaving ? "Saving..." : "Update Floating Controls"}
+                    </Button>
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+              )}
 
               {/* 4. Navbar Configuration (Super Admin Only) */}
               {isSuperAdmin && (

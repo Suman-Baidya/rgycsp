@@ -9,8 +9,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Plus, Save, CalendarDays, Users, Clock, Printer, Trash2, Edit, AlertTriangle } from "lucide-react";
 import { createExam, createExamShift, deleteExam, updateExam } from "@/app/actions/exam";
 import { toast } from "sonner";
-import { jsPDF } from "jspdf";
-import html2canvas from "html2canvas";
 import {
   Select,
   SelectContent,
@@ -127,8 +125,10 @@ export default function OfflineExamTab({ workspaceId, workspace, superAdminName,
         return;
       }
 
+      const { jsPDF } = await import("jspdf");
       const pdf = new jsPDF('p', 'pt', 'a4');
 
+      const html2canvas = (await import("html2canvas")).default;
       for (let i = 0; i < pages.length; i++) {
         const canvas = await html2canvas(pages[i] as HTMLElement, {
           scale: 2,

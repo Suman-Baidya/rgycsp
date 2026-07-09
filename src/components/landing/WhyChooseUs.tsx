@@ -42,7 +42,7 @@ export function WhyChooseUs({ data }: { data?: any }) {
   const iconMap: any = { Zap, ShieldCheck, Cpu, Globe, Rocket, Brain, GraduationCap, Users, Layout };
 
   return (
-    <section id="services" className="py-24 px-6 bg-background">
+    <section id="services" className="py-24 px-6 bg-transparent">
       <div className="max-w-7xl mx-auto flex flex-col lg:flex-row gap-16 items-center">
         {/* Features Grid */}
         <div className="flex-1 order-2 lg:order-1">

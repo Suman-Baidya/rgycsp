@@ -26,7 +26,7 @@ export function Testimonials({ data }: { data?: any }) {
    const testimonials = (content.items && content.items.length > 0) ? content.items : TESTIMONIALS;
 
    return (
-      <section id="pricing" className="py-24 px-6 bg-zinc-50 dark:bg-zinc-950 relative overflow-hidden">
+      <section id="pricing" className="py-24 px-6 relative overflow-hidden bg-transparent">
          {/* Decorative Blur Backgrounds */}
          <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[120px] pointer-events-none"></div>
          <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-accent/5 rounded-full blur-[120px] pointer-events-none"></div>

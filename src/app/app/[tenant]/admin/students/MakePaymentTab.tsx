@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
-import { Search, IndianRupee, History, AlertCircle, CheckCircle2, User, BookOpen, Clock, Loader2, Calendar } from "lucide-react";
+import { Search, IndianRupee, History, AlertCircle, CheckCircle2, User, BookOpen, Clock, Loader2, Calendar, Receipt, Settings2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -10,8 +10,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { generateStudentPaymentStructure, getStudentInvoices, recordManualOfflinePayment } from "@/app/actions/payments";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { jsPDF } from "jspdf";
-
 export default function MakePaymentTab({ 
   workspaceId, 
   students 
@@ -46,7 +44,7 @@ export default function MakePaymentTab({
     const res = await getStudentInvoices(studentId);
     setIsLoadingInvoices(false);
     if (res.success) {
-      setInvoices(res.data);
+      setInvoices(res.data || []);
     } else {
       toast.error(res.error || "Failed to fetch invoices");
     }
@@ -93,7 +91,8 @@ export default function MakePaymentTab({
     }
   };
 
-  const downloadReceipt = (invoice: any) => {
+  const downloadReceipt = async (invoice: any) => {
+    const { jsPDF } = await import("jspdf");
     const doc = new jsPDF();
     doc.setFontSize(22);
     doc.text("PAYMENT RECEIPT", 105, 20, { align: "center" });

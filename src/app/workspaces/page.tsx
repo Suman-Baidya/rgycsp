@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Building2, ArrowRight, Plus } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 
 export default async function WorkspacesPage() {
   const session = await auth();
@@ -81,7 +82,9 @@ export default async function WorkspacesPage() {
                     <div className="flex items-center gap-4 mb-4">
                       <div className="w-14 h-14 rounded-2xl bg-slate-50 dark:bg-zinc-800 border border-slate-100 dark:border-white/10 flex items-center justify-center p-2">
                         {workspace.logoUrl ? (
-                          <img src={workspace.logoUrl} alt={workspace.name} className="w-full h-full object-contain" />
+                          <div className="relative w-full h-full">
+                            <Image src={workspace.logoUrl} alt={workspace.name} fill className="object-contain" />
+                          </div>
                         ) : (
                           <Building2 className="w-8 h-8 text-primary" />
                         )}

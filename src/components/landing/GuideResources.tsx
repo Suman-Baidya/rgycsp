@@ -23,7 +23,7 @@ export function GuideResources({ data }: { data?: any }) {
   const docs = { ...defaults.docs, ...content.docs };
 
   return (
-    <section className="py-24 px-6 bg-zinc-50 dark:bg-zinc-900/30">
+    <section className="py-24 px-6 dark:bg-zinc-900/30 bg-transparent">
       <div className="max-w-7xl mx-auto">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
           

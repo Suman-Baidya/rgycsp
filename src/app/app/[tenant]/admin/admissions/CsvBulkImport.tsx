@@ -5,8 +5,6 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { Upload, FileDown, Database } from "lucide-react";
 import { bulkRegisterStudentsAction } from "@/app/actions/admissions";
-import Papa from "papaparse";
-
 export default function CsvBulkImport({ workspaceId }: { workspaceId: string }) {
   const [isUploading, setIsUploading] = useState(false);
   const [parsedData, setParsedData] = useState<any[]>([]);
@@ -40,9 +38,11 @@ export default function CsvBulkImport({ workspaceId }: { workspaceId: string }) 
     document.body.removeChild(link);
   };
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    const Papa = (await import("papaparse")).default;
 
     Papa.parse(file, {
       header: true,

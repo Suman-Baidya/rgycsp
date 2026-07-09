@@ -32,7 +32,7 @@ export function VisionSection({ data }: { data?: any }) {
   const items = final.items;
 
   return (
-    <section className="py-24 px-6 bg-white dark:bg-zinc-950 overflow-hidden">
+    <section className="py-24 px-6 overflow-hidden bg-transparent">
       <div className="max-w-7xl mx-auto flex flex-col lg:flex-row items-center gap-16">
         
         {/* Content Side */}

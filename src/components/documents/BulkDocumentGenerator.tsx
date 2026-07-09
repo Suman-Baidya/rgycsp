@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Loader2, Download, FileText, Printer, Award, CreditCard, User, Layers } from "lucide-react";
 import { DocumentRenderer, DocumentRendererRef } from "./DocumentRenderer";
-import { jsPDF } from "jspdf";
+import type { jsPDF } from "jspdf";
 import { toast } from "sonner";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
@@ -89,6 +89,7 @@ export function BulkDocumentGenerator({ open, onOpenChange, selectedStudentIds, 
     try {
       // 1. Initialize PDF if it's the first student
       if (currentStudentIndex === 0) {
+        const { jsPDF } = await import("jspdf");
         const dims = rendererRef.current.getTemplateDimensions();
         if (!dims) {
           toast.error(`Template not found for ${docLabel}. Skipping...`);

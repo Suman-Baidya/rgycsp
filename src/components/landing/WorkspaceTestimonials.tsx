@@ -37,7 +37,7 @@ export function WorkspaceTestimonials({ data }: { data?: any }) {
   ];
 
   return (
-    <section id="testimonials" className="py-24 bg-white dark:bg-slate-950 overflow-hidden relative">
+    <section id="testimonials" className="py-24 dark:bg-slate-950 overflow-hidden relative bg-transparent">
       {/* Premium Background Elements */}
       <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[120px] -translate-x-1/2 -translate-y-1/2 pointer-events-none" />
       <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-blue-500/5 rounded-full blur-[120px] translate-x-1/2 translate-y-1/2 pointer-events-none" />

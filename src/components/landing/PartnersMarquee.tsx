@@ -12,7 +12,7 @@ export function PartnersMarquee({ data }: { data?: any }) {
    ];
 
    return (
-      <section className="py-16 bg-white dark:bg-zinc-950 border-y border-border overflow-hidden">
+      <section className="py-16 border-y border-border overflow-hidden bg-transparent">
          <div className="max-w-7xl mx-auto px-6 mb-8 text-center">
             <div className="inline-flex items-center gap-2 py-1.5 px-4 rounded-full bg-primary/5 border border-primary/20 text-primary font-bold text-[10px] tracking-[0.2em] uppercase mb-4 shadow-sm">
                <span className="w-2 h-2 rounded-full bg-black dark:bg-white animate-pulse"></span>

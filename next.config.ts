@@ -26,7 +26,8 @@ const nextConfig = {
   },
   experimental: {
     serverActions: {
-      allowedOrigins: ['localhost:3000', '*.localhost:3000', '*.vercel.app']
+      allowedOrigins: ['localhost:3000', '*.localhost:3000', '*.vercel.app'],
+      bodySizeLimit: '10mb'
     }
   }
 };

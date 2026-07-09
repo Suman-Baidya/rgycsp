@@ -128,8 +128,9 @@ model SiteSettings {
   socialLinks      Json? // { facebook, twitter, instagram, linkedin, youtube }
   pageHeaderBanner String?
 
-  navigation   Json? // [{ label: 'Home', href: '/', isActive: true }, ...]
-  navbarConfig Json? // { showNavbar, showTopBar, showMenus, ctaPrimary: {text, link}, ctaSecondary: {text, link} }
+  navigation     Json? // [{ label: 'Home', href: '/', isActive: true }, ...]
+  navbarConfig   Json? // { showNavbar, showTopBar, showMenus, ctaPrimary: {text, link}, ctaSecondary: {text, link} }
+  floatingConfig Json? // { enableWhatsApp, enableChatbot, chatbotName, welcomeMessage }
 
   globalIdCardAccess    Boolean @default(true)
   globalAdmitCardAccess Boolean @default(true)

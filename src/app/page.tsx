@@ -10,8 +10,10 @@ import { Testimonials } from "@/components/landing/Testimonials";
 import { FaqSection } from "@/components/landing/FaqSection";
 import { ContactSection } from "@/components/landing/ContactSection";
 import { CoursesSection } from "@/components/landing/CoursesSection";
+import { FloatingWhatsApp } from "@/components/landing/FloatingWhatsApp";
 import { db } from "@/lib/prisma";
 import { CustomThemeStyle } from "@/components/providers/CustomThemeStyle";
+import { GlobalPremiumBackground } from "@/components/layout/GlobalPremiumBackground";
 
 import { auth } from "@/auth";
 
@@ -40,7 +42,8 @@ export default async function RootLandingPage() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen font-sans bg-background selection:bg-primary/30">
+    <div className="flex flex-col min-h-screen font-sans bg-transparent selection:bg-primary/30 relative">
+      <GlobalPremiumBackground />
       <CustomThemeStyle primaryColor={settings.primaryColor || undefined} accentColor={settings.accentColor || undefined} />
       <LandingNavbar settings={settings} user={session?.user} isHome={true} />
 
@@ -66,6 +69,7 @@ export default async function RootLandingPage() {
         {isSectionActive("contact") && <ContactSection data={getSectionData("contact")} settings={settings} />}
       </main>
 
+      <FloatingWhatsApp phoneNumber={settings.whatsapp} />
       <MainFooter settings={settings} />
     </div>
   );

@@ -32,7 +32,7 @@ export function WorkspaceFaq({ data }: { data?: any }) {
   const [activeIndex, setActiveIndex] = useState<number | null>(0);
 
   return (
-    <section id="faq" className="py-24 px-6 bg-slate-50 dark:bg-slate-900/10 relative overflow-hidden">
+    <section id="faq" className="py-24 px-6 relative overflow-hidden bg-transparent">
       {/* Decorative Background Elements */}
       <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-primary/5 rounded-full blur-[100px] -mr-64 -mt-64" />
       <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-blue-500/5 rounded-full blur-[80px] -ml-48 -mb-48" />

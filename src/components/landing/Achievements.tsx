@@ -6,7 +6,7 @@ export function Achievements({ data }: { data?: any }) {
    const description = content.description || "Award-winning implementations across hundreds of franchises. We pride ourselves on the tangible growth and success our partner Institutes achieve.";
 
    return (
-      <section id="guide" className="py-24 px-6 bg-background dark:bg-zinc-950 text-foreground dark:text-white relative flex flex-col items-center overflow-hidden">
+      <section id="guide" className="py-24 px-6 text-foreground dark:text-white relative flex flex-col items-center overflow-hidden bg-transparent">
          {/* Background Decor */}
          <div className="absolute top-0 right-0 w-96 h-96 bg-primary/10 rounded-full blur-[100px] pointer-events-none"></div>
          <div className="absolute bottom-0 left-0 w-96 h-96 bg-accent/10 rounded-full blur-[100px] pointer-events-none"></div>

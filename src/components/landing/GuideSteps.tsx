@@ -67,7 +67,7 @@ export function GuideSteps({ data }: { data?: any }) {
   if (!final.steps || final.steps.length === 0) final.steps = defaults.steps;
 
   return (
-    <section className="py-24 px-6 bg-white dark:bg-zinc-950">
+    <section className="py-24 px-6 bg-transparent">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="text-center mb-20">

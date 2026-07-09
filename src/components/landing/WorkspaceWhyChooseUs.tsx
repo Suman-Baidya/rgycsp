@@ -30,7 +30,7 @@ export function WorkspaceWhyChooseUs({ data }: { data?: any }) {
   const FloatingIcon = iconMap[floatingCard.icon] || Users;
 
   return (
-    <section id="why-choose-us" className="py-24 px-6 relative overflow-hidden bg-slate-50 dark:bg-slate-950/50">
+    <section id="why-choose-us" className="py-24 px-6 relative overflow-hidden dark:bg-slate-950/50 bg-transparent">
       {/* Background Decor */}
       <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/5 rounded-full -mr-64 -mt-64 blur-3xl" />
       <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-primary/5 rounded-full -ml-64 -mb-64 blur-3xl" />
