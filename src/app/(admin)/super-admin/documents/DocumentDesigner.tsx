@@ -33,6 +33,7 @@ import { toast } from "sonner";
 import { saveDocumentTemplate, getDocumentTemplates, deleteDocumentTemplate, checkActiveTemplateExists, toggleTemplateStatus } from "@/app/actions/document-templates";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Switch } from "@/components/ui/switch";
+import { ExampleDataModal } from "./ExampleDataModal";
 
 interface DocVariable {
   id: string;
@@ -45,9 +46,10 @@ interface DocVariable {
   color?: string;
   width?: number;
   height?: number;
+  textAlign?: "left" | "center" | "right" | "justify";
 }
 
-const DEMO_DATA: Record<string, string> = {
+const DEFAULT_DEMO_DATA: Record<string, string> = {
   // Student Base
   studentName: "Suman Baidya",
   studentPhoto: "https://api.dicebear.com/7.x/avataaars/svg?seed=student",
@@ -229,6 +231,8 @@ export default function DocumentDesigner() {
   const [backgroundUrl, setBackgroundUrl] = useState<string | null>(null);
   const [variables, setVariables] = useState<DocVariable[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [previewData, setPreviewData] = useState<Record<string, string>>(DEFAULT_DEMO_DATA);
+  const [showExampleData, setShowExampleData] = useState(false);
   const [isPreview, setIsPreview] = useState(false);
   const [canvasSize, setCanvasSize] = useState({ width: 800, height: 1131 });
   const [isSaving, setIsSaving] = useState(false);
@@ -401,6 +405,7 @@ export default function DocumentDesigner() {
       fontSize: 24,
       fontWeight: "bold",
       color: "#000000",
+      textAlign: "left",
       width: type === "text" ? undefined : 100,
       height: type === "text" ? undefined : 100,
     };
@@ -658,6 +663,14 @@ export default function DocumentDesigner() {
           </Button>
           <div className="w-[1px] h-8 bg-slate-200 mx-2" />
           <Button 
+            variant="secondary" 
+            onClick={() => setShowExampleData(true)} 
+            className="h-11 rounded-xl gap-2 font-bold bg-amber-100 text-amber-700 hover:bg-amber-200"
+          >
+            <Settings2 className="h-4 w-4" />
+            Example Data
+          </Button>
+          <Button 
             variant="outline" 
             onClick={() => setIsPreview(!isPreview)} 
             className={cn("h-11 rounded-xl gap-2 font-bold", isPreview && "bg-primary/5 border-primary text-primary")}
@@ -843,28 +856,39 @@ export default function DocumentDesigner() {
                         </select>
                       </div>
                     </div>
-                    <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Color</Label>
-                      <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl border-2 border-slate-50">
-                        <Input type="color" value={selectedVar.color} onChange={(e) => updateVariable(selectedVar.id, { color: e.target.value })} className="w-10 h-10 p-0 border-none bg-transparent cursor-pointer" />
-                        <span className="font-mono text-xs font-bold uppercase">{selectedVar.color}</span>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Color</Label>
+                        <div className="flex items-center gap-3 p-2 bg-slate-50 rounded-xl border-2 border-slate-50 h-11">
+                          <Input type="color" value={selectedVar.color} onChange={(e) => updateVariable(selectedVar.id, { color: e.target.value })} className="w-7 h-7 p-0 border-none bg-transparent cursor-pointer" />
+                          <span className="font-mono text-xs font-bold uppercase">{selectedVar.color}</span>
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Alignment</Label>
+                        <select value={selectedVar.textAlign || "left"} onChange={(e) => updateVariable(selectedVar.id, { textAlign: e.target.value as any })} className="w-full h-11 bg-slate-50 rounded-xl font-bold px-3 focus:outline-none text-sm">
+                          <option value="left">Left</option>
+                          <option value="center">Center</option>
+                          <option value="right">Right</option>
+                        </select>
                       </div>
                     </div>
                   </>
                 )}
 
-                {(selectedVar.type === 'image' || selectedVar.type === 'signature') && (
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Width ({unit})</Label>
-                      <Input 
-                        type="number" 
-                        step="0.01"
-                        value={Number(fromPx(selectedVar.width || 0, unit)).toFixed(unit === "px" ? 0 : 2)} 
-                        onChange={(e) => updateVariable(selectedVar.id, { width: toPx(parseFloat(e.target.value) || 0, unit) })} 
-                        className="h-11 rounded-xl font-bold" 
-                      />
-                    </div>
+                <div className="grid grid-cols-2 gap-4 mt-4">
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">{selectedVar.type === 'text' ? 'Max Width' : 'Width'} ({unit})</Label>
+                    <Input 
+                      type="number" 
+                      step="0.01"
+                      value={selectedVar.width ? Number(fromPx(selectedVar.width, unit)).toFixed(unit === "px" ? 0 : 2) : ""} 
+                      placeholder="Auto"
+                      onChange={(e) => updateVariable(selectedVar.id, { width: e.target.value ? toPx(parseFloat(e.target.value), unit) : undefined })} 
+                      className="h-11 rounded-xl font-bold" 
+                    />
+                  </div>
+                  {(selectedVar.type === 'image' || selectedVar.type === 'signature') && (
                     <div className="space-y-2">
                       <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Height ({unit})</Label>
                       <Input 
@@ -875,8 +899,8 @@ export default function DocumentDesigner() {
                         className="h-11 rounded-xl font-bold" 
                       />
                     </div>
-                  </div>
-                )}
+                  )}
+                </div>
               </CardContent>
             </Card>
           )}
@@ -1003,11 +1027,26 @@ export default function DocumentDesigner() {
                     "absolute cursor-move select-none",
                     !isPreview && selectedId === v.id ? "ring-2 ring-primary ring-offset-2 z-50" : "z-40"
                   )}
-                  style={{ left: `${v.x}px`, top: `${v.y}px` }}
+                  style={{ 
+                    left: `${v.x}px`, 
+                    top: `${v.y}px`,
+                    transform: (!v.width && v.type === "text") 
+                      ? (v.textAlign === "center" ? "translateX(-50%)" : v.textAlign === "right" ? "translateX(-100%)" : "none")
+                      : "none"
+                  }}
                 >
                   {v.type === "text" ? (
-                    <span style={{ fontSize: `${v.fontSize}px`, fontWeight: v.fontWeight, color: v.color, lineHeight: 1, whiteSpace: "nowrap" }}>
-                      {isPreview ? (DEMO_DATA[v.name] || `{${v.name}}`) : `{${v.name}}`}
+                    <span style={{ 
+                      fontSize: `${v.fontSize}px`, 
+                      fontWeight: v.fontWeight, 
+                      color: v.color, 
+                      lineHeight: 1, 
+                      whiteSpace: v.width ? "pre-wrap" : "nowrap",
+                      width: v.width ? `${v.width}px` : "auto",
+                      display: "block",
+                      textAlign: v.textAlign || "left"
+                    }}>
+                      {isPreview ? (previewData[v.name] || `{${v.name}}`) : `{${v.name}}`}
                     </span>
                   ) : (
                     <div 
@@ -1020,7 +1059,7 @@ export default function DocumentDesigner() {
                       className="flex items-center justify-center overflow-hidden"
                     >
                       {isPreview ? (
-                        <img src={DEMO_DATA[v.name] || ""} crossOrigin="anonymous" className="w-full h-full object-contain" />
+                        <img src={previewData[v.name] || ""} crossOrigin="anonymous" className="w-full h-full object-contain" />
                       ) : (
                         <div className="flex flex-col items-center gap-1" style={{ opacity: 0.4 }}>
                           {v.type === "image" ? <ImageIcon className="h-6 w-6" /> : <Signature className="h-6 w-6" />}
@@ -1040,6 +1079,13 @@ export default function DocumentDesigner() {
           </div>
         </div>
       </div>
+      <ExampleDataModal
+        open={showExampleData}
+        onOpenChange={setShowExampleData}
+        previewData={previewData}
+        setPreviewData={setPreviewData}
+      />
+
       <ConfirmDialog 
         open={!!templateToDelete} 
         onOpenChange={(open) => !open && setTemplateToDelete(null)}
