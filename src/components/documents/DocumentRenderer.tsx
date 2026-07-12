@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, forwardRef, useImperativeHandle, useRef } from "react";
+import { createPortal } from "react-dom";
 import { getDocumentTemplateByType } from "@/app/actions/document-templates";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
@@ -164,11 +165,15 @@ export const DocumentRenderer = forwardRef<DocumentRendererRef, DocumentRenderer
     const generateImage = async (): Promise<string | null> => {
       if (!canvasRef.current || !template) return null;
       try {
+        // Wait for React to render the DOM and apply styles
+        await new Promise(resolve => setTimeout(resolve, 500));
+
         // Wait for background image if exists
         if (template.background) {
           await Promise.race([
             new Promise((resolve) => {
               const img = new Image();
+              img.crossOrigin = "anonymous";
               img.onload = resolve;
               img.onerror = resolve;
               img.src = template.background;
@@ -190,23 +195,18 @@ export const DocumentRenderer = forwardRef<DocumentRendererRef, DocumentRenderer
           ]);
         }));
 
-        // Give layout 100ms to stabilize after images load
-        await new Promise(r => setTimeout(r, 100));
+        // Ensure fonts are fully loaded before capture to prevent baseline shifts
+        if (document.fonts) {
+          await document.fonts.ready;
+        }
 
-        const html2canvas = (await import("html2canvas")).default;
-        const canvas = await html2canvas(canvasRef.current, { 
-          scale: 2, 
-          useCORS: true,
-          allowTaint: true,
-          backgroundColor: '#ffffff',
-          windowWidth: template.width,
-          windowHeight: template.height,
-          x: 0,
-          y: 0,
-          scrollX: 0,
-          scrollY: 0
+        const { toJpeg } = await import("html-to-image");
+        const imgData = await toJpeg(canvasRef.current, { 
+          quality: 1.0,
+          pixelRatio: 4,
+          backgroundColor: '#ffffff'
         });
-        return canvas.toDataURL("image/jpeg", 1.0);
+        return imgData;
       } catch (err) {
         console.error(err);
         toast.error("Failed to render document image.");
@@ -286,21 +286,18 @@ export const DocumentRenderer = forwardRef<DocumentRendererRef, DocumentRenderer
 
     return (
       <>
-        {/* Hidden Render Canvas */}
-        <div style={{ position: 'fixed', top: 0, left: '-9999px', pointerEvents: 'none', zIndex: -9999 }}>
-          <div
-            ref={canvasRef}
-            style={{
-              width: `${template.width}px`,
-              height: `${template.height}px`,
-              backgroundColor: "#ffffff",
-              backgroundImage: template.background ? `url(${template.background})` : "none",
-              backgroundSize: "cover",
-              backgroundPosition: "center",
-              position: "relative",
-            }}
-          >
-            {config.map((item: any) => {
+        {/* Hidden Render Canvas Portaled to body to avoid affecting modal scroll */}
+        {typeof document !== 'undefined' && createPortal(
+          <div className="font-sans" style={{ position: 'absolute', top: 0, left: 0, pointerEvents: 'none', zIndex: -9999 }}>
+            <div style={{ width: `${template.width}px`, height: `${template.height}px` }}>
+              <div
+                ref={canvasRef}
+                className="relative bg-white overflow-hidden w-full h-full"
+              >
+                {template.background && (
+                  <img src={template.background} crossOrigin="anonymous" alt="BG" className="absolute inset-0 w-full h-full object-cover pointer-events-none" />
+                )}
+                {config.map((item: any) => {
               const mappedValue = mapVariable(item.name);
               
               if (item.type === "image" || item.type === "signature") {
@@ -333,21 +330,33 @@ export const DocumentRenderer = forwardRef<DocumentRendererRef, DocumentRenderer
                     position: "absolute",
                     left: `${item.x}px`,
                     top: `${item.y}px`,
+                    transform: (!item.width && item.type === "text") 
+                      ? (item.textAlign === "center" ? "translateX(-50%)" : item.textAlign === "right" ? "translateX(-100%)" : "none")
+                      : "none",
+                  }}
+                >
+                  <span style={{
                     fontSize: `${item.fontSize}px`,
                     fontWeight: item.fontWeight,
                     color: item.color,
-                    whiteSpace: "pre-wrap",
-                    lineHeight: 1.2,
-                  }}
-                >
-                  {mappedValue || " "}
+                    whiteSpace: item.width ? "pre-wrap" : "nowrap",
+                    width: item.width ? `${item.width}px` : "auto",
+                    display: "block",
+                    textAlign: item.textAlign || "left",
+                    lineHeight: 1,
+                    margin: 0,
+                    padding: 0
+                  }}>
+                    {mappedValue || " "}
+                  </span>
                 </div>
               );
             })}
           </div>
         </div>
+      </div>, document.body)}
 
-        {/* Preview Modal */}
+      {/* Preview Modal */}
         <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
           <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col overflow-hidden rounded-[2rem] p-0 border-2 border-slate-100 dark:border-slate-800">
             <DialogHeader className="p-6 pb-2 shrink-0">

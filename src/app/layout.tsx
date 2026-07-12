@@ -23,14 +23,16 @@ export const metadata: Metadata = {
 import { SessionProvider } from "@/components/providers/SessionProvider";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
 import { UserHeartbeat } from "@/components/providers/UserHeartbeat";
+import { auth } from "@/auth";
 import { OfflineIndicator } from "@/components/OfflineIndicator";
 import { Toaster } from "sonner";
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const session = await auth();
   return (
     <html
       lang="en"
@@ -38,7 +40,7 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col font-sans" suppressHydrationWarning>
-        <SessionProvider>
+        <SessionProvider session={session}>
           <UserHeartbeat />
           <OfflineIndicator />
           <ThemeProvider

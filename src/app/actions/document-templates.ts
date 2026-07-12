@@ -6,7 +6,10 @@ import { revalidatePath } from "next/cache";
 export async function getDocumentTemplates(workspaceId: string | null = null) {
   try {
     return await db.documentTemplate.findMany({
-      where: { workspaceId },
+      where: { 
+        workspaceId,
+        type: { not: "EXAMPLE_DATA" }
+      },
       orderBy: { updatedAt: "desc" }
     });
   } catch (error) {
@@ -119,6 +122,52 @@ export async function deleteDocumentTemplate(id: string) {
     return { success: true };
   } catch (error: any) {
     console.error("Failed to delete template:", error);
+    return { success: false, error: error.message };
+  }
+}
+
+// Example Data Management
+export async function getExampleData(workspaceId: string | null = null) {
+  try {
+    const template = await db.documentTemplate.findFirst({
+      where: { type: "EXAMPLE_DATA", workspaceId }
+    });
+    
+    if (template && template.config) {
+      return typeof template.config === 'string' ? JSON.parse(template.config) : template.config;
+    }
+    return null;
+  } catch (error) {
+    console.error("Failed to fetch example data:", error);
+    return null;
+  }
+}
+
+export async function saveExampleData(data: Record<string, string>, workspaceId: string | null = null) {
+  try {
+    const existing = await db.documentTemplate.findFirst({
+      where: { type: "EXAMPLE_DATA", workspaceId }
+    });
+
+    if (existing) {
+      await db.documentTemplate.update({
+        where: { id: existing.id },
+        data: { config: data as any }
+      });
+    } else {
+      await db.documentTemplate.create({
+        data: {
+          name: "Global Example Data",
+          type: "EXAMPLE_DATA",
+          workspaceId,
+          config: data as any,
+          isActive: false
+        }
+      });
+    }
+    return { success: true };
+  } catch (error: any) {
+    console.error("Failed to save example data:", error);
     return { success: false, error: error.message };
   }
 }
