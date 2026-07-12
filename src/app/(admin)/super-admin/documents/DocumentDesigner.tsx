@@ -19,8 +19,10 @@ import {
   Loader2,
   Settings,
   MoreVertical,
-  CheckCircle2
+  CheckCircle2,
+  QrCode
 } from "lucide-react";
+import { QRCodeCanvas } from "qrcode.react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -38,7 +40,7 @@ import { ExampleDataModal } from "./ExampleDataModal";
 interface DocVariable {
   id: string;
   name: string;
-  type: "text" | "image" | "signature";
+  type: "text" | "image" | "signature" | "qrcode";
   x: number;
   y: number;
   fontSize?: number;
@@ -47,6 +49,7 @@ interface DocVariable {
   width?: number;
   height?: number;
   textAlign?: "left" | "center" | "right" | "justify";
+  qrContentTemplate?: string;
 }
 
 const DEFAULT_DEMO_DATA: Record<string, string> = {
@@ -305,6 +308,12 @@ export default function DocumentDesigner() {
     setIsLoading(false);
   };
 
+  const parseQrContent = (template: string = "") => {
+    return template.replace(/\{(\w+)\}/g, (_, key) => {
+      return previewData[key] || `{${key}}`;
+    });
+  };
+
   if (!mounted) return null;
 
   const handleNewTemplate = () => {
@@ -415,19 +424,17 @@ export default function DocumentDesigner() {
     setTemplateToDelete(null);
   };
 
-  const addVariable = (type: "text" | "image" | "signature") => {
+  const addVariable = (type: "text" | "image" | "signature" | "qrcode") => {
     const newVar: DocVariable = {
-      id: Math.random().toString(36).substr(2, 9),
-      name: type === "text" ? "studentName" : type === "image" ? "studentPhoto" : "principalSign",
+      id: crypto.randomUUID(),
+      name: type === "text" ? "studentName" : type === "qrcode" ? "qrCode" : "studentPhoto",
       type,
       x: 50,
       y: 50,
-      fontSize: 24,
-      fontWeight: "bold",
-      color: "#000000",
-      textAlign: "left",
-      width: type === "text" ? undefined : 100,
-      height: type === "text" ? undefined : 100,
+      ...(type === "text" && { fontSize: 16, fontWeight: "normal", color: "#000000" }),
+      ...(type === "image" && { width: 100, height: 100 }),
+      ...(type === "signature" && { width: 120, height: 40 }),
+      ...(type === "qrcode" && { width: 100, height: 100, qrContentTemplate: "{studentName} - {registrationNo}" }),
     };
     setVariables([...variables, newVar]);
     setSelectedId(newVar.id);
@@ -649,6 +656,7 @@ export default function DocumentDesigner() {
                       <div className="w-5 h-5 rounded-full bg-blue-500/10 border border-white dark:border-zinc-900 flex items-center justify-center"><Type className="h-2.5 w-2.5 text-blue-500" /></div>
                       <div className="w-5 h-5 rounded-full bg-purple-500/10 border border-white dark:border-zinc-900 flex items-center justify-center"><ImageIcon className="h-2.5 w-2.5 text-purple-500" /></div>
                       <div className="w-5 h-5 rounded-full bg-amber-500/10 border border-white dark:border-zinc-900 flex items-center justify-center"><Signature className="h-2.5 w-2.5 text-amber-500" /></div>
+                      <div className="w-5 h-5 rounded-full bg-green-500/10 border border-white dark:border-zinc-900 flex items-center justify-center"><QrCode className="h-2.5 w-2.5 text-green-500" /></div>
                     </div>
                     <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">
                       {Array.isArray(template.config) 
@@ -792,6 +800,10 @@ export default function DocumentDesigner() {
                 <div className="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center group-hover:bg-amber-500/20"><Signature className="h-4 w-4 text-amber-600" /></div>
                 <span className="font-bold">Signature</span>
               </Button>
+              <Button variant="outline" onClick={() => addVariable("qrcode")} className="justify-start gap-3 h-12 rounded-2xl hover:bg-primary/5 group">
+                <div className="w-8 h-8 rounded-lg bg-green-500/10 flex items-center justify-center group-hover:bg-green-500/20"><QrCode className="h-4 w-4 text-green-600" /></div>
+                <span className="font-bold">QR Code</span>
+              </Button>
             </CardContent>
           </Card>
 
@@ -804,43 +816,56 @@ export default function DocumentDesigner() {
                 </Button>
               </CardHeader>
               <CardContent className="space-y-6">
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Binding Variable</Label>
-                  <Select
-                    value={selectedVar.name}
-                    onValueChange={(value: any) => updateVariable(selectedVar.id, { name: value })}
-                  >
-                    <SelectTrigger className="w-full h-11 bg-slate-50 border-2 border-slate-50 rounded-xl font-bold px-3 focus:ring-0 focus:ring-offset-0">
-                      <SelectValue placeholder="Select variable..." />
-                    </SelectTrigger>
-                    <SelectContent className="max-h-[400px]">
-                      {VARIABLE_GROUPS.map((group) => {
-                        const isImageVar = selectedVar.type === 'image' || selectedVar.type === 'signature';
-                        const imageKeys = ['studentPhoto', 'studentSign', 'centerHeadSign', 'franchiseOwnerPhoto', 'franchiseOwnerSign', 'staffPhoto', 'staffSign', 'principalSign'];
-                        
-                        const filteredItems = group.items.filter(item => {
-                          if (isImageVar) return imageKeys.includes(item.id);
-                          return !imageKeys.includes(item.id);
-                        });
+                {selectedVar.type === 'qrcode' ? (
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">QR Code Content</Label>
+                    <textarea 
+                      value={selectedVar.qrContentTemplate || ""}
+                      onChange={(e) => updateVariable(selectedVar.id, { qrContentTemplate: e.target.value })}
+                      className="w-full h-24 p-3 rounded-xl border-2 border-slate-50 bg-slate-50 font-mono text-sm resize-none focus:outline-none focus:border-primary/50"
+                      placeholder="e.g. Name: {studentName}&#10;Reg: {registrationNo}"
+                    />
+                    <p className="text-[10px] text-slate-400 font-bold">Use {'{variableName}'} to insert dynamic data.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Binding Variable</Label>
+                    <Select
+                      value={selectedVar.name}
+                      onValueChange={(value: any) => updateVariable(selectedVar.id, { name: value })}
+                    >
+                      <SelectTrigger className="w-full h-11 bg-slate-50 border-2 border-slate-50 rounded-xl font-bold px-3 focus:ring-0 focus:ring-offset-0">
+                        <SelectValue placeholder="Select variable..." />
+                      </SelectTrigger>
+                      <SelectContent className="max-h-[400px]">
+                        {VARIABLE_GROUPS.map((group) => {
+                          const isImageVar = selectedVar.type === 'image' || selectedVar.type === 'signature';
+                          const imageKeys = ['studentPhoto', 'studentSign', 'centerHeadSign', 'franchiseOwnerPhoto', 'franchiseOwnerSign', 'staffPhoto', 'staffSign', 'principalSign'];
+                          
+                          const filteredItems = group.items.filter(item => {
+                            if (isImageVar) return imageKeys.includes(item.id);
+                            return !imageKeys.includes(item.id);
+                          });
 
-                        if (filteredItems.length === 0) return null;
+                          if (filteredItems.length === 0) return null;
 
-                        return (
-                          <div key={group.label} className="py-1">
-                            <div className="font-black text-xs text-white uppercase tracking-wider bg-slate-900 dark:bg-black py-2 px-2 sticky top-0 z-10">
-                              {group.label}
+                          return (
+                            <div key={group.label} className="py-1">
+                              <div className="font-black text-xs text-white uppercase tracking-wider bg-slate-900 dark:bg-black py-2 px-2 sticky top-0 z-10">
+                                {group.label}
+                              </div>
+                              {filteredItems.map((item) => (
+                                <SelectItem key={item.id} value={item.id} className="font-semibold cursor-pointer py-2 pl-6">
+                                  {item.label} <span className="text-[10px] text-slate-400 font-mono ml-2">({item.id})</span>
+                                </SelectItem>
+                              ))}
                             </div>
-                            {filteredItems.map((item) => (
-                              <SelectItem key={item.id} value={item.id} className="font-semibold cursor-pointer py-2 pl-6">
-                                {item.label} <span className="text-[10px] text-slate-400 font-mono ml-2">({item.id})</span>
-                              </SelectItem>
-                            ))}
-                          </div>
-                        );
-                      })}
-                    </SelectContent>
-                  </Select>
-                </div>
+                          );
+                        })}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
@@ -914,7 +939,7 @@ export default function DocumentDesigner() {
                       className="h-11 rounded-xl font-bold" 
                     />
                   </div>
-                  {(selectedVar.type === 'image' || selectedVar.type === 'signature') && (
+                  {(selectedVar.type === 'image' || selectedVar.type === 'signature' || selectedVar.type === 'qrcode') && (
                     <div className="space-y-2">
                       <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Height ({unit})</Label>
                       <Input 
@@ -1085,15 +1110,24 @@ export default function DocumentDesigner() {
                       className="flex items-center justify-center overflow-hidden"
                     >
                       {isPreview ? (
-                        <img 
-                          src={previewData[v.name] || ""} 
-                          crossOrigin="anonymous" 
-                          className="w-full h-full object-cover" 
-                          style={{ borderRadius: v.type === "image" ? "8px" : "0" }}
-                        />
+                        v.type === "qrcode" ? (
+                          <QRCodeCanvas
+                            value={parseQrContent(v.qrContentTemplate)}
+                            size={Math.min(v.width || 100, v.height || 100)}
+                            level="H"
+                            includeMargin={false}
+                          />
+                        ) : (
+                          <img 
+                            src={previewData[v.name] || ""} 
+                            crossOrigin="anonymous" 
+                            className="w-full h-full object-cover" 
+                            style={{ borderRadius: v.type === "image" ? "8px" : "0" }}
+                          />
+                        )
                       ) : (
                         <div className="flex flex-col items-center gap-1" style={{ opacity: 0.4 }}>
-                          {v.type === "image" ? <ImageIcon className="h-6 w-6" /> : <Signature className="h-6 w-6" />}
+                          {v.type === "qrcode" ? <QrCode className="h-6 w-6" /> : v.type === "image" ? <ImageIcon className="h-6 w-6" /> : <Signature className="h-6 w-6" />}
                         </div>
                       )}
                     </div>

@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { QRCodeCanvas } from "qrcode.react";
 
 export interface DocumentRendererRef {
   downloadPDF: () => Promise<void>;
@@ -298,6 +299,38 @@ export const DocumentRenderer = forwardRef<DocumentRendererRef, DocumentRenderer
                   <img src={template.background} crossOrigin="anonymous" alt="BG" className="absolute inset-0 w-full h-full object-cover pointer-events-none" />
                 )}
                 {config.map((item: any) => {
+              if (item.type === "qrcode") {
+                const parseQrContent = (template: string = "") => {
+                  return template.replace(/\{(\w+)\}/g, (_, key) => {
+                    return mapVariable(key) || "";
+                  });
+                };
+                
+                return (
+                  <div
+                    key={item.id}
+                    style={{
+                      position: "absolute",
+                      left: `${item.x}px`,
+                      top: `${item.y}px`,
+                      width: `${item.width}px`,
+                      height: `${item.height}px`,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      overflow: "hidden"
+                    }}
+                  >
+                    <QRCodeCanvas
+                      value={parseQrContent(item.qrContentTemplate)}
+                      size={Math.min(item.width || 100, item.height || 100)}
+                      level="H"
+                      includeMargin={false}
+                    />
+                  </div>
+                );
+              }
+
               const mappedValue = mapVariable(item.name);
               
               if (item.type === "image" || item.type === "signature") {
