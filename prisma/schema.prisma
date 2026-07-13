@@ -861,6 +861,10 @@ model StudentSemester {
   student          StudentProfile @relation(fields: [studentProfileId], references: [id], onDelete: Cascade)
   marks            StudentMarks[]
   
+  // Document Approvals per Semester
+  marksheetApproved        Boolean @default(false)
+  marksheetIssuedToStudent Boolean @default(false)
+  
   createdAt        DateTime       @default(now())
   updatedAt        DateTime       @updatedAt
 
@@ -894,6 +898,9 @@ model Exam {
   workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   course      Course?   @relation(fields: [courseId], references: [id], onDelete: SetNull)
   shifts      ExamShift[]
+  
+  isCompleted     Boolean  @default(false)
+  forceUncomplete Boolean  @default(false)
   
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt

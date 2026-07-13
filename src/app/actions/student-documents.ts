@@ -3,8 +3,18 @@
 import { db } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 
-export async function issueStudentDocument(studentId: string, documentType: "MARKSHEET" | "CERTIFICATE" | "STUDENT_ID" | "ADMIT_CARD", status: boolean) {
+export async function issueStudentDocument(studentId: string, documentType: "MARKSHEET" | "CERTIFICATE" | "STUDENT_ID" | "ADMIT_CARD", status: boolean, semesterNumber?: number) {
   try {
+    if (documentType === "MARKSHEET" && semesterNumber) {
+      await db.studentSemester.upsert({
+        where: { studentProfileId_semesterNumber: { studentProfileId: studentId, semesterNumber } },
+        update: { marksheetApproved: status },
+        create: { studentProfileId: studentId, semesterNumber, marksheetApproved: status }
+      });
+      revalidatePath("/");
+      return { success: true };
+    }
+
     let data: any = {};
     switch (documentType) {
       case "MARKSHEET": data = { marksheetApproved: status }; break;
@@ -25,8 +35,18 @@ export async function issueStudentDocument(studentId: string, documentType: "MAR
   }
 }
 
-export async function issueDocumentToStudent(studentId: string, documentType: "MARKSHEET" | "CERTIFICATE" | "STUDENT_ID" | "ADMIT_CARD", status: boolean) {
+export async function issueDocumentToStudent(studentId: string, documentType: "MARKSHEET" | "CERTIFICATE" | "STUDENT_ID" | "ADMIT_CARD", status: boolean, semesterNumber?: number) {
   try {
+    if (documentType === "MARKSHEET" && semesterNumber) {
+      await db.studentSemester.upsert({
+        where: { studentProfileId_semesterNumber: { studentProfileId: studentId, semesterNumber } },
+        update: { marksheetIssuedToStudent: status },
+        create: { studentProfileId: studentId, semesterNumber, marksheetIssuedToStudent: status }
+      });
+      revalidatePath("/");
+      return { success: true };
+    }
+
     let data: any = {};
     switch (documentType) {
       case "MARKSHEET": data = { marksheetIssuedToStudent: status }; break;

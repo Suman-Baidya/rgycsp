@@ -6,8 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus, Save, CalendarDays, Users, Clock, Printer, Trash2, Edit, AlertTriangle } from "lucide-react";
-import { createExam, createExamShift, deleteExam, updateExam } from "@/app/actions/exam";
+import { Plus, Save, CalendarDays, Users, Clock, Printer, Trash2, Edit, AlertTriangle, CheckCircle, Send } from "lucide-react";
+import { createExam, createExamShift, deleteExam, updateExam, toggleExamCompletion, bulkIssueAdmitCards } from "@/app/actions/exam";
 import { toast } from "sonner";
 import {
   Select,
@@ -17,6 +17,7 @@ import {
   SelectValue
 } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
+import { Switch } from "@/components/ui/switch";
 
 export default function OfflineExamTab({ workspaceId, workspace, superAdminName, courses, exams, students = [] }: { workspaceId: string, workspace?: any, superAdminName?: string, courses: any[], exams: any[], students?: any[] }) {
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -35,6 +36,35 @@ export default function OfflineExamTab({ workspaceId, workspace, superAdminName,
 
   const [shifts, setShifts] = useState([{ name: "Morning Shift", startTime: "10:00 AM", endTime: "01:00 PM", capacity: 50 }]);
   const [printData, setPrintData] = useState<{ exam: any, shift: any, enrolledStudents: any[] }[] | null>(null);
+
+  const [isProcessingToggle, setIsProcessingToggle] = useState<string | null>(null);
+
+  const handleToggleCompletion = async (examId: string, isCurrentlyCompleted: boolean) => {
+    setIsProcessingToggle(examId);
+    
+    // Toggle logic: If it's currently completed, we want to reopen it (newIsCompleted = false)
+    // and force it to stay uncompleted even if the date is passed.
+    const newIsCompleted = !isCurrentlyCompleted;
+    const newForceUncomplete = !newIsCompleted; 
+    
+    const res = await toggleExamCompletion(examId, newIsCompleted, newForceUncomplete);
+    if (res.success) {
+      toast.success(newIsCompleted ? "Exam marked as completed." : "Exam reopened.");
+    } else {
+      toast.error(res.error || "Failed to update status");
+    }
+    setIsProcessingToggle(null);
+  };
+
+  const handleBulkIssueAdmitCards = async (examId: string) => {
+    const loadingToast = toast.loading("Issuing admit cards...");
+    const res = await bulkIssueAdmitCards(examId);
+    if (res.success) {
+      toast.success(`Successfully issued admit cards to ${res.count} students.`, { id: loadingToast });
+    } else {
+      toast.error(res.error || "Failed to issue admit cards", { id: loadingToast });
+    }
+  };
 
   const handleSaveExam = async () => {
     if (!formData.title) return toast.error("Exam title is required.");
@@ -288,7 +318,13 @@ export default function OfflineExamTab({ workspaceId, workspace, superAdminName,
         <div className="space-y-6">
           <h3 className="text-xl font-bold px-2">Scheduled Offline Exams</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {exams.filter(e => e.type === "OFFLINE").map((exam) => (
+            {exams.filter(e => e.type === "OFFLINE").map((exam) => {
+              const now = new Date();
+              now.setHours(0, 0, 0, 0);
+              const isAutoCompleted = exam.date && new Date(exam.date) < now && !exam.forceUncomplete;
+              const isCurrentlyCompleted = exam.isCompleted || isAutoCompleted;
+
+              return (
               <Card key={exam.id} className="relative group border-2 border-slate-100 dark:border-slate-800 rounded-[2rem] bg-white dark:bg-slate-900 shadow-lg shadow-slate-200/40 dark:shadow-none overflow-hidden transition-all hover:shadow-xl hover:-translate-y-1">
                 <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500"></div>
 
@@ -299,6 +335,7 @@ export default function OfflineExamTab({ workspaceId, workspace, superAdminName,
                       <div className="flex items-center gap-4 text-sm font-semibold text-slate-500">
                         <span className="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-full"><CalendarDays className="w-4 h-4 text-indigo-500" /> {exam.date ? new Date(exam.date).toLocaleDateString() : "TBD"}</span>
                         <span className="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-full"><Clock className="w-4 h-4 text-orange-500" /> {exam.shifts.length} Shifts</span>
+                        {isCurrentlyCompleted && <span className="flex items-center gap-1.5 bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 px-3 py-1 rounded-full"><CheckCircle className="w-4 h-4" /> Completed</span>}
                       </div>
                     </div>
                     <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -315,11 +352,28 @@ export default function OfflineExamTab({ workspaceId, workspace, superAdminName,
                 <div className="p-6 space-y-4 bg-slate-50/50 dark:bg-slate-800/20 flex-1 flex flex-col justify-between">
                   <div className="flex items-center justify-between">
                     <h5 className="text-xs font-black uppercase tracking-widest text-slate-400">Shifts & Signature Lists</h5>
-                    {exam.shifts.length > 0 && (
-                      <Button variant="outline" size="sm" onClick={() => handlePrintAll(exam.id)} className="rounded-xl h-8 text-xs font-bold gap-2 text-slate-500 hover:text-slate-900 shadow-sm">
-                        <Printer className="w-3.5 h-3.5" /> Print All
-                      </Button>
-                    )}
+                    <div className="flex gap-2">
+                      <div className="flex items-center gap-2 mr-4">
+                        <Switch 
+                          checked={isCurrentlyCompleted} 
+                          onCheckedChange={() => handleToggleCompletion(exam.id, isCurrentlyCompleted)}
+                          disabled={isProcessingToggle === exam.id}
+                        />
+                        <span className="text-xs font-bold text-slate-500">Completed</span>
+                      </div>
+                      
+                      {exam.shifts.length > 0 && !isCurrentlyCompleted && (
+                        <Button variant="outline" size="sm" onClick={() => handleBulkIssueAdmitCards(exam.id)} className="rounded-xl h-8 text-xs font-bold gap-2 text-indigo-600 border-indigo-200 hover:bg-indigo-50 dark:border-indigo-900/50 dark:hover:bg-indigo-900/20 shadow-sm">
+                          <Send className="w-3.5 h-3.5" /> Issue Admit Cards
+                        </Button>
+                      )}
+
+                      {exam.shifts.length > 0 && (
+                        <Button variant="outline" size="sm" onClick={() => handlePrintAll(exam.id)} className="rounded-xl h-8 text-xs font-bold gap-2 text-slate-500 hover:text-slate-900 shadow-sm">
+                          <Printer className="w-3.5 h-3.5" /> Print All
+                        </Button>
+                      )}
+                    </div>
                   </div>
                   <div className="space-y-3">
                     {exam.shifts.length === 0 ? (
@@ -356,7 +410,7 @@ export default function OfflineExamTab({ workspaceId, workspace, superAdminName,
                   </div>
                 </div>
               </Card>
-            ))}
+            )})}
 
             {exams.filter(e => e.type === "OFFLINE").length === 0 && (
               <div className="col-span-full py-12 flex flex-col items-center justify-center text-center border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-[2.5rem] bg-slate-50/50 dark:bg-slate-900/50">

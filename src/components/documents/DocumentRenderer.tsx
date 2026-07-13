@@ -22,6 +22,7 @@ interface DocumentRendererProps {
   student: any;
   examData?: any;
   workspaceId?: string | null;
+  semesterNumber?: number;
   onReady?: () => void;
 }
 
@@ -29,7 +30,7 @@ const DPI = 96;
 const MM_PER_INCH = 25.4;
 
 export const DocumentRenderer = forwardRef<DocumentRendererRef, DocumentRendererProps>(
-  ({ type, student, examData, workspaceId = null, onReady }, ref) => {
+  ({ type, student, examData, workspaceId = null, semesterNumber, onReady }, ref) => {
     const [template, setTemplate] = useState<any>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [previewOpen, setPreviewOpen] = useState(false);
@@ -76,6 +77,43 @@ export const DocumentRenderer = forwardRef<DocumentRendererRef, DocumentRenderer
     const mapVariable = (varName: string) => {
       if (!student) return "";
       
+      const getActiveExam = () => {
+        if (examData) return examData;
+        if (!student?.examEnrollments?.length) return null;
+        
+        const now = new Date();
+        now.setHours(0, 0, 0, 0);
+        
+        const activeEnrollments = student.examEnrollments.filter((enrollment: any) => {
+          const exam = enrollment.shift?.exam;
+          if (!exam) return false;
+          
+          const isAutoCompleted = exam.date && new Date(exam.date) < now && !exam.forceUncomplete;
+          const isCompleted = exam.isCompleted || isAutoCompleted;
+          
+          return !isCompleted;
+        });
+        
+        if (activeEnrollments.length === 0) return null;
+        
+        activeEnrollments.sort((a: any, b: any) => {
+          if (!a.shift.exam.date) return 1;
+          if (!b.shift.exam.date) return -1;
+          return new Date(a.shift.exam.date).getTime() - new Date(b.shift.exam.date).getTime();
+        });
+        
+        const closest = activeEnrollments[0];
+        return {
+          title: closest.shift.exam.title,
+          date: closest.shift.exam.date,
+          time: (closest.shift.startTime && closest.shift.endTime) ? `${closest.shift.startTime} - ${closest.shift.endTime}` : (closest.shift.startTime || ""),
+          duration: closest.shift.exam.duration,
+          syllabus: closest.shift.exam.syllabus,
+          rollNo: closest.rollNo
+        };
+      };
+      const activeExam = getActiveExam();
+
       switch (varName) {
         // Base Student Fields
         case "studentName": return student.fullName || "";
@@ -132,26 +170,62 @@ export const DocumentRenderer = forwardRef<DocumentRendererRef, DocumentRenderer
         case "noticeBody": return "";
         
         // Exam Fields
-        case "examName": return examData?.title || "";
-        case "examDate": return examData?.date ? new Date(examData.date).toLocaleDateString('en-GB') : "";
-        case "examTime": return examData?.time || "";
-        case "examDuration": return examData?.duration ? `${examData.duration} Minutes` : "";
-        case "examSyllabus": return examData?.syllabus || "";
-        case "examRollNo": return examData?.rollNo || "";
+        case "examName": return activeExam?.title || "";
+        case "examDate": return activeExam?.date ? new Date(activeExam.date).toLocaleDateString('en-GB') : "";
+        case "examTime": return activeExam?.time || "";
+        case "examDuration": return activeExam?.duration ? `${activeExam.duration} Minutes` : "";
+        case "examSyllabus": return activeExam?.syllabus || "";
+        case "examRollNo": return activeExam?.rollNo || "";
         
         // Marksheet Fields (Fallback to static if not deeply mapped yet)
-        case "semesterName": return "Semester 1";
+        case "semesterName": {
+          const activeSem = semesterNumber ? student?.semesters?.find((s:any) => s.semesterNumber === semesterNumber) : ((student?.semesters && student.semesters.length > 0) ? student.semesters[0] : null);
+          return activeSem ? `Semester ${activeSem.semesterNumber}` : (semesterNumber ? `Semester ${semesterNumber}` : "");
+        }
         case "unit1Name": return "Subject 1"; case "unit1Marks": return "";
         case "unit2Name": return "Subject 2"; case "unit2Marks": return "";
         case "unit3Name": return "Subject 3"; case "unit3Marks": return "";
         case "unit4Name": return "Subject 4"; case "unit4Marks": return "";
         case "unit5Name": return "Subject 5"; case "unit5Marks": return "";
         case "unit6Name": return "Subject 6"; case "unit6Marks": return "";
-        case "totalMarksObtained": return "";
-        case "totalMaxMarks": return "600";
-        case "percentage": return "";
-        case "grade": return "";
-        case "resultStatus": return "";
+        
+        // Multi-line Dynamic Marksheet Fields
+        case "marksheet_subjects": {
+          const activeSem = semesterNumber ? student?.semesters?.find((s:any) => s.semesterNumber === semesterNumber) : ((student?.semesters && student.semesters.length > 0) ? student.semesters[0] : null);
+          if (activeSem?.marks) return activeSem.marks.map((m: any) => m.unitName).join("\n");
+          return "Subject 1\nSubject 2\nSubject 3";
+        }
+        case "marksheet_max_marks": {
+          const activeSem = semesterNumber ? student?.semesters?.find((s:any) => s.semesterNumber === semesterNumber) : ((student?.semesters && student.semesters.length > 0) ? student.semesters[0] : null);
+          if (activeSem?.marks) return activeSem.marks.map((m: any) => m.maxMarks || 100).join("\n");
+          return "100\n100\n100";
+        }
+        case "marksheet_obtained_marks": {
+          const activeSem = semesterNumber ? student?.semesters?.find((s:any) => s.semesterNumber === semesterNumber) : ((student?.semesters && student.semesters.length > 0) ? student.semesters[0] : null);
+          if (activeSem?.marks) return activeSem.marks.map((m: any) => m.marksObtained).join("\n");
+          return "0\n0\n0";
+        }
+        
+        case "totalMarksObtained": {
+          const activeSem = semesterNumber ? student?.semesters?.find((s:any) => s.semesterNumber === semesterNumber) : ((student?.semesters && student.semesters.length > 0) ? student.semesters[0] : null);
+          return activeSem ? `${activeSem.totalMarks}` : "";
+        }
+        case "totalMaxMarks": {
+          const activeSem = semesterNumber ? student?.semesters?.find((s:any) => s.semesterNumber === semesterNumber) : ((student?.semesters && student.semesters.length > 0) ? student.semesters[0] : null);
+          return activeSem?.marks ? `${activeSem.marks.reduce((sum: number, m: any) => sum + (m.maxMarks || 100), 0)}` : "600";
+        }
+        case "percentage": {
+          const activeSem = semesterNumber ? student?.semesters?.find((s:any) => s.semesterNumber === semesterNumber) : ((student?.semesters && student.semesters.length > 0) ? student.semesters[0] : null);
+          return activeSem ? `${activeSem.percentage}` : "";
+        }
+        case "grade": {
+          const activeSem = semesterNumber ? student?.semesters?.find((s:any) => s.semesterNumber === semesterNumber) : ((student?.semesters && student.semesters.length > 0) ? student.semesters[0] : null);
+          return activeSem ? `${activeSem.grade}` : "";
+        }
+        case "resultStatus": {
+          const activeSem = semesterNumber ? student?.semesters?.find((s:any) => s.semesterNumber === semesterNumber) : ((student?.semesters && student.semesters.length > 0) ? student.semesters[0] : null);
+          return activeSem ? `${activeSem.status}` : "";
+        }
 
         // Staff specific
         case "staffName": return "";
@@ -299,92 +373,90 @@ export const DocumentRenderer = forwardRef<DocumentRendererRef, DocumentRenderer
                   <img src={template.background} crossOrigin="anonymous" alt="BG" className="absolute inset-0 w-full h-full object-cover pointer-events-none" />
                 )}
                 {config.map((item: any) => {
-              if (item.type === "qrcode") {
-                const parseQrContent = (template: string = "") => {
-                  return template.replace(/\{(\w+)\}/g, (_, key) => {
-                    return mapVariable(key) || "";
-                  });
-                };
-                
-                return (
-                  <div
-                    key={item.id}
-                    style={{
-                      position: "absolute",
-                      left: `${item.x}px`,
-                      top: `${item.y}px`,
-                      width: `${item.width}px`,
-                      height: `${item.height}px`,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      overflow: "hidden"
-                    }}
-                  >
-                    <QRCodeCanvas
-                      value={parseQrContent(item.qrContentTemplate)}
-                      size={Math.min(item.width || 100, item.height || 100)}
-                      level="H"
-                      includeMargin={false}
-                    />
-                  </div>
-                );
-              }
+                  if (item.type === "qrcode") {
+                    const parseQrContent = (template: string = "") => {
+                      return template.replace(/\{(\w+)\}/g, (_, key) => {
+                        return mapVariable(key) || "";
+                      });
+                    };
+                    
+                    return (
+                      <div
+                        key={item.id}
+                        style={{
+                          position: "absolute",
+                          left: `${item.x}px`,
+                          top: `${item.y}px`,
+                          width: `${item.width}px`,
+                          height: `${item.height}px`,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          overflow: "hidden"
+                        }}
+                      >
+                        <QRCodeCanvas
+                          value={parseQrContent(item.qrContentTemplate)}
+                          size={Math.min(item.width || 100, item.height || 100)}
+                          level="H"
+                          includeMargin={false}
+                        />
+                      </div>
+                    );
+                  }
 
-              const mappedValue = mapVariable(item.name);
-              
-              if (item.type === "image" || item.type === "signature") {
-                // If there's no photo URL, keep it blank (user feedback)
-                if (!mappedValue) return null;
-                
-                return (
-                  <img
-                    key={item.id}
-                    src={mappedValue}
-                    alt={item.name}
-                    style={{
-                      position: "absolute",
-                      left: `${item.x}px`,
-                      top: `${item.y}px`,
-                      width: `${item.width}px`,
-                      height: `${item.height}px`,
-                      objectFit: "cover",
-                      borderRadius: item.type === "image" ? "8px" : "0",
-                    }}
-                    crossOrigin="anonymous"
-                  />
-                );
-              }
+                  const mappedValue = mapVariable(item.name);
+                  
+                  if (item.type === "image" || item.type === "signature") {
+                    if (!mappedValue) return null;
+                    return (
+                      <img
+                        key={item.id}
+                        src={mappedValue}
+                        alt={item.name}
+                        style={{
+                          position: "absolute",
+                          left: `${item.x}px`,
+                          top: `${item.y}px`,
+                          width: `${item.width}px`,
+                          height: `${item.height}px`,
+                          objectFit: item.objectFit || "cover",
+                          borderRadius: item.borderRadius !== undefined ? `${item.borderRadius}px` : (item.type === "image" ? "8px" : "0"),
+                        }}
+                        crossOrigin="anonymous"
+                      />
+                    );
+                  }
 
-              return (
-                <div
-                  key={item.id}
-                  style={{
-                    position: "absolute",
-                    left: `${item.x}px`,
-                    top: `${item.y}px`,
-                    transform: (!item.width && item.type === "text") 
-                      ? (item.textAlign === "center" ? "translateX(-50%)" : item.textAlign === "right" ? "translateX(-100%)" : "none")
-                      : "none",
-                  }}
-                >
-                  <span style={{
-                    fontSize: `${item.fontSize}px`,
-                    fontWeight: item.fontWeight,
-                    color: item.color,
-                    whiteSpace: item.width ? "pre-wrap" : "nowrap",
-                    width: item.width ? `${item.width}px` : "auto",
-                    display: "block",
-                    textAlign: item.textAlign || "left",
-                    lineHeight: 1,
-                    margin: 0,
-                    padding: 0
-                  }}>
-                    {mappedValue || " "}
-                  </span>
-                </div>
-              );
-            })}
+                  return (
+                    <div
+                      key={item.id}
+                      style={{
+                        position: "absolute",
+                        left: `${item.x}px`,
+                        top: `${item.y}px`,
+                        transform: (!item.width && item.type === "text") 
+                          ? (item.textAlign === "center" ? "translateX(-50%)" : item.textAlign === "right" ? "translateX(-100%)" : "none")
+                          : "none",
+                      }}
+                    >
+                      <span style={{
+                        fontSize: `${item.fontSize}px`,
+                        fontWeight: item.fontWeight,
+                        color: item.color,
+                        whiteSpace: item.width ? "pre-wrap" : "pre",
+                        width: item.width ? `${item.width}px` : "auto",
+                        display: "block",
+                        textAlign: item.textAlign || "left",
+                        lineHeight: item.lineHeight || 1,
+                        margin: 0,
+                        padding: 0
+                      }}>
+                        {mappedValue || " "}
+                      </span>
+                    </div>
+                  );
+                })}
           </div>
         </div>
       </div>, document.body)}

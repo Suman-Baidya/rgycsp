@@ -27,7 +27,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { signOut, useSession } from "next-auth/react";
+import { signOut } from "next-auth/react";
 import { isActivePath, getTenantLink, detectTenant } from "@/lib/routing";
 import { getPendingFranchiseCount } from "@/app/actions/franchise";
 import { getPendingOrdersCount } from "@/app/actions/product-order";
@@ -51,10 +51,14 @@ const navItems = [
 
 export function AdminSidebar({
   serverRole,
-  serverPermissions
+  serverPermissions,
+  serverEmail,
+  serverIsDeveloper
 }: {
   serverRole?: string;
   serverPermissions?: string[];
+  serverEmail?: string;
+  serverIsDeveloper?: boolean;
 } = {}) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMoreOpen, setIsMoreOpen] = useState(false);
@@ -63,8 +67,7 @@ export function AdminSidebar({
   const [pendingOrders, setPendingOrders] = useState(0);
   const [pendingWalletRequests, setPendingWalletRequests] = useState(0);
 
-  const { data: session } = useSession();
-
+  // Session data passed from server layout
   const [developerEmail, setDeveloperEmail] = useState("");
 
   // Close mobile drawer on navigation
@@ -113,9 +116,9 @@ export function AdminSidebar({
   const toggleSidebar = () => setIsCollapsed(!isCollapsed);
   const toggleMore = () => setIsMoreOpen(!isMoreOpen);
   
-  const isDeveloper = !!session?.user?.isDeveloper || !!(session?.user?.email && developerEmail && session.user.email === developerEmail);
-  const isManager = serverRole ? serverRole === "SUPER_ADMIN_MANAGER" : session?.user?.role === "SUPER_ADMIN_MANAGER";
-  const permissions: string[] = serverPermissions || (session?.user as any)?.systemPermissions || [];
+  const isDeveloper = !!serverIsDeveloper || !!(serverEmail && developerEmail && serverEmail === developerEmail);
+  const isManager = serverRole === "SUPER_ADMIN_MANAGER";
+  const permissions: string[] = serverPermissions || [];
 
   const filteredNavItems = navItems.filter(item => {
     // Hide System Logs unless developer

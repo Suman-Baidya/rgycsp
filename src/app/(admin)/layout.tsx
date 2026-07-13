@@ -31,7 +31,12 @@ export default async function AdminLayout({
   return (
     <div className="flex min-h-screen bg-background text-foreground transition-colors duration-300">
       <SuperAdminRouteGuard userRole={dbUser.role} userPermissions={permissions} />
-      <AdminSidebar serverRole={dbUser.role} serverPermissions={permissions} />
+      <AdminSidebar 
+        serverRole={dbUser.role} 
+        serverPermissions={permissions} 
+        serverEmail={session?.user?.email ?? undefined}
+        serverIsDeveloper={session?.user?.isDeveloper ?? false}
+      />
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         <header className="h-16 border-b border-border/40 bg-background/50 backdrop-blur-sm flex items-center px-4 lg:px-8 sticky top-0 z-40">
           <div className="lg:hidden ml-12 font-bold tracking-tighter text-xl text-foreground">Super Admin</div>

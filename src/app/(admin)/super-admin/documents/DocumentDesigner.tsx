@@ -36,6 +36,12 @@ import { saveDocumentTemplate, getDocumentTemplates, deleteDocumentTemplate, che
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Switch } from "@/components/ui/switch";
 import { ExampleDataModal } from "./ExampleDataModal";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 
 interface DocVariable {
   id: string;
@@ -46,11 +52,16 @@ interface DocVariable {
   fontSize?: number;
   fontWeight?: string;
   color?: string;
+  lineHeight?: number;
   width?: number;
   height?: number;
   textAlign?: "left" | "center" | "right" | "justify";
   qrContentTemplate?: string;
+  objectFit?: "cover" | "contain" | "fill";
+  borderRadius?: number;
 }
+
+
 
 const DEFAULT_DEMO_DATA: Record<string, string> = {
   // Student Base
@@ -93,6 +104,9 @@ const DEFAULT_DEMO_DATA: Record<string, string> = {
   unit4Marks: "92", unit4Name: "Node JS",
   unit5Marks: "88", unit5Name: "Database",
   unit6Marks: "95", unit6Name: "Project",
+  marksheet_subjects: "HTML & CSS\nJavaScript Basics\nReact JS\nNode JS\nDatabase\nProject",
+  marksheet_max_marks: "100\n100\n100\n100\n100\n100",
+  marksheet_obtained_marks: "85\n90\n78\n92\n88\n95",
   totalMarksObtained: "528",
   totalMaxMarks: "600",
   percentage: "88.0%",
@@ -176,6 +190,9 @@ const VARIABLE_GROUPS = [
       { id: "unit4Name", label: "Unit 4 Name" }, { id: "unit4Marks", label: "Unit 4 Marks" },
       { id: "unit5Name", label: "Unit 5 Name" }, { id: "unit5Marks", label: "Unit 5 Marks" },
       { id: "unit6Name", label: "Unit 6 Name" }, { id: "unit6Marks", label: "Unit 6 Marks" },
+      { id: "marksheet_subjects", label: "Multi-line: Subjects" },
+      { id: "marksheet_max_marks", label: "Multi-line: Max Marks" },
+      { id: "marksheet_obtained_marks", label: "Multi-line: Obtained Marks" },
       { id: "totalMarksObtained", label: "Total Obtained" },
       { id: "totalMaxMarks", label: "Total Max Marks" },
       { id: "percentage", label: "Percentage" },
@@ -244,7 +261,7 @@ export default function DocumentDesigner() {
   const [orientation, setOrientation] = useState<"portrait" | "landscape">("portrait");
 
   const canvasRef = useRef<HTMLDivElement>(null);
-  const dragRef = useRef<{ id: string; startX: number; startY: number; origX: number; origY: number } | null>(null);
+  const dragRef = useRef<{ id: string; startX: number; startY: number; origX: number; origY: number; el?: HTMLElement | null } | null>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -431,7 +448,7 @@ export default function DocumentDesigner() {
       type,
       x: 50,
       y: 50,
-      ...(type === "text" && { fontSize: 16, fontWeight: "normal", color: "#000000" }),
+      ...(type === "text" && { fontSize: 16, fontWeight: "normal", color: "#000000", lineHeight: 1 }),
       ...(type === "image" && { width: 100, height: 100 }),
       ...(type === "signature" && { width: 120, height: 40 }),
       ...(type === "qrcode" && { width: 100, height: 100, qrContentTemplate: "{studentName} - {registrationNo}" }),
@@ -516,12 +533,16 @@ export default function DocumentDesigner() {
     if (!v) return;
     
     setSelectedId(id);
+    
+    const el = document.getElementById(`var-${id}`);
+    
     dragRef.current = {
       id,
       startX: e.clientX,
       startY: e.clientY,
       origX: v.x,
-      origY: v.y
+      origY: v.y,
+      el
     };
 
     const onMouseMove = (moveEvent: MouseEvent) => {
@@ -529,13 +550,32 @@ export default function DocumentDesigner() {
       const dx = moveEvent.clientX - dragRef.current.startX;
       const dy = moveEvent.clientY - dragRef.current.startY;
       
-      updateVariable(dragRef.current.id, {
-        x: Math.max(0, Math.min(canvasSize.width - 20, dragRef.current.origX + dx)),
-        y: Math.max(0, Math.min(canvasSize.height - 20, dragRef.current.origY + dy))
-      });
+      const newX = Math.max(0, Math.min(canvasSize.width - 20, dragRef.current.origX + dx));
+      const newY = Math.max(0, Math.min(canvasSize.height - 20, dragRef.current.origY + dy));
+      
+      // Update DOM directly for lag-free dragging
+      if (dragRef.current.el) {
+        dragRef.current.el.style.left = `${newX}px`;
+        dragRef.current.el.style.top = `${newY}px`;
+      }
     };
 
-    const onMouseUp = () => {
+    const onMouseUp = (upEvent: MouseEvent) => {
+      if (!dragRef.current) return;
+      const dx = upEvent.clientX - dragRef.current.startX;
+      const dy = upEvent.clientY - dragRef.current.startY;
+      
+      const finalX = Math.max(0, Math.min(canvasSize.width - 20, dragRef.current.origX + dx));
+      const finalY = Math.max(0, Math.min(canvasSize.height - 20, dragRef.current.origY + dy));
+      
+      // Only trigger heavy React re-render when drag completes
+      if (finalX !== dragRef.current.origX || finalY !== dragRef.current.origY) {
+        updateVariable(dragRef.current.id, {
+          x: finalX,
+          y: finalY
+        });
+      }
+      
       dragRef.current = null;
       document.removeEventListener("mousemove", onMouseMove);
       document.removeEventListener("mouseup", onMouseUp);
@@ -754,7 +794,7 @@ export default function DocumentDesigner() {
             <CardContent className="space-y-4">
                <div className="space-y-2">
                   <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Design Name</Label>
-                  <Input value={templateName} onChange={(e) => setTemplateName(e.target.value)} className="h-11 rounded-xl font-bold" />
+                  <Input value={templateName} onChange={(e) => setTemplateName(e.target.value)} className="h-11 bg-slate-50 border-2 border-slate-50 dark:bg-slate-800 dark:border-slate-800 dark:text-white focus-visible:ring-0 rounded-xl font-bold" />
                </div>
                <div className="space-y-2">
                   <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Doc Type</Label>
@@ -762,12 +802,17 @@ export default function DocumentDesigner() {
                     value={templateType}
                     onValueChange={(value: any) => setTemplateType(value)}
                   >
-                    <SelectTrigger className="w-full h-11 bg-slate-50 border-2 border-slate-50 rounded-xl font-bold px-3 focus:ring-0 focus:ring-offset-0">
+                    <SelectTrigger className="w-full h-11 bg-slate-50 border-2 border-slate-50 dark:bg-slate-800 dark:border-slate-800 dark:text-white rounded-xl font-bold px-3 focus:ring-0 focus:ring-offset-0">
                       <SelectValue placeholder="Select document type..." />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="CERTIFICATE">Students Certificate</SelectItem>
-                      <SelectItem value="MARKSHEET">Students Marksheet</SelectItem>
+                      <SelectItem value="MARKSHEET_SEM_1">Marksheet Sem 1</SelectItem>
+                      <SelectItem value="MARKSHEET_SEM_2">Marksheet Sem 2</SelectItem>
+                      <SelectItem value="MARKSHEET_SEM_3">Marksheet Sem 3</SelectItem>
+                      <SelectItem value="MARKSHEET_SEM_4">Marksheet Sem 4</SelectItem>
+                      <SelectItem value="MARKSHEET_SEM_5">Marksheet Sem 5</SelectItem>
+                      <SelectItem value="MARKSHEET_SEM_6">Marksheet Sem 6</SelectItem>
                       <SelectItem value="ADMIT_CARD">Admit Card</SelectItem>
                       <SelectItem value="STUDENT_ID">Student ID Card</SelectItem>
                       <SelectItem value="STAFF_ID">Staff Id Card</SelectItem>
@@ -787,22 +832,22 @@ export default function DocumentDesigner() {
                 Add Components
               </CardTitle>
             </CardHeader>
-            <CardContent className="grid grid-cols-1 gap-3">
-              <Button variant="outline" onClick={() => addVariable("text")} className="justify-start gap-3 h-12 rounded-2xl hover:bg-primary/5 group">
-                <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center group-hover:bg-blue-500/20"><Type className="h-4 w-4 text-blue-600" /></div>
-                <span className="font-bold">Text Variable</span>
+            <CardContent className="grid grid-cols-2 gap-3">
+              <Button variant="outline" onClick={() => addVariable("text")} className="h-auto py-4 flex-col gap-2 rounded-2xl hover:bg-primary/5 dark:hover:bg-primary/10 dark:border-slate-800 group">
+                <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center group-hover:bg-blue-500/20"><Type className="h-4 w-4 text-blue-600 dark:text-blue-400" /></div>
+                <span className="font-bold text-xs dark:text-slate-300">Text</span>
               </Button>
-              <Button variant="outline" onClick={() => addVariable("image")} className="justify-start gap-3 h-12 rounded-2xl hover:bg-primary/5 group">
-                <div className="w-8 h-8 rounded-lg bg-purple-500/10 flex items-center justify-center group-hover:bg-purple-500/20"><ImageIcon className="h-4 w-4 text-purple-600" /></div>
-                <span className="font-bold">Image/Photo</span>
+              <Button variant="outline" onClick={() => addVariable("image")} className="h-auto py-4 flex-col gap-2 rounded-2xl hover:bg-primary/5 dark:hover:bg-primary/10 dark:border-slate-800 group">
+                <div className="w-8 h-8 rounded-lg bg-purple-500/10 flex items-center justify-center group-hover:bg-purple-500/20"><ImageIcon className="h-4 w-4 text-purple-600 dark:text-purple-400" /></div>
+                <span className="font-bold text-xs dark:text-slate-300">Photo</span>
               </Button>
-              <Button variant="outline" onClick={() => addVariable("signature")} className="justify-start gap-3 h-12 rounded-2xl hover:bg-primary/5 group">
-                <div className="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center group-hover:bg-amber-500/20"><Signature className="h-4 w-4 text-amber-600" /></div>
-                <span className="font-bold">Signature</span>
+              <Button variant="outline" onClick={() => addVariable("signature")} className="h-auto py-4 flex-col gap-2 rounded-2xl hover:bg-primary/5 dark:hover:bg-primary/10 dark:border-slate-800 group">
+                <div className="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center group-hover:bg-amber-500/20"><Signature className="h-4 w-4 text-amber-600 dark:text-amber-400" /></div>
+                <span className="font-bold text-xs dark:text-slate-300">Signature</span>
               </Button>
-              <Button variant="outline" onClick={() => addVariable("qrcode")} className="justify-start gap-3 h-12 rounded-2xl hover:bg-primary/5 group">
-                <div className="w-8 h-8 rounded-lg bg-green-500/10 flex items-center justify-center group-hover:bg-green-500/20"><QrCode className="h-4 w-4 text-green-600" /></div>
-                <span className="font-bold">QR Code</span>
+              <Button variant="outline" onClick={() => addVariable("qrcode")} className="h-auto py-4 flex-col gap-2 rounded-2xl hover:bg-primary/5 dark:hover:bg-primary/10 dark:border-slate-800 group">
+                <div className="w-8 h-8 rounded-lg bg-green-500/10 flex items-center justify-center group-hover:bg-green-500/20"><QrCode className="h-4 w-4 text-green-600 dark:text-green-400" /></div>
+                <span className="font-bold text-xs dark:text-slate-300">QR Code</span>
               </Button>
             </CardContent>
           </Card>
@@ -815,143 +860,255 @@ export default function DocumentDesigner() {
                   <Trash2 className="h-4 w-4" />
                 </Button>
               </CardHeader>
-              <CardContent className="space-y-6">
-                {selectedVar.type === 'qrcode' ? (
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">QR Code Content</Label>
-                    <textarea 
-                      value={selectedVar.qrContentTemplate || ""}
-                      onChange={(e) => updateVariable(selectedVar.id, { qrContentTemplate: e.target.value })}
-                      className="w-full h-24 p-3 rounded-xl border-2 border-slate-50 bg-slate-50 font-mono text-sm resize-none focus:outline-none focus:border-primary/50"
-                      placeholder="e.g. Name: {studentName}&#10;Reg: {registrationNo}"
-                    />
-                    <p className="text-[10px] text-slate-400 font-bold">Use {'{variableName}'} to insert dynamic data.</p>
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Binding Variable</Label>
-                    <Select
-                      value={selectedVar.name}
-                      onValueChange={(value: any) => updateVariable(selectedVar.id, { name: value })}
-                    >
-                      <SelectTrigger className="w-full h-11 bg-slate-50 border-2 border-slate-50 rounded-xl font-bold px-3 focus:ring-0 focus:ring-offset-0">
-                        <SelectValue placeholder="Select variable..." />
-                      </SelectTrigger>
-                      <SelectContent className="max-h-[400px]">
-                        {VARIABLE_GROUPS.map((group) => {
-                          const isImageVar = selectedVar.type === 'image' || selectedVar.type === 'signature';
-                          const imageKeys = ['studentPhoto', 'studentSign', 'centerHeadSign', 'franchiseOwnerPhoto', 'franchiseOwnerSign', 'staffPhoto', 'staffSign', 'principalSign'];
-                          
-                          const filteredItems = group.items.filter(item => {
-                            if (isImageVar) return imageKeys.includes(item.id);
-                            return !imageKeys.includes(item.id);
-                          });
+              <CardContent className="p-4">
+                <Accordion key={selectedVar.id} multiple defaultValue={["data", "appearance", "layout"]} className="w-full space-y-3">
+                  
+                  {/* DATA SECTION */}
+                  <AccordionItem value="data" className="border-none bg-slate-50 dark:bg-slate-800/50 rounded-xl px-4">
+                    <AccordionTrigger className="hover:no-underline py-3">
+                      <span className="text-xs font-black uppercase tracking-widest text-slate-500">Data Source</span>
+                    </AccordionTrigger>
+                    <AccordionContent className="space-y-4 pb-4 pt-1">
+                      {selectedVar.type === 'qrcode' ? (
+                        <div className="space-y-2">
+                          <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">QR Code Content</Label>
+                          <textarea 
+                            value={selectedVar.qrContentTemplate || ""}
+                            onChange={(e) => updateVariable(selectedVar.id, { qrContentTemplate: e.target.value })}
+                            className="w-full h-24 p-3 rounded-xl border-2 border-slate-200 bg-white font-mono text-sm resize-none focus:outline-none focus:border-primary/50"
+                            placeholder="e.g. Name: {studentName}&#10;Reg: {registrationNo}"
+                          />
+                          <p className="text-[10px] text-slate-400 font-bold">Use {'{variableName}'} to insert dynamic data.</p>
+                        </div>
+                      ) : (
+                        <div className="space-y-2">
+                          <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Binding Variable</Label>
+                          <Select
+                            value={selectedVar.name}
+                            onValueChange={(value: any) => updateVariable(selectedVar.id, { name: value })}
+                          >
+                            <SelectTrigger className="w-full h-11 bg-white border-2 border-slate-200 rounded-xl font-bold px-3 focus:ring-0 focus:ring-offset-0">
+                              <SelectValue placeholder="Select variable..." />
+                            </SelectTrigger>
+                            <SelectContent className="max-h-[300px]">
+                              {VARIABLE_GROUPS.map((group) => {
+                                const isImageVar = selectedVar.type === 'image' || selectedVar.type === 'signature';
+                                const imageKeys = ['studentPhoto', 'studentSign', 'centerHeadSign', 'franchiseOwnerPhoto', 'franchiseOwnerSign', 'staffPhoto', 'staffSign', 'principalSign'];
+                                
+                                const filteredItems = group.items.filter(item => {
+                                  if (isImageVar) return imageKeys.includes(item.id);
+                                  return !imageKeys.includes(item.id);
+                                });
 
-                          if (filteredItems.length === 0) return null;
+                                if (filteredItems.length === 0) return null;
 
-                          return (
-                            <div key={group.label} className="py-1">
-                              <div className="font-black text-xs text-white uppercase tracking-wider bg-slate-900 dark:bg-black py-2 px-2 sticky top-0 z-10">
-                                {group.label}
+                                return (
+                                  <div key={group.label} className="py-1">
+                                    <div className="font-black text-xs text-white uppercase tracking-wider bg-slate-900 dark:bg-black py-2 px-2 sticky top-0 z-10">
+                                      {group.label}
+                                    </div>
+                                    {filteredItems.map((item) => (
+                                      <SelectItem key={item.id} value={item.id} className="font-semibold cursor-pointer py-2 pl-6">
+                                        {item.label} <span className="text-[10px] text-slate-400 font-mono ml-2">({item.id})</span>
+                                      </SelectItem>
+                                    ))}
+                                  </div>
+                                );
+                              })}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      )}
+                    </AccordionContent>
+                  </AccordionItem>
+
+                  {/* APPEARANCE SECTION */}
+                  <AccordionItem value="appearance" className="border-none bg-slate-50 dark:bg-slate-800/50 rounded-xl px-4">
+                    <AccordionTrigger className="hover:no-underline py-3">
+                      <span className="text-xs font-black uppercase tracking-widest text-slate-500">Appearance</span>
+                    </AccordionTrigger>
+                    <AccordionContent className="space-y-4 pb-4 pt-1">
+                      {selectedVar.type === 'text' && (
+                        <>
+                          <div className="space-y-2 col-span-2">
+                            <div className="flex items-center justify-between">
+                              <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Line Height</Label>
+                              <span className="text-[10px] font-bold text-slate-400">{selectedVar.lineHeight || 1}</span>
+                            </div>
+                            <input 
+                              type="range"
+                              min="0.5"
+                              max="4"
+                              step="0.1"
+                              value={selectedVar.lineHeight || 1}
+                              onChange={(e) => updateVariable(selectedVar.id, { lineHeight: parseFloat(e.target.value) })}
+                              className="w-full accent-primary"
+                            />
+                          </div>
+                          <div className="grid grid-cols-2 gap-3">
+                            <div className="space-y-2">
+                              <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Align</Label>
+                              <Select
+                                value={selectedVar.textAlign || "left"}
+                                onValueChange={(value: any) => updateVariable(selectedVar.id, { textAlign: value })}
+                              >
+                                <SelectTrigger className="w-full h-10 bg-white border-2 border-slate-200 rounded-xl font-bold px-3">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="left">Left</SelectItem>
+                                  <SelectItem value="center">Center</SelectItem>
+                                  <SelectItem value="right">Right</SelectItem>
+                                  <SelectItem value="justify">Justify</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            <div className="space-y-2">
+                              <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Weight</Label>
+                              <Select
+                                value={selectedVar.fontWeight || "normal"}
+                                onValueChange={(value: any) => updateVariable(selectedVar.id, { fontWeight: value })}
+                              >
+                                <SelectTrigger className="w-full h-10 bg-white border-2 border-slate-200 rounded-xl font-bold px-3">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="normal">Normal</SelectItem>
+                                  <SelectItem value="500">Medium</SelectItem>
+                                  <SelectItem value="600">Semi Bold</SelectItem>
+                                  <SelectItem value="bold">Bold</SelectItem>
+                                  <SelectItem value="900">Black</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            <div className="space-y-2">
+                              <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Size ({unit})</Label>
+                              <Input 
+                                type="number" 
+                                value={selectedVar.fontSize} 
+                                onChange={(e) => updateVariable(selectedVar.id, { fontSize: Number(e.target.value) })}
+                                className="h-10 bg-white border-2 border-slate-200 rounded-xl font-bold" 
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Color</Label>
+                              <div className="flex gap-2">
+                                <Input 
+                                  type="color" 
+                                  value={selectedVar.color || "#000000"} 
+                                  onChange={(e) => updateVariable(selectedVar.id, { color: e.target.value })}
+                                  className="h-10 w-10 p-1 bg-white border-2 border-slate-200 rounded-xl cursor-pointer shrink-0" 
+                                />
+                                <Input 
+                                  type="text" 
+                                  value={selectedVar.color || "#000000"} 
+                                  onChange={(e) => updateVariable(selectedVar.id, { color: e.target.value })}
+                                  className="h-10 bg-white border-2 border-slate-200 rounded-xl font-bold font-mono px-2" 
+                                />
                               </div>
-                              {filteredItems.map((item) => (
-                                <SelectItem key={item.id} value={item.id} className="font-semibold cursor-pointer py-2 pl-6">
-                                  {item.label} <span className="text-[10px] text-slate-400 font-mono ml-2">({item.id})</span>
-                                </SelectItem>
+                            </div>
+                          </div>
+                        </>
+                      )}
+                      
+                      {(selectedVar.type === 'image' || selectedVar.type === 'signature') && (
+                        <div className="space-y-4">
+                          <div className="space-y-2">
+                            <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Object Fit</Label>
+                            <div className="flex bg-white border-2 border-slate-200 p-1 rounded-xl">
+                              {(["cover", "contain", "fill"] as const).map((fit) => (
+                                <button
+                                  key={fit}
+                                  onClick={() => updateVariable(selectedVar.id, { objectFit: fit })}
+                                  className={cn(
+                                    "flex-1 py-1.5 text-xs font-bold rounded-lg transition-all capitalize",
+                                    (selectedVar.objectFit || "cover") === fit ? "bg-primary text-primary-foreground shadow-sm" : "text-slate-500 hover:text-slate-800"
+                                  )}
+                                >
+                                  {fit}
+                                </button>
                               ))}
                             </div>
-                          );
-                        })}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                )}
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Pos X ({unit})</Label>
-                    <Input 
-                      type="number" 
-                      step="0.01"
-                      value={Number(fromPx(selectedVar.x, unit)).toFixed(unit === "px" ? 0 : 2)} 
-                      onChange={(e) => updateVariable(selectedVar.id, { x: toPx(parseFloat(e.target.value) || 0, unit) })} 
-                      className="h-11 rounded-xl font-bold" 
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Pos Y ({unit})</Label>
-                    <Input 
-                      type="number" 
-                      step="0.01"
-                      value={Number(fromPx(selectedVar.y, unit)).toFixed(unit === "px" ? 0 : 2)} 
-                      onChange={(e) => updateVariable(selectedVar.id, { y: toPx(parseFloat(e.target.value) || 0, unit) })} 
-                      className="h-11 rounded-xl font-bold" 
-                    />
-                  </div>
-                </div>
-
-                {selectedVar.type === 'text' && (
-                  <>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Size (PT)</Label>
-                        <Input type="number" value={selectedVar.fontSize} onChange={(e) => updateVariable(selectedVar.id, { fontSize: parseInt(e.target.value) || 0 })} className="h-11 rounded-xl font-bold" />
-                      </div>
-                      <div className="space-y-2">
-                        <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Weight</Label>
-                        <select value={selectedVar.fontWeight} onChange={(e) => updateVariable(selectedVar.id, { fontWeight: e.target.value })} className="w-full h-11 bg-slate-50 rounded-xl font-bold px-3 focus:outline-none">
-                          <option value="normal">Normal</option>
-                          <option value="medium">Medium</option>
-                          <option value="bold">Bold</option>
-                          <option value="black">Black</option>
-                        </select>
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Color</Label>
-                        <div className="flex items-center gap-3 p-2 bg-slate-50 rounded-xl border-2 border-slate-50 h-11">
-                          <Input type="color" value={selectedVar.color} onChange={(e) => updateVariable(selectedVar.id, { color: e.target.value })} className="w-7 h-7 p-0 border-none bg-transparent cursor-pointer" />
-                          <span className="font-mono text-xs font-bold uppercase">{selectedVar.color}</span>
+                          </div>
+                          
+                          <div className="space-y-2">
+                            <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Border Radius (px)</Label>
+                            <div className="flex items-center gap-3">
+                              <input 
+                                type="range"
+                                min="0"
+                                max="100"
+                                step="1"
+                                value={selectedVar.borderRadius || 0}
+                                onChange={(e) => updateVariable(selectedVar.id, { borderRadius: Number(e.target.value) })}
+                                className="flex-1 accent-primary"
+                              />
+                              <Input 
+                                type="number" 
+                                value={selectedVar.borderRadius || 0} 
+                                onChange={(e) => updateVariable(selectedVar.id, { borderRadius: Number(e.target.value) })}
+                                className="h-9 w-16 bg-white border-2 border-slate-200 rounded-lg font-bold text-center p-0" 
+                              />
+                            </div>
+                          </div>
                         </div>
-                      </div>
-                      <div className="space-y-2">
-                        <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Alignment</Label>
-                        <select value={selectedVar.textAlign || "left"} onChange={(e) => updateVariable(selectedVar.id, { textAlign: e.target.value as any })} className="w-full h-11 bg-slate-50 rounded-xl font-bold px-3 focus:outline-none text-sm">
-                          <option value="left">Left</option>
-                          <option value="center">Center</option>
-                          <option value="right">Right</option>
-                        </select>
-                      </div>
-                    </div>
-                  </>
-                )}
+                      )}
+                    </AccordionContent>
+                  </AccordionItem>
 
-                <div className="grid grid-cols-2 gap-4 mt-4">
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">{selectedVar.type === 'text' ? 'Max Width' : 'Width'} ({unit})</Label>
-                    <Input 
-                      type="number" 
-                      step="0.01"
-                      value={selectedVar.width ? Number(fromPx(selectedVar.width, unit)).toFixed(unit === "px" ? 0 : 2) : ""} 
-                      placeholder="Auto"
-                      onChange={(e) => updateVariable(selectedVar.id, { width: e.target.value ? toPx(parseFloat(e.target.value), unit) : undefined })} 
-                      className="h-11 rounded-xl font-bold" 
-                    />
-                  </div>
-                  {(selectedVar.type === 'image' || selectedVar.type === 'signature' || selectedVar.type === 'qrcode') && (
-                    <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Height ({unit})</Label>
-                      <Input 
-                        type="number" 
-                        step="0.01"
-                        value={Number(fromPx(selectedVar.height || 0, unit)).toFixed(unit === "px" ? 0 : 2)} 
-                        onChange={(e) => updateVariable(selectedVar.id, { height: toPx(parseFloat(e.target.value) || 0, unit) })} 
-                        className="h-11 rounded-xl font-bold" 
-                      />
-                    </div>
-                  )}
-                </div>
+                  {/* LAYOUT SECTION */}
+                  <AccordionItem value="layout" className="border-none bg-slate-50 dark:bg-slate-800/50 rounded-xl px-4">
+                    <AccordionTrigger className="hover:no-underline py-3">
+                      <span className="text-xs font-black uppercase tracking-widest text-slate-500">Layout & Size</span>
+                    </AccordionTrigger>
+                    <AccordionContent className="space-y-3 pb-4 pt-1">
+                      <div className="flex items-center justify-between">
+                        <Label className="text-[10px] font-black uppercase tracking-widest text-slate-500">Pos X ({unit})</Label>
+                        <Input 
+                          type="number" 
+                          step="0.01"
+                          value={Number(fromPx(selectedVar.x, unit)).toFixed(unit === "px" ? 0 : 2)} 
+                          onChange={(e) => updateVariable(selectedVar.id, { x: toPx(parseFloat(e.target.value) || 0, unit) })} 
+                          className="h-9 w-24 bg-white border-2 border-slate-200 rounded-lg font-bold px-3 text-right" 
+                        />
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <Label className="text-[10px] font-black uppercase tracking-widest text-slate-500">Pos Y ({unit})</Label>
+                        <Input 
+                          type="number" 
+                          step="0.01"
+                          value={Number(fromPx(selectedVar.y, unit)).toFixed(unit === "px" ? 0 : 2)} 
+                          onChange={(e) => updateVariable(selectedVar.id, { y: toPx(parseFloat(e.target.value) || 0, unit) })} 
+                          className="h-9 w-24 bg-white border-2 border-slate-200 rounded-lg font-bold px-3 text-right" 
+                        />
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <Label className="text-[10px] font-black uppercase tracking-widest text-slate-500">{selectedVar.type === 'text' ? 'Max W' : 'Width'} ({unit})</Label>
+                        <Input 
+                          type="number" 
+                          step="0.01"
+                          value={selectedVar.width ? Number(fromPx(selectedVar.width, unit)).toFixed(unit === "px" ? 0 : 2) : ""} 
+                          placeholder="Auto"
+                          onChange={(e) => updateVariable(selectedVar.id, { width: e.target.value ? toPx(parseFloat(e.target.value), unit) : undefined })} 
+                          className="h-9 w-24 bg-white border-2 border-slate-200 rounded-lg font-bold px-3 text-right" 
+                        />
+                      </div>
+                      {(selectedVar.type === 'image' || selectedVar.type === 'signature' || selectedVar.type === 'qrcode') && (
+                        <div className="flex items-center justify-between">
+                          <Label className="text-[10px] font-black uppercase tracking-widest text-slate-500">Height ({unit})</Label>
+                          <Input 
+                            type="number" 
+                            step="0.01"
+                            value={Number(fromPx(selectedVar.height || 0, unit)).toFixed(unit === "px" ? 0 : 2)} 
+                            onChange={(e) => updateVariable(selectedVar.id, { height: toPx(parseFloat(e.target.value) || 0, unit) })} 
+                            className="h-9 w-24 bg-white border-2 border-slate-200 rounded-lg font-bold px-3 text-right" 
+                          />
+                        </div>
+                      )}
+                    </AccordionContent>
+                  </AccordionItem>
+
+                </Accordion>
               </CardContent>
             </Card>
           )}
@@ -963,14 +1120,14 @@ export default function DocumentDesigner() {
               
               <div className="space-y-2">
                 <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Preferred Unit</Label>
-                <div className="flex bg-slate-100 p-1 rounded-xl">
+                <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
                   {(["px", "in", "mm"] as const).map((u) => (
                     <button
                       key={u}
                       onClick={() => setUnit(u)}
                       className={cn(
                         "flex-1 py-1.5 text-xs font-bold rounded-lg transition-all",
-                        unit === u ? "bg-white shadow-sm text-primary" : "text-slate-400 hover:text-slate-600"
+                        unit === u ? "bg-white dark:bg-slate-700 shadow-sm text-primary dark:text-white" : "text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300"
                       )}
                     >
                       {u.toUpperCase()}
@@ -984,7 +1141,7 @@ export default function DocumentDesigner() {
                 <select 
                   value={pageSize}
                   onChange={(e) => handlePageSizeChange(e.target.value)}
-                  className="w-full h-11 bg-slate-50 border-2 border-slate-50 rounded-xl font-bold px-3 focus:outline-none"
+                  className="w-full h-11 bg-slate-50 border-2 border-slate-50 dark:bg-slate-800 dark:border-slate-800 dark:text-white rounded-xl font-bold px-3 focus:outline-none"
                 >
                   <option value="CUSTOM">Custom Size</option>
                   {Object.keys(PAGE_PRESETS).map(key => (
@@ -998,14 +1155,14 @@ export default function DocumentDesigner() {
                 <div className="flex gap-2">
                   <Button 
                     variant={orientation === "portrait" ? "default" : "outline"} 
-                    className="flex-1 rounded-xl font-bold h-10"
+                    className="flex-1 rounded-xl font-bold h-10 dark:border-slate-800"
                     onClick={() => orientation !== "portrait" && toggleOrientation()}
                   >
                     Portrait
                   </Button>
                   <Button 
                     variant={orientation === "landscape" ? "default" : "outline"} 
-                    className="flex-1 rounded-xl font-bold h-10"
+                    className="flex-1 rounded-xl font-bold h-10 dark:border-slate-800"
                     onClick={() => orientation !== "landscape" && toggleOrientation()}
                   >
                     Landscape
@@ -1024,7 +1181,7 @@ export default function DocumentDesigner() {
                       setCanvasSize({ ...canvasSize, width: toPx(parseFloat(e.target.value) || 0, unit) });
                       setPageSize("CUSTOM");
                     }} 
-                    className="h-11 rounded-xl font-bold" 
+                    className="h-11 bg-slate-50 border-2 border-slate-50 dark:bg-slate-800 dark:border-slate-800 dark:text-white focus-visible:ring-0 rounded-xl font-bold" 
                   />
                 </div>
                 <div className="space-y-2">
@@ -1037,7 +1194,7 @@ export default function DocumentDesigner() {
                       setCanvasSize({ ...canvasSize, height: toPx(parseFloat(e.target.value) || 0, unit) });
                       setPageSize("CUSTOM");
                     }} 
-                    className="h-11 rounded-xl font-bold" 
+                    className="h-11 bg-slate-50 border-2 border-slate-50 dark:bg-slate-800 dark:border-slate-800 dark:text-white focus-visible:ring-0 rounded-xl font-bold" 
                   />
                 </div>
               </div>
@@ -1073,6 +1230,7 @@ export default function DocumentDesigner() {
               {variables.map((v) => (
                 <div
                   key={v.id}
+                  id={`var-${v.id}`}
                   onMouseDown={(e) => onMouseDown(e, v.id)}
                   className={cn(
                     "absolute cursor-move select-none",
@@ -1087,18 +1245,20 @@ export default function DocumentDesigner() {
                   }}
                 >
                   {v.type === "text" ? (
-                    <span style={{ 
-                      fontSize: `${v.fontSize}px`, 
-                      fontWeight: v.fontWeight, 
-                      color: v.color, 
-                      lineHeight: 1, 
-                      whiteSpace: v.width ? "pre-wrap" : "nowrap",
-                      width: v.width ? `${v.width}px` : "auto",
-                      display: "block",
-                      textAlign: v.textAlign || "left"
-                    }}>
-                      {isPreview ? (previewData[v.name] || `{${v.name}}`) : `{${v.name}}`}
-                    </span>
+                          <span style={{
+                            fontSize: `${v.fontSize}px`,
+                            fontWeight: v.fontWeight,
+                            color: v.color,
+                            whiteSpace: v.width ? "pre-wrap" : "pre",
+                            width: v.width ? `${v.width}px` : "auto",
+                            display: "block",
+                            textAlign: v.textAlign || "left",
+                            lineHeight: v.lineHeight || 1,
+                            margin: 0,
+                            padding: 0
+                          }}>
+                            {isPreview ? (previewData[v.name] || `{${v.name}}`) : `{${v.name}}`}
+                          </span>
                   ) : (
                     <div 
                       style={{ 
@@ -1121,8 +1281,11 @@ export default function DocumentDesigner() {
                           <img 
                             src={previewData[v.name] || ""} 
                             crossOrigin="anonymous" 
-                            className="w-full h-full object-cover" 
-                            style={{ borderRadius: v.type === "image" ? "8px" : "0" }}
+                            className="w-full h-full" 
+                            style={{ 
+                              objectFit: v.objectFit || "cover",
+                              borderRadius: v.borderRadius !== undefined ? `${v.borderRadius}px` : (v.type === "image" ? "8px" : "0")
+                            }}
                           />
                         )
                       ) : (

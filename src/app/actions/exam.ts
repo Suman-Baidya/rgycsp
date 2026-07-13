@@ -279,3 +279,40 @@ export async function saveStudentMarksBatch(
     return { success: false, error: error.message };
   }
 }
+
+export async function toggleExamCompletion(id: string, isCompleted: boolean, forceUncomplete: boolean = false) {
+  try {
+    const exam = await db.exam.update({
+      where: { id },
+      data: { isCompleted, forceUncomplete }
+    });
+    revalidatePath(`/app/[tenant]/admin/exam-generator`, "page");
+    return { success: true, data: exam };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+}
+
+export async function bulkIssueAdmitCards(examId: string) {
+  try {
+    const enrollments = await db.examEnrollment.findMany({
+      where: { shift: { examId } },
+      select: { studentProfileId: true }
+    });
+
+    const studentIds = enrollments.map(e => e.studentProfileId);
+    if (studentIds.length === 0) {
+      return { success: false, error: "No students enrolled in this exam" };
+    }
+
+    await db.studentProfile.updateMany({
+      where: { id: { in: studentIds } },
+      data: { admitCardIssuedToStudent: true }
+    });
+
+    revalidatePath(`/app/[tenant]/admin/exam-generator`, "page");
+    return { success: true, count: studentIds.length };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+}

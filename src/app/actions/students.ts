@@ -12,12 +12,20 @@ export async function getStudents(workspaceId: string) {
           select: { name: true }
         },
         course: {
-          select: { title: true }
+          select: { title: true, duration: true }
         },
         admissionApp: {
           select: { appliedCourse: true, createdAt: true, email: true, photoUrl: true, signatureUrl: true, idProofUrl: true }
         },
-        registrations: true
+        registrations: true,
+        examEnrollments: {
+          include: {
+            shift: {
+              include: { exam: true }
+            }
+          }
+        },
+        semesters: true
       },
       orderBy: { createdAt: "desc" }
     });
@@ -39,12 +47,20 @@ export async function getAllPlatformStudents() {
           select: { name: true }
         },
         course: {
-          select: { title: true, code: true, globalCourse: { select: { short: true } } }
+          select: { title: true, code: true, duration: true, globalCourse: { select: { short: true } } }
         },
         admissionApp: {
           select: { appliedCourse: true, createdAt: true, email: true, photoUrl: true, signatureUrl: true, idProofUrl: true }
         },
-        registrations: true
+        registrations: true,
+        examEnrollments: {
+          include: {
+            shift: {
+              include: { exam: true }
+            }
+          }
+        },
+        semesters: true
       },
       orderBy: { createdAt: "desc" }
     });

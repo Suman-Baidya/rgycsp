@@ -437,7 +437,24 @@ export default function StudentProfileClient({
               
               <DocumentCard icon={<Contact />} title="Student ID Card" description="View or download ID" status="Available" />
               <DocumentCard icon={<FileText />} title="Admit Card" description="Examination entry pass" status={profile?.admitIssued ? "Available" : "Not Issued"} isAvailable={profile?.admitIssued} />
-              <DocumentCard icon={<Award />} title="Marksheet" description="Term examination results" status="Pending Release" isAvailable={false} />
+              
+              {profile?.semesters && profile.semesters.length > 0 ? (
+                [...profile.semesters]
+                  .sort((a: any, b: any) => a.semesterNumber - b.semesterNumber)
+                  .map((sem: any) => (
+                    <DocumentCard 
+                      key={`sem-${sem.id}`}
+                      icon={<Award />} 
+                      title={`Marksheet (Semester ${sem.semesterNumber})`} 
+                      description="Term examination results" 
+                      status={sem.marksheetIssuedToStudent ? "Available" : "Pending Release"} 
+                      isAvailable={sem.marksheetIssuedToStudent} 
+                    />
+                  ))
+              ) : (
+                <DocumentCard icon={<Award />} title="Marksheet" description="Term examination results" status={profile?.marksheetIssuedToStudent ? "Available" : "Pending Release"} isAvailable={!!profile?.marksheetIssuedToStudent} />
+              )}
+              
               <DocumentCard icon={<FileBadge />} title="Certificate" description="Course completion certificate" status="Not Eligible Yet" isAvailable={false} />
 
             </div>

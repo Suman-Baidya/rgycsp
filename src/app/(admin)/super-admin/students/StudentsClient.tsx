@@ -6,6 +6,7 @@ import {
   Eye, Pencil, ChevronLeft, ChevronRight, CheckCircle, FileText, Calendar, Mail, Phone, MoreHorizontal, User, UserCheck, Trash2, ShieldCheck, Download, ExternalLink, Settings, Save
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -160,19 +161,36 @@ export default function StudentsClient({ initialStudents, initialWorkspaces, ini
     setEditOpen(true);
   };
 
-  const handleIssueDocument = async (studentId: string, docType: "MARKSHEET" | "CERTIFICATE" | "STUDENT_ID" | "ADMIT_CARD", status: boolean) => {
-    const res = await issueStudentDocument(studentId, docType, status);
+  const handleIssueDocument = async (studentId: string, docType: "MARKSHEET" | "CERTIFICATE" | "STUDENT_ID" | "ADMIT_CARD", status: boolean, semesterNumber?: number) => {
+    const res = await issueStudentDocument(studentId, docType, status, semesterNumber);
     if (res.success) {
-      toast.success(`${docType.replace('_', ' ')} ${status ? 'Issued' : 'Revoked'} successfully`);
+      toast.success(`Document status updated`);
       if (selectedStudentForDocs) {
-        setSelectedStudentForDocs({
-          ...selectedStudentForDocs,
-          ...(docType === "MARKSHEET" && { marksheetApproved: status }),
-          ...(docType === "CERTIFICATE" && { certificateApproved: status }),
-          ...(docType === "STUDENT_ID" && { registrationCardApproved: status }),
-          ...(docType === "ADMIT_CARD" && { admitCardApproved: status }),
-        });
+        if (docType === "MARKSHEET" && semesterNumber) {
+          let updatedSemesters = [...(selectedStudentForDocs.semesters || [])];
+          const existingIndex = updatedSemesters.findIndex(s => s.semesterNumber === semesterNumber);
+          if (existingIndex >= 0) {
+            updatedSemesters[existingIndex] = { ...updatedSemesters[existingIndex], marksheetApproved: status };
+          } else {
+            updatedSemesters.push({
+              studentProfileId: studentId,
+              semesterNumber,
+              marksheetApproved: status,
+              marksheetIssuedToStudent: false
+            } as any);
+          }
+          setSelectedStudentForDocs({ ...selectedStudentForDocs, semesters: updatedSemesters });
+        } else {
+          setSelectedStudentForDocs({
+            ...selectedStudentForDocs,
+            ...(docType === "CERTIFICATE" && { certificateApproved: status }),
+            ...(docType === "STUDENT_ID" && { registrationCardApproved: status }),
+            ...(docType === "ADMIT_CARD" && { admitCardApproved: status }),
+            ...(docType === "MARKSHEET" && !semesterNumber && { marksheetApproved: status })
+          });
+        }
       }
+      router.refresh();
     } else {
       toast.error(res.error || "Failed to update document status");
     }
@@ -1228,8 +1246,9 @@ export default function StudentsClient({ initialStudents, initialWorkspaces, ini
 
       {/* Docs Modal */}
       <Dialog open={docsModalOpen} onOpenChange={setDocsModalOpen}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto rounded-[2.5rem] p-8 bg-slate-50/50 dark:bg-slate-950/50 border-2 border-slate-100 dark:border-slate-800">
-          <DialogHeader className="mb-6">
+        <DialogContent className="max-w-3xl w-[95vw] h-[90vh] flex flex-col overflow-hidden rounded-[2.5rem] p-0 bg-white/95 dark:bg-slate-950/95 backdrop-blur-xl border-2 border-slate-100 dark:border-slate-800 shadow-2xl">
+          <div className="flex-1 overflow-y-auto p-6 sm:p-8 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-slate-200 dark:[&::-webkit-scrollbar-thumb]:bg-slate-700 [&::-webkit-scrollbar-thumb]:rounded-full">
+            <DialogHeader className="mb-6">
             <div className="w-12 h-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mb-4">
               <FileText className="w-6 h-6" />
             </div>
@@ -1241,81 +1260,183 @@ export default function StudentsClient({ initialStudents, initialWorkspaces, ini
             </p>
           </DialogHeader>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {[
-              { id: 'STUDENT_ID', label: 'Student ID Card', desc: 'Identity verification for the student.', approved: selectedStudentForDocs?.registrationCardApproved, icon: <User className="w-4 h-4 text-blue-500" /> },
-              { id: 'ADMIT_CARD', label: 'Admit Card', desc: 'Required for appearing in examinations.', approved: selectedStudentForDocs?.admitCardApproved, icon: <Calendar className="w-4 h-4 text-indigo-500" /> },
-              { id: 'MARKSHEET', label: 'Marksheet', desc: 'Semester-wise detailed marksheets.', approved: selectedStudentForDocs?.marksheetApproved, icon: <FileText className="w-4 h-4 text-emerald-500" /> },
-              { id: 'CERTIFICATE', label: 'Final Certificate', desc: 'Official completion certificate.', approved: selectedStudentForDocs?.certificateApproved, icon: <GraduationCap className="w-4 h-4 text-amber-500" /> }
-            ].map((doc) => (
-              <div key={doc.id} className="flex flex-col p-6 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl gap-4 shadow-sm hover:shadow-md transition-shadow">
-                <div className="flex items-start justify-between">
-                  <div className="flex-1 pr-4">
-                    <div className="flex items-center gap-2 mb-2">
-                      <div className="w-8 h-8 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
-                        {doc.icon}
-                      </div>
-                      <h3 className="font-black text-slate-900 dark:text-white text-lg tracking-tight">{doc.label}</h3>
+          <div className="flex flex-col gap-6">
+            {/* Top: Certificate */}
+            <div className="flex flex-col p-6 bg-white dark:bg-slate-900 border-2 border-amber-200/50 dark:border-amber-800/50 rounded-3xl shadow-sm hover:shadow-md transition-all relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/5 rounded-bl-[4rem] -z-10"></div>
+              <div className="flex items-start justify-between">
+                <div className="flex-1 pr-4">
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="w-12 h-12 rounded-2xl bg-amber-50 dark:bg-amber-900/20 flex items-center justify-center">
+                      <GraduationCap className="w-6 h-6 text-amber-600 dark:text-amber-500" />
                     </div>
-                    <p className="text-sm font-medium text-slate-500 leading-snug">{doc.desc}</p>
+                    <h3 className="font-black text-slate-900 dark:text-white text-xl tracking-tight">Final Certificate</h3>
                   </div>
-                  {doc.approved ? (
-                    <Badge className="bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 hover:bg-emerald-100 border-0 rounded-xl px-3 py-1 font-bold">Issued</Badge>
-                  ) : (
-                    <Badge className="bg-amber-50 text-amber-600 dark:bg-amber-500/10 hover:bg-amber-100 border-0 rounded-xl px-3 py-1 font-bold">Pending</Badge>
-                  )}
+                  <p className="text-sm font-medium text-slate-500 leading-snug">Official completion certificate. This is the final milestone document.</p>
+                </div>
+                {selectedStudentForDocs?.certificateApproved ? (
+                  <Badge className="bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 border-0 rounded-xl px-4 py-1.5 font-bold shadow-sm">Issued</Badge>
+                ) : (
+                  <Badge className="bg-amber-50 text-amber-600 dark:bg-amber-500/10 border-0 rounded-xl px-4 py-1.5 font-bold shadow-sm">Pending</Badge>
+                )}
+              </div>
+              
+              <div className="flex items-center justify-between pt-5 mt-3 border-t border-slate-100 dark:border-slate-800">
+                <div className="flex items-center gap-3">
+                  <span className="text-xs font-black text-slate-400 uppercase tracking-widest">Issue Status</span>
+                  <Switch 
+                    checked={!!selectedStudentForDocs?.certificateApproved} 
+                    onCheckedChange={(checked) => {
+                      if (docRefs.current['CERTIFICATE'] && !docRefs.current['CERTIFICATE']?.hasTemplate()) {
+                        toast.error(`Design template for Certificate does not exist yet!`);
+                        return;
+                      }
+                      handleIssueDocument(selectedStudentForDocs?.id, 'CERTIFICATE', checked);
+                    }}
+                    className={selectedStudentForDocs?.certificateApproved ? "data-[state=checked]:bg-emerald-500" : ""}
+                  />
                 </div>
                 
-                <div className="flex items-center justify-between pt-4 mt-2 border-t border-slate-100 dark:border-slate-800">
-                  <div className="flex items-center gap-3">
-                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Issue Status</span>
-                    <Switch 
-                      checked={!!doc.approved} 
-                      onCheckedChange={(checked) => {
-                        if (docRefs.current[doc.id] && !docRefs.current[doc.id]?.hasTemplate()) {
-                          toast.error(`Design template for ${doc.label} does not exist yet!`);
-                          return;
-                        }
-                        handleIssueDocument(selectedStudentForDocs?.id, doc.id as any, checked);
-                      }}
-                      className={doc.approved ? "data-[state=checked]:bg-emerald-500" : ""}
-                    />
-                  </div>
-                  
-                  {/* The Renderer */}
-                  <DocumentRenderer 
-                    ref={el => { docRefs.current[doc.id] = el; }} 
-                    type={doc.id} 
-                    student={selectedStudentForDocs} 
-                  />
+                <DocumentRenderer 
+                  ref={el => { docRefs.current['CERTIFICATE'] = el; }} 
+                  type="CERTIFICATE" 
+                  student={selectedStudentForDocs}
+                />
 
-                  <div className="flex items-center gap-2">
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      className="rounded-xl h-10 w-10 text-slate-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20"
-                      title="Preview Document"
-                      onClick={() => {
-                        if (docRefs.current[doc.id]) docRefs.current[doc.id]?.preview();
-                      }}
-                    >
-                      <Eye className="w-5 h-5" />
-                    </Button>
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      className="rounded-xl h-10 w-10 text-slate-500 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/20"
-                      title="Download PDF"
-                      onClick={() => {
-                        if (docRefs.current[doc.id]) docRefs.current[doc.id]?.downloadPDF();
-                      }}
-                    >
-                      <Download className="w-5 h-5" />
-                    </Button>
-                  </div>
+                <div className="flex items-center gap-2">
+                  <Button variant="outline" size="sm" className="rounded-xl font-bold h-10 px-4" onClick={() => docRefs.current['CERTIFICATE']?.preview()}><Eye className="w-4 h-4 mr-2" /> Preview</Button>
+                  <Button size="sm" className="rounded-xl font-bold h-10 px-4 shadow-md shadow-primary/20" onClick={() => docRefs.current['CERTIFICATE']?.downloadPDF()}><Download className="w-4 h-4 mr-2" /> Download</Button>
                 </div>
               </div>
-            ))}
+            </div>
+
+            {/* Middle: Marksheets */}
+            {(() => {
+              let totalSemesters = 1;
+              if (selectedStudentForDocs?.course?.duration) {
+                const durationStr = String(selectedStudentForDocs.course.duration).toLowerCase().trim();
+                if (!isNaN(Number(durationStr))) {
+                  totalSemesters = Math.max(1, Math.floor(Number(durationStr) / 6));
+                } else {
+                  if (durationStr.includes('1 year') || durationStr.includes('1 yr')) totalSemesters = 2;
+                  else if (durationStr.includes('2 year') || durationStr.includes('2 yr')) totalSemesters = 4;
+                  else if (durationStr.includes('3 year') || durationStr.includes('3 yr')) totalSemesters = 6;
+                  else if (durationStr.includes('12')) totalSemesters = 2;
+                  else if (durationStr.includes('18')) totalSemesters = 3;
+                  else if (durationStr.includes('24')) totalSemesters = 4;
+                  else if (durationStr.includes('30')) totalSemesters = 5;
+                  else if (durationStr.includes('36')) totalSemesters = 6;
+                  else if (durationStr.includes('6')) totalSemesters = 1;
+                }
+              }
+
+              const semestersData = [];
+              for (let i = 1; i <= totalSemesters; i++) {
+                const semData = selectedStudentForDocs?.semesters?.find((s:any) => s.semesterNumber === i);
+                semestersData.push({ semesterNumber: i, approved: semData?.marksheetApproved || false });
+              }
+
+              return (
+                <div className="flex flex-col p-6 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-sm">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-10 h-10 rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+                      <FileText className="w-5 h-5 text-emerald-500" />
+                    </div>
+                    <div>
+                      <h3 className="font-black text-slate-900 dark:text-white text-lg tracking-tight">Academic Marksheets</h3>
+                      <p className="text-sm font-medium text-slate-500 leading-snug">Semester-wise detailed marksheets. (Total {totalSemesters})</p>
+                    </div>
+                  </div>
+                  
+                  <div className="border border-slate-100 dark:border-slate-800 rounded-2xl overflow-hidden">
+                    <Table>
+                      <TableHeader className="bg-slate-50 dark:bg-slate-900/50">
+                        <TableRow>
+                          <TableHead className="font-bold">Semester</TableHead>
+                          <TableHead className="font-bold">Status</TableHead>
+                          <TableHead className="font-bold text-center">Issue Status</TableHead>
+                          <TableHead className="font-bold text-right">Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {semestersData.map((sem) => {
+                          const uniqueKey = `MARKSHEET_${sem.semesterNumber}`;
+                          return (
+                            <TableRow key={uniqueKey} className="hover:bg-slate-50 dark:bg-slate-900 dark:hover:bg-slate-800/50">
+                              <TableCell className="font-bold py-3 text-slate-700 dark:text-slate-300">Semester {sem.semesterNumber}</TableCell>
+                              <TableCell className="py-3">
+                                {sem.approved ? (
+                                  <Badge className="bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 border-0 rounded-lg font-bold">Issued</Badge>
+                                ) : (
+                                  <Badge className="bg-amber-50 text-amber-600 dark:bg-amber-500/10 border-0 rounded-lg font-bold">Pending</Badge>
+                                )}
+                              </TableCell>
+                              <TableCell className="text-center py-3">
+                                <Switch 
+                                  checked={!!sem.approved} 
+                                  onCheckedChange={(checked) => {
+                                    if (docRefs.current[uniqueKey] && !docRefs.current[uniqueKey]?.hasTemplate()) {
+                                      toast.error(`Design template for Marksheet Sem ${sem.semesterNumber} does not exist yet!`);
+                                      return;
+                                    }
+                                    handleIssueDocument(selectedStudentForDocs?.id, 'MARKSHEET', checked, sem.semesterNumber);
+                                  }}
+                                  className={sem.approved ? "data-[state=checked]:bg-emerald-500" : ""}
+                                />
+                              </TableCell>
+                              <TableCell className="text-right py-3">
+                                <div className="flex items-center justify-end gap-1">
+                                  <DocumentRenderer ref={el => { docRefs.current[uniqueKey] = el; }} type={`MARKSHEET_SEM_${sem.semesterNumber}`} student={selectedStudentForDocs} semesterNumber={sem.semesterNumber} />
+                                  <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-500 hover:text-blue-600" onClick={() => docRefs.current[uniqueKey]?.preview()}><Eye className="w-4 h-4" /></Button>
+                                  <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-500 hover:text-emerald-600" onClick={() => docRefs.current[uniqueKey]?.downloadPDF()}><Download className="w-4 h-4" /></Button>
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </div>
+              );
+            })()}
+
+            {/* Bottom: Auxiliary Documents */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {[
+                { id: 'STUDENT_ID', label: 'Student ID Card', desc: 'Identity verification.', icon: <User className="w-5 h-5 text-blue-500 dark:text-blue-400" /> },
+                { id: 'ADMIT_CARD', label: 'Admit Card', desc: 'Required for examinations.', icon: <Calendar className="w-5 h-5 text-indigo-500 dark:text-indigo-400" /> }
+                ].map((doc) => (
+                  <div key={doc.id} className="flex flex-col p-5 bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-2xl gap-3 hover:border-blue-200 dark:hover:border-blue-900/50 hover:shadow-md transition-all group">
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center shadow-sm">
+                        {doc.icon}
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-slate-900 dark:text-white text-base">{doc.label}</h3>
+                        <p className="text-xs font-medium text-slate-500 dark:text-slate-400">{doc.desc}</p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center justify-between pt-3 mt-1 border-t border-slate-200 dark:border-slate-800/60">
+                    <div className="flex items-center gap-2 bg-slate-200/50 dark:bg-slate-800 px-2 py-1 rounded-md">
+                       <ShieldCheck className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
+                       <span className="text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-widest">Delegated to Franchise</span>
+                    </div>
+                    
+                    <DocumentRenderer ref={el => { docRefs.current[doc.id] = el; }} type={doc.id as any} student={selectedStudentForDocs} />
+                    
+                    <div className="flex items-center gap-1">
+                      <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 dark:hover:bg-slate-800" onClick={() => docRefs.current[doc.id]?.preview()}><Eye className="w-4 h-4" /></Button>
+                      <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-500 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 dark:hover:bg-slate-800" onClick={() => docRefs.current[doc.id]?.downloadPDF()}><Download className="w-4 h-4" /></Button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
           </div>
         </DialogContent>
       </Dialog>
