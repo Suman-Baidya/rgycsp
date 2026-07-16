@@ -44,6 +44,7 @@ export default async function StudentsPage({
       batches={batches}
       courses={courses}
       paymentConfig={paymentConfig}
+      hasDocumentAuthority={workspace.hasDocumentAuthority}
     />
   );
 }

@@ -10,6 +10,7 @@ import type { jsPDF } from "jspdf";
 import { toast } from "sonner";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
+import { markStudentsAsPrinted } from "@/app/actions/student-documents";
 
 interface BulkDocumentGeneratorProps {
   open: boolean;
@@ -93,7 +94,7 @@ export function BulkDocumentGenerator({ open, onOpenChange, selectedStudentIds, 
         const dims = rendererRef.current.getTemplateDimensions();
         if (!dims) {
           toast.error(`Template not found for ${docLabel}. Skipping...`);
-          moveToNextDocType();
+          await moveToNextDocType();
           return;
         }
         if (printMode) {
@@ -170,7 +171,7 @@ export function BulkDocumentGenerator({ open, onOpenChange, selectedStudentIds, 
           pdfRef.current = null; // reset for next doc type
           toast.success(`Successfully downloaded ${docLabel}`);
         }
-        moveToNextDocType();
+        await moveToNextDocType();
       } else {
         // Move to next student
         setCurrentStudentIndex(prev => prev + 1);
@@ -180,16 +181,19 @@ export function BulkDocumentGenerator({ open, onOpenChange, selectedStudentIds, 
       toast.error(`Error generating document for ${student.fullName}`);
       // Skip error and move to next
       if (currentStudentIndex === selectedStudents.length - 1) {
-        moveToNextDocType();
+        await moveToNextDocType();
       } else {
         setCurrentStudentIndex(prev => prev + 1);
       }
     }
   };
 
-  const moveToNextDocType = () => {
+  const moveToNextDocType = async () => {
     if (currentDocTypeIndex === selectedTypes.length - 1) {
       // Done with all!
+      if (printMode) {
+        await markStudentsAsPrinted(selectedStudentIds);
+      }
       setIsGenerating(false);
       setCurrentDocTypeIndex(-1);
       setCurrentStudentIndex(-1);

@@ -3,7 +3,7 @@
 import React, { useState, useMemo, useRef } from "react";
 import {
   Users, GraduationCap, Building2, Search,
-  Eye, Pencil, ChevronLeft, ChevronRight, CheckCircle, FileText, Calendar, Mail, Phone, MoreHorizontal, User, UserCheck, Trash2, ShieldCheck, Download, ExternalLink, Settings, Save
+  Eye, Pencil, ChevronLeft, ChevronRight, CheckCircle, FileText, Calendar, Mail, Phone, MoreHorizontal, User, UserCheck, Trash2, ShieldCheck, Download, ExternalLink, Settings, Save, Printer
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -38,6 +38,9 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DocumentRenderer, DocumentRendererRef } from "@/components/documents/DocumentRenderer";
 import { BulkDocumentGenerator } from "@/components/documents/BulkDocumentGenerator";
+import { getDocumentStatus } from "@/lib/document-utils";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { ManageResultModal } from "@/components/students/ManageResultModal";
 
 interface StudentsClientProps {
   initialStudents: any[];
@@ -49,9 +52,10 @@ export default function StudentsClient({ initialStudents, initialWorkspaces, ini
   const router = useRouter();
 
   const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState("UNREGISTERED");
+  const [statusFilter, setStatusFilter] = useState("REGISTERED");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [showRequestsOnly, setShowRequestsOnly] = useState(false);
 
   // Edit State
   const [editOpen, setEditOpen] = useState(false);
@@ -66,12 +70,17 @@ export default function StudentsClient({ initialStudents, initialWorkspaces, ini
   const [configData, setConfigData] = useState({
     enrollmentPrefix: initialConfig?.enrollmentPrefix || "RGY",
     registrationSeries: initialConfig?.registrationSeries || "B",
+    autoDocumentIssueEnabled: initialConfig?.autoDocumentIssueEnabled || false,
+    autoMarksheetDays: initialConfig?.autoMarksheetDays || 2,
+    autoCertificateDays: initialConfig?.autoCertificateDays || 30,
+    autoIssueAfterRequestHours: initialConfig?.autoIssueAfterRequestHours || 1,
   });
   const [isSavingConfig, setIsSavingConfig] = useState(false);
 
   // Docs Modal State
   const [docsModalOpen, setDocsModalOpen] = useState(false);
   const [selectedStudentForDocs, setSelectedStudentForDocs] = useState<any>(null);
+  const [manageResultStudent, setManageResultStudent] = useState<any>(null);
   const docRefs = useRef<{ [key: string]: DocumentRendererRef | null }>({});
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -272,27 +281,53 @@ export default function StudentsClient({ initialStudents, initialWorkspaces, ini
     }
   };
 
+  const hasPendingRequests = useMemo(() => {
+    return initialStudents.some(s => {
+      if (s.documentIssueRequestedAt) {
+        const certStatus = getDocumentStatus(s, null, configData as any);
+        return !(certStatus.finalCertApproved || certStatus.finalCertIssued || certStatus.isCertAuto);
+      }
+      return false;
+    });
+  }, [initialStudents, configData]);
+
   const filteredStudents = useMemo(() => {
     return initialStudents.filter(s => {
       const searchLower = searchTerm.toLowerCase();
       const dobStr = s.dob ? new Date(s.dob).toLocaleDateString('en-GB') : "";
       const adminDateStr = s.admissionDate ? new Date(s.admissionDate).toLocaleDateString('en-GB') : "";
+      
+      // Get all registration numbers for this student as a string array
+      const regNos = s.registrations ? s.registrations.map((r: any) => r.registrationNo?.toLowerCase() || "") : [];
 
       const matchesSearch =
         s.fullName.toLowerCase().includes(searchLower) ||
         s.enrollmentNo.toLowerCase().includes(searchLower) ||
+        regNos.some((r: string) => r.includes(searchLower)) ||
         (s.applicationId && s.applicationId.toLowerCase().includes(searchLower)) ||
         (s.phone && s.phone.includes(searchLower)) ||
         (s.email && s.email.toLowerCase().includes(searchLower)) ||
         (s.workspace?.name && s.workspace.name.toLowerCase().includes(searchLower)) ||
+        (s.workspace?.centerCode && s.workspace.centerCode.toLowerCase().includes(searchLower)) ||
         dobStr.includes(searchLower) ||
         adminDateStr.includes(searchLower);
 
       const matchesStatus = s.status === statusFilter;
 
-      return matchesSearch && matchesStatus;
+      let matchesRequest = true;
+      if (showRequestsOnly && statusFilter === "REGISTERED") {
+        matchesRequest = false;
+        if (s.documentIssueRequestedAt) {
+          const certStatus = getDocumentStatus(s, null, configData as any);
+          if (!(certStatus.finalCertApproved || certStatus.finalCertIssued || certStatus.isCertAuto)) {
+            matchesRequest = true;
+          }
+        }
+      }
+
+      return matchesSearch && matchesStatus && matchesRequest;
     });
-  }, [initialStudents, searchTerm, statusFilter]);
+  }, [initialStudents, searchTerm, statusFilter, showRequestsOnly, configData]);
 
   const totalPages = Math.ceil(filteredStudents.length / itemsPerPage);
   const paginatedStudents = filteredStudents.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
@@ -318,10 +353,10 @@ export default function StudentsClient({ initialStudents, initialWorkspaces, ini
   }, [initialStudents]);
 
   const tabs = [
-    { id: "UNREGISTERED", label: "Current Unregistered", icon: User },
-    { id: "REGISTERED", label: "Active Registered", icon: UserCheck },
-    { id: "PASS_OUT", label: "Pass Out Students", icon: GraduationCap },
-    { id: "CONFIG", label: "Registration Config", icon: Settings },
+    { id: "UNREGISTERED", label: "Pending Registration", icon: User },
+    { id: "REGISTERED", label: "Registered Students", icon: UserCheck },
+    { id: "PASS_OUT", label: "Pass Out", icon: GraduationCap },
+    { id: "CONFIG", label: "Configuration", icon: Settings },
   ];
 
   const handleSaveConfig = async () => {
@@ -432,80 +467,166 @@ export default function StudentsClient({ initialStudents, initialWorkspaces, ini
       <Card className="border-none shadow-xl shadow-slate-200/50 dark:shadow-none bg-white dark:bg-slate-900 rounded-[2.5rem] overflow-hidden transition-all duration-500">
         {statusFilter === "CONFIG" ? (
           <div className="p-8">
-            <h2 className="text-xl font-bold mb-6 text-slate-800 dark:text-slate-100 flex items-center gap-2">
-              <Settings className="w-5 h-5 text-primary" />
-              Registration Number Configuration
-            </h2>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 w-full">
-              <div className="space-y-6">
-                <div className="p-6 rounded-2xl bg-slate-50/50 dark:bg-slate-800/30 border border-slate-100 dark:border-slate-800">
-                  <label className="text-sm font-bold text-slate-700 dark:text-slate-300 block mb-1">Enrollment Number Prefix</label>
-                  <p className="text-xs text-slate-500 mb-4">Used as the prefix for all generated Enrollment Numbers (e.g., RGY12345678)</p>
-                  <Input 
-                    value={configData.enrollmentPrefix} 
-                    onChange={e => setConfigData(prev => ({ ...prev, enrollmentPrefix: e.target.value.toUpperCase() }))}
-                    className="h-14 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-sm text-lg font-bold font-mono tracking-wider"
-                    placeholder="e.g. RGY"
-                  />
-                </div>
-                <div className="p-6 rounded-2xl bg-slate-50/50 dark:bg-slate-800/30 border border-slate-100 dark:border-slate-800">
-                  <label className="text-sm font-bold text-slate-700 dark:text-slate-300 block mb-1">Registration Number Series</label>
-                  <p className="text-xs text-slate-500 mb-4">Used in the Franchise Registration Number (e.g., WB002Y2026<span className="font-bold text-primary">B</span>12345)</p>
-                  <Input 
-                    value={configData.registrationSeries} 
-                    onChange={e => setConfigData(prev => ({ ...prev, registrationSeries: e.target.value.toUpperCase() }))}
-                    className="h-14 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-sm text-lg font-bold font-mono tracking-wider"
-                    placeholder="e.g. B"
-                  />
-                </div>
-                <Button 
-                  onClick={handleSaveConfig} 
-                  disabled={isSavingConfig}
-                  className="w-full h-14 rounded-xl text-lg font-bold shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-all hover:-translate-y-0.5"
-                >
-                  {isSavingConfig ? "Saving Configuration..." : <><Save className="w-5 h-5 mr-2" /> Save Configuration</>}
-                </Button>
-              </div>
-              <div className="bg-gradient-to-br from-slate-50 to-white dark:from-slate-800/50 dark:to-slate-900/50 rounded-[2rem] p-8 lg:p-10 border border-slate-100 dark:border-slate-800 shadow-sm flex flex-col justify-center h-full">
-                <div className="flex items-center gap-3 mb-8 pb-6 border-b border-slate-200/50 dark:border-slate-700/50">
-                  <div className="p-3 bg-primary/10 rounded-xl text-primary">
-                    <Eye className="w-6 h-6" />
-                  </div>
-                  <div>
-                    <h3 className="font-black text-xl text-slate-800 dark:text-slate-100">Live Preview</h3>
-                    <p className="text-sm text-slate-500">How the generated IDs will look</p>
-                  </div>
-                </div>
-                
-                <div className="space-y-8">
-                  <div className="group">
-                    <p className="text-xs uppercase font-black tracking-[0.2em] text-slate-400 mb-3 group-hover:text-primary transition-colors">Sample Enrollment No</p>
-                    <div className="bg-white dark:bg-slate-950 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-inner flex items-center justify-center">
-                      <span className="text-2xl sm:text-3xl font-black font-mono tracking-widest text-slate-800 dark:text-slate-200">
-                        <span className="text-indigo-600 dark:text-indigo-400">{configData.enrollmentPrefix || "PREFIX"}</span>
-                        <span>12345678</span>
-                      </span>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
+              <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
+                <Settings className="w-5 h-5 text-primary" />
+                System Configuration
+              </h2>
+              <Button 
+                onClick={handleSaveConfig} 
+                disabled={isSavingConfig}
+                className="rounded-xl font-bold px-6 h-10 text-sm shadow-lg shadow-primary/25 hover:shadow-primary/40 transition-all hover:-translate-y-0.5 w-full sm:w-auto"
+              >
+                {isSavingConfig ? "Saving..." : <><Save className="w-4 h-4 mr-2" /> Save Config</>}
+              </Button>
+            </div>
+
+            <div className="max-w-5xl mx-auto w-full">
+              <Accordion defaultValue={["registration"]} className="space-y-6">
+                {/* Registration Config Accordion Item */}
+                <AccordionItem value="registration" className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm px-1">
+                  <AccordionTrigger className="px-5 py-4 hover:no-underline hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 rounded-full bg-blue-50 dark:bg-blue-500/10 flex items-center justify-center">
+                        <FileText className="w-4 h-4 text-blue-600 dark:text-blue-500" />
+                      </div>
+                      <h3 className="font-bold text-slate-800 dark:text-slate-200">Registration Number Config</h3>
                     </div>
-                  </div>
-                  <div className="group">
-                    <p className="text-xs uppercase font-black tracking-[0.2em] text-slate-400 mb-3 group-hover:text-primary transition-colors">Sample Registration No</p>
-                    <div className="bg-white dark:bg-slate-950 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-inner flex items-center justify-center text-center">
-                      <span className="text-2xl sm:text-3xl font-black font-mono tracking-widest text-slate-800 dark:text-slate-200 break-all">
-                        <span>WB002Y2026</span>
-                        <span className="text-primary">{configData.registrationSeries || "SERIES"}</span>
-                        <span>12345</span>
-                      </span>
+                  </AccordionTrigger>
+                  <AccordionContent className="p-6 pt-2 border-t border-slate-100 dark:border-slate-800">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 w-full mt-4">
+                      {/* Left Side: Inputs */}
+                      <div className="space-y-6">
+                        <div>
+                          <label className="text-sm font-bold text-slate-700 dark:text-slate-300 block mb-1">Enrollment Number Prefix</label>
+                          <p className="text-xs text-slate-500 mb-3">Used as the prefix for all generated Enrollment Numbers (e.g., RGY12345678)</p>
+                          <Input 
+                            value={configData.enrollmentPrefix} 
+                            onChange={e => setConfigData(prev => ({ ...prev, enrollmentPrefix: e.target.value.toUpperCase() }))}
+                            className="h-12 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-xl font-bold font-mono tracking-wider"
+                            placeholder="e.g. RGY"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-sm font-bold text-slate-700 dark:text-slate-300 block mb-1">Registration Number Series</label>
+                          <p className="text-xs text-slate-500 mb-3">Used in the Franchise Registration Number (e.g., WB002Y2026<span className="font-bold text-primary">B</span>12345)</p>
+                          <Input 
+                            value={configData.registrationSeries} 
+                            onChange={e => setConfigData(prev => ({ ...prev, registrationSeries: e.target.value.toUpperCase() }))}
+                            className="h-12 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-xl font-bold font-mono tracking-wider"
+                            placeholder="e.g. B"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Right Side: Live Preview */}
+                      <div className="bg-gradient-to-br from-slate-50 to-white dark:from-slate-800/50 dark:to-slate-900/50 rounded-[2rem] p-6 lg:p-8 border border-slate-100 dark:border-slate-800 shadow-sm flex flex-col justify-center h-full">
+                        <div className="flex items-center gap-3 mb-6 pb-4 border-b border-slate-200/50 dark:border-slate-700/50">
+                          <div className="p-2 bg-primary/10 rounded-xl text-primary">
+                            <Eye className="w-5 h-5" />
+                          </div>
+                          <div>
+                            <h3 className="font-black text-lg text-slate-800 dark:text-slate-100">Live Preview</h3>
+                            <p className="text-xs text-slate-500">How the generated IDs will look</p>
+                          </div>
+                        </div>
+                        
+                        <div className="space-y-6">
+                          <div className="group">
+                            <p className="text-[10px] uppercase font-black tracking-[0.2em] text-slate-400 mb-2 group-hover:text-primary transition-colors">Sample Enrollment No</p>
+                            <div className="bg-white dark:bg-slate-950 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-inner flex items-center justify-center">
+                              <span className="text-xl sm:text-2xl font-black font-mono tracking-widest text-slate-800 dark:text-slate-200">
+                                <span className="text-indigo-600 dark:text-indigo-400">{configData.enrollmentPrefix || "PREFIX"}</span>
+                                <span>12345678</span>
+                              </span>
+                            </div>
+                          </div>
+                          <div className="group">
+                            <p className="text-[10px] uppercase font-black tracking-[0.2em] text-slate-400 mb-2 group-hover:text-primary transition-colors">Sample Registration No</p>
+                            <div className="bg-white dark:bg-slate-950 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-inner flex items-center justify-center text-center">
+                              <span className="text-xl sm:text-2xl font-black font-mono tracking-widest text-slate-800 dark:text-slate-200 break-all">
+                                <span>WB002Y2026</span>
+                                <span className="text-primary">{configData.registrationSeries || "SERIES"}</span>
+                                <span>12345</span>
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                </div>
-              </div>
+                  </AccordionContent>
+                </AccordionItem>
+
+                {/* Auto Issue Config Accordion Item */}
+                <AccordionItem value="documents" className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm px-1">
+                  <AccordionTrigger className="px-5 py-4 hover:no-underline hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
+                    <div className="flex items-center justify-between w-full pr-4">
+                      <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 rounded-full bg-emerald-50 dark:bg-emerald-500/10 flex items-center justify-center">
+                          <Settings className="w-4 h-4 text-emerald-600 dark:text-emerald-500" />
+                        </div>
+                        <h3 className="font-bold text-slate-800 dark:text-slate-200">Automatic Document Issue</h3>
+                      </div>
+                      <div onClick={(e) => e.stopPropagation()}>
+                        <Switch 
+                          checked={configData.autoDocumentIssueEnabled}
+                          onCheckedChange={(checked) => setConfigData(prev => ({ ...prev, autoDocumentIssueEnabled: checked }))}
+                          className="data-[state=checked]:bg-primary"
+                        />
+                      </div>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="p-6 pt-2 border-t border-slate-100 dark:border-slate-800">
+                    <div className="mt-4">
+                      {configData.autoDocumentIssueEnabled ? (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                          <div>
+                            <label className="text-sm font-bold text-slate-700 dark:text-slate-300 block mb-1">Marksheet Delay (Days)</label>
+                            <p className="text-xs text-slate-500 mb-3">Days after franchise uploads marks to auto-issue marksheet.</p>
+                            <Input 
+                              type="number"
+                              value={configData.autoMarksheetDays} 
+                              onChange={e => setConfigData(prev => ({ ...prev, autoMarksheetDays: parseInt(e.target.value) || 0 }))}
+                              className="h-12 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-xl"
+                            />
+                          </div>
+                          <div>
+                            <label className="text-sm font-bold text-slate-700 dark:text-slate-300 block mb-1">Certificate Delay (Days)</label>
+                            <p className="text-xs text-slate-500 mb-3">Days after final marksheet is published to auto-issue certificate.</p>
+                            <Input 
+                              type="number"
+                              value={configData.autoCertificateDays} 
+                              onChange={e => setConfigData(prev => ({ ...prev, autoCertificateDays: parseInt(e.target.value) || 0 }))}
+                              className="h-12 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-xl"
+                            />
+                          </div>
+                          <div className="col-span-1 md:col-span-2">
+                            <label className="text-sm font-bold text-slate-700 dark:text-slate-300 block mb-1">Quick Issue Delay (Hours)</label>
+                            <p className="text-xs text-slate-500 mb-3">Hours to wait after a franchise admin clicks "Request Quick Issue" before auto-approving the documents. Set to 0 to disable quick auto-issue (requires manual approval).</p>
+                            <Input 
+                              type="number"
+                              value={configData.autoIssueAfterRequestHours} 
+                              onChange={e => setConfigData(prev => ({ ...prev, autoIssueAfterRequestHours: parseInt(e.target.value) || 0 }))}
+                              className="h-12 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-xl max-w-sm"
+                            />
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="text-center py-8 text-slate-500 dark:text-slate-400 text-sm">
+                          Automatic document issuance is currently disabled. Documents will require manual approval.
+                        </div>
+                      )}
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
             </div>
           </div>
         ) : (
           <>
         <CardHeader className="p-6 md:p-8 border-b border-slate-50 dark:border-slate-800/50">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-4 w-full md:w-auto">
+            <div className="flex items-center flex-wrap md:flex-nowrap gap-4 w-full md:w-auto">
               {statusFilter !== "CONFIG" && (
                 <div className="flex items-center gap-3 pr-4 border-r border-slate-200 dark:border-slate-800 h-14">
                   <Checkbox 
@@ -542,6 +663,23 @@ export default function StudentsClient({ initialStudents, initialWorkspaces, ini
                   className="pl-11 pr-4 bg-slate-50 dark:bg-slate-800/40 border-none rounded-2xl h-14 font-bold text-sm transition-all focus-visible:ring-2 focus-visible:ring-primary/20 placeholder:text-slate-400 placeholder:font-medium"
                 />
               </div>
+              {statusFilter === "REGISTERED" && hasPendingRequests && (
+                <div className="flex items-center gap-2 pl-2 shrink-0 w-full md:w-auto">
+                  <Checkbox 
+                    id="show-requests-only"
+                    checked={showRequestsOnly} 
+                    onCheckedChange={(c) => { setShowRequestsOnly(!!c); setCurrentPage(1); }} 
+                    className="border-blue-600 data-[state=checked]:bg-blue-600 data-[state=checked]:text-white h-5 w-5 rounded shadow-sm shadow-blue-500/20 shrink-0"
+                  />
+                  <label htmlFor="show-requests-only" className="text-sm font-bold text-slate-700 dark:text-slate-300 cursor-pointer flex items-center gap-2 whitespace-normal md:whitespace-nowrap">
+                    Show Only Requested Students
+                    <span className="relative flex h-2 w-2 shrink-0">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
+                    </span>
+                  </label>
+                </div>
+              )}
             </div>
             <div className="flex items-center gap-3 self-end md:self-auto w-full md:w-auto">
               <span className="text-xs font-bold text-slate-400 uppercase tracking-widest hidden md:inline">Show</span>
@@ -602,6 +740,16 @@ export default function StudentsClient({ initialStudents, initialWorkspaces, ini
                         <div className="flex flex-col items-start gap-1">
                           <div className="flex items-center gap-2">
                             <p className="font-bold text-sm text-slate-900 dark:text-white">{student.fullName}</p>
+                            {student.documentsPrinted && (
+                              <Tooltip>
+                                <TooltipTrigger className="cursor-help">
+                                  <Printer className="w-4 h-4 text-emerald-500" />
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p>Documents have been printed</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            )}
                             <Badge variant="outline" className={cn(
                               "text-[10px] font-bold px-1.5 py-0 rounded uppercase tracking-widest border-none",
                               student.status === "REGISTERED" ? "bg-green-500/10 text-green-600" :
@@ -722,10 +870,19 @@ export default function StudentsClient({ initialStudents, initialWorkspaces, ini
                         {(student.status === "REGISTERED" || student.status === "PASS_OUT") && (
                           <DropdownMenu>
                             <DropdownMenuTrigger
-                              className="inline-flex items-center justify-center whitespace-nowrap h-10 w-10 rounded-xl text-slate-500 hover:text-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary/20"
+                              className="relative inline-flex items-center justify-center whitespace-nowrap h-10 w-10 rounded-xl text-slate-500 hover:text-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary/20"
                               title="Documents"
                             >
                               <MoreHorizontal className="h-4 w-4" />
+                              {student.documentIssueRequestedAt && (() => {
+                                const certStatus = getDocumentStatus(student, null, configData as any);
+                                return !(certStatus.finalCertApproved || certStatus.finalCertIssued || certStatus.isCertAuto);
+                              })() && (
+                                <span className="absolute top-2 right-2 flex h-2 w-2">
+                                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                                  <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                                </span>
+                              )}
                             </DropdownMenuTrigger>
                             <DropdownMenuContent side="top" align="end" className="w-56 rounded-xl font-medium p-1">
                               <DropdownMenuItem 
@@ -736,6 +893,12 @@ export default function StudentsClient({ initialStudents, initialWorkspaces, ini
                                 className="cursor-pointer gap-2 py-2.5"
                               >
                                 <FileText className="h-4 w-4 text-slate-400" /> Manage Documents
+                              </DropdownMenuItem>
+                              <DropdownMenuItem 
+                                onClick={() => setManageResultStudent(student)} 
+                                className="cursor-pointer gap-2 py-2.5"
+                              >
+                                <GraduationCap className="h-4 w-4 text-slate-400" /> Manage Result
                               </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
@@ -1261,8 +1424,12 @@ export default function StudentsClient({ initialStudents, initialWorkspaces, ini
           </DialogHeader>
 
           <div className="flex flex-col gap-6">
-            {/* Top: Certificate */}
-            <div className="flex flex-col p-6 bg-white dark:bg-slate-900 border-2 border-amber-200/50 dark:border-amber-800/50 rounded-3xl shadow-sm hover:shadow-md transition-all relative overflow-hidden">
+            {(() => {
+              const certStatus = getDocumentStatus(selectedStudentForDocs, null, initialConfig);
+              return (
+                <>
+                  {/* Top: Certificate */}
+                  <div className="flex flex-col p-6 bg-white dark:bg-slate-900 border-2 border-amber-200/50 dark:border-amber-800/50 rounded-3xl shadow-sm hover:shadow-md transition-all relative overflow-hidden">
               <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/5 rounded-bl-[4rem] -z-10"></div>
               <div className="flex items-start justify-between">
                 <div className="flex-1 pr-4">
@@ -1274,8 +1441,12 @@ export default function StudentsClient({ initialStudents, initialWorkspaces, ini
                   </div>
                   <p className="text-sm font-medium text-slate-500 leading-snug">Official completion certificate. This is the final milestone document.</p>
                 </div>
-                {selectedStudentForDocs?.certificateApproved ? (
+                {certStatus.isCertAuto ? (
+                  <Badge className="bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 border-0 rounded-xl px-4 py-1.5 font-bold shadow-sm">Auto Issued</Badge>
+                ) : selectedStudentForDocs?.certificateIssuedToStudent ? (
                   <Badge className="bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 border-0 rounded-xl px-4 py-1.5 font-bold shadow-sm">Issued</Badge>
+                ) : selectedStudentForDocs?.certificateApproved ? (
+                  <Badge className="bg-blue-50 text-blue-600 dark:bg-blue-500/10 border-0 rounded-xl px-4 py-1.5 font-bold shadow-sm">Approved</Badge>
                 ) : (
                   <Badge className="bg-amber-50 text-amber-600 dark:bg-amber-500/10 border-0 rounded-xl px-4 py-1.5 font-bold shadow-sm">Pending</Badge>
                 )}
@@ -1283,18 +1454,22 @@ export default function StudentsClient({ initialStudents, initialWorkspaces, ini
               
               <div className="flex items-center justify-between pt-5 mt-3 border-t border-slate-100 dark:border-slate-800">
                 <div className="flex items-center gap-3">
-                  <span className="text-xs font-black text-slate-400 uppercase tracking-widest">Issue Status</span>
-                  <Switch 
-                    checked={!!selectedStudentForDocs?.certificateApproved} 
-                    onCheckedChange={(checked) => {
-                      if (docRefs.current['CERTIFICATE'] && !docRefs.current['CERTIFICATE']?.hasTemplate()) {
-                        toast.error(`Design template for Certificate does not exist yet!`);
-                        return;
-                      }
-                      handleIssueDocument(selectedStudentForDocs?.id, 'CERTIFICATE', checked);
-                    }}
-                    className={selectedStudentForDocs?.certificateApproved ? "data-[state=checked]:bg-emerald-500" : ""}
-                  />
+                  <span className="text-xs font-black text-slate-400 uppercase tracking-widest">Super Admin Approval</span>
+                  {!certStatus.isCertAuto ? (
+                    <Switch 
+                      checked={!!selectedStudentForDocs?.certificateApproved} 
+                      onCheckedChange={(checked) => {
+                        if (docRefs.current['CERTIFICATE'] && !docRefs.current['CERTIFICATE']?.hasTemplate()) {
+                          toast.error(`Design template for Certificate does not exist yet!`);
+                          return;
+                        }
+                        handleIssueDocument(selectedStudentForDocs?.id, 'CERTIFICATE', checked);
+                      }}
+                      className={selectedStudentForDocs?.certificateApproved ? "data-[state=checked]:bg-emerald-500" : ""}
+                    />
+                  ) : (
+                    <span className="text-xs text-slate-400 font-medium">Auto Issued</span>
+                  )}
                 </div>
                 
                 <DocumentRenderer 
@@ -1308,7 +1483,10 @@ export default function StudentsClient({ initialStudents, initialWorkspaces, ini
                   <Button size="sm" className="rounded-xl font-bold h-10 px-4 shadow-md shadow-primary/20" onClick={() => docRefs.current['CERTIFICATE']?.downloadPDF()}><Download className="w-4 h-4 mr-2" /> Download</Button>
                 </div>
               </div>
-            </div>
+                  </div>
+                </>
+              );
+            })()}
 
             {/* Middle: Marksheets */}
             {(() => {
@@ -1333,7 +1511,15 @@ export default function StudentsClient({ initialStudents, initialWorkspaces, ini
               const semestersData = [];
               for (let i = 1; i <= totalSemesters; i++) {
                 const semData = selectedStudentForDocs?.semesters?.find((s:any) => s.semesterNumber === i);
-                semestersData.push({ semesterNumber: i, approved: semData?.marksheetApproved || false });
+                const status = getDocumentStatus(selectedStudentForDocs, semData, initialConfig);
+                semestersData.push({ 
+                  semesterNumber: i, 
+                  approved: semData?.marksheetApproved || false,
+                  issued: semData?.marksheetIssuedToStudent || false,
+                  isAuto: status.isMarksheetAuto,
+                  finalIssued: status.finalMarksheetIssued,
+                  finalApproved: status.finalMarksheetApproved
+                });
               }
 
               return (
@@ -1354,7 +1540,7 @@ export default function StudentsClient({ initialStudents, initialWorkspaces, ini
                         <TableRow>
                           <TableHead className="font-bold">Semester</TableHead>
                           <TableHead className="font-bold">Status</TableHead>
-                          <TableHead className="font-bold text-center">Issue Status</TableHead>
+                          <TableHead className="font-bold text-center">SA Approval</TableHead>
                           <TableHead className="font-bold text-right">Actions</TableHead>
                         </TableRow>
                       </TableHeader>
@@ -1365,24 +1551,32 @@ export default function StudentsClient({ initialStudents, initialWorkspaces, ini
                             <TableRow key={uniqueKey} className="hover:bg-slate-50 dark:bg-slate-900 dark:hover:bg-slate-800/50">
                               <TableCell className="font-bold py-3 text-slate-700 dark:text-slate-300">Semester {sem.semesterNumber}</TableCell>
                               <TableCell className="py-3">
-                                {sem.approved ? (
+                                {sem.isAuto ? (
+                                  <Badge className="bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 border-0 rounded-lg font-bold">Auto Issued</Badge>
+                                ) : sem.issued ? (
                                   <Badge className="bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 border-0 rounded-lg font-bold">Issued</Badge>
+                                ) : sem.approved ? (
+                                  <Badge className="bg-blue-50 text-blue-600 dark:bg-blue-500/10 border-0 rounded-lg font-bold">Approved</Badge>
                                 ) : (
                                   <Badge className="bg-amber-50 text-amber-600 dark:bg-amber-500/10 border-0 rounded-lg font-bold">Pending</Badge>
                                 )}
                               </TableCell>
                               <TableCell className="text-center py-3">
-                                <Switch 
-                                  checked={!!sem.approved} 
-                                  onCheckedChange={(checked) => {
-                                    if (docRefs.current[uniqueKey] && !docRefs.current[uniqueKey]?.hasTemplate()) {
-                                      toast.error(`Design template for Marksheet Sem ${sem.semesterNumber} does not exist yet!`);
-                                      return;
-                                    }
-                                    handleIssueDocument(selectedStudentForDocs?.id, 'MARKSHEET', checked, sem.semesterNumber);
-                                  }}
-                                  className={sem.approved ? "data-[state=checked]:bg-emerald-500" : ""}
-                                />
+                                {!sem.isAuto ? (
+                                  <Switch 
+                                    checked={!!sem.approved} 
+                                    onCheckedChange={(checked) => {
+                                      if (docRefs.current[uniqueKey] && !docRefs.current[uniqueKey]?.hasTemplate()) {
+                                        toast.error(`Design template for Marksheet Sem ${sem.semesterNumber} does not exist yet!`);
+                                        return;
+                                      }
+                                      handleIssueDocument(selectedStudentForDocs?.id, 'MARKSHEET', checked, sem.semesterNumber);
+                                    }}
+                                    className={sem.approved ? "data-[state=checked]:bg-emerald-500" : ""}
+                                  />
+                                ) : (
+                                  <span className="text-xs text-slate-400 font-medium">Auto Issued</span>
+                                )}
                               </TableCell>
                               <TableCell className="text-right py-3">
                                 <div className="flex items-center justify-end gap-1">
@@ -1440,6 +1634,15 @@ export default function StudentsClient({ initialStudents, initialWorkspaces, ini
           </div>
         </DialogContent>
       </Dialog>
+
+      {manageResultStudent && (
+        <ManageResultModal
+          isOpen={!!manageResultStudent}
+          onClose={() => setManageResultStudent(null)}
+          student={manageResultStudent}
+          onSave={() => router.refresh()}
+        />
+      )}
 
       <BulkDocumentGenerator 
         open={bulkDownloadOpen}

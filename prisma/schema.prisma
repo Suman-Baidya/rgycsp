@@ -100,6 +100,7 @@ model Workspace {
 
   // Documents
   registrationCertificateApproved Boolean @default(false)
+  hasDocumentAuthority            Boolean @default(false)
   
   shippingAddress String? @db.Text
 
@@ -307,6 +308,10 @@ model StudentProfile {
   registrationCardIssuedToStudent Boolean @default(false)
   marksheetIssuedToStudent        Boolean @default(false)
   certificateIssuedToStudent      Boolean @default(false)
+
+  // Tracking bulk print downloads
+  documentsPrinted                Boolean   @default(false)
+  documentIssueRequestedAt        DateTime?
 
   admissionApp AdmissionApplication? @relation(fields: [applicationId], references: [id], onDelete: SetNull)
 
@@ -864,6 +869,7 @@ model StudentSemester {
   // Document Approvals per Semester
   marksheetApproved        Boolean @default(false)
   marksheetIssuedToStudent Boolean @default(false)
+  marksFinalizedAt         DateTime?
   
   createdAt        DateTime       @default(now())
   updatedAt        DateTime       @updatedAt
@@ -980,6 +986,12 @@ model RegistrationConfig {
   id                 String   @id @default(cuid())
   enrollmentPrefix   String   @default("RGY")
   registrationSeries String   @default("B")
+  
+  autoDocumentIssueEnabled Boolean @default(false)
+  autoMarksheetDays        Int     @default(2)
+  autoCertificateDays      Int     @default(30)
+  autoIssueAfterRequestHours Int   @default(1)
+
   updatedAt          DateTime @updatedAt
 }
 

@@ -51,14 +51,25 @@ export function StudentSidebar({
     return <Link href={href} className={className} onClick={onClick}>{children}</Link>;
   };
 
+  const generateLink = (path: string) => {
+    if (workspaceBase === undefined) {
+      return getTenantLink(path, tenant, pathname);
+    }
+    const cleanPath = path.startsWith('/') ? path : `/${path}`;
+    if (path.startsWith('http') || path.startsWith('mailto:') || path.startsWith('tel:')) return path;
+    if (workspaceBase && cleanPath.startsWith(workspaceBase)) return cleanPath;
+    if (workspaceBase === "") return cleanPath;
+    return `${workspaceBase}${cleanPath}`.replace(/\/+/g, '/');
+  };
+
   const navItems = [
-    { name: "Overview", href: getTenantLink(WORKSPACE_ROUTES.STUDENT_DASHBOARD, tenant, pathname), icon: LayoutDashboard },
-    { name: "My Courses", href: getTenantLink(WORKSPACE_ROUTES.STUDENT_COURSES, tenant, pathname), icon: BookOpen },
-    { name: "Attendance", href: getTenantLink(WORKSPACE_ROUTES.STUDENT_ATTENDANCE, tenant, pathname), icon: Calendar },
-    { name: "Exams", href: getTenantLink(WORKSPACE_ROUTES.STUDENT_EXAMS, tenant, pathname), icon: FileText },
-    { name: "Fees & Invoices", href: getTenantLink(WORKSPACE_ROUTES.STUDENT_FEES, tenant, pathname), icon: Wallet },
-    { name: "Notices", href: getTenantLink(WORKSPACE_ROUTES.STUDENT_NOTICES, tenant, pathname), icon: Bell },
-    { name: "My Profile", href: getTenantLink(WORKSPACE_ROUTES.STUDENT_PROFILE, tenant, pathname), icon: User },
+    { name: "Overview", href: generateLink(WORKSPACE_ROUTES.STUDENT_DASHBOARD), icon: LayoutDashboard },
+    { name: "My Courses", href: generateLink(WORKSPACE_ROUTES.STUDENT_COURSES), icon: BookOpen },
+    { name: "Attendance", href: generateLink(WORKSPACE_ROUTES.STUDENT_ATTENDANCE), icon: Calendar },
+    { name: "Exams", href: generateLink(WORKSPACE_ROUTES.STUDENT_EXAMS), icon: FileText },
+    { name: "Fees & Invoices", href: generateLink(WORKSPACE_ROUTES.STUDENT_FEES), icon: Wallet },
+    { name: "Notices", href: generateLink(WORKSPACE_ROUTES.STUDENT_NOTICES), icon: Bell },
+    { name: "My Profile", href: generateLink(WORKSPACE_ROUTES.STUDENT_PROFILE), icon: User },
   ];
 
   useEffect(() => {

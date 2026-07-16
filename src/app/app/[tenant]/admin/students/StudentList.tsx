@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Plus, Search, MoreVertical, UserPlus, Phone, Mail, GraduationCap, FileText, Eye, Pencil, Database, Download, Loader2, CheckCircle, Calendar, User, Award, ShieldCheck } from "lucide-react";
+import { Plus, Search, MoreVertical, UserPlus, Phone, Mail, GraduationCap, FileText, Eye, Pencil, Database, Download, Loader2, CheckCircle, Calendar, User, Award, ShieldCheck, Clock, Rocket } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -34,26 +34,32 @@ import Link from "next/link";
 import { ImageUpload } from "@/components/ui/ImageUpload";
 import { Switch } from "@/components/ui/switch";
 import { DocumentRenderer, DocumentRendererRef } from "@/components/documents/DocumentRenderer";
-import { issueDocumentToStudent } from "@/app/actions/student-documents";
+import { issueDocumentToStudent, requestDocumentIssue } from "@/app/actions/student-documents";
+import { getRegistrationConfig } from "@/app/actions/registration-config";
+import { getDocumentStatus } from "@/lib/document-utils";
+import { ManageResultModal } from "@/components/students/ManageResultModal";
 
 export default function StudentList({ 
   workspaceId, 
   initialStudents,
   batches,
   courses,
-  status
+  status,
+  hasDocumentAuthority
 }: { 
   workspaceId: string; 
   initialStudents: any[];
   batches: any[];
   courses: any[];
   status?: string;
+  hasDocumentAuthority?: boolean;
 }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [open, setOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState<any>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [manageResultStudent, setManageResultStudent] = useState<any>(null);
   const [importOpen, setImportOpen] = useState(false);
   const [csvFile, setCsvFile] = useState<File | null>(null);
   const [importing, setImporting] = useState(false);
@@ -96,6 +102,39 @@ export default function StudentList({
 
   const [docsModalOpen, setDocsModalOpen] = useState(false);
   const docRefs = React.useRef<Record<string, DocumentRendererRef | null>>({});
+  const [globalConfig, setGlobalConfig] = useState<any>(null);
+
+  React.useEffect(() => {
+    async function loadConfig() {
+      const config = await getRegistrationConfig();
+      setGlobalConfig(config);
+    }
+    loadConfig();
+  }, []);
+
+  const [isRequestingIssue, setIsRequestingIssue] = useState(false);
+
+  const handleRequestIssue = async (studentId: string) => {
+    if (!studentId) return;
+    setIsRequestingIssue(true);
+    try {
+      const res = await requestDocumentIssue(studentId);
+      if (res.success) {
+        toast.success("Document issue requested successfully!");
+        // Update local state to reflect the request
+        router.refresh();
+        if (selectedStudent && selectedStudent.id === studentId) {
+          setSelectedStudent({ ...selectedStudent, documentIssueRequestedAt: new Date() });
+        }
+      } else {
+        toast.error(res.error || "Failed to request document issue.");
+      }
+    } catch (error: any) {
+      toast.error(error.message || "An error occurred.");
+    } finally {
+      setIsRequestingIssue(false);
+    }
+  };
 
   const handleIssueToStudent = async (studentId: string, docType: "MARKSHEET" | "CERTIFICATE" | "STUDENT_ID" | "ADMIT_CARD", status: boolean, semesterNumber?: number) => {
     const res = await issueDocumentToStudent(studentId, docType, status, semesterNumber);
@@ -654,13 +693,23 @@ export default function StudentList({
                           </Link>
                         )}
                       </div>
-                      <Button 
-                        onClick={() => handleEditClick(student)}
-                        variant="outline" 
-                        className="rounded-xl font-bold px-6 h-10 border-slate-200 dark:border-slate-800"
-                      >
-                        Edit Profile
-                      </Button>
+                      
+                      {(() => {
+                        const certStatus = globalConfig ? getDocumentStatus(student, null, globalConfig as any) : { finalCertIssued: student.certificateIssuedToStudent, finalCertApproved: student.certificateApproved, isCertAuto: false };
+                        const isIssued = certStatus.finalCertIssued || certStatus.finalCertApproved || certStatus.isCertAuto;
+                        
+                        if (isIssued) return null;
+                        
+                        return (
+                          <Button 
+                            onClick={() => handleEditClick(student)}
+                            variant="outline" 
+                            className="rounded-xl font-bold px-6 h-10 border-slate-200 dark:border-slate-800"
+                          >
+                            Edit Profile
+                          </Button>
+                        );
+                      })()}
                     </div>
                   </div>
                 </DialogContent>
@@ -686,15 +735,11 @@ export default function StudentList({
                           <MoreVertical className="h-4 w-4" />
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="w-56 rounded-xl">
-                          <DropdownMenuItem 
-                            onClick={() => {
-                              setSelectedStudent(student);
-                              setDocsModalOpen(true);
-                            }}
-                            className="text-xs font-bold cursor-pointer py-2"
-                          >
-                            <FileText className="h-3.5 w-3.5 mr-2 text-slate-400" />
-                            Manage Documents
+                          <DropdownMenuItem onClick={() => { setSelectedStudent(student); setDocsModalOpen(true); }} className="cursor-pointer py-2.5 my-0.5 font-bold text-slate-700 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400">
+                            <FileText className="mr-2 h-4 w-4" /> Manage Document
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => setManageResultStudent(student)} className="cursor-pointer py-2.5 my-0.5 font-bold text-slate-700 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400">
+                            <GraduationCap className="mr-2 h-4 w-4" /> Manage Result
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
@@ -711,17 +756,24 @@ export default function StudentList({
                     </Button>
                   </>
                 )}
-
-                {student.status !== "PASS_OUT" && (
-                  <Button 
-                    onClick={() => handleEditClick(student)}
-                    variant="ghost" 
-                    size="icon" 
-                    className="h-9 w-9 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-400 dark:text-slate-600 shrink-0"
-                  >
-                    <Pencil className="h-4 w-4" />
-                  </Button>
-                )}
+                {student.status !== "PASS_OUT" && (() => {
+                  const certStatus = globalConfig ? getDocumentStatus(student, null, globalConfig as any) : { finalCertIssued: student.certificateIssuedToStudent, finalCertApproved: student.certificateApproved, isCertAuto: false };
+                  const isIssued = certStatus.finalCertIssued || certStatus.finalCertApproved || certStatus.isCertAuto;
+                  
+                  if (isIssued) return null;
+                  
+                  return (
+                    <Button 
+                      onClick={() => handleEditClick(student)}
+                      variant="ghost" 
+                      size="icon" 
+                      className="h-9 w-9 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-400 dark:text-slate-600 shrink-0"
+                      title="Edit Profile"
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                  );
+                })()}
               </div>
             </div>
           </div>
@@ -1067,8 +1119,12 @@ export default function StudentList({
             </DialogHeader>
 
             <div className="flex flex-col gap-6">
-              {/* Top: Certificate */}
-              <div className="flex flex-col p-6 bg-white dark:bg-slate-900 border-2 border-amber-200/50 dark:border-amber-800/50 rounded-3xl shadow-sm hover:shadow-md transition-all relative overflow-hidden">
+            {(() => {
+              const certStatus = getDocumentStatus(selectedStudent, null, globalConfig);
+              return (
+                <>
+                  {/* Top: Certificate */}
+                  <div className="flex flex-col p-6 bg-white dark:bg-slate-900 border-2 border-amber-200/50 dark:border-amber-800/50 rounded-3xl shadow-sm hover:shadow-md transition-all relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/5 rounded-bl-[4rem] -z-10"></div>
                 <div className="flex items-start justify-between">
                   <div className="flex-1 pr-4">
@@ -1078,21 +1134,25 @@ export default function StudentList({
                       </div>
                       <h3 className="font-black text-slate-900 dark:text-white text-xl tracking-tight">Final Certificate</h3>
                     </div>
-                    <p className="text-sm font-medium text-slate-500 leading-snug">Official completion certificate. You can only issue this once Super Admin approves.</p>
+                    <p className="text-sm font-medium text-slate-500 leading-snug">Official completion certificate. This is the final milestone document.</p>
                   </div>
-                  {selectedStudent?.certificateIssuedToStudent ? (
-                    <Badge className="bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 border-0 rounded-xl px-4 py-1.5 font-bold shadow-sm">Issued to Student</Badge>
-                  ) : selectedStudent?.certificateApproved ? (
-                    <Badge className="bg-amber-50 text-amber-600 dark:bg-amber-500/10 border-0 rounded-xl px-4 py-1.5 font-bold shadow-sm">Ready to Issue</Badge>
+                  {certStatus.isCertAuto ? (
+                    <Badge className="bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 border-0 rounded-xl px-4 py-1.5 font-bold shadow-sm">Auto Issued</Badge>
+                  ) : certStatus.finalCertApproved ? (
+                    <Badge className="bg-amber-50 text-amber-600 dark:bg-amber-500/10 border-0 rounded-xl px-4 py-1.5 font-bold shadow-sm">Approved</Badge>
+                  ) : certStatus.finalCertIssued ? (
+                    <Badge className="bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 border-0 rounded-xl px-4 py-1.5 font-bold shadow-sm">Issued</Badge>
+                  ) : hasDocumentAuthority ? (
+                    <Badge className="bg-blue-50 text-blue-600 dark:bg-blue-500/10 border-0 rounded-xl px-4 py-1.5 font-bold shadow-sm">Authority</Badge>
                   ) : (
-                    <Badge className="bg-red-50 text-red-600 dark:bg-red-500/10 border-0 rounded-xl px-4 py-1.5 font-bold shadow-sm">Pending Super Admin</Badge>
+                    <Badge className="bg-red-50 text-red-600 dark:bg-red-500/10 border-0 rounded-xl px-4 py-1.5 font-bold shadow-sm">Pending</Badge>
                   )}
                 </div>
                 
                 <div className="flex items-center justify-between pt-5 mt-3 border-t border-slate-100 dark:border-slate-800">
                   <div className="flex items-center gap-3">
                     <span className="text-xs font-black text-slate-400 uppercase tracking-widest">Issue Status</span>
-                    {selectedStudent?.certificateApproved ? (
+                    {(certStatus.finalCertApproved || hasDocumentAuthority || certStatus.finalCertIssued) && !certStatus.isCertAuto ? (
                       <Switch 
                         checked={!!selectedStudent?.certificateIssuedToStudent} 
                         onCheckedChange={(checked) => {
@@ -1105,11 +1165,34 @@ export default function StudentList({
                         className={selectedStudent?.certificateIssuedToStudent ? "data-[state=checked]:bg-emerald-500" : ""}
                       />
                     ) : (
-                      <span className="text-xs text-slate-400 font-medium">-</span>
+                      <span className="text-xs text-slate-400 font-medium">
+                        {certStatus.isCertAuto ? "Auto Issued" : "-"}
+                      </span>
                     )}
                   </div>
                   
-                  {selectedStudent?.certificateApproved && (
+                  {!(certStatus.finalCertApproved || hasDocumentAuthority || certStatus.finalCertIssued || certStatus.isCertAuto) && (
+                    <div className="flex items-center gap-2">
+                      {selectedStudent?.documentIssueRequestedAt ? (
+                        <Badge variant="outline" className="text-amber-500 border-amber-200">
+                          <Clock className="w-3 h-3 mr-1" /> Request Pending
+                        </Badge>
+                      ) : (
+                        <Button 
+                          onClick={() => handleRequestIssue(selectedStudent?.id)}
+                          disabled={isRequestingIssue}
+                          variant="outline" 
+                          size="sm" 
+                          className="rounded-xl font-bold h-9 px-4 text-indigo-600 border-indigo-200 hover:bg-indigo-50"
+                        >
+                          {isRequestingIssue ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Rocket className="w-4 h-4 mr-2" />}
+                          Request Quick Issue
+                        </Button>
+                      )}
+                    </div>
+                  )}
+
+                  {(certStatus.finalCertApproved || hasDocumentAuthority || certStatus.finalCertIssued) && (
                     <>
                       <DocumentRenderer 
                         ref={el => { docRefs.current['CERTIFICATE'] = el; }} 
@@ -1124,6 +1207,9 @@ export default function StudentList({
                   )}
                 </div>
               </div>
+                </>
+              );
+              })()}
 
               {/* Middle: Marksheets */}
               {(() => {
@@ -1148,10 +1234,13 @@ export default function StudentList({
                 const semestersData = [];
                 for (let i = 1; i <= totalSemesters; i++) {
                   const semData = selectedStudent?.semesters?.find((s:any) => s.semesterNumber === i);
+                  const status = getDocumentStatus(selectedStudent, semData, globalConfig);
                   semestersData.push({ 
                     semesterNumber: i, 
-                    superAdminApproved: semData?.marksheetApproved || false,
-                    issuedToStudent: semData?.marksheetIssuedToStudent || false
+                    superAdminApproved: status.finalMarksheetApproved,
+                    issuedToStudent: status.finalMarksheetIssued,
+                    isAuto: status.isMarksheetAuto,
+                    rawIssued: semData?.marksheetIssuedToStudent || false
                   });
                 }
 
@@ -1184,16 +1273,22 @@ export default function StudentList({
                               <TableRow key={uniqueKey} className="hover:bg-slate-50 dark:bg-slate-900 dark:hover:bg-slate-800/50">
                                 <TableCell className="font-bold py-3 text-slate-700 dark:text-slate-300">Semester {sem.semesterNumber}</TableCell>
                                 <TableCell className="py-3">
-                                  {sem.superAdminApproved ? (
+                                  {sem.isAuto ? (
+                                    <Badge className="bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 border-0 rounded-lg font-bold">Auto Issued</Badge>
+                                  ) : sem.superAdminApproved ? (
                                     <Badge className="bg-amber-50 text-amber-600 dark:bg-amber-500/10 border-0 rounded-lg font-bold">Approved</Badge>
+                                  ) : sem.issuedToStudent ? (
+                                    <Badge className="bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 border-0 rounded-lg font-bold">Issued</Badge>
+                                  ) : hasDocumentAuthority ? (
+                                    <Badge className="bg-blue-50 text-blue-600 dark:bg-blue-500/10 border-0 rounded-lg font-bold">Authority</Badge>
                                   ) : (
                                     <Badge className="bg-red-50 text-red-600 dark:bg-red-500/10 border-0 rounded-lg font-bold">Pending</Badge>
                                   )}
                                 </TableCell>
                                 <TableCell className="text-center py-3">
-                                  {sem.superAdminApproved ? (
+                                  {(sem.superAdminApproved || hasDocumentAuthority || sem.issuedToStudent) && !sem.isAuto ? (
                                     <Switch 
-                                      checked={!!sem.issuedToStudent} 
+                                      checked={!!sem.rawIssued} 
                                       onCheckedChange={(checked) => {
                                         if (docRefs.current[uniqueKey] && !docRefs.current[uniqueKey]?.hasTemplate()) {
                                           toast.error(`Design template for Marksheet Sem ${sem.semesterNumber} does not exist yet!`);
@@ -1201,16 +1296,18 @@ export default function StudentList({
                                         }
                                         handleIssueToStudent(selectedStudent?.id, 'MARKSHEET', checked, sem.semesterNumber);
                                       }}
-                                      className={sem.issuedToStudent ? "data-[state=checked]:bg-emerald-500" : ""}
+                                      className={sem.rawIssued ? "data-[state=checked]:bg-emerald-500" : ""}
                                     />
                                   ) : (
-                                    <span className="text-xs text-slate-400 font-medium">-</span>
+                                    <span className="text-xs text-slate-400 font-medium">
+                                      {sem.isAuto ? "Auto Issued" : "-"}
+                                    </span>
                                   )}
                                 </TableCell>
                                 <TableCell className="text-right py-3">
-                                  {sem.superAdminApproved && (
+                                  {(sem.superAdminApproved || hasDocumentAuthority || sem.issuedToStudent) && (
                                     <div className="flex items-center justify-end gap-1">
-                                      <DocumentRenderer ref={el => { docRefs.current[uniqueKey] = el; }} type={uniqueKey as any} student={selectedStudent} semesterNumber={sem.semesterNumber} />
+                                      <DocumentRenderer ref={el => { docRefs.current[uniqueKey] = el; }} type={`MARKSHEET_SEM_${sem.semesterNumber}`} student={selectedStudent} semesterNumber={sem.semesterNumber} />
                                       <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-500 hover:text-blue-600" onClick={() => docRefs.current[uniqueKey]?.preview()}><Eye className="w-4 h-4" /></Button>
                                       <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-500 hover:text-emerald-600" onClick={() => docRefs.current[uniqueKey]?.downloadPDF()}><Download className="w-4 h-4" /></Button>
                                     </div>
@@ -1275,6 +1372,13 @@ export default function StudentList({
           </div>
         </DialogContent>
       </Dialog>
+      {/* Manage Result Modal */}
+      <ManageResultModal
+        isOpen={!!manageResultStudent}
+        onClose={() => setManageResultStudent(null)}
+        student={manageResultStudent}
+        onSave={() => router.refresh()}
+      />
     </div>
   );
 }

@@ -11,6 +11,10 @@ export async function getRegistrationConfig() {
         data: {
           enrollmentPrefix: "RGY",
           registrationSeries: "B",
+          autoDocumentIssueEnabled: false,
+          autoMarksheetDays: 2,
+          autoCertificateDays: 30,
+          autoIssueAfterRequestHours: 1,
         }
       });
     }
@@ -21,7 +25,14 @@ export async function getRegistrationConfig() {
   }
 }
 
-export async function updateRegistrationConfig(data: { enrollmentPrefix: string; registrationSeries: string }) {
+export async function updateRegistrationConfig(data: { 
+  enrollmentPrefix: string; 
+  registrationSeries: string;
+  autoDocumentIssueEnabled?: boolean;
+  autoMarksheetDays?: number;
+  autoCertificateDays?: number;
+  autoIssueAfterRequestHours?: number;
+}) {
   try {
     const config = await db.registrationConfig.findFirst();
     if (config) {

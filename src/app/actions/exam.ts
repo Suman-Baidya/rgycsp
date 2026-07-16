@@ -249,7 +249,16 @@ export async function saveStudentMarksBatch(
       });
       if (!semester) {
         semester = await db.studentSemester.create({
-          data: { studentProfileId, semesterNumber: mark.semesterNumber }
+          data: { 
+            studentProfileId, 
+            semesterNumber: mark.semesterNumber,
+            marksFinalizedAt: new Date()
+          }
+        });
+      } else {
+        await db.studentSemester.update({
+          where: { id: semester.id },
+          data: { marksFinalizedAt: new Date() }
         });
       }
       

@@ -1,12 +1,12 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { 
-  IndianRupee, 
-  ArrowUpRight, 
-  ArrowDownLeft, 
-  Clock, 
-  CheckCircle2, 
+import {
+  IndianRupee,
+  ArrowUpRight,
+  ArrowDownLeft,
+  Clock,
+  CheckCircle2,
   XCircle,
   UploadCloud,
   CreditCard,
@@ -21,7 +21,8 @@ import {
   ShieldCheck,
   ChevronLeft,
   ChevronRight,
-  Filter
+  Filter,
+  Download
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { AdminPageHeader } from "@/components/layout/AdminPageHeader";
@@ -36,6 +37,7 @@ import { submitRechargeRequest } from "@/app/actions/wallet";
 import { toast } from "sonner";
 import Image from "next/image";
 import { ImageUpload } from "@/components/ui/ImageUpload";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 
 interface WalletDashboardClientProps {
   workspaceId: string;
@@ -43,6 +45,8 @@ interface WalletDashboardClientProps {
   balance: number;
   transactions: any[];
   paymentConfig: any;
+  workspace?: any;
+  globalSettings?: any;
 }
 
 export default function WalletDashboardClient({
@@ -50,28 +54,77 @@ export default function WalletDashboardClient({
   tenant,
   balance,
   transactions,
-  paymentConfig
+  paymentConfig,
+  workspace,
+  globalSettings
 }: WalletDashboardClientProps) {
   const [activeTab, setActiveTab] = useState("recharge");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [rechargeAmount, setRechargeAmount] = useState("");
   const [referenceId, setReferenceId] = useState("");
   const [receiptUrl, setReceiptUrl] = useState("");
-  
+
   // Stepper state
   const [step, setStep] = useState(1);
   const [agreed, setAgreed] = useState(false);
   const [mounted, setMounted] = useState(false);
-  
+
   // Transaction Filters & Pagination
   const [currentPage, setCurrentPage] = useState(1);
   const [filterStatus, setFilterStatus] = useState("ALL");
   const [dateRange, setDateRange] = useState("ALL");
   const ITEMS_PER_PAGE = 10;
 
+  // Receipt Modal State
+  const [receiptModalOpen, setReceiptModalOpen] = useState(false);
+  const [selectedReceiptTx, setSelectedReceiptTx] = useState<any>(null);
+
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  const downloadPdf = async (content: string | HTMLElement, filename: string) => {
+    toast.loading("Generating Receipt...", { id: "receipt-gen" });
+    try {
+      const html2pdf = (await import('html2pdf.js')).default;
+      const opt = {
+        margin: 10,
+        filename: filename,
+        image: { type: 'jpeg' as const, quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true, width: 794, windowWidth: 794 },
+        jsPDF: { unit: 'mm' as const, format: 'a4', orientation: 'portrait' as const }
+      };
+
+      await html2pdf().set(opt).from(content).save();
+      toast.success("Downloaded successfully!", { id: "receipt-gen" });
+    } catch (e) {
+      console.error(e);
+      toast.error("Failed to generate PDF.", { id: "receipt-gen" });
+    }
+  };
+
+  const handleDownloadReceipt = () => {
+    const element = document.getElementById("receipt-content");
+    if (!element) return;
+
+    // Clone to manipulate styles safely without affecting screen view
+    const clone = element.cloneNode(true) as HTMLElement;
+    clone.style.width = '794px';
+    clone.style.maxWidth = '794px';
+    clone.style.margin = '0 auto';
+    clone.style.backgroundColor = 'white';
+
+    // Passing HTML string ensures html2pdf handles the hidden iframe lifecycle properly.
+    // We exactly match the 794px width to prevent the hidden iframe's default 8px body margin
+    // from causing a 16px right-side crop.
+    const html = `
+      <div style="width: 794px; background: white; margin: 0; padding: 0; overflow: hidden;">
+        ${clone.outerHTML}
+      </div>
+    `;
+
+    downloadPdf(html, `Payment_Receipt_${selectedReceiptTx?.referenceId || selectedReceiptTx?.id}.pdf`);
+  };
 
   const handleSubmitRecharge = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -83,9 +136,9 @@ export default function WalletDashboardClient({
     setIsSubmitting(true);
     try {
       const res = await submitRechargeRequest(
-        workspaceId, 
-        Number(rechargeAmount), 
-        referenceId, 
+        workspaceId,
+        Number(rechargeAmount),
+        referenceId,
         receiptUrl,
         tenant
       );
@@ -111,14 +164,14 @@ export default function WalletDashboardClient({
     if (dateRange !== "ALL") {
       const txDate = new Date(tx.createdAt);
       const now = new Date();
-      
+
       if (dateRange.startsWith("YEAR_")) {
         const year = parseInt(dateRange.replace("YEAR_", ""));
         if (txDate.getFullYear() !== year) return false;
       } else {
         const diffTime = Math.abs(now.getTime() - txDate.getTime());
         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-        
+
         if (dateRange === "7DAYS" && diffDays > 7) return false;
         if (dateRange === "30DAYS" && diffDays > 30) return false;
         if (dateRange === "THIS_MONTH") {
@@ -139,14 +192,14 @@ export default function WalletDashboardClient({
   useEffect(() => {
     setCurrentPage(1);
   }, [filterStatus, dateRange]);
-  
+
   // Dynamically determine available years from transactions to improve UX
   const currentYear = new Date().getFullYear();
   const oldestYear = transactions.reduce((oldest, tx) => {
     const txYear = new Date(tx.createdAt).getFullYear();
     return Math.min(oldest, txYear);
   }, currentYear);
-  
+
   const filterYears = [];
   for (let y = currentYear; y >= oldestYear; y--) {
     filterYears.push(y);
@@ -160,8 +213,8 @@ export default function WalletDashboardClient({
 
   return (
     <div className="p-4 lg:p-10 max-w-7xl mx-auto space-y-8">
-      <AdminPageHeader 
-        title="Wallet Dashboard" 
+      <AdminPageHeader
+        title="Wallet Dashboard"
         description="Manage your franchise wallet balance and recharge."
       />
 
@@ -243,7 +296,7 @@ export default function WalletDashboardClient({
                 {paginatedTransactions.map(tx => {
                   const isRejected = tx.status === 'REJECTED';
                   const isCredit = tx.type === 'CREDIT';
-                  
+
                   return (
                     <div key={tx.id} className={cn(
                       "flex flex-col md:flex-row md:items-center justify-between p-6 transition-all gap-4 md:gap-8",
@@ -253,9 +306,9 @@ export default function WalletDashboardClient({
                       <div className="flex items-center gap-4 shrink-0 md:w-1/3">
                         <div className={cn(
                           "h-12 w-12 rounded-2xl flex items-center justify-center shrink-0 shadow-sm",
-                          isRejected ? "bg-red-100 text-red-600 dark:bg-red-900/40 dark:text-red-400" 
-                                     : isCredit ? "bg-green-100 text-green-600 dark:bg-green-900/40 dark:text-green-400" 
-                                                : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400"
+                          isRejected ? "bg-red-100 text-red-600 dark:bg-red-900/40 dark:text-red-400"
+                            : isCredit ? "bg-green-100 text-green-600 dark:bg-green-900/40 dark:text-green-400"
+                              : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400"
                         )}>
                           {isRejected ? <XCircle className="h-6 w-6" /> : isCredit ? <ArrowDownLeft className="h-6 w-6" /> : <ArrowUpRight className="h-6 w-6" />}
                         </div>
@@ -287,13 +340,29 @@ export default function WalletDashboardClient({
                       </div>
 
                       {/* Right: Amount */}
-                      <div className={cn(
-                        "text-right font-black text-lg flex items-center justify-end gap-1 shrink-0 md:w-1/4",
-                        isRejected ? "text-red-600 dark:text-red-400 line-through opacity-70" 
-                                   : isCredit ? "text-green-600 dark:text-green-400" 
-                                              : "text-slate-900 dark:text-white"
-                      )}>
-                        {isCredit ? '+' : '-'} <IndianRupee className="h-4 w-4" /> {tx.amount.toFixed(2)}
+                      <div className="flex items-center gap-4 justify-end shrink-0 md:w-1/4">
+                        {tx.status === 'APPROVED' && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="hidden md:flex rounded-lg h-8 text-[10px] font-bold uppercase tracking-wider"
+                            onClick={() => {
+                              setSelectedReceiptTx(tx);
+                              setReceiptModalOpen(true);
+                            }}
+                          >
+                            <FileText className="h-3 w-3 mr-1.5" />
+                            Receipt
+                          </Button>
+                        )}
+                        <div className={cn(
+                          "text-right font-black text-lg flex items-center gap-1",
+                          isRejected ? "text-red-600 dark:text-red-400 line-through opacity-70"
+                            : isCredit ? "text-green-600 dark:text-green-400"
+                              : "text-slate-900 dark:text-white"
+                        )}>
+                          {isCredit ? '+' : '-'} <IndianRupee className="h-4 w-4" /> {tx.amount.toFixed(2)}
+                        </div>
                       </div>
                     </div>
                   );
@@ -306,7 +375,7 @@ export default function WalletDashboardClient({
                   </div>
                 )}
               </div>
-              
+
               {/* Pagination Controls */}
               {filteredTransactions.length > 0 && (
                 <div className="p-4 border-t border-slate-50 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/20 flex items-center justify-between">
@@ -314,9 +383,9 @@ export default function WalletDashboardClient({
                     Showing <span className="text-slate-900 dark:text-white">{(currentPage - 1) * ITEMS_PER_PAGE + 1}</span> to <span className="text-slate-900 dark:text-white">{Math.min(currentPage * ITEMS_PER_PAGE, filteredTransactions.length)}</span> of <span className="text-slate-900 dark:text-white">{filteredTransactions.length}</span>
                   </p>
                   <div className="flex items-center gap-2">
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
+                    <Button
+                      variant="outline"
+                      size="sm"
                       onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                       disabled={currentPage === 1}
                       className="rounded-xl h-8 px-2"
@@ -326,9 +395,9 @@ export default function WalletDashboardClient({
                     <div className="text-sm font-bold px-3 py-1 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg shadow-sm">
                       {currentPage} / {totalPages}
                     </div>
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
+                    <Button
+                      variant="outline"
+                      size="sm"
                       onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                       disabled={currentPage === totalPages}
                       className="rounded-xl h-8 px-2"
@@ -344,36 +413,36 @@ export default function WalletDashboardClient({
 
         {activeTab === "recharge" && (
           <div className="w-full grid grid-cols-1 lg:grid-cols-12 gap-8 relative">
-            
+
             {/* Left Sidebar - Vertical Stepper */}
             <div className="lg:col-span-4 sticky top-6 self-start">
               <div className="bg-white/70 dark:bg-slate-900/70 backdrop-blur-2xl rounded-[2.5rem] p-8 border border-white/40 dark:border-white/10 shadow-[0_8px_40px_-12px_rgba(0,0,0,0.1)] dark:shadow-[0_8px_40px_-12px_rgba(0,0,0,0.5)]">
                 <h3 className="text-xl font-bold tracking-tight mb-8 bg-gradient-to-br from-slate-900 to-slate-600 dark:from-white dark:to-slate-400 bg-clip-text text-transparent">Recharge Process</h3>
                 <div className="space-y-8 relative">
-                   <div className="absolute left-[1.35rem] top-6 bottom-6 w-1 bg-slate-100 dark:bg-slate-800 rounded-full z-0 translate-x-[-50%]"></div>
-                   <motion.div 
-                     initial={{ height: 0 }}
-                     animate={{ height: `${((step - 1) / 3) * 100}%` }}
-                     transition={{ type: "spring", stiffness: 100, damping: 20 }}
-                     className="absolute left-[1.35rem] top-6 w-1 bg-primary rounded-full z-0 translate-x-[-50%] shadow-[0_0_15px_rgba(var(--primary),0.5)]" 
-                   />
-                   
-                   {[
-                     { s: 1, title: "Terms & Conditions", desc: "Review and accept terms", icon: FileText },
-                     { s: 2, title: "Recharge Amount", desc: "Enter amount to add", icon: IndianRupee },
-                     { s: 3, title: "Make Payment", desc: "Scan QR & Transfer", icon: QrCode },
-                     { s: 4, title: "Verify Payment", desc: "Upload receipt", icon: ShieldCheck }
-                   ].map((item) => (
-                     <div key={item.s} className={cn("relative z-10 flex gap-5 items-start transition-all duration-500", step === item.s ? "opacity-100 scale-105 origin-left" : (step > item.s ? "opacity-100" : "opacity-40"))}>
-                       <div className={cn("w-[2.7rem] h-[2.7rem] rounded-2xl flex items-center justify-center shrink-0 border-2 font-bold transition-all duration-500", step > item.s ? "border-primary bg-primary text-white shadow-[0_0_20px_-5px_rgba(var(--primary),0.5)]" : step === item.s ? "border-primary bg-white dark:bg-slate-950 text-primary shadow-[0_0_25px_-5px_rgba(var(--primary),0.5)]" : "border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-400")}>
-                         {step > item.s ? <Check className="h-5 w-5 stroke-[3]" /> : <item.icon className="h-5 w-5" />}
-                       </div>
-                       <div className="pt-1.5">
-                         <h4 className={cn("font-bold text-base leading-none mb-1.5 transition-colors duration-500", step === item.s ? "text-primary" : "text-slate-900 dark:text-white")}>{item.title}</h4>
-                         <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">{item.desc}</p>
-                       </div>
-                     </div>
-                   ))}
+                  <div className="absolute left-[1.35rem] top-6 bottom-6 w-1 bg-slate-100 dark:bg-slate-800 rounded-full z-0 translate-x-[-50%]"></div>
+                  <motion.div
+                    initial={{ height: 0 }}
+                    animate={{ height: `${((step - 1) / 3) * 100}%` }}
+                    transition={{ type: "spring", stiffness: 100, damping: 20 }}
+                    className="absolute left-[1.35rem] top-6 w-1 bg-primary rounded-full z-0 translate-x-[-50%] shadow-[0_0_15px_rgba(var(--primary),0.5)]"
+                  />
+
+                  {[
+                    { s: 1, title: "Terms & Conditions", desc: "Review and accept terms", icon: FileText },
+                    { s: 2, title: "Recharge Amount", desc: "Enter amount to add", icon: IndianRupee },
+                    { s: 3, title: "Make Payment", desc: "Scan QR & Transfer", icon: QrCode },
+                    { s: 4, title: "Verify Payment", desc: "Upload receipt", icon: ShieldCheck }
+                  ].map((item) => (
+                    <div key={item.s} className={cn("relative z-10 flex gap-5 items-start transition-all duration-500", step === item.s ? "opacity-100 scale-105 origin-left" : (step > item.s ? "opacity-100" : "opacity-40"))}>
+                      <div className={cn("w-[2.7rem] h-[2.7rem] rounded-2xl flex items-center justify-center shrink-0 border-2 font-bold transition-all duration-500", step > item.s ? "border-primary bg-primary text-white shadow-[0_0_20px_-5px_rgba(var(--primary),0.5)]" : step === item.s ? "border-primary bg-white dark:bg-slate-950 text-primary shadow-[0_0_25px_-5px_rgba(var(--primary),0.5)]" : "border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-400")}>
+                        {step > item.s ? <Check className="h-5 w-5 stroke-[3]" /> : <item.icon className="h-5 w-5" />}
+                      </div>
+                      <div className="pt-1.5">
+                        <h4 className={cn("font-bold text-base leading-none mb-1.5 transition-colors duration-500", step === item.s ? "text-primary" : "text-slate-900 dark:text-white")}>{item.title}</h4>
+                        <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">{item.desc}</p>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
@@ -381,7 +450,7 @@ export default function WalletDashboardClient({
             {/* Right Side - Form Content */}
             <div className="lg:col-span-8">
               <Card className="border-2 border-slate-100 dark:border-slate-800 rounded-[2.5rem] shadow-sm overflow-hidden h-full">
-                
+
                 {/* Step 1: Instructions & Agreement */}
                 {step === 1 && (
                   <div className="animate-in slide-in-from-right-4 duration-500 flex flex-col h-full min-h-[400px]">
@@ -407,15 +476,15 @@ export default function WalletDashboardClient({
                       </div>
                     </CardContent>
                     <CardFooter className="p-6 px-8 flex flex-col md:flex-row md:items-center justify-between gap-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/20 mt-auto">
-                      <div 
-                        className="flex items-center space-x-3 cursor-pointer group" 
+                      <div
+                        className="flex items-center space-x-3 cursor-pointer group"
                         onClick={() => setAgreed(!agreed)}
                       >
-                        <Checkbox 
-                          id="terms" 
-                          checked={agreed} 
-                          onCheckedChange={(c) => setAgreed(c as boolean)} 
-                          className="h-6 w-6 rounded-md border-2 transition-colors data-[state=checked]:bg-primary data-[state=checked]:border-primary" 
+                        <Checkbox
+                          id="terms"
+                          checked={agreed}
+                          onCheckedChange={(c) => setAgreed(c as boolean)}
+                          className="h-6 w-6 rounded-md border-2 transition-colors data-[state=checked]:bg-primary data-[state=checked]:border-primary"
                         />
                         <label htmlFor="terms" className="text-sm font-bold cursor-pointer group-hover:text-primary transition-colors pointer-events-none">
                           I have read and agree to the payment terms.
@@ -442,7 +511,7 @@ export default function WalletDashboardClient({
                           <div className="absolute left-4 top-1/2 -translate-y-1/2 w-8 flex justify-center">
                             <IndianRupee className="h-6 w-6 text-slate-400 group-focus-within:text-primary transition-colors" />
                           </div>
-                          <Input 
+                          <Input
                             type="number"
                             value={rechargeAmount}
                             onChange={e => setRechargeAmount(e.target.value)}
@@ -471,7 +540,7 @@ export default function WalletDashboardClient({
                       <CardDescription className="text-xs font-medium text-slate-500">Please pay exactly ₹{rechargeAmount} using the details below.</CardDescription>
                     </CardHeader>
                     <CardContent className="p-8 grid grid-cols-1 md:grid-cols-2 gap-10 flex-1">
-                      
+
                       {/* QR Section */}
                       {paymentConfig?.qrCodeUrl && (
                         <div className="flex flex-col items-center justify-center p-10 bg-slate-50 dark:bg-slate-900 border-2 border-slate-100 dark:border-slate-800 rounded-3xl h-full shadow-inner">
@@ -497,7 +566,7 @@ export default function WalletDashboardClient({
                         {(paymentConfig?.bankName || paymentConfig?.accountNumber) && (
                           <div className="p-8 bg-slate-50 dark:bg-slate-900 rounded-3xl border-2 border-slate-100 dark:border-slate-800 space-y-4 shadow-inner">
                             <p className="text-xs font-black uppercase tracking-widest text-slate-400 mb-4 border-b border-slate-200 dark:border-slate-800 pb-4">Manual Bank Transfer</p>
-                            
+
                             {paymentConfig.bankName && (
                               <div className="flex justify-between items-center">
                                 <span className="text-xs text-slate-500 font-bold uppercase tracking-wide">Bank Name</span>
@@ -548,7 +617,7 @@ export default function WalletDashboardClient({
                     <CardContent className="p-8 space-y-8 flex-1 flex flex-col justify-center max-w-2xl mx-auto w-full">
                       <div className="space-y-3">
                         <label className="text-xs font-black uppercase tracking-widest text-slate-500">Payment Screenshot</label>
-                        <ImageUpload 
+                        <ImageUpload
                           value={receiptUrl}
                           onChange={(url) => setReceiptUrl(url)}
                           folder="receipts"
@@ -557,7 +626,7 @@ export default function WalletDashboardClient({
 
                       <div className="space-y-3">
                         <label className="text-xs font-black uppercase tracking-widest text-slate-500">Transaction Reference ID (UTR / UPI Ref)</label>
-                        <Input 
+                        <Input
                           required
                           value={referenceId}
                           onChange={e => setReferenceId(e.target.value)}
@@ -594,7 +663,7 @@ export default function WalletDashboardClient({
                 </CardDescription>
               </CardHeader>
               <CardContent className="p-8 space-y-8">
-                
+
                 {paymentConfig?.guideYoutubeLink && (
                   <div className="w-full bg-slate-100 dark:bg-slate-900 rounded-3xl overflow-hidden border-4 border-slate-50 dark:border-slate-800">
                     <div className="aspect-video w-full">
@@ -604,19 +673,19 @@ export default function WalletDashboardClient({
                           const videoId = url.searchParams.get("v") || url.pathname.split("/").pop();
                           if (videoId && videoId.length > 5) {
                             return (
-                              <iframe 
-                                width="100%" 
-                                height="100%" 
-                                src={`https://www.youtube.com/embed/${videoId}`} 
-                                title="YouTube video player" 
-                                frameBorder="0" 
-                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                              <iframe
+                                width="100%"
+                                height="100%"
+                                src={`https://www.youtube.com/embed/${videoId}`}
+                                title="YouTube video player"
+                                frameBorder="0"
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                                 allowFullScreen
                               ></iframe>
                             );
                           }
                           return null;
-                        } catch(e) {
+                        } catch (e) {
                           return null;
                         }
                       })()}
@@ -649,6 +718,136 @@ export default function WalletDashboardClient({
           </div>
         )}
       </div>
+
+      <Dialog open={receiptModalOpen} onOpenChange={setReceiptModalOpen}>
+        <DialogContent className="max-w-3xl w-[90vw] max-h-[85vh] overflow-hidden bg-white rounded-[2rem] flex flex-col my-auto shadow-2xl">
+          {/* Header / Actions */}
+          <div className="flex items-center justify-between p-4 md:p-6 border-b border-slate-100 shrink-0 bg-slate-50">
+            <h2 className="text-lg md:text-xl font-bold text-slate-800">Payment Receipt</h2>
+            <Button onClick={handleDownloadReceipt} className="rounded-xl shadow-md gap-2" id="download-btn">
+              <Download className="h-4 w-4" /> <span className="hidden sm:inline">Download PDF</span>
+            </Button>
+          </div>
+
+          {/* Scrollable Receipt Area */}
+          <div className="flex-1 overflow-y-auto p-4 md:p-8 bg-slate-200 flex flex-col items-center">
+            {selectedReceiptTx && (
+              <div className="w-full max-w-[794px] bg-white shadow-xl border border-slate-200">
+                <div
+                  id="receipt-content"
+                  className="w-full p-6 md:p-10 relative shrink-0 font-sans mx-auto"
+                  style={{
+                    backgroundColor: '#ffffff',
+                    color: '#0f172a',
+                    lineHeight: '1.5'
+                  }}
+                >
+                  {/* Receipt Watermark */}
+                  <div className="absolute inset-0 flex items-center justify-center opacity-[0.03] pointer-events-none">
+                    <ShieldCheck className="w-1/2 h-1/2" style={{ color: '#0f172a' }} />
+                  </div>
+
+                  {/* Header Section (Company Info) */}
+                  <div className="flex flex-col items-start mb-12">
+                    {globalSettings?.logoUrl ? (
+                      <img src={globalSettings.logoUrl} alt="Logo" className="h-20 md:h-24 w-auto object-contain mb-4" />
+                    ) : (
+                      <div className="h-20 w-20 md:h-24 md:w-24 rounded-full flex items-center justify-center mb-4" style={{ backgroundColor: '#0f2940' }}>
+                        <ShieldCheck className="h-10 w-10 md:h-12 md:w-12 text-white" />
+                      </div>
+                    )}
+                    <h1 className="text-xl md:text-2xl font-black tracking-tight mb-2 whitespace-normal break-words" style={{ color: '#0f2940', maxWidth: '100%' }}>
+                      {globalSettings?.siteName || "RGYCSP Hub"}
+                    </h1>
+                    <div className="text-sm font-medium" style={{ color: '#475569' }}>
+                      <p>Registered Franchise Office</p>
+                      <p>{globalSettings?.contactPhone || "+91 00000 00000"} | {globalSettings?.contactEmail || "info@example.com"}</p>
+                    </div>
+                  </div>
+
+                  {/* Recipient & Meta Block */}
+                  <div className="flex flex-col mb-12 gap-6">
+                    {/* Top Left: Recipient */}
+                    <div className="w-full">
+                      <h3 className="text-xs font-black uppercase tracking-widest mb-3" style={{ color: '#0f2940' }}>Recipient:</h3>
+                      <p className="text-2xl font-bold mb-1 break-words whitespace-normal" style={{ color: '#0f2940' }}>{workspace?.name || "Franchise Partner"}</p>
+                      {workspace?.centerCode && (
+                        <p className="text-sm font-semibold mb-1" style={{ color: '#475569' }}>Center Code: {workspace.centerCode}</p>
+                      )}
+                      <p className="text-sm font-medium" style={{ color: '#475569' }}>{workspace?.address || "Registered Address"}</p>
+                      <p className="text-sm font-medium" style={{ color: '#475569' }}>{workspace?.phone || ""}</p>
+                    </div>
+
+                    {/* Bottom Right: Receipt Meta (Outline Style) */}
+                    <div className="w-full md:w-80 flex flex-col self-end border-2 rounded-xl overflow-hidden" style={{ borderColor: '#e2e8f0' }}>
+                      <div className="p-4 border-b-2" style={{ borderColor: '#e2e8f0', backgroundColor: '#ffffff' }}>
+                        <h2 className="text-xl font-bold" style={{ color: '#0f2940' }}>Receipt for #{selectedReceiptTx.id.slice(-8).toUpperCase()}</h2>
+                      </div>
+                      <div className="p-4" style={{ backgroundColor: '#f8fafc' }}>
+                        <p className="text-sm font-medium" style={{ color: '#475569' }}>
+                          Transaction Date: {new Date(selectedReceiptTx.createdAt).toLocaleDateString()}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Details Table */}
+                  <div className="mb-16">
+                    <table className="w-full text-left border-collapse">
+                      <thead>
+                        <tr>
+                          <th className="py-3 px-4 text-xs font-black uppercase tracking-wider" style={{ backgroundColor: '#4f46e5', color: '#ffffff' }}>Description</th>
+                          <th className="py-3 px-4 text-xs font-black uppercase tracking-wider" style={{ backgroundColor: '#4f46e5', color: '#ffffff' }}>Ref Id</th>
+                          <th className="py-3 px-4 text-xs font-black uppercase tracking-wider text-right" style={{ backgroundColor: '#4f46e5', color: '#ffffff' }}>Amount</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr className="border-b" style={{ borderColor: '#e2e8f0' }}>
+                          <td className="py-5 px-4">
+                            <p className="font-bold text-base" style={{ color: '#0f2940' }}>{selectedReceiptTx.description || "Wallet Recharge"}</p>
+                            <p className="text-sm mt-1" style={{ color: '#64748b' }}>Status: APPROVED</p>
+                          </td>
+                          <td className="py-5 px-4 align-top">
+                            <p className="font-medium text-sm" style={{ color: '#475569' }}>{selectedReceiptTx.referenceId || "N/A"}</p>
+                          </td>
+                          <td className="py-5 px-4 text-right align-top">
+                            <p className="font-medium text-base" style={{ color: '#0f2940' }}>₹{selectedReceiptTx.amount.toFixed(2)}</p>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* Footer (Totals & Thanks) */}
+                  <div className="flex flex-col-reverse md:flex-row justify-between items-start gap-8">
+                    {/* Left: Thanks */}
+                    <div className="pt-2">
+                      <p className="text-sm font-medium" style={{ color: '#475569' }}>Grateful for your partnership in learning.</p>
+                      <p className="text-xs font-medium mt-1" style={{ color: '#94a3b8' }}>Payment Method: Digital / Bank Transfer</p>
+                    </div>
+
+                    {/* Right: Totals */}
+                    <div className="w-full md:w-80">
+                      <h3 className="text-xl md:text-2xl font-bold mb-4" style={{ color: '#475569' }}>Receipt for Payment</h3>
+
+                      <div className="flex justify-between items-center py-3 border-b" style={{ borderColor: '#f1f5f9' }}>
+                        <span className="text-sm font-medium" style={{ color: '#475569' }}>Subtotal</span>
+                        <span className="text-sm font-medium" style={{ color: '#475569' }}>₹{selectedReceiptTx.amount.toFixed(2)}</span>
+                      </div>
+
+                      <div className="flex justify-between items-center py-4">
+                        <span className="text-base font-bold" style={{ color: '#0f2940' }}>Total</span>
+                        <span className="text-lg font-bold" style={{ color: '#0f2940' }}>₹{selectedReceiptTx.amount.toFixed(2)}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

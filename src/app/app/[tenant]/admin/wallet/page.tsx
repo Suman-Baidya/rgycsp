@@ -21,6 +21,7 @@ export default async function FranchiseWalletPage({
 
   const walletRes = await getWorkspaceWallet(workspace.id);
   const paymentConfigRes = await getWalletPaymentConfig();
+  const globalSettings = await prisma.siteSettings.findFirst({ where: { workspaceId: null } });
 
   if (!walletRes.success) {
     return <div>Failed to load wallet dashboard: {walletRes.error}</div>;
@@ -36,6 +37,8 @@ export default async function FranchiseWalletPage({
       balance={walletRes.balance as number}
       transactions={walletRes.transactions as any[]}
       paymentConfig={paymentConfigRes.data as any}
+      workspace={workspace}
+      globalSettings={globalSettings}
     />
   );
 }

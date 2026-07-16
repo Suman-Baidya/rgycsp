@@ -76,6 +76,7 @@ export default function OfflineExamTab({ workspaceId, workspace, superAdminName,
           type: "OFFLINE",
           date: formData.date ? new Date(formData.date) : undefined,
           courseId: formData.courseId || undefined,
+          semesterNumber: formData.semesterNumber ? parseInt(formData.semesterNumber) : undefined,
           duration: formData.duration || undefined,
           syllabus: formData.syllabus || undefined
         }, shifts);
@@ -94,6 +95,7 @@ export default function OfflineExamTab({ workspaceId, workspace, superAdminName,
           type: "OFFLINE",
           date: formData.date ? new Date(formData.date) : undefined,
           courseId: formData.courseId || undefined,
+          semesterNumber: formData.semesterNumber ? parseInt(formData.semesterNumber) : undefined,
           duration: formData.duration || undefined,
           syllabus: formData.syllabus || undefined
         });
@@ -261,6 +263,7 @@ export default function OfflineExamTab({ workspaceId, workspace, superAdminName,
                         </SelectContent>
                       </Select>
                     </div>
+
                     <div className="space-y-2">
                       <Label className="text-xs font-black uppercase tracking-widest text-slate-400 ml-1">Exam Date</Label>
                       <Input type="date" value={formData.date} onChange={e => setFormData({ ...formData, date: e.target.value })} className="h-12 rounded-2xl font-bold" />

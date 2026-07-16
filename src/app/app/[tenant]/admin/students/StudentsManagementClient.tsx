@@ -14,13 +14,15 @@ export default function StudentsManagementClient({
   initialStudents, 
   batches,
   courses,
-  paymentConfig
+  paymentConfig,
+  hasDocumentAuthority
 }: { 
   workspaceId: string;
   initialStudents: any[];
   batches: any[];
   courses: any[];
   paymentConfig: any;
+  hasDocumentAuthority?: boolean;
 }) {
   const [activeTab, setActiveTab] = useState("registered");
   const [mounted, setMounted] = useState(false);
@@ -72,6 +74,7 @@ export default function StudentsManagementClient({
             batches={batches}
             courses={courses}
             status={activeTab.toUpperCase()}
+            hasDocumentAuthority={hasDocumentAuthority}
           />
         )}
         

@@ -69,7 +69,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AdminPageHeader } from "@/components/layout/AdminPageHeader";
 import { updateFranchiseApplicationStatus } from "@/app/actions/franchise";
-import { createWorkspace, updateCenterConfig, toggleWorkspaceStatus, deleteWorkspace } from "@/app/actions/workspaces";
+import { createWorkspace, updateCenterConfig, toggleWorkspaceStatus, deleteWorkspace, toggleDocumentAuthority } from "@/app/actions/workspaces";
 import { importWorkspacesCSV } from "@/app/actions/workspaces-import";
 import { ImageUpload } from "@/components/ui/ImageUpload";
 import { getRootDomain } from "@/lib/domain";
@@ -183,6 +183,9 @@ export default function FranchiseApplicationsClient({
   const [suspendAlertOpen, setSuspendAlertOpen] = useState(false);
   const [workspaceToSuspend, setWorkspaceToSuspend] = useState<{id: string, currentStatus: boolean} | null>(null);
 
+  const [authorityAlertOpen, setAuthorityAlertOpen] = useState(false);
+  const [workspaceToToggleAuthority, setWorkspaceToToggleAuthority] = useState<{id: string, currentAuthority: boolean} | null>(null);
+
   const handleOpenEditConfig = (ws: any) => {
     const adminUser = ws.roles?.[0]?.user;
     setEditConfigData({
@@ -265,6 +268,31 @@ export default function FranchiseApplicationsClient({
         router.refresh();
       } else {
         toast.error(res.error || "Failed to delete center.", { id: loadingToast });
+      }
+    } catch (err) {
+      toast.error("Something went wrong.", { id: loadingToast });
+    }
+  };
+
+  const confirmToggleAuthority = (wsId: string, currentAuthority: boolean) => {
+    setWorkspaceToToggleAuthority({ id: wsId, currentAuthority });
+    setAuthorityAlertOpen(true);
+  };
+
+  const handleToggleAuthority = async () => {
+    if (!workspaceToToggleAuthority) return;
+    
+    const { id, currentAuthority } = workspaceToToggleAuthority;
+    const loadingToast = toast.loading(`Updating Authority Power...`);
+    try {
+      const res = await toggleDocumentAuthority(id, !currentAuthority);
+      if (res.success) {
+        toast.success(`Authority Power ${!currentAuthority ? 'granted' : 'revoked'}.`, { id: loadingToast });
+        setAuthorityAlertOpen(false);
+        setWorkspaceToToggleAuthority(null);
+        router.refresh();
+      } else {
+        toast.error(res.error || "Failed to update authority power.", { id: loadingToast });
       }
     } catch (err) {
       toast.error("Something went wrong.", { id: loadingToast });
@@ -1457,6 +1485,20 @@ export default function FranchiseApplicationsClient({
                                 </DropdownMenuItem>
                                 <DropdownMenuSeparator className="my-2 bg-slate-50 dark:bg-slate-800" />
                                 <DropdownMenuItem 
+                                  className={cn(
+                                    "gap-3 rounded-xl py-3 font-bold cursor-pointer",
+                                    ws.hasDocumentAuthority ? "text-amber-600 bg-amber-500/5" : "text-emerald-600 bg-emerald-500/5"
+                                  )}
+                                  onClick={() => confirmToggleAuthority(ws.id, !!ws.hasDocumentAuthority)}
+                                >
+                                  {ws.hasDocumentAuthority ? (
+                                    <><ShieldOff className="h-4 w-4" /> Revoke Authority Power</>
+                                  ) : (
+                                    <><Shield className="h-4 w-4" /> Grant Authority Power</>
+                                  )}
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator className="my-2 bg-slate-50 dark:bg-slate-800" />
+                                <DropdownMenuItem 
                                   className="gap-3 rounded-xl py-3 font-bold cursor-pointer text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10"
                                   onClick={() => confirmDeleteWorkspace(ws.id)}
                                 >
@@ -1999,6 +2041,47 @@ export default function FranchiseApplicationsClient({
                 Confirm Delete
               </Button>
             </div>
+          </div>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Authority Power Alert Dialog */}
+      <AlertDialog open={authorityAlertOpen} onOpenChange={setAuthorityAlertOpen}>
+        <AlertDialogContent className="rounded-3xl border-none shadow-2xl p-0 overflow-hidden max-w-sm">
+          <div className="bg-gradient-to-br from-blue-500 to-indigo-600 p-6 pb-5 text-center relative overflow-hidden">
+            <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
+            <div className="mx-auto w-14 h-14 bg-white/20 backdrop-blur-xl rounded-full flex items-center justify-center mb-3 relative z-10 border-4 border-white/30 shadow-inner">
+              {workspaceToToggleAuthority?.currentAuthority ? (
+                <ShieldOff className="h-7 w-7 text-white" />
+              ) : (
+                <Shield className="h-7 w-7 text-white" />
+              )}
+            </div>
+            <AlertDialogTitle className="text-xl font-black text-white relative z-10 tracking-tight">
+              {workspaceToToggleAuthority?.currentAuthority ? "Revoke Authority?" : "Grant Authority?"}
+            </AlertDialogTitle>
+          </div>
+          <div className="p-6 bg-white dark:bg-slate-900">
+            <AlertDialogDescription className="text-center text-slate-500 font-medium text-sm leading-relaxed">
+              {workspaceToToggleAuthority?.currentAuthority 
+                ? "This center will require Super Admin approval for all documents again."
+                : "This center will be able to issue documents without Super Admin approval. Proceed?"
+              }
+            </AlertDialogDescription>
+            <AlertDialogFooter className="mt-6 flex gap-3 sm:justify-center">
+              <AlertDialogCancel className="flex-1 rounded-xl h-11 font-bold bg-slate-50 border-none hover:bg-slate-100">Cancel</AlertDialogCancel>
+              <AlertDialogAction 
+                onClick={handleToggleAuthority}
+                className={cn(
+                  "flex-1 rounded-xl h-11 font-bold text-white shadow-lg",
+                  workspaceToToggleAuthority?.currentAuthority 
+                    ? "bg-amber-500 hover:bg-amber-600 shadow-amber-500/30" 
+                    : "bg-blue-600 hover:bg-blue-700 shadow-blue-600/30"
+                )}
+              >
+                {workspaceToToggleAuthority?.currentAuthority ? "Yes, Revoke" : "Yes, Grant"}
+              </AlertDialogAction>
+            </AlertDialogFooter>
           </div>
         </AlertDialogContent>
       </AlertDialog>

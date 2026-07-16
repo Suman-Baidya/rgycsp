@@ -32,9 +32,9 @@ export async function registerStudent(studentId: string, tenant: string) {
     let feeAmount = 0;
 
     if (duration) {
-      const feeConfig = await db.registrationFeeConfig.findUnique({
-        where: { duration }
-      });
+      const allFeeConfigs = await db.registrationFeeConfig.findMany();
+      const feeConfig = allFeeConfigs.find(c => c.duration.toLowerCase().trim() === duration.toLowerCase().trim());
+      
       if (feeConfig) {
         feeAmount = feeConfig.amount;
       }

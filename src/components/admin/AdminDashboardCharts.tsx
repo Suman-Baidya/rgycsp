@@ -36,7 +36,7 @@ export function AdminDashboardCharts({ admissionData, studentDistData }: ChartPr
         </CardHeader>
         <CardContent className="p-6">
           <div className="h-[300px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height="100%" minWidth={0}>
               <AreaChart data={admissionData}>
                 <defs>
                   <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
@@ -89,7 +89,7 @@ export function AdminDashboardCharts({ admissionData, studentDistData }: ChartPr
         </CardHeader>
         <CardContent className="p-6">
           <div className="h-[300px] w-full flex items-center justify-center">
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height="100%" minWidth={0}>
               <PieChart>
                 <Pie
                   data={studentDistData}

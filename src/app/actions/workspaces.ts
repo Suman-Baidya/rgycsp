@@ -279,3 +279,17 @@ export async function updateWorkspaceShippingAddress(workspaceId: string, shippi
     return { success: false, error: "Failed to update shipping address" };
   }
 }
+
+export async function toggleDocumentAuthority(workspaceId: string, status: boolean) {
+  try {
+    const updated = await db.workspace.update({
+      where: { id: workspaceId },
+      data: { hasDocumentAuthority: status }
+    });
+    revalidatePath("/(admin)/super-admin/franchises", "page");
+    return { success: true, data: updated };
+  } catch (error: any) {
+    console.error("Failed to toggle document authority:", error);
+    return { success: false, error: "Failed to toggle document authority power" };
+  }
+}

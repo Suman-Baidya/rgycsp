@@ -2,6 +2,7 @@
 
 import { db } from "@/lib/prisma";
 import { auth } from "@/auth";
+import { getDocumentStatus } from "@/lib/document-utils";
 
 export async function getStudentProfile(workspaceId: string) {
   try {
@@ -109,19 +110,35 @@ export async function getStudentDashboardData(workspaceId: string, studentProfil
     const profile = await db.studentProfile.findUnique({
       where: { id: studentProfileId },
       select: {
+        id: true,
         admitCardIssuedToStudent: true,
         registrationCardIssuedToStudent: true,
         certificateIssuedToStudent: true,
-        marksheetIssuedToStudent: true
+        certificateApproved: true,
+        semesters: true
       }
     });
+
+    const config = await db.registrationConfig.findFirst();
 
     const issuedDocuments = [];
     if (profile) {
       if (profile.admitCardIssuedToStudent) issuedDocuments.push({ name: 'Admit Card', type: 'DOCUMENT' });
       if (profile.registrationCardIssuedToStudent) issuedDocuments.push({ name: 'Registration Card', type: 'DOCUMENT' });
-      if (profile.certificateIssuedToStudent) issuedDocuments.push({ name: 'Course Certificate', type: 'DOCUMENT' });
-      if (profile.marksheetIssuedToStudent) issuedDocuments.push({ name: 'Marksheet', type: 'DOCUMENT' });
+      
+      const { isCertAuto, finalCertIssued } = getDocumentStatus(profile, null, config);
+      if (finalCertIssued) {
+        issuedDocuments.push({ name: 'Course Certificate', type: 'DOCUMENT' });
+      }
+
+      const issuedMarksheets = profile.semesters?.filter((sem: any) => {
+        const { finalMarksheetIssued } = getDocumentStatus(profile, sem, config);
+        return finalMarksheetIssued;
+      }) || [];
+      
+      issuedMarksheets.forEach((sem: any) => {
+        issuedDocuments.push({ name: `Semester ${sem.semesterNumber} Marksheet`, type: 'DOCUMENT' });
+      });
     }
 
     return {

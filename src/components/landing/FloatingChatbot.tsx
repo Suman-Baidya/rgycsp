@@ -200,7 +200,7 @@ export function FloatingChatbot({ config }: FloatingChatbotProps) {
               onClick={() => setIsOpen(true)}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="relative flex items-center justify-center w-[60px] h-[60px] bg-gradient-to-br from-primary via-primary to-indigo-600 text-white rounded-full shadow-[0_15px_30px_-10px_rgba(0,0,0,0.6)] hover:shadow-[0_20px_40px_-10px_rgba(0,0,0,0.8)] border border-white/20 transition-all duration-300 group"
+              className="relative flex items-center justify-center w-14 h-14 bg-gradient-to-br from-primary via-primary to-indigo-600 text-white rounded-full shadow-[0_15px_30px_-10px_rgba(0,0,0,0.6)] hover:shadow-[0_20px_40px_-10px_rgba(0,0,0,0.8)] border border-white/20 transition-all duration-300 group"
               aria-label="Open Chat Assistant"
             >
               <div className="relative">

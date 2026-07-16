@@ -45,3 +45,5 @@ if (process.env.NODE_ENV !== "production") globalThis.prisma = db;
 
 // trigger reload for new schema models: ProductVariant, StoreConfig, ProductOrderItem
 // Last Updated: 2026-07-04T09:28:01+05:30
+// trigger reload for documentsPrinted field
+// Last Updated: 2026-07-15
