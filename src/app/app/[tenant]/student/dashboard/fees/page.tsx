@@ -1,5 +1,6 @@
 import { db } from "@/lib/prisma";
 import { notFound, redirect } from "next/navigation";
+import { getServerTenantLink } from "@/lib/routing-server";
 import { auth } from "@/auth";
 import StudentFeesClient from "./StudentFeesClient";
 import { getStudentInvoices, getFranchisePaymentConfig } from "@/app/actions/payments";
@@ -20,7 +21,7 @@ export default async function StudentFeesPage({
 
   const session = await auth();
   if (!session || !session.user) {
-    redirect(`/app/${normalizedTenant}/login`);
+    redirect(await getServerTenantLink("/login", normalizedTenant));
   }
 
   const studentProfile = await db.studentProfile.findUnique({

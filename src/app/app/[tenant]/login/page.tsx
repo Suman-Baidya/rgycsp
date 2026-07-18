@@ -2,6 +2,7 @@ import { db } from "@/lib/prisma";
 import { LoginForm } from "@/components/auth/LoginForm";
 import { CustomThemeStyle } from "@/components/providers/CustomThemeStyle";
 import { redirect } from "next/navigation";
+import { getServerTenantLink } from "@/lib/routing-server";
 import { auth } from "@/auth";
 import { headers } from "next/headers";
 import { getPostLoginRedirect } from "@/app/actions/auth";
@@ -28,7 +29,7 @@ export default async function WorkspaceLoginPage({
     include: { siteSettings: true }
   });
 
-  if (!workspace) redirect("/");
+  if (!workspace) redirect(await getServerTenantLink("/", tenant));
 
   return (
     <div className="h-screen w-full flex flex-col items-center justify-center bg-slate-50 dark:bg-zinc-950 p-4 md:p-6 relative overflow-hidden">

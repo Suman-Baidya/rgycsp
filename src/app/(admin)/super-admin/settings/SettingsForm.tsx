@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
-import { Globe, Layout, Palette, Phone, Save, Settings2, Trash2, ChevronDown, Cpu, LayoutDashboard, FileText, Play, Rocket, Mail, ShieldCheck, UserCheck, BookOpenCheck, Menu, MousePointer2, ExternalLink, Plus, Check, X, Zap, Bell, Calendar } from "lucide-react";
+import { Globe, Layout, Palette, Phone, Save, Settings2, Trash2, ChevronDown, ChevronUp, Cpu, LayoutDashboard, FileText, Play, Rocket, Mail, ShieldCheck, UserCheck, BookOpenCheck, Menu, MousePointer2, ExternalLink, Plus, Check, X, Zap, Bell, Calendar, Pencil } from "lucide-react";
 import { updateSiteSettings, updateLandingSection, syncAllSections } from "@/app/actions/site-settings";
 import { toast } from "sonner";
 import { ImageUpload } from "@/components/ui/ImageUpload";
@@ -55,6 +55,7 @@ export function SettingsForm({ settings, isSuperAdmin = true }: { settings: any,
     { name: "Services", href: "/services", id: "services", isActive: true },
     { name: "Students", href: "/students", id: "students", isActive: true },
     { name: "Courses", href: "/courses", id: "courses", isActive: true },
+    { name: "Study Center", href: "/study-center", id: "study-center", isActive: true },
     { name: "Franchises", href: "/franchises", id: "franchises", isActive: true },
     { name: "Events", href: "/events", id: "events", isActive: true },
     { name: "Placement", href: "/placement", id: "placement", isActive: true },
@@ -64,6 +65,8 @@ export function SettingsForm({ settings, isSuperAdmin = true }: { settings: any,
   const [globalIdCardAccess, setGlobalIdCardAccess] = useState(settings.globalIdCardAccess ?? true);
   const [globalAdmitCardAccess, setGlobalAdmitCardAccess] = useState(settings.globalAdmitCardAccess ?? true);
   const [isSaving, setIsSaving] = useState(false);
+  const [editingNavIndex, setEditingNavIndex] = useState<number | null>(null);
+  const [editingLinkIndex, setEditingLinkIndex] = useState<number | null>(null);
   const mediaFolderBase = settings.workspaceId && settings.workspace?.subdomain 
     ? `RGYCSP/Workspaces/${settings.workspace.subdomain}` 
     : "RGYCSP/SuperAdmin";
@@ -99,6 +102,7 @@ export function SettingsForm({ settings, isSuperAdmin = true }: { settings: any,
       { name: "Services", href: "/services", id: "services", isActive: true },
       { name: "Students", href: "/students", id: "students", isActive: true },
       { name: "Courses", href: "/courses", id: "courses", isActive: true },
+      { name: "Study Center", href: "/study-center", id: "study-center", isActive: true },
       { name: "Franchises", href: "/franchises", id: "franchises", isActive: true },
       { name: "Events", href: "/events", id: "events", isActive: true },
       { name: "Placement", href: "/placement", id: "placement", isActive: true },
@@ -174,32 +178,33 @@ export function SettingsForm({ settings, isSuperAdmin = true }: { settings: any,
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full flex flex-col gap-12">
         {/* ROW 1: Navigation (Refined Professional Top Bar) */}
         <div className="sticky top-0 z-30 w-full bg-background/80 backdrop-blur-sm border-b border-border/40 py-4 transition-all duration-300">
-          <TabsList className="flex w-full h-12 bg-transparent p-0 gap-8 overflow-x-auto no-scrollbar justify-start border-none shadow-none">
-            {[
-              { value: "branding", label: "Branding & Contact", icon: Palette },
-              { value: "navigation", label: "Navigation", icon: Globe },
-              { value: "sections", label: "Sections", icon: Layout },
-              ...(!isSuperAdmin ? [{ value: "notices", label: "Notices", icon: Bell }] : []),
-              { value: "page-headers", label: "Page Headers", icon: LayoutDashboard },
-              { value: "events", label: "Events", icon: Calendar },
-              { value: "legal-pages", label: "Legal Pages", icon: ShieldCheck },
-              ...(isSuperAdmin ? [{ value: "documents", label: "Documents", icon: FileText }] : []),
-            ].map((tab) => (
-              <TabsTrigger
-                key={tab.value}
-                value={tab.value}
-                className="group relative flex items-center gap-2.5 px-2 h-full rounded-none bg-transparent data-[state=active]:bg-transparent text-muted-foreground data-[state=active]:text-primary transition-all text-sm font-semibold border-none shadow-none overflow-visible"
-              >
-                <tab.icon className="h-4 w-4 transition-transform group-hover:brightness-110" />
-                {tab.label}
-                <div className="absolute -bottom-4 left-0 w-full h-0.5 bg-primary scale-x-0 data-[state=active]:group-[]:scale-x-100 transition-transform origin-left" />
-              </TabsTrigger>
-            ))}
-          </TabsList>
+          <div className="w-full">
+            <TabsList className="flex flex-nowrap overflow-x-auto no-scrollbar gap-2 p-2 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm max-w-full w-full justify-start">
+              {[
+                { value: "branding", label: "Branding & Contact", icon: Palette },
+                { value: "navigation", label: "Navigation", icon: Globe },
+                { value: "sections", label: "Sections", icon: Layout },
+                ...(!isSuperAdmin ? [{ value: "notices", label: "Notices", icon: Bell }] : []),
+                { value: "page-headers", label: "Page Headers", icon: LayoutDashboard },
+                { value: "events", label: "Events", icon: Calendar },
+                { value: "legal-pages", label: "Legal Pages", icon: ShieldCheck },
+                ...(isSuperAdmin ? [{ value: "documents", label: "Documents", icon: FileText }] : []),
+              ].map((tab) => (
+                <TabsTrigger
+                  key={tab.value}
+                  value={tab.value}
+                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 whitespace-nowrap shrink-0 data-[state=active]:bg-slate-100 dark:data-[state=active]:bg-slate-800 data-[state=active]:text-primary data-[state=active]:shadow-inner text-slate-500 hover:text-slate-900 hover:bg-slate-50 dark:hover:text-white dark:hover:bg-slate-800/50 data-[state=inactive]:bg-transparent"
+                >
+                  <tab.icon className="h-4 w-4 transition-transform group-hover:scale-110" />
+                  {tab.label}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+          </div>
         </div>
 
         {/* ROW 2: Content (Premium Minimalist Cards) */}
-        <div className="w-full animate-in fade-in slide-in-from-bottom-4 duration-500 px-4 sm:px-6">
+        <div className="w-full animate-in fade-in slide-in-from-bottom-4 duration-500">
           
           {isSuperAdmin && (
             <TabsContent value="documents" className="mt-0 w-full focus-visible:outline-none">
@@ -237,7 +242,7 @@ export function SettingsForm({ settings, isSuperAdmin = true }: { settings: any,
               
               {/* Save Button for Documents Tab */}
               <div className="fixed bottom-0 left-0 lg:left-[280px] right-0 p-6 bg-background/80 backdrop-blur-sm border-t border-border/50 z-40">
-                <div className="max-w-[1200px] mx-auto flex justify-between items-center">
+                <div className="max-w-7xl mx-auto flex justify-between items-center">
                   <p className="text-sm text-muted-foreground hidden sm:block">
                     Remember to save your changes to apply them to your site.
                   </p>
@@ -670,18 +675,64 @@ export function SettingsForm({ settings, isSuperAdmin = true }: { settings: any,
                         {index + 1}
                       </div>
                       <div className="flex flex-col gap-1 flex-1">
-                        <Input value={nav.name} onChange={(e) => {
-                          const newNav = [...navigation];
-                          newNav[index] = { ...newNav[index], name: e.target.value };
-                          setNavigation(newNav);
-                        }} className="h-8 font-bold border-none bg-transparent p-0 focus-visible:ring-0 text-lg" />
-                        <div className="flex items-center gap-2 text-xs font-mono text-muted-foreground">
-                          <ExternalLink className="w-3 h-3" />
-                          <Input value={nav.href} onChange={(e) => {
-                            const newNav = [...navigation];
-                            newNav[index] = { ...newNav[index], href: e.target.value };
-                            setNavigation(newNav);
-                          }} className="h-6 border-none bg-transparent p-0 focus-visible:ring-0 text-xs text-primary underline" />
+                        <div className="flex items-center gap-2 group/edit h-8">
+                          {editingNavIndex === index ? (
+                            <Input 
+                              autoFocus
+                              value={nav.name || ""} 
+                              onChange={(e) => {
+                                const newNav = [...navigation];
+                                newNav[index] = { ...newNav[index], name: e.target.value };
+                                setNavigation(newNav);
+                              }} 
+                              onBlur={() => setEditingNavIndex(null)}
+                              onKeyDown={(e) => { if (e.key === 'Enter') setEditingNavIndex(null); }}
+                              className="h-8 font-black bg-white dark:bg-zinc-800 border border-border px-2 focus-visible:ring-1 text-xl tracking-tight rounded-md w-full max-w-[200px]" 
+                            />
+                          ) : (
+                            <>
+                              <span className="font-bold text-lg">{nav.name || "Unnamed"}</span>
+                              <Button 
+                                type="button"
+                                variant="ghost" 
+                                size="icon" 
+                                onClick={() => setEditingNavIndex(index)} 
+                                className="h-6 w-6 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-full"
+                              >
+                                <Pencil className="h-3 w-3" />
+                              </Button>
+                            </>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2 group/edit h-6 mt-1">
+                          <ExternalLink className="w-3 h-3 text-primary shrink-0" />
+                          {editingLinkIndex === index ? (
+                            <Input 
+                              autoFocus
+                              value={nav.href || ""} 
+                              onChange={(e) => {
+                                const newNav = [...navigation];
+                                newNav[index] = { ...newNav[index], href: e.target.value };
+                                setNavigation(newNav);
+                              }} 
+                              onBlur={() => setEditingLinkIndex(null)}
+                              onKeyDown={(e) => { if (e.key === 'Enter') setEditingLinkIndex(null); }}
+                              className="h-6 font-mono bg-white dark:bg-zinc-800 border border-border px-1 focus-visible:ring-1 text-xs text-primary rounded max-w-[200px]" 
+                            />
+                          ) : (
+                            <>
+                              <span className="font-mono text-xs text-primary underline">{nav.href || "No link"}</span>
+                              <Button 
+                                type="button"
+                                variant="ghost" 
+                                size="icon" 
+                                onClick={() => setEditingLinkIndex(index)} 
+                                className="h-4 w-4 opacity-0 group-hover/edit:opacity-100 transition-opacity text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-full shrink-0"
+                              >
+                                <Pencil className="h-2 w-2" />
+                              </Button>
+                            </>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -698,6 +749,18 @@ export function SettingsForm({ settings, isSuperAdmin = true }: { settings: any,
                             setNavigation(newNav);
                           }} 
                         />
+                      </div>
+                      <div className="flex items-center gap-1 mr-1">
+                        <Button variant="ghost" size="icon" disabled={index === 0} onClick={() => {
+                          const newNav = [...navigation];
+                          [newNav[index - 1], newNav[index]] = [newNav[index], newNav[index - 1]];
+                          setNavigation(newNav);
+                        }} className="h-10 w-10 rounded-xl text-muted-foreground hover:bg-muted/50 hover:text-foreground transition-colors"><ChevronUp className="h-4 w-4" /></Button>
+                        <Button variant="ghost" size="icon" disabled={index === navigation.length - 1} onClick={() => {
+                          const newNav = [...navigation];
+                          [newNav[index + 1], newNav[index]] = [newNav[index], newNav[index + 1]];
+                          setNavigation(newNav);
+                        }} className="h-10 w-10 rounded-xl text-muted-foreground hover:bg-muted/50 hover:text-foreground transition-colors"><ChevronDown className="h-4 w-4" /></Button>
                       </div>
                       <Button variant="ghost" size="icon" onClick={() => {
                         setNavigation(navigation.filter((_: any, i: number) => i !== index));
@@ -788,7 +851,7 @@ export function SettingsForm({ settings, isSuperAdmin = true }: { settings: any,
                  variant="outline" 
                  size="sm" 
                  onClick={async () => {
-                   const types = ['hero', 'quick-links', 'courses', 'about', 'why-choose-us', 'achievements', 'partners', 'our-message', 'mission', 'vision', 'services', 'guide-steps', 'guide-resources', 'ready-to-modernize', 'custom-solution', 'pricing', 'testimonials', 'faq', 'contact', 'page-header-about', 'page-header-services', 'page-header-guide', 'page-header-pricing', 'page-header-support', 'page-header-students', 'page-header-courses', 'page-header-franchises', 'page-header-events', 'page-header-placement', 'franchises-offer-banner', 'franchises-rules', 'franchises-guidelines', 'franchises-verification', 'legal-privacy-policy', 'legal-terms-conditions', 'legal-cookie-policy', 'legal-refund-policy', 'legal-sitemap'];
+                   const types = ['hero', 'quick-links', 'courses', 'about', 'why-choose-us', 'achievements', 'partners', 'our-message', 'mission', 'vision', 'services', 'guide-steps', 'guide-resources', 'ready-to-modernize', 'custom-solution', 'pricing', 'testimonials', 'faq', 'contact', 'page-header-about', 'page-header-services', 'page-header-guide', 'page-header-pricing', 'page-header-support', 'page-header-students', 'page-header-courses', 'page-header-franchises', 'page-header-events', 'page-header-placement', 'page-header-study-center', 'study-center-content', 'franchises-offer-banner', 'franchises-rules', 'franchises-guidelines', 'franchises-verification', 'legal-privacy-policy', 'legal-terms-conditions', 'legal-cookie-policy', 'legal-refund-policy', 'legal-sitemap'];
                    const res = await syncAllSections(settings.id, types);
                    if (res.success) {
                      toast.success(res.created ? `Initialized ${res.created} new sections!` : "All sections are already synced.");
@@ -817,7 +880,7 @@ export function SettingsForm({ settings, isSuperAdmin = true }: { settings: any,
                  variant="outline" 
                  size="sm" 
                  onClick={async () => {
-                   const types = ['hero', 'quick-links', 'courses', 'about', 'why-choose-us', 'achievements', 'partners', 'our-message', 'mission', 'vision', 'services', 'guide-steps', 'guide-resources', 'ready-to-modernize', 'custom-solution', 'pricing', 'testimonials', 'faq', 'contact', 'page-header-about', 'page-header-services', 'page-header-guide', 'page-header-pricing', 'page-header-support', 'page-header-students', 'page-header-courses', 'page-header-franchises', 'page-header-events', 'page-header-placement', 'franchises-offer-banner', 'franchises-rules', 'franchises-guidelines', 'franchises-verification', 'legal-privacy-policy', 'legal-terms-conditions', 'legal-cookie-policy', 'legal-refund-policy', 'legal-sitemap'];
+                   const types = ['hero', 'quick-links', 'courses', 'about', 'why-choose-us', 'achievements', 'partners', 'our-message', 'mission', 'vision', 'services', 'guide-steps', 'guide-resources', 'ready-to-modernize', 'custom-solution', 'pricing', 'testimonials', 'faq', 'contact', 'page-header-about', 'page-header-services', 'page-header-guide', 'page-header-pricing', 'page-header-support', 'page-header-students', 'page-header-courses', 'page-header-franchises', 'page-header-events', 'page-header-placement', 'page-header-study-center', 'study-center-content', 'franchises-offer-banner', 'franchises-rules', 'franchises-guidelines', 'franchises-verification', 'legal-privacy-policy', 'legal-terms-conditions', 'legal-cookie-policy', 'legal-refund-policy', 'legal-sitemap'];
                    const res = await syncAllSections(settings.id, types);
                    if (res.success) {
                      toast.success(res.created ? `Initialized ${res.created} new sections!` : "All sections are already synced.");
@@ -851,7 +914,7 @@ export function SettingsForm({ settings, isSuperAdmin = true }: { settings: any,
                  variant="outline" 
                  size="sm" 
                  onClick={async () => {
-                   const types = ['hero', 'quick-links', 'courses', 'about', 'why-choose-us', 'achievements', 'partners', 'our-message', 'mission', 'vision', 'services', 'guide-steps', 'guide-resources', 'ready-to-modernize', 'custom-solution', 'pricing', 'testimonials', 'faq', 'contact', 'page-header-about', 'page-header-services', 'page-header-guide', 'page-header-pricing', 'page-header-support', 'page-header-students', 'page-header-courses', 'page-header-franchises', 'page-header-events', 'page-header-placement', 'franchises-offer-banner', 'franchises-rules', 'franchises-guidelines', 'legal-privacy-policy', 'legal-terms-conditions', 'legal-cookie-policy', 'legal-refund-policy', 'legal-sitemap', 'page-header-privacy-policy', 'page-header-terms-conditions', 'page-header-cookie-policy', 'page-header-refund-policy', 'page-header-sitemap'];
+                   const types = ['hero', 'quick-links', 'courses', 'about', 'why-choose-us', 'achievements', 'partners', 'our-message', 'mission', 'vision', 'services', 'guide-steps', 'guide-resources', 'ready-to-modernize', 'custom-solution', 'pricing', 'testimonials', 'faq', 'contact', 'page-header-about', 'page-header-services', 'page-header-guide', 'page-header-pricing', 'page-header-support', 'page-header-students', 'page-header-courses', 'page-header-franchises', 'page-header-events', 'page-header-placement', 'page-header-study-center', 'study-center-content', 'franchises-offer-banner', 'franchises-rules', 'franchises-guidelines', 'legal-privacy-policy', 'legal-terms-conditions', 'legal-cookie-policy', 'legal-refund-policy', 'legal-sitemap', 'page-header-privacy-policy', 'page-header-terms-conditions', 'page-header-cookie-policy', 'page-header-refund-policy', 'page-header-sitemap'];
                    const res = await syncAllSections(settings.id, types);
                    if (res.success) {
                      toast.success(res.created ? `Initialized ${res.created} new sections!` : "All sections are already synced.");
@@ -980,6 +1043,7 @@ function SectionEditor({ section, settings, mediaFolderBase, isSuperAdmin }: { s
                {section.type === 'custom-solution' && <CustomSolutionContentEditor content={content} setContent={setContent} mediaFolderBase={mediaFolderBase} />}
                {section.type === 'pricing' && <PricingContentEditor content={content} setContent={setContent} mediaFolderBase={mediaFolderBase} />}
                {section.type === 'contact' && <ContactContentEditor content={content} setContent={setContent} settings={settings} mediaFolderBase={mediaFolderBase} />}
+               {section.type === 'study-center-content' && <StudyCenterContentEditor content={content} setContent={setContent} />}
                {section.type === 'franchises-offer-banner' && <FranchisesOfferBannerEditor content={content} setContent={setContent} mediaFolderBase={mediaFolderBase} />}
                {section.type === 'franchises-rules' && <FranchisesRulesEditor content={content} setContent={setContent} mediaFolderBase={mediaFolderBase} />}
                {section.type === 'franchises-guidelines' && <FranchisesGuidelinesEditor content={content} setContent={setContent} />}
@@ -1001,6 +1065,22 @@ function SectionEditor({ section, settings, mediaFolderBase, isSuperAdmin }: { s
 }
 
 // --- Specialized Editors ---
+
+function StudyCenterContentEditor({ content, setContent }: any) {
+  return (
+    <div className="space-y-4">
+      <div className="space-y-2">
+        <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Section Description (Keep to 10 words)</Label>
+        <Textarea 
+          value={content.description || ""} 
+          onChange={(e) => setContent({ ...content, description: e.target.value })} 
+          className="min-h-[100px] rounded-2xl bg-muted/5 border-none resize-none" 
+          placeholder="e.g. Search by institute name, code, state, or pin code."
+        />
+      </div>
+    </div>
+  );
+}
 
 function HeroContentEditor({ content, setContent, mediaFolderBase }: any) {
   return (
@@ -1482,6 +1562,14 @@ function PageHeaderContentEditor({ content, setContent, mediaFolderBase }: any) 
          label="Header Background Image" 
          folder={`${mediaFolderBase}/headers`} 
        />
+       <div className="space-y-2">
+          <Label className="text-[10px] uppercase font-bold text-muted-foreground">Or Provide Image Link</Label>
+          <Input 
+            value={content.bgImage || ""} 
+            onChange={(e) => setContent({ ...content, bgImage: e.target.value })} 
+            placeholder="https://example.com/image.jpg"
+          />
+       </div>
        <div className="space-y-2">
           <Label className="text-[10px] uppercase font-bold text-muted-foreground">Breadcrumb Text</Label>
           <Input 

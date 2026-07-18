@@ -15,10 +15,9 @@ export default async function StateManagerPage({
 }: {
   params: Promise<{ tenant: string }>;
 }) {
-  const session = await auth();
-  if (!session?.user) redirect("/login");
-
   const { tenant } = await params;
+  const session = await auth();
+  if (!session?.user) redirect(await getServerTenantLink("/login", tenant));
   
   // Find the workspace ID for this tenant
   const workspace = await db.workspace.findUnique({

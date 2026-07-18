@@ -13,8 +13,19 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "RGYCSP",
-  description: "RGYCSP - Empowering Education and Technology",
+  title: {
+    template: "%s | RGYCSP",
+    default: "RGYCSP - Empowering Education and Technology",
+  },
+  description: "RGYCSP (ABCD Edu Hub) provides top-tier educational management and skill development centers across the globe.",
+  keywords: ["education", "management", "RGYCSP", "learning", "dashboard", "hub"],
+  openGraph: {
+    title: "RGYCSP - Education Hub",
+    description: "Empowering Education and Technology across modern learning centers.",
+    type: "website",
+    locale: "en_US",
+    siteName: "RGYCSP",
+  },
   icons: {
     icon: "https://res.cloudinary.com/dmhipemqk/image/upload/v1780409947/RGYCSP/SuperAdmin/branding/mjwcqjcyprkxpyleggms.webp"
   }

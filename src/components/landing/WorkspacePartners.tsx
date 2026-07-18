@@ -21,7 +21,7 @@ export function WorkspacePartners({ data }: { data?: any }) {
          {/* Background Decor */}
          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent z-0" />
          
-         <div className="max-w-7xl mx-auto px-6 mb-16 text-center relative z-10">
+         <div className="max-w-[1400px] mx-auto px-6 sm:px-12 mb-16 text-center relative z-10">
             <div className="inline-flex items-center justify-center gap-3 text-primary font-black tracking-[0.2em] text-[10px] uppercase w-full mb-6">
                <div className="h-0.5 w-10 bg-primary" />
                {subtitle}

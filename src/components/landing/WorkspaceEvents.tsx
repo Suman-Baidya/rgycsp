@@ -42,8 +42,8 @@ export function WorkspaceEvents({ data }: { data: any }) {
   const description = data?.content?.description || "Stay updated with the latest happenings, academic seminars, and cultural celebrations at our institute.";
 
   return (
-    <section id="events" className="py-24 /50 dark:/[0.02] px-6 bg-transparent">
-      <div className="max-w-7xl mx-auto">
+    <section id="events" className="py-24 /50 dark:/[0.02] bg-transparent">
+      <div className="max-w-[1400px] mx-auto px-6 sm:px-12">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
           <div className="space-y-4 max-w-2xl">
             <div className="inline-flex items-center gap-3 text-primary font-black tracking-[0.2em] text-[10px] uppercase">

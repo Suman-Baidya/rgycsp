@@ -49,7 +49,7 @@ export function WorkspaceContact({ data, settings }: { data?: any, settings?: an
             </svg>
          </div>
 
-         <div className="max-w-7xl mx-auto px-6 relative z-10">
+         <div className="max-w-[1400px] mx-auto px-6 sm:px-12 relative z-10">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-20 mb-20">
                {/* Info Side */}
                <div className="space-y-12">

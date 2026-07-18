@@ -53,7 +53,7 @@ export default function ExamGeneratorClient({
     <div className="p-4 lg:p-10 max-w-7xl mx-auto space-y-10">
       <AdminPageHeader
         title="Examination Suite"
-        description="Manage everything from generating question papers to scheduling exams, processing results, and printing admit cards."
+        description="Manage question papers, schedule exams, and process results."
       >
         <div className="flex items-center gap-4 bg-primary/5 dark:bg-primary/10 px-6 py-3 rounded-2xl border border-primary/10 shadow-sm animate-in fade-in slide-in-from-right-4 duration-500">
           <div className="flex flex-col">

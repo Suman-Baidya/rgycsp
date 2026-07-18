@@ -1,6 +1,7 @@
 import { auth } from "@/auth";
 import { db } from "@/lib/prisma";
 import { redirect } from "next/navigation";
+import { getServerTenantLink } from "@/lib/routing-server";
 import { AdminPageHeader } from "@/components/layout/AdminPageHeader";
 import { ProfileForm } from "./ProfileForm";
 
@@ -10,11 +11,11 @@ export const metadata = {
 };
 
 export default async function ProfilePage(props: { params: Promise<{ tenant: string }> }) {
-  const session = await auth();
   const { tenant } = await props.params;
+  const session = await auth();
   
   if (!session?.user?.id) {
-    redirect("/login");
+    redirect(await getServerTenantLink("/login", tenant));
   }
 
   const workspace = await db.workspace.findUnique({
@@ -22,7 +23,7 @@ export default async function ProfilePage(props: { params: Promise<{ tenant: str
   });
 
   if (!workspace) {
-    redirect("/login");
+    redirect(await getServerTenantLink("/login", tenant));
   }
 
   // Find the currently logged in user's role in this workspace

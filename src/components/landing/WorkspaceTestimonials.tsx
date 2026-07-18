@@ -50,7 +50,7 @@ export function WorkspaceTestimonials({ data }: { data?: any }) {
         <Quote className="w-64 h-64 text-slate-900 dark:text-white -rotate-12" />
       </div>
 
-      <div className="max-w-7xl mx-auto px-6 relative z-10">
+      <div className="max-w-[1400px] mx-auto px-6 sm:px-12 relative z-10">
         <div className="flex flex-col md:flex-row justify-between items-end gap-8 mb-20">
           <div className="max-w-2xl space-y-4 text-left">
             <div className="inline-flex items-center gap-3 text-primary font-black tracking-[0.2em] text-[10px] uppercase">

@@ -66,8 +66,8 @@ export function WorkspaceCourses({ data, dbCourses }: { data: any, dbCourses?: a
   ];
 
   return (
-    <section id="courses" className="py-24 px-6 overflow-hidden bg-transparent">
-      <div className="max-w-7xl mx-auto">
+    <section id="courses" className="py-24 overflow-hidden bg-transparent">
+      <div className="max-w-[1400px] mx-auto px-6 sm:px-12">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
           <div className="space-y-4 max-w-2xl">
             <div className="inline-flex items-center gap-3 text-primary font-black tracking-[0.2em] text-[10px] uppercase">

@@ -1,5 +1,6 @@
 import { getWorkspaceByTenant } from "@/lib/workspace";
 import { redirect } from "next/navigation";
+import { getServerTenantLink } from "@/lib/routing-server";
 import StudentExamsClient from "@/components/student/StudentExamsClient";
 
 export default async function StudentExamsPage({
@@ -9,7 +10,7 @@ export default async function StudentExamsPage({
 }) {
   const { tenant } = await params;
   const workspace = await getWorkspaceByTenant(tenant);
-  if (!workspace) redirect("/");
+  if (!workspace) redirect(await getServerTenantLink("/", tenant));
 
   const workspaceSettings = workspace.siteSettings as any;
 

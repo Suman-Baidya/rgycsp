@@ -1,6 +1,7 @@
 import { getStudentProfile } from "@/app/actions/student";
 import { getWorkspaceByTenant } from "@/lib/workspace";
 import { redirect } from "next/navigation";
+import { getServerTenantLink } from "@/lib/routing-server";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Wallet, Receipt, CreditCard, Download, ArrowUpRight, History } from "lucide-react";
@@ -15,13 +16,13 @@ export default async function StudentFeesPage({
 }) {
   const { tenant } = await params;
   const workspace = await getWorkspaceByTenant(tenant);
-  if (!workspace) redirect("/");
+  if (!workspace) redirect(await getServerTenantLink("/", tenant));
 
   const result = await getStudentProfile(workspace.id);
-  if (!result.success) redirect(`/app/${tenant}/student/dashboard`);
+  if (!result.success) redirect(await getServerTenantLink("/student/dashboard", tenant));
 
   const student = result.data as any;
-  if (!student) redirect(`/app/${tenant}/student/dashboard`);
+  if (!student) redirect(await getServerTenantLink("/student/dashboard", tenant));
   const invoices = student.studentProfile?.invoices || [];
 
   const totalPaid = invoices

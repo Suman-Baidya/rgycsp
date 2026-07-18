@@ -2,9 +2,13 @@
 
 import { db } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { auth } from "@/auth";
 
 export async function getStudents(workspaceId: string) {
   try {
+    const session = await auth();
+    if (!session?.user) return { success: false, error: "Unauthorized" };
+
     const students = await db.studentProfile.findMany({
       where: { workspaceId },
       include: {
@@ -31,6 +35,9 @@ export async function getStudents(workspaceId: string) {
 
 export async function getAllPlatformStudents() {
   try {
+    const session = await auth();
+    if (session?.user?.role !== "SUPER_ADMIN") return { success: false, error: "Unauthorized" };
+
     const students = await db.studentProfile.findMany({
       include: {
         workspace: {
@@ -59,6 +66,9 @@ export async function getAllPlatformStudents() {
 
 export async function createStudent(workspaceId: string, data: any) {
   try {
+    const session = await auth();
+    if (!session?.user) return { success: false, error: "Unauthorized" };
+
     const { 
       fullName, enrollmentNo, phone, email, whatsapp, 
       dob, gender, religion, caste, bloodGroup, address,
@@ -124,6 +134,13 @@ export async function createStudent(workspaceId: string, data: any) {
 
 export async function updateStudent(id: string, data: any) {
   try {
+    const session = await auth();
+    if (!session?.user) return { success: false, error: "Unauthorized" };
+
+    // Find student to verify access
+    const existing = await db.studentProfile.findUnique({ where: { id } });
+    if (!existing) return { success: false, error: "Student not found" };
+
     const { 
       fullName, enrollmentNo, phone, email, whatsapp, 
       dob, gender, religion, caste, bloodGroup, address,

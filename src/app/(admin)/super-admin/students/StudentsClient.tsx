@@ -16,7 +16,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { AdminPageHeader } from "@/components/layout/AdminPageHeader";
 import { ImageUpload } from "@/components/ui/ImageUpload";
 import { updateStudent } from "@/app/actions/students";
-import { issueStudentDocument } from "@/app/actions/student-documents";
+import { issueStudentDocument, markStudentsAsNotPrinted } from "@/app/actions/student-documents";
 import { registerStudent } from "@/app/actions/student-registration";
 import { updateRegistrationConfig } from "@/app/actions/registration-config";
 import { Switch } from "@/components/ui/switch";
@@ -742,11 +742,29 @@ export default function StudentsClient({ initialStudents, initialWorkspaces, ini
                             <p className="font-bold text-sm text-slate-900 dark:text-white">{student.fullName}</p>
                             {student.documentsPrinted && (
                               <Tooltip>
-                                <TooltipTrigger className="cursor-help">
-                                  <Printer className="w-4 h-4 text-emerald-500" />
+                                <TooltipTrigger asChild>
+                                  <div
+                                    role="button"
+                                    tabIndex={0}
+                                    className="cursor-pointer flex items-center justify-center outline-none"
+                                    onClick={async (e) => {
+                                      e.preventDefault();
+                                      e.stopPropagation();
+                                      toast.loading("Updating print status...", { id: `print-${student.id}` });
+                                      const res = await markStudentsAsNotPrinted([student.id]);
+                                      if(res.success) {
+                                        toast.success("Document unmarked as printed", { id: `print-${student.id}` });
+                                        router.refresh();
+                                      } else {
+                                        toast.error(res.error || "Failed to update", { id: `print-${student.id}` });
+                                      }
+                                    }}
+                                  >
+                                    <Printer className="w-4 h-4 text-emerald-500 hover:text-red-500 transition-colors" />
+                                  </div>
                                 </TooltipTrigger>
                                 <TooltipContent>
-                                  <p>Documents have been printed</p>
+                                  <p>Printed. Click to unmark.</p>
                                 </TooltipContent>
                               </Tooltip>
                             )}

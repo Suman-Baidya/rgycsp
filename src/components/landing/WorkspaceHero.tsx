@@ -74,7 +74,7 @@ export function WorkspaceHero({ data }: { data: any }) {
         </AnimatePresence>
       </div>
 
-      <div className="relative z-10 max-w-7xl mx-auto px-6 pt-8 grid grid-cols-1 lg:grid-cols-[1.3fr_0.7fr] items-center gap-12">
+      <div className="relative z-10 max-w-[1400px] mx-auto px-6 sm:px-12 pt-8 grid grid-cols-1 lg:grid-cols-[1.3fr_0.7fr] items-center gap-12">
         {/* Left Content */}
         <motion.div
           key={`content-${currentSlide}`}

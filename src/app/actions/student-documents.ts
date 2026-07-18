@@ -167,6 +167,19 @@ export async function markStudentsAsPrinted(studentIds: string[]) {
   }
 }
 
+export async function markStudentsAsNotPrinted(studentIds: string[]) {
+  try {
+    await db.studentProfile.updateMany({
+      where: { id: { in: studentIds } },
+      data: { documentsPrinted: false }
+    });
+    revalidatePath("/");
+    return { success: true };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+}
+
 export async function requestDocumentIssue(studentId: string) {
   try {
     const student = await db.studentProfile.findUnique({

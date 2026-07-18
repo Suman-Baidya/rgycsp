@@ -2,6 +2,7 @@ import { getStudentProfile, getStudentDashboardData } from "@/app/actions/studen
 import { getWorkspaceByTenant } from "@/lib/workspace";
 import StudentDashboardClient from "@/components/student/StudentDashboardClient";
 import { redirect } from "next/navigation";
+import { getServerTenantLink } from "@/lib/routing-server";
 import { Button } from "@/components/ui/button";
 import { LogOut } from "lucide-react";
 import Link from "next/link";
@@ -15,7 +16,7 @@ export default async function StudentDashboardPage({
   const { tenant } = await params;
   const workspace = await getWorkspaceByTenant(tenant);
   
-  if (!workspace) redirect("/");
+  if (!workspace) redirect(await getServerTenantLink("/", tenant));
 
   const result = await getStudentProfile(workspace.id);
   const homeHref = await getServerTenantLink("/", tenant);

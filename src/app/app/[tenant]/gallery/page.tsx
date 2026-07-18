@@ -6,6 +6,7 @@ import { CustomThemeStyle } from "@/components/providers/CustomThemeStyle";
 import { WorkspaceNavbar } from "@/components/layout/WorkspaceNavbar";
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
+import { getServerTenantLink } from "@/lib/routing-server";
 
 export default async function GalleryPage({ params }: { params: Promise<{ tenant: string }> }) {
   const { tenant } = await params;
@@ -23,7 +24,7 @@ export default async function GalleryPage({ params }: { params: Promise<{ tenant
   });
 
   if (!workspace || !workspace.siteSettings) {
-    redirect("/");
+    redirect(await getServerTenantLink("/", tenant));
   }
 
   // Pre-defined categories for initial filter buttons

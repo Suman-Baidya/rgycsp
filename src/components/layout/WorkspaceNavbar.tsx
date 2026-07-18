@@ -87,26 +87,19 @@ export function WorkspaceNavbar({ settings, user, tenant: propTenant }: { settin
     { name: "Contact", href: "/contact", id: "contact", isActive: true },
   ];
 
-  // Map user's navigation onto the strict serial order
-  let navItems = defaultItems.map(def => {
-    const existing = settings.navigation?.find((item: any) => item && (item.id === def.id || item.href === def.href));
-    return existing ? { ...def, ...existing, id: def.id } : def;
-  });
+  // Use the navigation array directly from settings to preserve the user's custom order
+  const rawNav = (settings?.navigation && Array.isArray(settings.navigation) && settings.navigation.length > 0)
+    ? settings.navigation
+    : defaultItems;
 
-  // Append any custom links they added, while skipping legacy duplicates
-  if (settings.navigation && Array.isArray(settings.navigation)) {
-    const customLinks = settings.navigation.filter((item: any) => 
-      item &&
-      !defaultItems.some(def => def.id === item.id || def.href === item.href) &&
-      item.id !== 'franchise' && item.name?.toLowerCase() !== 'franchise' &&
-      item.name?.toLowerCase() !== 'students' &&
-      item.name?.toLowerCase() !== 'learner' &&
-      item.href !== '/students'
-    );
-    navItems = [...navItems, ...customLinks];
-  }
-
-  const visibleNavItems = navItems.filter((item: any) => item.isActive !== false);
+  // Filter active items and remove unwanted legacy duplicates
+  const visibleNavItems = rawNav.filter((item: any) => 
+    item.isActive !== false &&
+    item.id !== 'franchise' && item.name?.toLowerCase() !== 'franchise' &&
+    item.name?.toLowerCase() !== 'students' &&
+    item.name?.toLowerCase() !== 'learner' &&
+    item.href !== '/students'
+  );
 
   const Logo = ({ size = "w-10 h-10 lg:w-12 lg:h-12", iconSize = "text-xl lg:text-2xl", showName = true }: { size?: string, iconSize?: string, showName?: boolean }) => (
     <div className="flex items-center gap-3 lg:gap-5 group min-w-0">

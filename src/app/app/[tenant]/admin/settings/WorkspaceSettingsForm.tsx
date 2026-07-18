@@ -11,10 +11,10 @@ import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { 
   Globe, Layout, Palette, Phone, Save, Settings2, Trash2, 
-  ChevronDown, Cpu, LayoutDashboard, FileText, Play, Rocket, 
+  ChevronDown, ChevronUp, Cpu, LayoutDashboard, FileText, Play, Rocket, 
   Mail, ShieldCheck, UserCheck, BookOpenCheck, Menu, 
   MousePointer2, ExternalLink, Plus, Check, X, Zap, Bell,
-  Calendar, Trophy, Handshake, Star, HelpCircle, MapPin, Clock, Send, Search, Image as ImageIcon
+  Calendar, Trophy, Handshake, Star, HelpCircle, MapPin, Clock, Send, Search, Image as ImageIcon, Pencil
 } from "lucide-react";
 import { updateSiteSettings, updateLandingSection, syncAllSections } from "@/app/actions/site-settings";
 import { createEvent, updateEvent, deleteEvent } from "@/app/actions/events";
@@ -64,29 +64,21 @@ export function WorkspaceSettingsForm({ settings }: { settings: any }) {
 
   const [navigation, setNavigation] = useState(() => {
     if (!settings.navigation || !Array.isArray(settings.navigation) || settings.navigation.length === 0) return DEFAULT_NAV;
-    const current = [...settings.navigation];
     
-    // Build strict serial ordered array
-    const merged = DEFAULT_NAV.map(def => {
-      // Find matching item by ID or href (to handle legacy 'learners-public' vs 'learners')
-      const existing = current.find(item => item && (item.id === def.id || item.href === def.href));
-      return existing ? { ...def, ...existing, id: def.id } : def;
-    });
-
-    // Append any custom links the user created
-    const customLinks = current.filter(item => 
+    // Filter out unwanted legacy items but maintain the database order
+    return settings.navigation.filter((item: any) => 
       item &&
-      !DEFAULT_NAV.some(def => def.id === item.id || def.href === item.href) &&
       item.id !== 'franchise' && item.name?.toLowerCase() !== 'franchise' &&
-      item.name?.toLowerCase() !== 'learner' // Filter out duplicated learner links
+      item.name?.toLowerCase() !== 'learner' &&
+      item.href !== '/students'
     );
-
-    return [...merged, ...customLinks];
   });
 
   const [isSaving, setIsSaving] = useState(false);
   const [activeTab, setActiveTab] = useState("branding");
   const [sectionSearch, setSectionSearch] = useState("");
+  const [editingNavIndex, setEditingNavIndex] = useState<number | null>(null);
+  const [editingLinkIndex, setEditingLinkIndex] = useState<number | null>(null);
 
   const mediaFolderBase = `RGYCSP/Workspaces/${settings.workspace?.subdomain || 'Unknown'}`;
 
@@ -105,24 +97,18 @@ export function WorkspaceSettingsForm({ settings }: { settings: any }) {
     setSocialLinks(settings.socialLinks || {});
     setPageHeaderBanner(settings.pageHeaderBanner);
     
-    // Update navigation with strict serial logic
-    const current = settings.navigation && Array.isArray(settings.navigation) && settings.navigation.length > 0 
-      ? [...settings.navigation] 
-      : [...DEFAULT_NAV];
-    
-    const merged = DEFAULT_NAV.map(def => {
-      const existing = current.find(item => item && (item.id === def.id || item.href === def.href));
-      return existing ? { ...def, ...existing, id: def.id } : def;
-    });
-
-    const customLinks = current.filter(item => 
-      item &&
-      !DEFAULT_NAV.some(def => def.id === item.id || def.href === item.href) &&
-      item.id !== 'franchise' && item.name?.toLowerCase() !== 'franchise' &&
-      item.name?.toLowerCase() !== 'learner' // Filter out duplicated learner links
-    );
-
-    setNavigation([...merged, ...customLinks]);
+    // Update navigation directly from settings, maintaining database order
+    if (settings.navigation && Array.isArray(settings.navigation) && settings.navigation.length > 0) {
+      const filteredNav = settings.navigation.filter((item: any) => 
+        item &&
+        item.id !== 'franchise' && item.name?.toLowerCase() !== 'franchise' &&
+        item.name?.toLowerCase() !== 'learner' &&
+        item.href !== '/students'
+      );
+      setNavigation(filteredNav);
+    } else {
+      setNavigation(DEFAULT_NAV);
+    }
 
     // --- Load Fonts for Preview ---
     const fontsToLoad = [
@@ -188,30 +174,31 @@ export function WorkspaceSettingsForm({ settings }: { settings: any }) {
     <div className="w-full pb-24">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full flex flex-col gap-12">
         <div className="sticky top-0 z-30 w-full bg-background/80 backdrop-blur-xl border-b border-border/40 py-4">
-          <TabsList className="flex w-full h-12 bg-transparent p-0 gap-8 overflow-x-auto no-scrollbar justify-start border-none shadow-none">
-            {[
-              { value: "branding", label: "Branding", icon: Palette },
-              { value: "navigation", label: "Menu", icon: Globe },
-              { value: "sections", label: "Landing Page", icon: Layout },
-              { value: "events", label: "Events", icon: Calendar },
-              { value: "notices", label: "Notice Board", icon: Bell },
-              { value: "gallery", label: "Gallery", icon: ImageIcon },
-              { value: "legal", label: "Legal & Help", icon: ShieldCheck },
-            ].map((tab) => (
-              <TabsTrigger
-                key={tab.value}
-                value={tab.value}
-                className="group relative flex items-center gap-2.5 px-2 h-full rounded-none bg-transparent data-[state=active]:bg-transparent text-muted-foreground data-[state=active]:text-primary transition-all text-sm font-semibold border-none shadow-none"
-              >
-                <tab.icon className="h-4 w-4 transition-transform group-hover:scale-110" />
-                {tab.label}
-                <div className="absolute -bottom-4 left-0 w-full h-0.5 bg-primary scale-x-0 data-[state=active]:group-[]:scale-x-100 transition-transform origin-left" />
-              </TabsTrigger>
-            ))}
-          </TabsList>
+          <div className="w-full">
+            <TabsList className="flex flex-nowrap overflow-x-auto no-scrollbar gap-2 p-2 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm max-w-full w-full justify-start">
+              {[
+                { value: "branding", label: "Branding", icon: Palette },
+                { value: "navigation", label: "Menu", icon: Globe },
+                { value: "sections", label: "Landing Page", icon: Layout },
+                { value: "events", label: "Events", icon: Calendar },
+                { value: "notices", label: "Notice Board", icon: Bell },
+                { value: "gallery", label: "Gallery", icon: ImageIcon },
+                { value: "legal", label: "Legal & Help", icon: ShieldCheck },
+              ].map((tab) => (
+                <TabsTrigger
+                  key={tab.value}
+                  value={tab.value}
+                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 whitespace-nowrap shrink-0 data-[state=active]:bg-slate-100 dark:data-[state=active]:bg-slate-800 data-[state=active]:text-primary data-[state=active]:shadow-inner text-slate-500 hover:text-slate-900 hover:bg-slate-50 dark:hover:text-white dark:hover:bg-slate-800/50 data-[state=inactive]:bg-transparent"
+                >
+                  <tab.icon className="h-4 w-4 transition-transform group-hover:scale-110" />
+                  {tab.label}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+          </div>
         </div>
 
-        <div className="w-full max-w-6xl mx-auto px-4 sm:px-8">
+        <div className="w-full">
           <TabsContent value="branding" className="mt-0 w-full space-y-10 focus-visible:outline-none">
             <Accordion className="space-y-6">
               <AccordionItem value="identity" className="border border-border/50 bg-card/50 rounded-3xl overflow-hidden shadow-md">
@@ -454,18 +441,64 @@ export function WorkspaceSettingsForm({ settings }: { settings: any }) {
                       {index + 1}
                     </div>
                     <div className="flex flex-col gap-1 flex-1">
-                      <Input value={nav.name || ""} onChange={(e) => {
-                        const newNav = [...navigation];
-                        newNav[index] = { ...newNav[index], name: e.target.value };
-                        setNavigation(newNav);
-                      }} className="h-8 font-black border-none bg-transparent p-0 focus-visible:ring-0 text-xl tracking-tight" />
-                      <div className="flex items-center gap-2 text-xs font-mono text-muted-foreground">
-                        <ExternalLink className="w-3 h-3 text-primary" />
-                        <Input value={nav.href || ""} onChange={(e) => {
-                          const newNav = [...navigation];
-                          newNav[index] = { ...newNav[index], href: e.target.value };
-                          setNavigation(newNav);
-                        }} className="h-6 border-none bg-transparent p-0 focus-visible:ring-0 text-[10px] text-primary/60" />
+                      <div className="flex items-center gap-2 group/edit h-8">
+                        {editingNavIndex === index ? (
+                          <Input 
+                            autoFocus
+                            value={nav.name || ""} 
+                            onChange={(e) => {
+                              const newNav = [...navigation];
+                              newNav[index] = { ...newNav[index], name: e.target.value };
+                              setNavigation(newNav);
+                            }} 
+                            onBlur={() => setEditingNavIndex(null)}
+                            onKeyDown={(e) => { if (e.key === 'Enter') setEditingNavIndex(null); }}
+                            className="h-8 font-black bg-white dark:bg-zinc-800 border border-border px-2 focus-visible:ring-1 text-xl tracking-tight rounded-md w-full max-w-[200px]" 
+                          />
+                        ) : (
+                          <>
+                            <span className="font-black text-xl tracking-tight">{nav.name || "Unnamed"}</span>
+                            <Button 
+                              type="button"
+                              variant="ghost" 
+                              size="icon" 
+                              onClick={() => setEditingNavIndex(index)} 
+                              className="h-6 w-6 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-full"
+                            >
+                              <Pencil className="h-3 w-3" />
+                            </Button>
+                          </>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2 group/edit h-6">
+                        <ExternalLink className="w-3 h-3 text-primary shrink-0" />
+                        {editingLinkIndex === index ? (
+                          <Input 
+                            autoFocus
+                            value={nav.href || ""} 
+                            onChange={(e) => {
+                              const newNav = [...navigation];
+                              newNav[index] = { ...newNav[index], href: e.target.value };
+                              setNavigation(newNav);
+                            }} 
+                            onBlur={() => setEditingLinkIndex(null)}
+                            onKeyDown={(e) => { if (e.key === 'Enter') setEditingLinkIndex(null); }}
+                            className="h-6 font-mono bg-white dark:bg-zinc-800 border border-border px-1 focus-visible:ring-1 text-[10px] text-primary/60 rounded max-w-[200px]" 
+                          />
+                        ) : (
+                          <>
+                            <span className="font-mono text-[10px] text-primary/60">{nav.href || "No link"}</span>
+                            <Button 
+                              type="button"
+                              variant="ghost" 
+                              size="icon" 
+                              onClick={() => setEditingLinkIndex(index)} 
+                              className="h-4 w-4 opacity-0 group-hover/edit:opacity-100 transition-opacity text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-full shrink-0"
+                            >
+                              <Pencil className="h-2 w-2" />
+                            </Button>
+                          </>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -482,6 +515,18 @@ export function WorkspaceSettingsForm({ settings }: { settings: any }) {
                           setNavigation(newNav);
                         }} 
                       />
+                    </div>
+                    <div className="flex items-center gap-1 mr-1">
+                      <Button variant="ghost" size="icon" disabled={index === 0} onClick={() => {
+                        const newNav = [...navigation];
+                        [newNav[index - 1], newNav[index]] = [newNav[index], newNav[index - 1]];
+                        setNavigation(newNav);
+                      }} className="h-12 w-12 rounded-2xl text-muted-foreground hover:bg-muted/50 hover:text-foreground transition-colors"><ChevronUp className="h-5 w-5" /></Button>
+                      <Button variant="ghost" size="icon" disabled={index === navigation.length - 1} onClick={() => {
+                        const newNav = [...navigation];
+                        [newNav[index + 1], newNav[index]] = [newNav[index], newNav[index + 1]];
+                        setNavigation(newNav);
+                      }} className="h-12 w-12 rounded-2xl text-muted-foreground hover:bg-muted/50 hover:text-foreground transition-colors"><ChevronDown className="h-5 w-5" /></Button>
                     </div>
                     <Button variant="ghost" size="icon" onClick={() => {
                       setNavigation(navigation.filter((_: any, i: number) => i !== index));

@@ -26,7 +26,7 @@ export function WorkspaceAchievements({ data }: { data?: any }) {
 
   return (
     <section id="achievements" className="py-24 relative bg-primary/[0.02]">
-      <div className="max-w-7xl mx-auto px-6">
+      <div className="max-w-[1400px] mx-auto px-6 sm:px-12">
         <div className="text-center max-w-3xl mx-auto mb-20 space-y-4">
           <div className="inline-flex items-center justify-center gap-3 text-primary font-black tracking-[0.2em] text-[10px] uppercase w-full">
             <div className="h-0.5 w-10 bg-primary" />

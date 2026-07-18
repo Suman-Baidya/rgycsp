@@ -1,6 +1,7 @@
 import { getStudentProfile } from "@/app/actions/student";
 import { getWorkspaceByTenant } from "@/lib/workspace";
 import { redirect } from "next/navigation";
+import { getServerTenantLink } from "@/lib/routing-server";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { BookOpen, Calendar, Clock, GraduationCap } from "lucide-react";
@@ -16,13 +17,13 @@ export default async function StudentCoursesPage({
 }) {
   const { tenant } = await params;
   const workspace = await getWorkspaceByTenant(tenant);
-  if (!workspace) redirect("/");
+  if (!workspace) redirect(await getServerTenantLink("/", tenant));
 
   const result = await getStudentProfile(workspace.id);
-  if (!result.success) redirect(`/app/${tenant}/student/dashboard`);
+  if (!result.success) redirect(await getServerTenantLink("/student/dashboard", tenant));
 
   const student = result.data as any;
-  if (!student) redirect(`/app/${tenant}/student/dashboard`);
+  if (!student) redirect(await getServerTenantLink("/student/dashboard", tenant));
   const profile = student.studentProfile;
   const currentCourse = profile?.batch?.course;
 
