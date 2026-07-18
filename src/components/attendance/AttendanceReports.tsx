@@ -181,7 +181,7 @@ export default function AttendanceReports({ batches }: { batches: any[] }) {
               <label className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">
                 <CalendarDays className="w-4 h-4 text-primary" /> Duration
               </label>
-              <Select value={selectedDuration} onValueChange={(v: DurationType) => setSelectedDuration(v)}>
+              <Select value={selectedDuration} onValueChange={(v) => setSelectedDuration(v as DurationType)}>
                 <SelectTrigger className="h-14 bg-slate-50 dark:bg-slate-900/50 rounded-2xl border-2 border-slate-100 dark:border-slate-800 font-bold focus:ring-primary/20 transition-all">
                   <SelectValue />
                 </SelectTrigger>

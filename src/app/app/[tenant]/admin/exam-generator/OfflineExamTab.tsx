@@ -27,7 +27,8 @@ export default function OfflineExamTab({ workspaceId, workspace, superAdminName,
     courseId: "",
     date: "",
     duration: "180",
-    syllabus: ""
+    syllabus: "",
+    semesterNumber: ""
   });
 
   const [editExamId, setEditExamId] = useState<string | null>(null);
@@ -79,11 +80,11 @@ export default function OfflineExamTab({ workspaceId, workspace, superAdminName,
           semesterNumber: formData.semesterNumber ? parseInt(formData.semesterNumber) : undefined,
           duration: formData.duration || undefined,
           syllabus: formData.syllabus || undefined
-        }, shifts);
+        } as any, shifts);
 
         if (res.success) {
           toast.success("Exam updated successfully!");
-          setFormData({ title: "", courseId: "", date: "", duration: "180", syllabus: "" });
+          setFormData({ title: "", courseId: "", date: "", duration: "180", syllabus: "", semesterNumber: "" });
           setEditExamId(null);
           setIsFormOpen(false);
         } else {
@@ -98,14 +99,14 @@ export default function OfflineExamTab({ workspaceId, workspace, superAdminName,
           semesterNumber: formData.semesterNumber ? parseInt(formData.semesterNumber) : undefined,
           duration: formData.duration || undefined,
           syllabus: formData.syllabus || undefined
-        });
+        } as any);
 
         if (res.success && res.data) {
           for (const shift of shifts) {
             await createExamShift(res.data.id, shift);
           }
           toast.success("Exam and shifts created successfully!");
-          setFormData({ title: "", courseId: "", date: "", duration: "180", syllabus: "" });
+          setFormData({ title: "", courseId: "", date: "", duration: "180", syllabus: "", semesterNumber: "" });
           setIsFormOpen(false);
         } else {
           toast.error(res.error || "Failed to create exam");
@@ -125,7 +126,8 @@ export default function OfflineExamTab({ workspaceId, workspace, superAdminName,
       courseId: exam.courseId || "",
       date: exam.date ? new Date(exam.date).toISOString().split('T')[0] : "",
       duration: exam.duration || "180",
-      syllabus: exam.syllabus || ""
+      syllabus: exam.syllabus || "",
+      semesterNumber: exam.semesterNumber?.toString() || ""
     });
     setShifts(exam.shifts && exam.shifts.length > 0 ? exam.shifts : [{ name: "Morning Shift", startTime: "10:00 AM", endTime: "01:00 PM", capacity: 50 }]);
     setIsFormOpen(true);
@@ -218,7 +220,7 @@ export default function OfflineExamTab({ workspaceId, workspace, superAdminName,
           <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
             <DialogTrigger className="inline-flex items-center justify-center whitespace-nowrap text-sm h-12 px-6 rounded-2xl font-bold bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-500/30 transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950 disabled:pointer-events-none disabled:opacity-50" onClick={() => {
               setEditExamId(null);
-              setFormData({ title: "", courseId: "", date: "", duration: "180", syllabus: "" });
+              setFormData({ title: "", courseId: "", date: "", duration: "180", syllabus: "", semesterNumber: "" });
               setShifts([{ name: "Morning Shift", startTime: "10:00 AM", endTime: "01:00 PM", capacity: 50 }]);
             }}>
               <Plus className="w-5 h-5 mr-2" /> Create Offline Exam

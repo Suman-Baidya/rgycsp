@@ -274,7 +274,7 @@ export default function BatchManagement({
           <div className="space-y-6 py-6 max-h-[60vh] overflow-y-auto px-2 -mx-2">
             <div className="space-y-2">
               <Label className="text-xs font-bold uppercase tracking-widest text-slate-400 ml-1">Associated Course</Label>
-              <Select value={formData.courseId} onValueChange={(v) => setFormData({...formData, courseId: v})}>
+              <Select value={formData.courseId || ""} onValueChange={(v) => setFormData({...formData, courseId: v as string})}>
                 <SelectTrigger className="h-12 rounded-2xl font-bold bg-slate-50/50 dark:bg-slate-900/50">
                   <SelectValue placeholder="Independent Batch (No Course)">
                     {formData.courseId === "independent" || !formData.courseId 

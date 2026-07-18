@@ -37,7 +37,7 @@ export default function PaymentReportsTab({ workspaceId }: { workspaceId: string
     setIsLoading(false);
     
     if (res.success) {
-      setInvoices(res.data);
+      setInvoices(res.data || []);
     } else {
       toast.error(res.error || "Failed to load reports");
     }

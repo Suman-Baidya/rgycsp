@@ -6,7 +6,6 @@ import { getServerTenantLink } from "@/lib/routing-server";
 import { Button } from "@/components/ui/button";
 import { LogOut } from "lucide-react";
 import Link from "next/link";
-import { getServerTenantLink } from "@/lib/routing-server";
 
 export default async function StudentDashboardPage({
   params
@@ -46,8 +45,8 @@ export default async function StudentDashboardPage({
   const aboutSection = workspaceSettings?.sections?.find((s: any) => s.type === "about");
   const notices = (aboutSection?.content as any)?.notices || [];
 
-  const studentProfileId = result.data.studentProfile?.id;
-  const courseId = result.data.studentProfile?.courseId;
+  const studentProfileId = result.data?.studentProfile?.id;
+  const courseId = result.data?.studentProfile?.courseId;
   let dashboardData = null;
   if (studentProfileId) {
     const dashResult = await getStudentDashboardData(workspace.id, studentProfileId, courseId);
@@ -58,7 +57,7 @@ export default async function StudentDashboardPage({
 
   return (
     <StudentDashboardClient 
-      student={result.data} 
+      student={result.data!} 
       tenant={tenant} 
       settings={workspaceSettings} 
       notices={notices}

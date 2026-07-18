@@ -742,7 +742,7 @@ export default function StudentsClient({ initialStudents, initialWorkspaces, ini
                             <p className="font-bold text-sm text-slate-900 dark:text-white">{student.fullName}</p>
                             {student.documentsPrinted && (
                               <Tooltip>
-                                <TooltipTrigger asChild>
+                                <TooltipTrigger>
                                   <div
                                     role="button"
                                     tabIndex={0}
