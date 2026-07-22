@@ -68,7 +68,9 @@ const DEFAULT_DEMO_DATA: Record<string, string> = {
   studentName: "Suman Baidya",
   studentPhoto: "https://api.dicebear.com/7.x/avataaars/svg?seed=student",
   studentSign: "https://api.dicebear.com/7.x/bottts/svg?seed=sign",
-  registrationNo: "ABCD-2024-001",
+  registrationNo: "123456",
+  certificateNo: "123456",
+  marksheetNo: "123456",
   dob: "12-05-1998",
   gender: "Male",
   bloodGroup: "O+",
@@ -146,6 +148,8 @@ const VARIABLE_GROUPS = [
       { id: "studentPhoto", label: "Profile Picture" },
       { id: "studentSign", label: "Student Signature" },
       { id: "registrationNo", label: "Enrollment Number" },
+      { id: "certificateNo", label: "Certificate Number" },
+      { id: "marksheetNo", label: "Marksheet Number" },
       { id: "dob", label: "Date of Birth" },
       { id: "gender", label: "Gender" },
       { id: "bloodGroup", label: "Blood Group" },
@@ -272,7 +276,7 @@ export default function DocumentDesigner() {
   const fetchExampleData = async () => {
     const data = await getExampleData();
     if (data && Object.keys(data).length > 0) {
-      setPreviewData(data);
+      setPreviewData({ ...DEFAULT_DEMO_DATA, ...data });
     } else {
       setPreviewData(DEFAULT_DEMO_DATA);
     }

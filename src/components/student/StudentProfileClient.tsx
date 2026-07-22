@@ -448,14 +448,15 @@ export default function StudentProfileClient({
                       title={`Marksheet (Semester ${sem.semesterNumber})`} 
                       description="Term examination results" 
                       status={sem.marksheetIssuedToStudent ? "Available" : "Pending Release"} 
-                      isAvailable={sem.marksheetIssuedToStudent} 
+                      isAvailable={sem.marksheetIssuedToStudent}
+                      documentNumber={profile?.marksheetNo || sem.marksheetNo}
                     />
                   ))
               ) : (
-                <DocumentCard icon={<Award />} title="Marksheet" description="Term examination results" status={profile?.marksheetIssuedToStudent ? "Available" : "Pending Release"} isAvailable={!!profile?.marksheetIssuedToStudent} />
+                <DocumentCard icon={<Award />} title="Marksheet" description="Term examination results" status={profile?.marksheetIssuedToStudent ? "Available" : "Pending Release"} isAvailable={!!profile?.marksheetIssuedToStudent} documentNumber={profile?.marksheetNo} />
               )}
               
-              <DocumentCard icon={<FileBadge />} title="Certificate" description="Course completion certificate" status="Not Eligible Yet" isAvailable={false} />
+              <DocumentCard icon={<FileBadge />} title="Certificate" description="Course completion certificate" status={profile?.certificateIssuedToStudent ? "Available" : "Not Eligible Yet"} isAvailable={!!profile?.certificateIssuedToStudent} documentNumber={profile?.certificateNo} />
 
             </div>
           </CardContent>
@@ -466,7 +467,7 @@ export default function StudentProfileClient({
   );
 }
 
-function DocumentCard({ icon, title, description, status, isAvailable = true }: { icon: React.ReactNode, title: string, description: string, status: string, isAvailable?: boolean }) {
+function DocumentCard({ icon, title, description, status, isAvailable = true, documentNumber }: { icon: React.ReactNode, title: string, description: string, status: string, isAvailable?: boolean, documentNumber?: string | null }) {
   return (
     <div className={`p-5 rounded-[1.5rem] border flex flex-col sm:flex-row sm:items-center gap-5 transition-all duration-300 group ${isAvailable ? 'bg-slate-50 dark:bg-zinc-800/50 border-slate-200 dark:border-white/10 hover:border-primary/40 hover:shadow-md hover:bg-white dark:hover:bg-zinc-900' : 'bg-slate-50/50 dark:bg-zinc-900/50 border-slate-100 dark:border-white/5 opacity-70'}`}>
       <div className={`w-14 h-14 shrink-0 rounded-2xl flex items-center justify-center shadow-sm transition-transform duration-500 group- ${isAvailable ? 'bg-white dark:bg-zinc-950 text-primary border border-slate-100 dark:border-white/5' : 'bg-slate-100 dark:bg-zinc-800 text-slate-400'}`}>
@@ -480,7 +481,14 @@ function DocumentCard({ icon, title, description, status, isAvailable = true }: 
             {status}
           </Badge>
         </div>
-        <p className="text-xs font-medium text-slate-500 truncate">{description}</p>
+        <div className="flex items-center gap-2">
+          <p className="text-xs font-medium text-slate-500 truncate">{description}</p>
+          {documentNumber && (
+            <Badge variant="outline" className="text-[9px] font-mono font-bold bg-indigo-50/50 text-indigo-600 border-indigo-200 dark:bg-indigo-500/10 dark:text-indigo-400 dark:border-indigo-800">
+              {documentNumber}
+            </Badge>
+          )}
+        </div>
       </div>
       
       {isAvailable && (

@@ -63,10 +63,9 @@ export function WorkspaceSidebar({
       : false;
 
   const TenantNavLink = ({ href, children, className, onClick }: any) => {
-    if (isSubdomainMode) {
-      return <a href={href} className={className} onClick={onClick}>{children}</a>;
-    }
-    return <Link href={href} className={className} onClick={onClick}>{children}</Link>;
+    // Force native anchor tags for all navigation to avoid Next.js App Router 
+    // client-side flight data mismatch bugs with middleware rewrites and subdirectories.
+    return <a href={href} className={className} onClick={onClick}>{children}</a>;
   };
 
   const generateLink = (path: string) => {

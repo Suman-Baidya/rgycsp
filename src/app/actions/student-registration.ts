@@ -2,6 +2,7 @@
 
 import { db } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { getDocumentStatus, isMarksheetAutoIssued } from "@/lib/document-utils";
 
 export async function registerStudent(studentId: string, tenant: string) {
   try {
@@ -70,9 +71,13 @@ export async function registerStudent(studentId: string, tenant: string) {
         });
       }
 
-      // 2. Generate Registration No
-      const config = await tx.registrationConfig.findFirst();
-      const series = config ? config.registrationSeries : "B";
+      // 2. Generate Registration, Certificate and Marksheet Nos
+      let config = await tx.registrationConfig.findFirst();
+      if (!config) {
+        config = await tx.registrationConfig.create({ data: {} });
+      }
+
+      const series = config.registrationSeries || "B";
       
       const rawCode = workspace.centerCode || workspace.subdomain;
       const centerCode = rawCode.toUpperCase().replace(/[^A-Z0-9]/g, '');
@@ -83,6 +88,20 @@ export async function registerStudent(studentId: string, tenant: string) {
       
       const registrationNo = `${centerCode}Y${year}${series}${seqNumber}`;
 
+      const cPadding = config.certificateDigits || 4;
+      const certificateNo = `${config.certificatePrefix}${String(config.certificateNextSeq).padStart(cPadding, '0')}`;
+
+      const mPadding = config.marksheetDigits || 4;
+      const marksheetNo = `${config.marksheetPrefix}${String(config.marksheetNextSeq).padStart(mPadding, '0')}`;
+
+      await tx.registrationConfig.update({
+        where: { id: config.id },
+        data: { 
+          certificateNextSeq: config.certificateNextSeq + 1,
+          marksheetNextSeq: config.marksheetNextSeq + 1
+        }
+      });
+
       // Create Registration
       await tx.studentRegistration.create({
         data: {
@@ -92,10 +111,15 @@ export async function registerStudent(studentId: string, tenant: string) {
         }
       });
 
-      // 3. Update student status to REGISTERED
+      // 3. Update student status to REGISTERED and apply new numbers
       await tx.studentProfile.update({
         where: { id: studentId },
-        data: { status: "REGISTERED" }
+        data: { 
+          status: "REGISTERED",
+          certificateNo: student.certificateNo || certificateNo,
+          marksheetNo: student.marksheetNo || marksheetNo,
+          registrationNo: registrationNo
+        }
       });
     });
 
@@ -146,7 +170,8 @@ export async function toggleDocumentApproval(studentId: string, docType: 'admitC
 export async function markStudentAsPassOut(studentId: string, tenant: string) {
   try {
     const student = await db.studentProfile.findUnique({
-      where: { id: studentId }
+      where: { id: studentId },
+      include: { semesters: true }
     });
 
     if (!student) {
@@ -157,7 +182,19 @@ export async function markStudentAsPassOut(studentId: string, tenant: string) {
       return { success: false, error: "Only active registered students can be marked as passed out." };
     }
 
-    if (!student.admitCardIssuedToStudent || !student.registrationCardIssuedToStudent || !student.marksheetIssuedToStudent || !student.certificateIssuedToStudent) {
+    const config = await db.registrationConfig.findFirst();
+    const certStatus = getDocumentStatus(student, null, config);
+    
+    let isMarksheetIssued = student.marksheetIssuedToStudent;
+    if (student.semesters && student.semesters.length > 0) {
+      isMarksheetIssued = student.semesters.every(sem => sem.marksheetIssuedToStudent || isMarksheetAutoIssued(sem, config, student));
+    } else {
+      isMarksheetIssued = isMarksheetIssued || certStatus.isMarksheetAuto;
+    }
+
+    const isCertIssued = student.certificateIssuedToStudent || certStatus.isCertAuto;
+
+    if (!student.admitCardIssuedToStudent || !student.registrationCardIssuedToStudent || !isMarksheetIssued || !isCertIssued) {
       return { success: false, error: "All documents must be issued to the student before marking them as pass out." };
     }
 

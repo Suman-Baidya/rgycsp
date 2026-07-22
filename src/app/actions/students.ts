@@ -3,6 +3,7 @@
 import { db } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { auth } from "@/auth";
+import bcrypt from "bcryptjs";
 
 export async function getStudents(workspaceId: string) {
   try {
@@ -89,15 +90,30 @@ export async function createStudent(workspaceId: string, data: any) {
     let loginPassword = providedPassword;
     if (!loginPassword && dob) {
       const dobDate = new Date(dob);
-      const dd = String(dobDate.getDate()).padStart(2, '0');
-      const mm = String(dobDate.getMonth() + 1).padStart(2, '0');
       const yyyy = dobDate.getFullYear();
-      loginPassword = `${dd}${mm}${yyyy}`;
+      let fname = fullName.split(' ')[0];
+      fname = fname.charAt(0).toUpperCase() + fname.slice(1).toLowerCase();
+      loginPassword = `${fname}${yyyy}`;
+    }
+
+    let userId = null;
+    if (loginPassword) {
+      const passwordHash = await bcrypt.hash(loginPassword, 10);
+      const newUser = await db.user.create({
+        data: {
+          username: finalEnrollmentNo,
+          name: fullName,
+          passwordHash,
+          role: 'USER'
+        }
+      });
+      userId = newUser.id;
     }
 
     const student = await db.studentProfile.create({
       data: {
         workspaceId,
+        userId,
         fullName,
         enrollmentNo: finalEnrollmentNo,
         loginPassword: loginPassword || null,
@@ -145,7 +161,7 @@ export async function updateStudent(id: string, data: any) {
       fullName, enrollmentNo, phone, email, whatsapp, 
       dob, gender, religion, caste, bloodGroup, address,
       parentName, parentPhone, fatherName, motherName, guardianPhone, batchId, courseId, qualification,
-      photoUrl, signatureUrl, idProofUrl, loginPassword
+      photoUrl, signatureUrl, idProofUrl, loginPassword, marksheetNo, certificateNo
     } = data;
 
     const updateData: any = {
@@ -175,6 +191,12 @@ export async function updateStudent(id: string, data: any) {
     if (loginPassword !== undefined) {
       updateData.loginPassword = loginPassword || null;
     }
+    if (marksheetNo !== undefined) {
+      updateData.marksheetNo = marksheetNo || null;
+    }
+    if (certificateNo !== undefined) {
+      updateData.certificateNo = certificateNo || null;
+    }
 
     const student = await db.studentProfile.update({
       where: { id },
@@ -186,5 +208,60 @@ export async function updateStudent(id: string, data: any) {
   } catch (error: any) {
     console.error("Failed to update student:", error);
     return { success: false, error: error.message || "Failed to update student" };
+  }
+}
+
+export async function adminUpdateStudentPassword(studentId: string, newPassword: string) {
+  try {
+    const student = await db.studentProfile.findUnique({
+      where: { id: studentId },
+      include: { user: true }
+    });
+    if (!student) return { success: false, error: 'Student not found' };
+    
+    const passwordHash = await bcrypt.hash(newPassword, 10);
+    
+    await db.$transaction(async (tx) => {
+      let targetUserId = student.userId;
+
+      if (!targetUserId && student.enrollmentNo) {
+        const existingUser = await tx.user.findUnique({
+          where: { username: student.enrollmentNo }
+        });
+        
+        if (existingUser) {
+          targetUserId = existingUser.id;
+        } else {
+          const newUser = await tx.user.create({
+            data: {
+              username: student.enrollmentNo,
+              name: student.fullName,
+              passwordHash,
+              role: 'USER'
+            }
+          });
+          targetUserId = newUser.id;
+        }
+      }
+
+      await tx.studentProfile.update({
+        where: { id: studentId },
+        data: { 
+          loginPassword: newPassword,
+          ...(targetUserId && { userId: targetUserId })
+        }
+      });
+
+      if (targetUserId) {
+        await tx.user.update({
+          where: { id: targetUserId },
+          data: { passwordHash }
+        });
+      }
+    });
+    revalidatePath('/app/[tenant]/admin/students');
+    return { success: true };
+  } catch (error: any) {
+    return { success: false, error: error.message };
   }
 }

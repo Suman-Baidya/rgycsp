@@ -19,7 +19,9 @@ import {
   ChevronRight,
   PlusCircle,
   History,
-  Clock
+  Clock,
+  MinusCircle,
+  Trash2
 } from "lucide-react";
 import { AdminPageHeader } from "@/components/layout/AdminPageHeader";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -41,6 +43,7 @@ interface WalletManagementClientProps {
   feeConfig: any[];
   paymentConfig: any;
   allTransactions: any[];
+  platformFees?: any[];
 }
 
 export default function WalletManagementClient({
@@ -48,7 +51,8 @@ export default function WalletManagementClient({
   requests,
   feeConfig,
   paymentConfig,
-  allTransactions
+  allTransactions,
+  platformFees = []
 }: WalletManagementClientProps) {
   const [activeTab, setActiveTab] = useState("analytics");
   const [searchQuery, setSearchQuery] = useState("");
@@ -69,6 +73,12 @@ export default function WalletManagementClient({
   const [rechargeReason, setRechargeReason] = useState("");
   const [isPromotional, setIsPromotional] = useState(false);
   const [isRecharging, setIsRecharging] = useState(false);
+  
+  const [deductModalOpen, setDeductModalOpen] = useState(false);
+  const [deductAmount, setDeductAmount] = useState("");
+  const [deductReason, setDeductReason] = useState("");
+  const [isDeducting, setIsDeducting] = useState(false);
+
   const WALLETS_PER_PAGE = 10;
   const HISTORY_PER_PAGE = 10;
 
@@ -143,6 +153,34 @@ export default function WalletManagementClient({
     }
   };
 
+  const handleManualDeduct = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedWorkspace || !deductAmount || !deductReason) return;
+    
+    const amountNum = parseFloat(deductAmount);
+    if (isNaN(amountNum) || amountNum <= 0) {
+      toast.error("Please enter a valid positive amount");
+      return;
+    }
+
+    setIsDeducting(true);
+    try {
+      const { manualDeductWallet } = await import("@/app/actions/wallet");
+      const res = await manualDeductWallet(selectedWorkspace.id, amountNum, deductReason);
+      if (res.success) {
+        toast.success(`Successfully deducted ₹${amountNum} from ${selectedWorkspace.name}`);
+        setDeductModalOpen(false);
+        setDeductAmount("");
+        setDeductReason("");
+        setSelectedWorkspace(null);
+      } else {
+        toast.error("Failed to deduct funds: " + res.error);
+      }
+    } finally {
+      setIsDeducting(false);
+    }
+  };
+
   const handleSaveFees = async () => {
     setIsUpdatingFees(true);
     try {
@@ -155,6 +193,54 @@ export default function WalletManagementClient({
     } finally {
       setIsUpdatingFees(false);
     }
+  };
+
+  const [pFees, setPFees] = useState(
+    platformFees.length > 0
+      ? platformFees
+      : [{ name: "Annual Platform Fee", amount: 500, cronMonth: 4, cronDay: 1, isActive: true }]
+  );
+  const [isUpdatingPFees, setIsUpdatingPFees] = useState(false);
+
+  const handleSavePFees = async () => {
+    setIsUpdatingPFees(true);
+    try {
+      const { savePlatformFeeConfig, deletePlatformFeeConfig } = await import("@/app/actions/wallet");
+      // Since it's an array, we save them one by one. In reality there might be just one or two.
+      for (const pf of pFees) {
+        await savePlatformFeeConfig(pf);
+      }
+      toast.success("Platform fees updated successfully");
+    } catch (e: any) {
+      toast.error("Failed to update platform fees");
+    } finally {
+      setIsUpdatingPFees(false);
+    }
+  };
+
+  const addPFee = () => {
+    setPFees([...pFees, { name: "", amount: 0, cronMonth: 1, cronDay: 1, isActive: true }]);
+  };
+
+  const removePFee = async (index: number) => {
+    const feeToRemove = pFees[index];
+    if (feeToRemove.id) {
+      try {
+        const { deletePlatformFeeConfig } = await import("@/app/actions/wallet");
+        await deletePlatformFeeConfig(feeToRemove.id);
+      } catch (e) {
+        console.error("Failed to delete fee");
+      }
+    }
+    const newPFees = [...pFees];
+    newPFees.splice(index, 1);
+    setPFees(newPFees);
+  };
+
+  const updatePFee = (index: number, field: string, value: any) => {
+    const newPFees = [...pFees];
+    newPFees[index] = { ...newPFees[index], [field]: value };
+    setPFees(newPFees);
   };
 
   const handleSavePayment = async () => {
@@ -307,7 +393,7 @@ export default function WalletManagementClient({
                         </Button>
                         <Button 
                           size="sm" 
-                          className="h-9 rounded-xl flex-1 md:flex-none bg-primary hover:bg-primary/90 text-white shadow-md shadow-primary/20"
+                          className="h-9 rounded-xl flex-1 md:flex-none bg-indigo-600 hover:bg-indigo-700 text-white shadow-md"
                           onClick={() => {
                             setSelectedWorkspace(wallet);
                             setRechargeAmount("");
@@ -318,6 +404,19 @@ export default function WalletManagementClient({
                         >
                           <PlusCircle className="h-4 w-4 mr-2" />
                           Add Funds
+                        </Button>
+                        <Button 
+                          size="sm" 
+                          className="h-9 rounded-xl flex-1 md:flex-none bg-rose-600 hover:bg-rose-700 text-white shadow-md"
+                          onClick={() => {
+                            setSelectedWorkspace(wallet);
+                            setDeductAmount("");
+                            setDeductReason("");
+                            setDeductModalOpen(true);
+                          }}
+                        >
+                          <MinusCircle className="h-4 w-4 mr-2" />
+                          Deduct
                         </Button>
                       </div>
                     </div>
@@ -430,7 +529,7 @@ export default function WalletManagementClient({
 
         {activeTab === "settings" && (
           <div className="max-w-4xl mx-auto space-y-6">
-            <Accordion defaultValue={["fees"]} className="space-y-4">
+            <Accordion defaultValue={[]} className="space-y-4">
               
               <AccordionItem value="fees" className="border-2 border-slate-100 dark:border-slate-800 rounded-[2.5rem] bg-white dark:bg-slate-950 px-6 py-2 shadow-sm overflow-hidden data-[state=open]:shadow-md transition-all">
                 <AccordionTrigger className="hover:no-underline py-6">
@@ -514,6 +613,88 @@ export default function WalletManagementClient({
                     >
                       {isUpdatingFees ? "Saving Changes..." : "Save Fee Structure"}
                     </Button>
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+
+              <AccordionItem value="platform-fees" className="border-2 border-slate-100 dark:border-slate-800 rounded-[2.5rem] bg-white dark:bg-slate-950 px-6 py-2 shadow-sm overflow-hidden data-[state=open]:shadow-md transition-all">
+                <AccordionTrigger className="hover:no-underline py-6">
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 bg-rose-500/10 rounded-xl flex items-center justify-center">
+                      <Clock className="h-5 w-5 text-rose-600" />
+                    </div>
+                    <div className="text-left">
+                      <h3 className="text-xl font-bold tracking-tight">Recurring Platform Fees</h3>
+                      <p className="text-xs font-medium text-slate-500">Configure global automated deductions</p>
+                    </div>
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="pt-4 pb-8 border-t border-slate-50 dark:border-slate-800">
+                  <div className="space-y-6">
+                    <div className="bg-slate-50/50 dark:bg-slate-900/50 rounded-3xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
+                      <div className="hidden sm:flex items-center px-6 py-3 bg-slate-100/50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-800">
+                        <div className="flex-[2] text-[10px] font-black text-slate-500 uppercase tracking-widest">Fee Name</div>
+                        <div className="flex-1 text-[10px] font-black text-slate-500 uppercase tracking-widest">Amount (₹)</div>
+                        <div className="flex-1 text-[10px] font-black text-slate-500 uppercase tracking-widest">Month</div>
+                        <div className="flex-1 text-[10px] font-black text-slate-500 uppercase tracking-widest">Day</div>
+                        <div className="w-12"></div>
+                      </div>
+                      
+                      <div className="divide-y divide-slate-100 dark:divide-slate-800/50 p-2">
+                        {pFees.map((fee, index) => (
+                          <div key={index} className="flex flex-col sm:flex-row items-center gap-3 p-3 bg-white dark:bg-slate-950 rounded-2xl sm:rounded-none sm:bg-transparent mb-3 sm:mb-0">
+                            <div className="w-full flex-[2]">
+                              <Input 
+                                value={fee.name}
+                                onChange={(e) => updatePFee(index, "name", e.target.value)}
+                                placeholder="e.g. Annual Platform Fee"
+                                className="h-11 rounded-xl bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800 font-bold"
+                              />
+                            </div>
+                            <div className="w-full flex-1">
+                              <Input 
+                                type="number"
+                                value={fee.amount}
+                                onChange={(e) => updatePFee(index, "amount", parseFloat(e.target.value))}
+                                className="h-11 rounded-xl bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800 font-mono"
+                              />
+                            </div>
+                            <div className="w-full flex-1">
+                              <select 
+                                value={fee.cronMonth}
+                                onChange={(e) => updatePFee(index, "cronMonth", parseInt(e.target.value))}
+                                className="w-full h-11 rounded-xl bg-slate-50 dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 px-3 font-medium text-sm focus:outline-none focus:border-primary"
+                              >
+                                {[...Array(12)].map((_, i) => (
+                                  <option key={i+1} value={i+1}>{new Date(0, i).toLocaleString('en', { month: 'long' })}</option>
+                                ))}
+                              </select>
+                            </div>
+                            <div className="w-full flex-1">
+                              <Input 
+                                type="number"
+                                min={1} max={31}
+                                value={fee.cronDay}
+                                onChange={(e) => updatePFee(index, "cronDay", parseInt(e.target.value))}
+                                className="h-11 rounded-xl bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800 font-mono"
+                              />
+                            </div>
+                            <Button variant="ghost" size="icon" onClick={() => removePFee(index)} className="shrink-0 h-11 w-11 rounded-xl text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950">
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between px-2">
+                      <Button variant="outline" onClick={addPFee} className="rounded-xl border-dashed border-2 bg-slate-50/50 hover:bg-slate-100">
+                        <PlusCircle className="h-4 w-4 mr-2" /> Add Fee
+                      </Button>
+                      <Button onClick={handleSavePFees} disabled={isUpdatingPFees} className="rounded-xl shadow-md bg-indigo-600 hover:bg-indigo-700 text-white">
+                        {isUpdatingPFees ? "Saving..." : "Save Platform Fees"}
+                      </Button>
+                    </div>
                   </div>
                 </AccordionContent>
               </AccordionItem>
@@ -831,6 +1012,50 @@ export default function WalletManagementClient({
           </form>
         </DialogContent>
       </Dialog>
+
+      {/* Deduction Modal */}
+      {selectedWorkspace && (
+        <Dialog open={deductModalOpen} onOpenChange={setDeductModalOpen}>
+          <DialogContent className="rounded-3xl p-0 overflow-hidden border-0 max-w-md">
+            <div className="bg-rose-600 p-8 text-white">
+              <h2 className="text-2xl font-bold">Deduct Funds</h2>
+              <p className="text-rose-100 mt-1">Deduct balance from {selectedWorkspace.name}</p>
+            </div>
+            <form onSubmit={handleManualDeduct} className="p-8 space-y-6">
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Amount (₹)</label>
+                  <Input 
+                    type="number"
+                    value={deductAmount}
+                    onChange={(e) => setDeductAmount(e.target.value)}
+                    placeholder="Enter amount to deduct"
+                    className="h-12 rounded-xl border-2 border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50"
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Reason</label>
+                  <Input 
+                    value={deductReason}
+                    onChange={(e) => setDeductReason(e.target.value)}
+                    placeholder="e.g. Platform Fee, Adjustment"
+                    className="h-12 rounded-xl border-2 border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-3 pt-6 border-t border-slate-100 dark:border-slate-800">
+                <Button type="button" variant="outline" onClick={() => setDeductModalOpen(false)} className="rounded-xl">Cancel</Button>
+                <Button type="submit" disabled={isDeducting} className="rounded-xl bg-rose-600 hover:bg-rose-700 text-white shadow-md">
+                  {isDeducting ? "Deducting..." : "Deduct Funds"}
+                </Button>
+              </div>
+            </form>
+          </DialogContent>
+        </Dialog>
+      )}
 
       {/* Franchise Transaction History Modal */}
       <Dialog open={historyModalOpen} onOpenChange={setHistoryModalOpen}>

@@ -282,6 +282,98 @@ export async function directRecharge(workspaceId: string, amount: number, reason
   }
 }
 
+export async function manualDeductWallet(workspaceId: string, amount: number, reason: string) {
+  try {
+    await prisma.$transaction(async (tx) => {
+      const referenceId = 'DEDUCT-' + Date.now();
+      
+      await tx.walletTransaction.create({
+        data: {
+          workspaceId,
+          amount,
+          type: 'DEBIT',
+          status: 'APPROVED',
+          description: reason,
+          referenceId,
+        }
+      });
+
+      await tx.workspace.update({
+        where: { id: workspaceId },
+        data: { walletBalance: { decrement: amount } }
+      });
+      
+      await tx.notification.create({
+        data: {
+          workspaceId,
+          title: "Wallet Deduction",
+          message: `Your wallet has been deducted by ${amount}. Reason: ${reason}`,
+          type: "ERROR",
+          link: "/admin/wallet"
+        }
+      });
+    });
+
+    revalidatePath("/(admin)/super-admin/wallet", "page");
+    return { success: true };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+}
+
+export async function getPlatformFeeConfigs() {
+  try {
+    const configs = await prisma.platformFeeConfig.findMany({
+      orderBy: { createdAt: 'desc' }
+    });
+    return { success: true, data: configs };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+}
+
+export async function savePlatformFeeConfig(data: { id?: string, name: string, amount: number, cronMonth: number, cronDay: number, isActive: boolean }) {
+  try {
+    if (data.id) {
+      await prisma.platformFeeConfig.update({
+        where: { id: data.id },
+        data: {
+          name: data.name,
+          amount: data.amount,
+          cronMonth: data.cronMonth,
+          cronDay: data.cronDay,
+          isActive: data.isActive
+        }
+      });
+    } else {
+      await prisma.platformFeeConfig.create({
+        data: {
+          name: data.name,
+          amount: data.amount,
+          cronMonth: data.cronMonth,
+          cronDay: data.cronDay,
+          isActive: data.isActive
+        }
+      });
+    }
+    revalidatePath("/(admin)/super-admin/token-economy");
+    return { success: true };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+}
+
+export async function deletePlatformFeeConfig(id: string) {
+  try {
+    await prisma.platformFeeConfig.delete({ where: { id } });
+    revalidatePath("/(admin)/super-admin/token-economy");
+    return { success: true };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+}
+
+
 export async function rejectRechargeRequest(transactionId: string, reason?: string) {
   try {
     await prisma.$transaction(async (tx) => {

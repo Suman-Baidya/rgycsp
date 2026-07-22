@@ -83,34 +83,15 @@ export async function submitAdmissionApplication(workspaceId: string, data: any,
     const tempPassword = generateSecurePassword();
     const passwordHash = await bcrypt.hash(tempPassword, 10);
 
-    // 1. Check if user exists by email (if email provided)
-    let user;
-    if (data.email) {
-      user = await db.user.findUnique({
-        where: { email: data.email }
-      });
-    }
-
-    if (!user) {
-      // Create new user if doesn't exist
-      user = await db.user.create({
-        data: {
-          name: data.fullName,
-          username: applicationNo,
-          email: data.email,
-          passwordHash: passwordHash,
-          role: "USER"
-        }
-      });
-    } else {
-      // If user exists, ensure they have a username (student login)
-      if (!user.username) {
-        await db.user.update({
-          where: { id: user.id },
-          data: { username: applicationNo }
-        });
+    // Create new user for the applicant
+    const user = await db.user.create({
+      data: {
+        name: data.fullName,
+        username: applicationNo,
+        passwordHash: passwordHash,
+        role: "USER"
       }
-    }
+    });
 
     // 2. Create Application linked to User
     const application = await db.admissionApplication.create({
@@ -231,9 +212,11 @@ export async function updateApplicationStatus(id: string, status: string, reject
 
     if (status === "APPROVED") {
       // Logic to create StudentProfile
-      const year = new Date().getFullYear();
-      const random = Math.floor(1000 + Math.random() * 9000).toString();
-      const enrollmentNo = `ENR-${year}-${random}`;
+      const config = await db.registrationConfig.findFirst();
+      const prefix = config ? config.enrollmentPrefix : "RGY";
+      const digits = config?.enrollmentDigits || 6;
+      const globalCount = await db.studentProfile.count();
+      const enrollmentNo = `${prefix}${String(globalCount + 1).padStart(digits, '0')}`;
 
       // Create or update User for login
       if (!application.tempPassword) {
@@ -242,15 +225,14 @@ export async function updateApplicationStatus(id: string, status: string, reject
       const passwordHash = await bcrypt.hash(application.tempPassword, 10);
       
       const user = await db.user.upsert({
-        where: { username: application.applicationNo },
+        where: { username: enrollmentNo },
         update: {
           name: application.fullName!,
           passwordHash: passwordHash
         },
         create: {
           name: application.fullName!,
-          username: application.applicationNo!,
-          email: application.email,
+          username: enrollmentNo,
           passwordHash: passwordHash,
           role: "USER"
         }

@@ -30,6 +30,39 @@ export async function getPendingDocumentRequestsCount() {
 export async function issueStudentDocument(studentId: string, documentType: "MARKSHEET" | "CERTIFICATE" | "STUDENT_ID" | "ADMIT_CARD", status: boolean, semesterNumber?: number) {
   try {
     if (documentType === "MARKSHEET" && semesterNumber) {
+      if (status === true) {
+        const student = await db.studentProfile.findUnique({ where: { id: studentId } });
+        let marksheetNoToUse = student?.marksheetNo;
+
+        if (!marksheetNoToUse) {
+          await db.$transaction(async (tx) => {
+            let config = await tx.registrationConfig.findFirst();
+            if (!config) config = await tx.registrationConfig.create({ data: {} });
+
+            const padding = config.marksheetDigits || 4;
+            marksheetNoToUse = `${config.marksheetPrefix}${String(config.marksheetNextSeq).padStart(padding, '0')}`;
+            
+            await tx.registrationConfig.update({
+              where: { id: config.id },
+              data: { marksheetNextSeq: config.marksheetNextSeq + 1 }
+            });
+
+            await tx.studentProfile.update({
+              where: { id: studentId },
+              data: { marksheetNo: marksheetNoToUse }
+            });
+
+            await tx.studentSemester.upsert({
+              where: { studentProfileId_semesterNumber: { studentProfileId: studentId, semesterNumber } },
+              update: { marksheetApproved: true },
+              create: { studentProfileId: studentId, semesterNumber, marksheetApproved: true }
+            });
+          });
+          revalidatePath("/");
+          return { success: true, marksheetNo: marksheetNoToUse };
+        }
+      }
+
       await db.studentSemester.upsert({
         where: { studentProfileId_semesterNumber: { studentProfileId: studentId, semesterNumber } },
         update: { 
@@ -43,11 +76,32 @@ export async function issueStudentDocument(studentId: string, documentType: "MAR
     }
 
     let data: any = {};
+    
+    if (documentType === "CERTIFICATE" && status === true) {
+      const student = await db.studentProfile.findUnique({ where: { id: studentId } });
+      if (student && !student.certificateNo) {
+        let newCertificateNo = "";
+        await db.$transaction(async (tx) => {
+          let config = await tx.registrationConfig.findFirst();
+          if (!config) config = await tx.registrationConfig.create({ data: {} });
+
+          const padding = config.certificateDigits || 4;
+          newCertificateNo = `${config.certificatePrefix}${String(config.certificateNextSeq).padStart(padding, '0')}`;
+          
+          await tx.registrationConfig.update({
+            where: { id: config.id },
+            data: { certificateNextSeq: config.certificateNextSeq + 1 }
+          });
+        });
+        data.certificateNo = newCertificateNo;
+      }
+    }
+
     switch (documentType) {
-      case "MARKSHEET": data = { marksheetApproved: status, ...(status === false ? { marksheetIssuedToStudent: false } : {}) }; break;
-      case "CERTIFICATE": data = { certificateApproved: status, ...(status === false ? { certificateIssuedToStudent: false } : {}) }; break;
-      case "STUDENT_ID": data = { registrationCardApproved: status, ...(status === false ? { registrationCardIssuedToStudent: false } : {}) }; break;
-      case "ADMIT_CARD": data = { admitCardApproved: status, ...(status === false ? { admitCardIssuedToStudent: false } : {}) }; break;
+      case "MARKSHEET": data.marksheetApproved = status; if (status === false) data.marksheetIssuedToStudent = false; break;
+      case "CERTIFICATE": data.certificateApproved = status; if (status === false) data.certificateIssuedToStudent = false; break;
+      case "STUDENT_ID": data.registrationCardApproved = status; if (status === false) data.registrationCardIssuedToStudent = false; break;
+      case "ADMIT_CARD": data.admitCardApproved = status; if (status === false) data.admitCardIssuedToStudent = false; break;
     }
 
     await db.studentProfile.update({
@@ -56,7 +110,7 @@ export async function issueStudentDocument(studentId: string, documentType: "MAR
     });
     
     revalidatePath("/");
-    return { success: true };
+    return { success: true, certificateNo: data.certificateNo };
   } catch (error: any) {
     return { success: false, error: error.message };
   }
@@ -65,6 +119,55 @@ export async function issueStudentDocument(studentId: string, documentType: "MAR
 export async function issueDocumentToStudent(studentId: string, documentType: "MARKSHEET" | "CERTIFICATE" | "STUDENT_ID" | "ADMIT_CARD", status: boolean, semesterNumber?: number) {
   try {
     if (documentType === "MARKSHEET" && semesterNumber) {
+      if (status === true) {
+        // Find existing to check if the student already has a marksheetNo
+        const student = await db.studentProfile.findUnique({
+          where: { id: studentId }
+        });
+        
+        let marksheetNoToUse = student?.marksheetNo;
+
+        if (!marksheetNoToUse) {
+          // Generate number in a transaction
+          await db.$transaction(async (tx) => {
+            let config = await tx.registrationConfig.findFirst();
+            if (!config) {
+              config = await tx.registrationConfig.create({ data: {} });
+            }
+
+            const padding = config.marksheetDigits || 4;
+            marksheetNoToUse = `${config.marksheetPrefix}${String(config.marksheetNextSeq).padStart(padding, '0')}`;
+            
+            await tx.registrationConfig.update({
+              where: { id: config.id },
+              data: { marksheetNextSeq: config.marksheetNextSeq + 1 }
+            });
+
+            await tx.studentProfile.update({
+              where: { id: studentId },
+              data: { marksheetNo: marksheetNoToUse }
+            });
+
+            await tx.studentSemester.upsert({
+              where: { studentProfileId_semesterNumber: { studentProfileId: studentId, semesterNumber } },
+              update: { marksheetIssuedToStudent: true },
+              create: { studentProfileId: studentId, semesterNumber, marksheetIssuedToStudent: true }
+            });
+          });
+          revalidatePath("/");
+          return { success: true };
+        } else {
+          // The student already has a marksheetNo, just approve this semester
+          await db.studentSemester.upsert({
+            where: { studentProfileId_semesterNumber: { studentProfileId: studentId, semesterNumber } },
+            update: { marksheetIssuedToStudent: true },
+            create: { studentProfileId: studentId, semesterNumber, marksheetIssuedToStudent: true }
+          });
+          revalidatePath("/");
+          return { success: true };
+        }
+      }
+
       await db.studentSemester.upsert({
         where: { studentProfileId_semesterNumber: { studentProfileId: studentId, semesterNumber } },
         update: { marksheetIssuedToStudent: status },
@@ -72,6 +175,33 @@ export async function issueDocumentToStudent(studentId: string, documentType: "M
       });
       revalidatePath("/");
       return { success: true };
+    }
+
+    if (documentType === "CERTIFICATE" && status === true) {
+      const student = await db.studentProfile.findUnique({ where: { id: studentId } });
+      if (student && !student.certificateNo) {
+        await db.$transaction(async (tx) => {
+          let config = await tx.registrationConfig.findFirst();
+          if (!config) {
+            config = await tx.registrationConfig.create({ data: {} });
+          }
+
+          const padding = config.certificateDigits || 4;
+          const newCertificateNo = `${config.certificatePrefix}${String(config.certificateNextSeq).padStart(padding, '0')}`;
+          
+          await tx.registrationConfig.update({
+            where: { id: config.id },
+            data: { certificateNextSeq: config.certificateNextSeq + 1 }
+          });
+
+          await tx.studentProfile.update({
+            where: { id: studentId },
+            data: { certificateIssuedToStudent: true, certificateNo: newCertificateNo }
+          });
+        });
+        revalidatePath("/");
+        return { success: true };
+      }
     }
 
     let data: any = {};

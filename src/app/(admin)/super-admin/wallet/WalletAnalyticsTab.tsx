@@ -225,8 +225,17 @@ export default function WalletAnalyticsTab({ transactions }: WalletAnalyticsTabP
                 <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#64748b' }} dy={10} />
                 <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#64748b' }} dx={-10} />
                 <Tooltip 
-                  cursor={{ fill: '#f1f5f9' }}
-                  contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1)' }}
+                    cursor={{ fill: 'rgba(148, 163, 184, 0.1)' }}
+                    contentStyle={{ 
+                      borderRadius: '16px', 
+                      border: '1px solid rgba(148, 163, 184, 0.2)', 
+                      backgroundColor: 'rgba(15, 23, 42, 0.95)',
+                      color: '#f8fafc',
+                      boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.2)',
+                      padding: '16px'
+                    }}
+                    itemStyle={{ color: '#e2e8f0', fontWeight: 500 }}
+                    labelStyle={{ color: '#94a3b8', marginBottom: '8px', fontWeight: 600 }}
                 />
                 <Bar dataKey="recharges" name="Recharges (₹)" fill="#22c55e" radius={[4, 4, 0, 0]} maxBarSize={40} />
                 <Bar dataKey="deductions" name="Deductions (₹)" fill="#ef4444" radius={[4, 4, 0, 0]} maxBarSize={40} />

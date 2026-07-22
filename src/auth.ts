@@ -25,16 +25,51 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           const username = credentials.username as string;
           const password = credentials.password as string;
 
+          const cleanUsername = username.trim();
+          const upperUsername = cleanUsername.toUpperCase();
+          const lowerEmail = cleanUsername.toLowerCase();
+
           // Try username first (Student/Applicant)
-          let user = await db.user.findUnique({
-            where: { username }
+          let user = await db.user.findFirst({
+            where: { 
+              OR: [
+                { username: cleanUsername },
+                { username: upperUsername }
+              ]
+            }
           });
 
           // If not found by username, try email (Staff/Admin)
           if (!user) {
-            user = await db.user.findUnique({
-              where: { email: username }
+            user = await db.user.findFirst({
+              where: { 
+                OR: [
+                  { email: cleanUsername },
+                  { email: lowerEmail }
+                ]
+              }
             });
+          }
+
+          // If not found by email, try Center Code (Franchise Admin)
+          if (!user) {
+            const workspace = await db.workspace.findFirst({
+              where: { 
+                OR: [
+                  { centerCode: cleanUsername },
+                  { centerCode: upperUsername }
+                ]
+              }
+            });
+            if (workspace) {
+              const adminRole = await db.workspaceRole.findFirst({
+                where: { workspaceId: workspace.id, role: 'ADMIN' },
+                include: { user: true }
+              });
+              if (adminRole) {
+                user = adminRole.user;
+              }
+            }
           }
 
           if (!user || !user.passwordHash) {

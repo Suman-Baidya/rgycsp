@@ -10,7 +10,12 @@ export async function getRegistrationConfig() {
       config = await db.registrationConfig.create({
         data: {
           enrollmentPrefix: "RGY",
+          enrollmentDigits: 6,
           registrationSeries: "B",
+          certificatePrefix: "CERT",
+          certificateDigits: 4,
+          marksheetPrefix: "MS",
+          marksheetDigits: 4,
           autoDocumentIssueEnabled: false,
           autoMarksheetDays: 2,
           autoCertificateDays: 30,
@@ -27,13 +32,30 @@ export async function getRegistrationConfig() {
 
 export async function updateRegistrationConfig(data: { 
   enrollmentPrefix: string; 
+  enrollmentDigits?: number;
   registrationSeries: string;
+  certificatePrefix: string;
+  certificateDigits?: number;
+  marksheetPrefix: string;
+  marksheetDigits?: number;
   autoDocumentIssueEnabled?: boolean;
   autoMarksheetDays?: number;
   autoCertificateDays?: number;
   autoIssueAfterRequestHours?: number;
 }) {
   try {
+    if (data.enrollmentDigits !== undefined) {
+      if (data.enrollmentDigits < 6) data.enrollmentDigits = 6;
+      if (data.enrollmentDigits > 12) data.enrollmentDigits = 12;
+    }
+    if (data.certificateDigits !== undefined) {
+      if (data.certificateDigits < 3) data.certificateDigits = 3;
+      if (data.certificateDigits > 10) data.certificateDigits = 10;
+    }
+    if (data.marksheetDigits !== undefined) {
+      if (data.marksheetDigits < 3) data.marksheetDigits = 3;
+      if (data.marksheetDigits > 10) data.marksheetDigits = 10;
+    }
     const config = await db.registrationConfig.findFirst();
     if (config) {
       await db.registrationConfig.update({

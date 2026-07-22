@@ -22,7 +22,8 @@ import {
   ChevronLeft,
   ChevronRight,
   Filter,
-  Download
+  Download,
+  BarChart
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { AdminPageHeader } from "@/components/layout/AdminPageHeader";
@@ -38,6 +39,7 @@ import { toast } from "sonner";
 import Image from "next/image";
 import { ImageUpload } from "@/components/ui/ImageUpload";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
+import FranchiseWalletAnalyticsTab from "./FranchiseWalletAnalyticsTab";
 
 interface WalletDashboardClientProps {
   workspaceId: string;
@@ -209,6 +211,7 @@ export default function WalletDashboardClient({
     { id: "recharge", label: "Recharge Wallet", icon: PlusCircle },
     { id: "guide", label: "Recharge Guide", icon: Video },
     { id: "transactions", label: "Transaction History", icon: List },
+    { id: "analytics", label: "Analytics & Report", icon: BarChart },
   ];
 
   return (
@@ -716,6 +719,10 @@ export default function WalletDashboardClient({
               </CardContent>
             </Card>
           </div>
+        )}
+
+        {activeTab === "analytics" && (
+          <FranchiseWalletAnalyticsTab transactions={transactions} />
         )}
       </div>
 

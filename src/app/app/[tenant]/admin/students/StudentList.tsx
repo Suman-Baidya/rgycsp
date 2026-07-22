@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Plus, Search, MoreVertical, UserPlus, Phone, Mail, GraduationCap, FileText, Eye, Pencil, Database, Download, Loader2, CheckCircle, Calendar, User, Award, ShieldCheck, Clock, Rocket } from "lucide-react";
+import { Plus, Search, MoreVertical, UserPlus, Phone, Mail, GraduationCap, FileText, Eye, Pencil, Database, Download, Loader2, CheckCircle, Calendar, User, Award, ShieldCheck, Clock, Rocket, KeyRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -25,7 +25,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { createStudent, updateStudent } from "@/app/actions/students";
+import { createStudent, updateStudent, adminUpdateStudentPassword } from "@/app/actions/students";
 import { importStudentsCSV } from "@/app/actions/students-import";
 import { registerStudent, markStudentAsPassOut, toggleDocumentApproval } from "@/app/actions/student-registration";
 import { toast } from "sonner";
@@ -101,6 +101,9 @@ export default function StudentList({
   });
 
   const [docsModalOpen, setDocsModalOpen] = useState(false);
+  const [passwordModalOpen, setPasswordModalOpen] = useState(false);
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const docRefs = React.useRef<Record<string, DocumentRendererRef | null>>({});
   const [globalConfig, setGlobalConfig] = useState<any>(null);
 
@@ -372,6 +375,33 @@ export default function StudentList({
     }
   };
 
+  const handlePasswordUpdate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (newPassword !== confirmPassword) {
+      toast.error("Passwords do not match!");
+      return;
+    }
+    if (newPassword.length < 4) {
+      toast.error("Password must be at least 4 characters long.");
+      return;
+    }
+    setIsSubmitting(true);
+    const res = await adminUpdateStudentPassword(selectedStudent.id, newPassword);
+    setIsSubmitting(false);
+    
+    if (res.success) {
+      toast.success("Student password updated successfully!");
+      setPasswordModalOpen(false);
+      setNewPassword("");
+      setConfirmPassword("");
+      // Update selected student local state so UI reflects it
+      setSelectedStudent({ ...selectedStudent, loginPassword: newPassword });
+      router.refresh();
+    } else {
+      toast.error(res.error || "Failed to update password");
+    }
+  };
+
   const [isActioning, setIsActioning] = useState<string | null>(null);
   const [studentToRegister, setStudentToRegister] = useState<any>(null);
   const [studentToPassout, setStudentToPassout] = useState<any>(null);
@@ -540,7 +570,7 @@ export default function StudentList({
                 </Avatar>
                 <div className="flex flex-col min-w-0">
                   <div className="flex items-center gap-2 mb-1">
-                    <h3 className="font-bold text-slate-900 dark:text-white truncate text-lg leading-none">{student.fullName}</h3>
+                    <h3 className="font-bold text-slate-900 dark:text-white truncate text-lg leading-none uppercase">{student.fullName}</h3>
                     {student.admissionApp && (
                       <span className="text-[8px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 px-1.5 py-0.5 rounded tracking-tight">
                         Online
@@ -548,9 +578,9 @@ export default function StudentList({
                     )}
                   </div>
                   <div className="flex items-center gap-3 text-slate-400 dark:text-slate-500">
-                    <span className="text-[10px] font-bold tracking-wider text-primary/70">{student.enrollmentNo}</span>
+                    <span className="text-[10px] font-bold tracking-wider text-primary/70 uppercase">{student.enrollmentNo}</span>
                     <span className="h-1 w-1 rounded-full bg-slate-200 dark:bg-slate-800" />
-                    <span className="text-[10px] font-bold whitespace-nowrap" suppressHydrationWarning>
+                    <span className="text-[10px] font-bold whitespace-nowrap uppercase" suppressHydrationWarning>
                       Joined {new Date(student.admissionDate).toLocaleDateString('en-GB')}
                     </span>
                   </div>
@@ -559,13 +589,27 @@ export default function StudentList({
 
               <div className="flex items-center gap-8 md:px-8 md:border-x-2 md:border-slate-100 dark:md:border-slate-800/50">
                 <div className="flex flex-col">
-                  <p className="text-[9px] font-bold text-slate-400 dark:text-slate-500 mb-1 flex items-center gap-1">
-                    <GraduationCap className="h-2.5 w-2.5" />
-                    Batch
-                  </p>
-                  <p className="text-xs font-bold text-slate-700 dark:text-slate-300 whitespace-nowrap">
-                    {student.batch?.name || "Unassigned"}
-                  </p>
+                  {student.status === "PASS_OUT" ? (
+                    <>
+                      <p className="text-[9px] font-bold text-slate-400 dark:text-slate-500 mb-1 flex items-center gap-1">
+                        <FileText className="h-2.5 w-2.5" />
+                        Reg. No
+                      </p>
+                      <p className="text-xs font-bold text-slate-700 dark:text-slate-300 whitespace-nowrap">
+                        {student.registrations?.[student.registrations.length - 1]?.registrationNo || "N/A"}
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <p className="text-[9px] font-bold text-slate-400 dark:text-slate-500 mb-1 flex items-center gap-1">
+                        <GraduationCap className="h-2.5 w-2.5" />
+                        Batch
+                      </p>
+                      <p className="text-xs font-bold text-slate-700 dark:text-slate-300 whitespace-nowrap">
+                        {student.batch?.name || "Unassigned"}
+                      </p>
+                    </>
+                  )}
                 </div>
                 <div className="flex flex-col">
                   {student.status === "REGISTERED" && student.registrations && student.registrations.length > 0 ? (
@@ -600,7 +644,7 @@ export default function StudentList({
                       View Details
                     </Button>
                   } />
-                <DialogContent className="max-w-2xl rounded-[2rem] border-none shadow-2xl p-0 overflow-hidden">
+                <DialogContent className={`max-w-2xl rounded-[2rem] border-none shadow-2xl p-0 overflow-hidden transition-all duration-300 ${passwordModalOpen ? "blur-md brightness-75 scale-[0.98]" : ""}`}>
                   <div className="bg-primary h-32 w-full relative">
                     <div className="absolute -bottom-12 left-8 p-1 bg-white dark:bg-slate-900 rounded-3xl shadow-xl">
                       <Avatar className="h-24 w-24 rounded-2xl border-4 border-white dark:border-slate-900 shadow-sm">
@@ -615,10 +659,32 @@ export default function StudentList({
                   <div className="px-8 pt-16 pb-8 space-y-8 bg-white dark:bg-slate-900">
                     <div className="flex justify-between items-start">
                       <div>
-                        <h2 className="text-2xl font-bold text-slate-900 dark:text-white">{student.fullName}</h2>
-                        <div className="flex gap-4">
-                          <p className="text-xs font-bold text-slate-400 tracking-wider mt-1">ENR: {student.enrollmentNo}</p>
-                          <p className="text-xs font-bold text-amber-500 tracking-wider mt-1">PWD: {student.loginPassword || "Not Set"}</p>
+                        <h2 className="text-2xl font-bold text-slate-900 dark:text-white uppercase">{student.fullName}</h2>
+                        <div className="flex flex-wrap items-center gap-4 mt-2">
+                          <p className="text-xs font-bold text-slate-500 dark:text-slate-400 tracking-wider flex items-center gap-1.5">
+                            <span className="text-[10px] uppercase text-slate-400">ENR:</span> {student.enrollmentNo}
+                          </p>
+                          {(student.status === "REGISTERED" || student.status === "PASS_OUT") && student.registrations?.length > 0 && (
+                            <p className="text-xs font-bold text-indigo-600 dark:text-indigo-400 tracking-wider flex items-center gap-1.5">
+                              <span className="text-[10px] uppercase text-indigo-400">REG:</span> {student.registrations[student.registrations.length - 1].registrationNo}
+                            </p>
+                          )}
+                          <div className="text-xs font-bold text-amber-500 tracking-wider flex items-center gap-1.5">
+                            <span className="text-[10px] uppercase text-amber-400/80">Password:</span> {student.loginPassword || "Not Set"}
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              onClick={() => {
+                                setNewPassword("");
+                                setConfirmPassword("");
+                                setSelectedStudent(student);
+                                setPasswordModalOpen(true);
+                              }}
+                              className="h-6 w-6 p-0 hover:bg-amber-100 dark:hover:bg-amber-900/30 text-amber-600 dark:text-amber-400 rounded-full"
+                            >
+                              <Pencil className="h-3 w-3" />
+                            </Button>
+                          </div>
                         </div>
                       </div>
                       <Badge className="bg-primary/10 text-primary hover:bg-primary/20 border-none font-bold px-4 py-1 rounded-full text-[10px]">
@@ -637,7 +703,7 @@ export default function StudentList({
                               </div>
                               <div>
                                 <p className="text-[9px] font-bold text-slate-400">Batch / Course</p>
-                                <p className="text-sm font-bold text-slate-700 dark:text-slate-200">{student.batch?.name || "Not Assigned"}</p>
+                                <p className="text-sm font-bold text-slate-700 dark:text-slate-200 uppercase">{student.batch?.name || "Not Assigned"}</p>
                               </div>
                             </div>
                             <div className="flex items-center gap-3">
@@ -646,7 +712,7 @@ export default function StudentList({
                               </div>
                               <div>
                                 <p className="text-[9px] font-bold text-slate-400">Admission Date</p>
-                                <p className="text-sm font-bold text-slate-700 dark:text-slate-200" suppressHydrationWarning>
+                                <p className="text-sm font-bold text-slate-700 dark:text-slate-200 uppercase" suppressHydrationWarning>
                                   {new Date(student.admissionDate).toLocaleDateString('en-GB')}
                                 </p>
                               </div>
@@ -665,7 +731,7 @@ export default function StudentList({
                               </div>
                               <div>
                                 <p className="text-[9px] font-bold text-slate-400">Phone Number</p>
-                                <p className="text-sm font-bold text-slate-700 dark:text-slate-200">{student.phone || "N/A"}</p>
+                                <p className="text-sm font-bold text-slate-700 dark:text-slate-200 uppercase">{student.phone || "N/A"}</p>
                               </div>
                             </div>
                             <div className="flex items-center gap-3">
@@ -674,7 +740,7 @@ export default function StudentList({
                               </div>
                               <div>
                                 <p className="text-[9px] font-bold text-slate-400">Email Address</p>
-                                <p className="text-sm font-bold text-slate-700 dark:text-slate-200 truncate max-w-[180px]">{student.email || "N/A"}</p>
+                                <p className="text-sm font-bold text-slate-700 dark:text-slate-200 truncate max-w-[180px] lowercase">{student.email || "N/A"}</p>
                               </div>
                             </div>
                           </div>
@@ -715,6 +781,65 @@ export default function StudentList({
                 </DialogContent>
               </Dialog>
 
+              <Dialog open={passwordModalOpen} onOpenChange={setPasswordModalOpen}>
+                <DialogContent className="max-w-sm rounded-[2.5rem] border-0 shadow-2xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl p-8">
+                  <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 to-transparent rounded-[2.5rem] pointer-events-none" />
+                  <DialogHeader className="space-y-3">
+                    <div className="w-12 h-12 bg-amber-100 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400 rounded-2xl flex items-center justify-center mb-2">
+                      <KeyRound className="w-6 h-6" />
+                    </div>
+                    <DialogTitle className="text-2xl font-black text-slate-900 dark:text-white">Update Password</DialogTitle>
+                    <p className="text-sm font-medium text-slate-500 dark:text-slate-400 leading-relaxed">
+                      Change password for <span className="font-bold text-slate-800 dark:text-slate-200">{student?.fullName}</span>. This will immediately update their login access.
+                    </p>
+                  </DialogHeader>
+                  <form onSubmit={handlePasswordUpdate} className="space-y-5 mt-6 relative z-10">
+                    <div className="space-y-2">
+                      <Label className="text-xs font-bold uppercase tracking-wider text-slate-500 ml-1">New Password</Label>
+                      <Input 
+                        type="text" 
+                        value={newPassword}
+                        onChange={e => setNewPassword(e.target.value)}
+                        className="bg-slate-50 dark:bg-slate-950 border-2 border-slate-100 dark:border-slate-800/50 rounded-2xl h-12 px-4 focus-visible:ring-amber-500/50 focus-visible:border-amber-500/50 font-medium"
+                        placeholder="Enter new password"
+                        required
+                        minLength={4}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-xs font-bold uppercase tracking-wider text-slate-500 ml-1">Confirm Password</Label>
+                      <Input 
+                        type="text" 
+                        value={confirmPassword}
+                        onChange={e => setConfirmPassword(e.target.value)}
+                        className="bg-slate-50 dark:bg-slate-950 border-2 border-slate-100 dark:border-slate-800/50 rounded-2xl h-12 px-4 focus-visible:ring-amber-500/50 focus-visible:border-amber-500/50 font-medium"
+                        placeholder="Re-enter password"
+                        required
+                        minLength={4}
+                      />
+                    </div>
+                    <div className="pt-6 flex gap-3">
+                      <Button 
+                        type="button" 
+                        variant="ghost" 
+                        onClick={() => setPasswordModalOpen(false)}
+                        className="rounded-2xl font-bold h-12 flex-1 hover:bg-slate-100 dark:hover:bg-slate-800"
+                      >
+                        Cancel
+                      </Button>
+                      <Button 
+                        type="submit" 
+                        disabled={isSubmitting}
+                        className="rounded-2xl font-bold h-12 flex-1 bg-amber-500 hover:bg-amber-600 text-white shadow-lg shadow-amber-500/25"
+                      >
+                        {isSubmitting ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : <ShieldCheck className="h-5 w-5 mr-2" />}
+                        Update
+                      </Button>
+                    </div>
+                  </form>
+                </DialogContent>
+              </Dialog>
+
               <div className="flex items-center gap-1">
                 {student.status === "UNREGISTERED" && (
                   <Button
@@ -727,34 +852,37 @@ export default function StudentList({
                   </Button>
                 )}
 
-                {student.status === "REGISTERED" && (
-                  <>
-                    <div className="flex gap-1 border-r border-slate-200 dark:border-slate-800 pr-2 mr-1 items-center">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger className="inline-flex items-center justify-center h-9 w-9 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-400 dark:text-slate-600 shrink-0 outline-none">
-                          <MoreVertical className="h-4 w-4" />
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-56 rounded-xl">
-                          <DropdownMenuItem onClick={() => { setSelectedStudent(student); setDocsModalOpen(true); }} className="cursor-pointer py-2.5 my-0.5 font-bold text-slate-700 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400">
-                            <FileText className="mr-2 h-4 w-4" /> Manage Document
-                          </DropdownMenuItem>
+                {(student.status === "REGISTERED" || student.status === "PASS_OUT") && (
+                  <div className="flex gap-1 border-r border-slate-200 dark:border-slate-800 pr-2 mr-1 items-center">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger className="inline-flex items-center justify-center h-9 w-9 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-400 dark:text-slate-600 shrink-0 outline-none">
+                        <MoreVertical className="h-4 w-4" />
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-56 rounded-xl">
+                        <DropdownMenuItem onClick={() => { setSelectedStudent(student); setDocsModalOpen(true); }} className="cursor-pointer py-2.5 my-0.5 font-bold text-slate-700 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400">
+                          <FileText className="mr-2 h-4 w-4" /> Manage Document
+                        </DropdownMenuItem>
+                        {student.status !== "PASS_OUT" && (
                           <DropdownMenuItem onClick={() => setManageResultStudent(student)} className="cursor-pointer py-2.5 my-0.5 font-bold text-slate-700 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400">
                             <GraduationCap className="mr-2 h-4 w-4" /> Manage Result
                           </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </div>
-                    <Button
-                      onClick={() => handlePassOutClick(student)}
-                      disabled={isActioning === student.id}
-                      variant="ghost"
-                      size="sm"
-                      className="h-9 rounded-lg font-bold text-[10px] px-2 text-amber-500 hover:text-amber-600 hover:bg-amber-50"
-                    >
-                      {isActioning === student.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <GraduationCap className="h-3 w-3 mr-1" />}
-                      Pass Out
-                    </Button>
-                  </>
+                        )}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                )}
+                
+                {student.status === "REGISTERED" && (
+                  <Button
+                    onClick={() => handlePassOutClick(student)}
+                    disabled={isActioning === student.id}
+                    variant="ghost"
+                    size="sm"
+                    className="h-9 rounded-lg font-bold text-[10px] px-2 text-amber-500 hover:text-amber-600 hover:bg-amber-50"
+                  >
+                    {isActioning === student.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <GraduationCap className="h-3 w-3 mr-1" />}
+                    Pass Out
+                  </Button>
                 )}
                 {student.status !== "PASS_OUT" && (() => {
                   const certStatus = globalConfig ? getDocumentStatus(student, null, globalConfig as any) : { finalCertIssued: student.certificateIssuedToStudent, finalCertApproved: student.certificateApproved, isCertAuto: false };
@@ -1155,6 +1283,7 @@ export default function StudentList({
                     {(certStatus.finalCertApproved || hasDocumentAuthority || certStatus.finalCertIssued) && !certStatus.isCertAuto ? (
                       <Switch 
                         checked={!!selectedStudent?.certificateIssuedToStudent} 
+                        disabled={selectedStudent?.status === "PASS_OUT"}
                         onCheckedChange={(checked) => {
                           if (docRefs.current['CERTIFICATE'] && !docRefs.current['CERTIFICATE']?.hasTemplate()) {
                             toast.error(`Design template for Certificate does not exist yet!`);
@@ -1256,9 +1385,9 @@ export default function StudentList({
                       </div>
                     </div>
                     
-                    <div className="border border-slate-100 dark:border-slate-800 rounded-2xl overflow-hidden">
+                    <div className="border border-slate-100 dark:border-slate-800 rounded-2xl overflow-hidden overflow-y-auto max-h-[300px] scrollbar-thin scrollbar-thumb-slate-200 dark:scrollbar-thumb-slate-700 scrollbar-track-transparent">
                       <Table>
-                        <TableHeader className="bg-slate-50 dark:bg-slate-900/50">
+                        <TableHeader className="bg-slate-50 dark:bg-slate-900/50 sticky top-0 z-10">
                           <TableRow>
                             <TableHead className="font-bold">Semester</TableHead>
                             <TableHead className="font-bold">Super Admin Status</TableHead>
@@ -1289,6 +1418,7 @@ export default function StudentList({
                                   {(sem.superAdminApproved || hasDocumentAuthority || sem.issuedToStudent) && !sem.isAuto ? (
                                     <Switch 
                                       checked={!!sem.rawIssued} 
+                                      disabled={selectedStudent?.status === "PASS_OUT"}
                                       onCheckedChange={(checked) => {
                                         if (docRefs.current[uniqueKey] && !docRefs.current[uniqueKey]?.hasTemplate()) {
                                           toast.error(`Design template for Marksheet Sem ${sem.semesterNumber} does not exist yet!`);
@@ -1347,6 +1477,7 @@ export default function StudentList({
                         <span className="text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-widest">Issue Status</span>
                         <Switch 
                           checked={!!doc.isIssued} 
+                          disabled={selectedStudent?.status === "PASS_OUT"}
                           onCheckedChange={(checked) => {
                             if (docRefs.current[doc.id] && !docRefs.current[doc.id]?.hasTemplate()) {
                               toast.error(`Design template for ${doc.label} does not exist yet!`);

@@ -60,7 +60,7 @@ export async function createWorkspace(data: any) {
     const workspace = await db.workspace.create({
       data: {
         name,
-        subdomain,
+        subdomain: subdomain.toLowerCase(),
         isActive: true,
         centerCode: centerCode || null,
         state: state || null,
@@ -178,7 +178,7 @@ export async function updateCenterConfig(workspaceId: string, data: any) {
       where: { id: workspaceId },
       data: {
         name,
-        subdomain,
+        subdomain: subdomain ? subdomain.toLowerCase() : undefined,
         centerCode,
         logoUrl,
         signatureUrl,

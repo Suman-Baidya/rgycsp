@@ -3,6 +3,7 @@ import { MainFooter } from "@/components/layout/MainFooter";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { db } from "@/lib/prisma";
 import { auth } from "@/auth";
+import { StudentFeaturesGrid } from "@/components/landing/StudentFeaturesGrid";
 
 export default async function StudentsPage() {
   const session = await auth();
@@ -42,19 +43,7 @@ export default async function StudentsPage() {
           />
         )}
 
-        {/* Dynamic Content Section for Students */}
-        <section className="py-20 bg-background relative overflow-hidden">
-           <div className="max-w-7xl mx-auto px-6 relative z-10">
-              <div className="text-center max-w-3xl mx-auto space-y-6">
-                <h2 className="text-3xl md:text-5xl font-black tracking-tight text-foreground">
-                  Empowering the <span className="text-primary">Next Generation</span>
-                </h2>
-                <p className="text-lg text-muted-foreground">
-                  Our student portal provides seamless access to courses, notices, and placement opportunities. Stay connected and excel in your academic journey.
-                </p>
-              </div>
-           </div>
-        </section>
+        <StudentFeaturesGrid />
 
       </main>
 

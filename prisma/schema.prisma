@@ -135,6 +135,7 @@ model SiteSettings {
 
   globalIdCardAccess    Boolean @default(true)
   globalAdmitCardAccess Boolean @default(true)
+  documentNumberConfig  Json? // { certificatePrefix, marksheetPrefix, registrationPrefix, nextNumber }
 
   sections LandingSection[]
 
@@ -272,6 +273,9 @@ model StudentProfile {
 
   fullName      String
   enrollmentNo  String // System generated ID
+  registrationNo String? @unique // Official Registration Number
+  certificateNo  String? @unique // Official Certificate Number
+  marksheetNo    String? @unique // Shared official Marksheet Number across all semesters
   loginPassword String? // Added for dashboard login
   dob           DateTime?
   gender        String?
@@ -741,6 +745,18 @@ model WalletPaymentConfig {
   updatedAt         DateTime @updatedAt
 }
 
+model PlatformFeeConfig {
+  id              String   @id @default(cuid())
+  name            String
+  amount          Float
+  cronMonth       Int      // 1-12
+  cronDay         Int      // 1-31
+  isActive        Boolean  @default(true)
+  lastExecutedAt  DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
 // ============================================
 // Franchise Product System
 // ============================================
@@ -985,7 +1001,15 @@ model QuestionBank {
 model RegistrationConfig {
   id                 String   @id @default(cuid())
   enrollmentPrefix   String   @default("RGY")
+  enrollmentDigits   Int      @default(6)
   registrationSeries String   @default("B")
+  
+  certificatePrefix  String   @default("CERT")
+  certificateDigits  Int      @default(4)
+  certificateNextSeq Int      @default(1)
+  marksheetPrefix    String   @default("MS")
+  marksheetDigits    Int      @default(4)
+  marksheetNextSeq   Int      @default(1)
   
   autoDocumentIssueEnabled Boolean @default(false)
   autoMarksheetDays        Int     @default(2)

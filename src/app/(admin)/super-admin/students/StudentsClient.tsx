@@ -69,7 +69,12 @@ export default function StudentsClient({ initialStudents, initialWorkspaces, ini
   // Config State
   const [configData, setConfigData] = useState({
     enrollmentPrefix: initialConfig?.enrollmentPrefix || "RGY",
+    enrollmentDigits: initialConfig?.enrollmentDigits || 6,
     registrationSeries: initialConfig?.registrationSeries || "B",
+    certificatePrefix: initialConfig?.certificatePrefix || "CERT",
+    certificateDigits: initialConfig?.certificateDigits || 4,
+    marksheetPrefix: initialConfig?.marksheetPrefix || "MS",
+    marksheetDigits: initialConfig?.marksheetDigits || 4,
     autoDocumentIssueEnabled: initialConfig?.autoDocumentIssueEnabled || false,
     autoMarksheetDays: initialConfig?.autoMarksheetDays || 2,
     autoCertificateDays: initialConfig?.autoCertificateDays || 30,
@@ -114,6 +119,8 @@ export default function StudentsClient({ initialStudents, initialWorkspaces, ini
     photoUrl: "",
     signatureUrl: "",
     idProofUrl: "",
+    marksheetNo: "",
+    certificateNo: "",
   });
 
   const handleEditClick = (student: any) => {
@@ -139,6 +146,8 @@ export default function StudentsClient({ initialStudents, initialWorkspaces, ini
     setEditFormData({
       fullName: student.fullName,
       enrollmentNo: student.enrollmentNo,
+      marksheetNo: student.marksheetNo || "",
+      certificateNo: student.certificateNo || "",
       loginPassword: student.loginPassword || "",
       phone: student.phone || "",
       email: student.email || "",
@@ -188,11 +197,15 @@ export default function StudentsClient({ initialStudents, initialWorkspaces, ini
               marksheetIssuedToStudent: false
             } as any);
           }
-          setSelectedStudentForDocs({ ...selectedStudentForDocs, semesters: updatedSemesters });
+          setSelectedStudentForDocs({ 
+            ...selectedStudentForDocs, 
+            semesters: updatedSemesters,
+            marksheetNo: res.marksheetNo || selectedStudentForDocs.marksheetNo
+          });
         } else {
           setSelectedStudentForDocs({
             ...selectedStudentForDocs,
-            ...(docType === "CERTIFICATE" && { certificateApproved: status }),
+            ...(docType === "CERTIFICATE" && { certificateApproved: status, certificateNo: res.certificateNo || selectedStudentForDocs.certificateNo }),
             ...(docType === "STUDENT_ID" && { registrationCardApproved: status }),
             ...(docType === "ADMIT_CARD" && { admitCardApproved: status }),
             ...(docType === "MARKSHEET" && !semesterNumber && { marksheetApproved: status })
@@ -482,7 +495,7 @@ export default function StudentsClient({ initialStudents, initialWorkspaces, ini
             </div>
 
             <div className="max-w-5xl mx-auto w-full">
-              <Accordion defaultValue={["registration"]} className="space-y-6">
+              <Accordion defaultValue={[]} className="space-y-6">
                 {/* Registration Config Accordion Item */}
                 <AccordionItem value="registration" className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm px-1">
                   <AccordionTrigger className="px-5 py-4 hover:no-underline hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
@@ -501,7 +514,7 @@ export default function StudentsClient({ initialStudents, initialWorkspaces, ini
                           <label className="text-sm font-bold text-slate-700 dark:text-slate-300 block mb-1">Enrollment Number Prefix</label>
                           <p className="text-xs text-slate-500 mb-3">Used as the prefix for all generated Enrollment Numbers (e.g., RGY12345678)</p>
                           <Input 
-                            value={configData.enrollmentPrefix} 
+                            value={configData.enrollmentPrefix || ""} 
                             onChange={e => setConfigData(prev => ({ ...prev, enrollmentPrefix: e.target.value.toUpperCase() }))}
                             className="h-12 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-xl font-bold font-mono tracking-wider"
                             placeholder="e.g. RGY"
@@ -511,10 +524,23 @@ export default function StudentsClient({ initialStudents, initialWorkspaces, ini
                           <label className="text-sm font-bold text-slate-700 dark:text-slate-300 block mb-1">Registration Number Series</label>
                           <p className="text-xs text-slate-500 mb-3">Used in the Franchise Registration Number (e.g., WB002Y2026<span className="font-bold text-primary">B</span>12345)</p>
                           <Input 
-                            value={configData.registrationSeries} 
+                            value={configData.registrationSeries || ""} 
                             onChange={e => setConfigData(prev => ({ ...prev, registrationSeries: e.target.value.toUpperCase() }))}
                             className="h-12 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-xl font-bold font-mono tracking-wider"
                             placeholder="e.g. B"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-sm font-bold text-slate-700 dark:text-slate-300 block mb-1">Enrollment Number Length</label>
+                          <p className="text-xs text-slate-500 mb-3">Number of digits in the generated Enrollment Number (6 to 12). (e.g. 6 = {configData.enrollmentPrefix || "RGY"}000001)</p>
+                          <Input 
+                            type="number"
+                            min="6"
+                            max="12"
+                            value={configData.enrollmentDigits || 6} 
+                            onChange={e => setConfigData(prev => ({ ...prev, enrollmentDigits: parseInt(e.target.value) || 6 }))}
+                            className="h-12 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-xl font-bold font-mono tracking-wider"
+                            placeholder="e.g. 6"
                           />
                         </div>
                       </div>
@@ -536,8 +562,8 @@ export default function StudentsClient({ initialStudents, initialWorkspaces, ini
                             <p className="text-[10px] uppercase font-black tracking-[0.2em] text-slate-400 mb-2 group-hover:text-primary transition-colors">Sample Enrollment No</p>
                             <div className="bg-white dark:bg-slate-950 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-inner flex items-center justify-center">
                               <span className="text-xl sm:text-2xl font-black font-mono tracking-widest text-slate-800 dark:text-slate-200">
-                                <span className="text-indigo-600 dark:text-indigo-400">{configData.enrollmentPrefix || "PREFIX"}</span>
-                                <span>12345678</span>
+                                <span className="text-indigo-600 dark:text-indigo-400">{configData.enrollmentPrefix ?? "PREFIX"}</span>
+                                <span>{String(123456).padStart(configData.enrollmentDigits || 6, '0')}</span>
                               </span>
                             </div>
                           </div>
@@ -546,8 +572,103 @@ export default function StudentsClient({ initialStudents, initialWorkspaces, ini
                             <div className="bg-white dark:bg-slate-950 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-inner flex items-center justify-center text-center">
                               <span className="text-xl sm:text-2xl font-black font-mono tracking-widest text-slate-800 dark:text-slate-200 break-all">
                                 <span>WB002Y2026</span>
-                                <span className="text-primary">{configData.registrationSeries || "SERIES"}</span>
-                                <span>12345</span>
+                                <span className="text-primary">{configData.registrationSeries ?? "SERIES"}</span>
+                                <span>123456</span>
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+
+                {/* Document Number Config Accordion Item */}
+                <AccordionItem value="documentNumber" className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm px-1">
+                  <AccordionTrigger className="px-5 py-4 hover:no-underline hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 rounded-full bg-indigo-50 dark:bg-indigo-500/10 flex items-center justify-center">
+                        <FileText className="w-4 h-4 text-indigo-600 dark:text-indigo-500" />
+                      </div>
+                      <h3 className="font-bold text-slate-800 dark:text-slate-200">Document Number Config</h3>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="p-6 pt-2 border-t border-slate-100 dark:border-slate-800">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 w-full mt-4">
+                      {/* Left Side: Inputs */}
+                      <div className="space-y-6">
+                        <div>
+                          <label className="text-sm font-bold text-slate-700 dark:text-slate-300 block mb-1">Certificate Prefix</label>
+                          <p className="text-xs text-slate-500 mb-3">Prefix used when generating Certificate Numbers (e.g., CERT0001)</p>
+                          <Input 
+                            value={configData.certificatePrefix || ""} 
+                            onChange={e => setConfigData(prev => ({ ...prev, certificatePrefix: e.target.value.toUpperCase() }))}
+                            className="h-12 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-xl font-bold font-mono tracking-wider"
+                            placeholder="e.g. CERT"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-sm font-bold text-slate-700 dark:text-slate-300 block mb-1">Certificate Number Length</label>
+                          <p className="text-xs text-slate-500 mb-3">Number of numeric digits used (e.g. 4 = CERT0001)</p>
+                          <Input 
+                            type="number"
+                            min="3" max="10"
+                            value={configData.certificateDigits || 4} 
+                            onChange={e => setConfigData(prev => ({ ...prev, certificateDigits: parseInt(e.target.value) || 4 }))}
+                            className="h-12 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-xl font-bold font-mono tracking-wider"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-sm font-bold text-slate-700 dark:text-slate-300 block mb-1">Marksheet Prefix</label>
+                          <p className="text-xs text-slate-500 mb-3">Prefix used when generating Marksheet Numbers (e.g., MS0001)</p>
+                          <Input 
+                            value={configData.marksheetPrefix || ""} 
+                            onChange={e => setConfigData(prev => ({ ...prev, marksheetPrefix: e.target.value.toUpperCase() }))}
+                            className="h-12 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-xl font-bold font-mono tracking-wider"
+                            placeholder="e.g. MS"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-sm font-bold text-slate-700 dark:text-slate-300 block mb-1">Marksheet Number Length</label>
+                          <p className="text-xs text-slate-500 mb-3">Number of numeric digits used (e.g. 4 = MS0001)</p>
+                          <Input 
+                            type="number"
+                            min="3" max="10"
+                            value={configData.marksheetDigits || 4} 
+                            onChange={e => setConfigData(prev => ({ ...prev, marksheetDigits: parseInt(e.target.value) || 4 }))}
+                            className="h-12 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-xl font-bold font-mono tracking-wider"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Right Side: Live Preview */}
+                      <div className="bg-gradient-to-br from-slate-50 to-white dark:from-slate-800/50 dark:to-slate-900/50 rounded-[2rem] p-6 lg:p-8 border border-slate-100 dark:border-slate-800 shadow-sm flex flex-col justify-center h-full">
+                        <div className="flex items-center gap-3 mb-6 pb-4 border-b border-slate-200/50 dark:border-slate-700/50">
+                          <div className="p-2 bg-primary/10 rounded-xl text-primary">
+                            <Eye className="w-5 h-5" />
+                          </div>
+                          <div>
+                            <h3 className="font-black text-lg text-slate-800 dark:text-slate-100">Live Preview</h3>
+                            <p className="text-xs text-slate-500">How the generated document numbers will look</p>
+                          </div>
+                        </div>
+                        
+                        <div className="space-y-6">
+                          <div className="group">
+                            <p className="text-[10px] uppercase font-black tracking-[0.2em] text-slate-400 mb-2 group-hover:text-primary transition-colors">Sample Certificate No</p>
+                            <div className="bg-white dark:bg-slate-950 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-inner flex items-center justify-center">
+                              <span className="text-xl sm:text-2xl font-black font-mono tracking-widest text-slate-800 dark:text-slate-200">
+                                <span className="text-indigo-600 dark:text-indigo-400">{configData.certificatePrefix ?? "CERT"}</span>
+                                <span>{String(123456).padStart(configData.certificateDigits || 4, '0')}</span>
+                              </span>
+                            </div>
+                          </div>
+                          <div className="group">
+                            <p className="text-[10px] uppercase font-black tracking-[0.2em] text-slate-400 mb-2 group-hover:text-primary transition-colors">Sample Marksheet No</p>
+                            <div className="bg-white dark:bg-slate-950 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-inner flex items-center justify-center text-center">
+                              <span className="text-xl sm:text-2xl font-black font-mono tracking-widest text-slate-800 dark:text-slate-200 break-all">
+                                <span className="text-indigo-600 dark:text-indigo-400">{configData.marksheetPrefix ?? "MS"}</span>
+                                <span>{String(123456).padStart(configData.marksheetDigits || 4, '0')}</span>
                               </span>
                             </div>
                           </div>
@@ -1213,7 +1334,18 @@ export default function StudentsClient({ initialStudents, initialWorkspaces, ini
                         </div>
                         <div className="space-y-1.5">
                           <label className="text-xs font-bold text-slate-400">Login Password</label>
-                          <Input value={editFormData.loginPassword} onChange={e => setEditFormData({ ...editFormData, loginPassword: e.target.value })} className="h-11 rounded-xl" />
+                          <Input type="text" value={editFormData.loginPassword} onChange={e => setEditFormData({ ...editFormData, loginPassword: e.target.value })} placeholder="Leave blank to keep current" className="h-11 rounded-xl" />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-1.5">
+                          <label className="text-xs font-bold text-slate-400">Marksheet No</label>
+                          <Input value={editFormData.marksheetNo} onChange={e => setEditFormData({ ...editFormData, marksheetNo: e.target.value })} placeholder="e.g. MS0001" className="h-11 rounded-xl" />
+                        </div>
+                        <div className="space-y-1.5">
+                          <label className="text-xs font-bold text-slate-400">Certificate No</label>
+                          <Input value={editFormData.certificateNo} onChange={e => setEditFormData({ ...editFormData, certificateNo: e.target.value })} placeholder="e.g. CR0001" className="h-11 rounded-xl" />
                         </div>
                       </div>
 
@@ -1458,6 +1590,11 @@ export default function StudentsClient({ initialStudents, initialWorkspaces, ini
                     <h3 className="font-black text-slate-900 dark:text-white text-xl tracking-tight">Final Certificate</h3>
                   </div>
                   <p className="text-sm font-medium text-slate-500 leading-snug">Official completion certificate. This is the final milestone document.</p>
+                  {selectedStudentForDocs?.certificateNo && (
+                    <div className="mt-2 text-xs font-mono font-bold bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-400 px-3 py-1 rounded-md inline-block border border-amber-200 dark:border-amber-800">
+                      Cert No: {selectedStudentForDocs.certificateNo}
+                    </div>
+                  )}
                 </div>
                 {certStatus.isCertAuto ? (
                   <Badge className="bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 border-0 rounded-xl px-4 py-1.5 font-bold shadow-sm">Auto Issued</Badge>
@@ -1549,6 +1686,11 @@ export default function StudentsClient({ initialStudents, initialWorkspaces, ini
                     <div>
                       <h3 className="font-black text-slate-900 dark:text-white text-lg tracking-tight">Academic Marksheets</h3>
                       <p className="text-sm font-medium text-slate-500 leading-snug">Semester-wise detailed marksheets. (Total {totalSemesters})</p>
+                      {selectedStudentForDocs?.marksheetNo && (
+                        <div className="mt-2 text-xs font-mono font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-3 py-1 rounded-md inline-block border border-slate-200 dark:border-slate-700">
+                          Marksheet No: {selectedStudentForDocs.marksheetNo}
+                        </div>
+                      )}
                     </div>
                   </div>
                   

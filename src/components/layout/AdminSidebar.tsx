@@ -203,7 +203,7 @@ export function AdminSidebar({
             const Icon = item.icon;
             
             return (
-              <Link key={item.href} href={href} className="block w-full">
+              <a key={item.href} href={href} className="block w-full">
                 <div
                   className={cn(
                     "flex items-center gap-3 transition-all duration-300 group relative overflow-hidden",
@@ -294,7 +294,7 @@ export function AdminSidebar({
                     </div>
                   )}
                 </div>
-              </Link>
+              </a>
             );
           })}
         </nav>
@@ -336,7 +336,7 @@ export function AdminSidebar({
             const isActive = isActivePath(pathname, href);
             
             return (
-              <Link key={item.name} href={href} className="flex flex-col items-center gap-1 w-16">
+              <a key={item.name} href={href} className="flex flex-col items-center gap-1 w-16">
                 <div className={cn(
                   "p-2 rounded-xl transition-all duration-300 flex items-center justify-center",
                   isActive ? "bg-primary text-primary-foreground shadow-[0_4px_12px_-4px_rgba(var(--primary),0.5)]" : "text-zinc-400"
@@ -355,7 +355,7 @@ export function AdminSidebar({
                 )}>
                   {item.name}
                 </span>
-              </Link>
+              </a>
             );
           })}
           
@@ -405,7 +405,7 @@ export function AdminSidebar({
                   const isActive = isActivePath(pathname, href);
                   
                   return (
-                    <Link key={item.name} href={href} className="block w-full">
+                    <a key={item.name} href={href} className="block w-full">
                       <div className={cn(
                         "flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-300",
                         isActive ? "bg-primary text-primary-foreground shadow-md" : "hover:bg-white/5 text-zinc-300"
@@ -425,7 +425,7 @@ export function AdminSidebar({
                           )}
                         </span>
                       </div>
-                    </Link>
+                    </a>
                   );
                 })}
               </div>

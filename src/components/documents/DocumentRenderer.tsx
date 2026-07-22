@@ -117,7 +117,9 @@ export const DocumentRenderer = forwardRef<DocumentRendererRef, DocumentRenderer
       switch (varName) {
         // Base Student Fields
         case "studentName": return student.fullName || "";
-        case "registrationNo": return student.enrollmentNo || "";
+        case "registrationNo": return student.registrationNo || student.enrollmentNo || "";
+        case "certificateNo": return student.certificateNo || "";
+        case "marksheetNo": return student.marksheetNo || "";
         case "dob": return student.dob ? new Date(student.dob).toLocaleDateString('en-GB') : "";
         case "gender": return student.gender || "";
         case "bloodGroup": return student.bloodGroup || "";

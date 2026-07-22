@@ -156,7 +156,7 @@ export function LoginForm({
               <div className="flex justify-between items-end px-1">
                 <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">Identification</label>
                 <Badge variant="outline" className="bg-slate-50 dark:bg-white/5 border-none text-[8px] font-bold px-2 py-0.5 opacity-60">
-                  {isGlobal ? "Email Address" : "Email or Username"}
+                  {isGlobal ? "Email, Enrollment No. or Center Code" : "Email or Username"}
                 </Badge>
               </div>
               <div className="relative group">
@@ -165,7 +165,7 @@ export function LoginForm({
                 </div>
                 <Input
                   name="username"
-                  placeholder={isGlobal ? "name@example.com" : "Email or Username"}
+                  placeholder={isGlobal ? "Email, Enrollment No, or Center Code" : "Email or Username"}
                   autoComplete="username"
                   className="h-12 pl-12 rounded-2xl border-slate-200 dark:border-white/10 bg-slate-50/50 dark:bg-white/5 focus:bg-white dark:focus:bg-zinc-900 focus:ring-4 focus:ring-primary/10 font-bold text-sm transition-all outline-none"
                   required

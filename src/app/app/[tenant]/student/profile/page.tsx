@@ -2,6 +2,8 @@ import { getStudentProfile } from "@/app/actions/student";
 import { getWorkspaceByTenant } from "@/lib/workspace";
 import { redirect } from "next/navigation";
 import { getServerTenantLink } from "@/lib/routing-server";
+import { db } from "@/lib/prisma";
+import { getDocumentStatus } from "@/lib/document-utils";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -25,6 +27,22 @@ export default async function StudentProfilePage({
   const student = result.data as any;
   if (!student) redirect(await getServerTenantLink("/student/dashboard", tenant));
   const profile = student.studentProfile;
+
+  // Apply auto-issue logic dynamically for the dashboard
+  const config = await db.registrationConfig.findFirst();
+  const certStatus = getDocumentStatus(profile, null, config);
+  
+  if (certStatus.finalCertIssued) profile.certificateIssuedToStudent = true;
+  if (certStatus.finalCertApproved) profile.certificateApproved = true;
+
+  if (profile.semesters) {
+    profile.semesters = profile.semesters.map((sem: any) => {
+      const semStatus = getDocumentStatus(profile, sem, config);
+      if (semStatus.finalMarksheetIssued) sem.marksheetIssuedToStudent = true;
+      if (semStatus.finalMarksheetApproved) sem.marksheetApproved = true;
+      return sem;
+    });
+  }
 
   const workspaceSettings = workspace.siteSettings as any;
 

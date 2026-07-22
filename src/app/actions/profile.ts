@@ -100,9 +100,18 @@ export async function updatePassword(data: {
     }
 
     const hashed = await hash(data.newPassword, 12);
-    await db.user.update({
-      where: { id: userIdToUpdate },
-      data: { passwordHash: hashed }
+    await db.$transaction(async (tx) => {
+      await tx.user.update({
+        where: { id: userIdToUpdate },
+        data: { passwordHash: hashed }
+      });
+      // Also update plain text password in StudentProfile if they are a student
+      if (user.role === "STUDENT") {
+        await tx.studentProfile.updateMany({
+          where: { userId: userIdToUpdate },
+          data: { loginPassword: data.newPassword }
+        });
+      }
     });
 
     return { success: true };

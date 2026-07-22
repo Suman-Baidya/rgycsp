@@ -68,22 +68,38 @@ export async function approveApplication(applicationId: string, batchId: string)
       // 2. Generate Enrollment No and Password
       const config = await tx.registrationConfig.findFirst();
       const prefix = config ? config.enrollmentPrefix : "RGY";
+      const digits = config?.enrollmentDigits || 6;
       const globalCount = await tx.studentProfile.count();
-      const enrollmentNo = `${prefix}${String(globalCount + 1).padStart(8, '0')}`;
+      const enrollmentNo = `${prefix}${String(globalCount + 1).padStart(digits, '0')}`;
 
       let loginPassword = "";
       if (application.dob) {
         const dobDate = new Date(application.dob);
-        const dd = String(dobDate.getDate()).padStart(2, '0');
-        const mm = String(dobDate.getMonth() + 1).padStart(2, '0');
         const yyyy = dobDate.getFullYear();
-        loginPassword = `${dd}${mm}${yyyy}`;
+        let fname = application.fullName.split(' ')[0];
+        fname = fname.charAt(0).toUpperCase() + fname.slice(1).toLowerCase();
+        loginPassword = `${fname}${yyyy}`;
+      }
+
+      let userId = null;
+      if (loginPassword) {
+        const passwordHash = await bcrypt.hash(loginPassword, 10);
+        const newUser = await tx.user.create({
+          data: {
+            username: enrollmentNo,
+            name: application.fullName,
+            passwordHash,
+            role: 'USER'
+          }
+        });
+        userId = newUser.id;
       }
 
       // 3. Create StudentProfile
       const student = await tx.studentProfile.create({
         data: {
           workspaceId: application.workspaceId,
+          userId,
           batchId: batchId || null,
           courseId: application.courseId,
           applicationId: application.id,
