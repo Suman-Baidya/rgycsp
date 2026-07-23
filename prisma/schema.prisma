@@ -105,6 +105,9 @@ model Workspace {
   shippingAddress String? @db.Text
 
   franchisePaymentConfig FranchisePaymentConfig?
+  practicalConfig        PracticalConfig?
+  practicalSlots         PracticalSlot[]
+  practicalSchedules     StudentPracticalSchedule[]
 }
 
 // ============================================
@@ -261,6 +264,57 @@ model Batch {
 }
 
 // ============================================
+// Practical Classes System
+// ============================================
+
+model PracticalConfig {
+  id              String   @id @default(cuid())
+  workspaceId     String   @unique
+  slotDuration    Int      @default(90) // e.g., 90 (1.5hr) or 120 (2hr)
+  capacityPerSlot Int      @default(30) // 15-30 students max
+  offDays         Json?    @default("[]") // Array of integers [0, 1] representing off days
+  
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  slots     PracticalSlot[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model PracticalSlot {
+  id          String   @id @default(cuid())
+  configId    String
+  workspaceId String
+  startTime   String   // HH:MM
+  endTime     String   // HH:MM
+  order       Int      @default(0) // Sorting order for columns
+  
+  config    PracticalConfig @relation(fields: [configId], references: [id], onDelete: Cascade)
+  workspace Workspace       @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  schedules StudentPracticalSchedule[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model StudentPracticalSchedule {
+  id               String   @id @default(cuid())
+  studentProfileId String
+  workspaceId      String
+  slotId           String
+  dayOfWeek        Int      // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+
+  student   StudentProfile @relation(fields: [studentProfileId], references: [id], onDelete: Cascade)
+  workspace Workspace      @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  slot      PracticalSlot  @relation(fields: [slotId], references: [id], onDelete: Cascade)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([studentProfileId, dayOfWeek, slotId])
+}
+
+// ============================================
 // Student & Parent Profiles
 // ============================================
 
@@ -329,6 +383,7 @@ model StudentProfile {
   semesters   StudentSemester[]
   examEnrollments ExamEnrollment[]
   registrations   StudentRegistration[]
+  practicalSchedules StudentPracticalSchedule[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

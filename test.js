@@ -2,10 +2,14 @@ const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
 async function main() {
-  const courses = await prisma.course.findMany({ select: { id: true, title: true, duration: true } });
-  console.log(courses.filter(c => c.title.includes('DDME') || c.duration !== '1'));
+  try {
+    const config = await prisma.practicalConfig.findFirst();
+    console.log('Config:', config);
+  } catch (e) {
+    console.error('Error:', e);
+  } finally {
+    await prisma.$disconnect();
+  }
 }
 
-main()
-  .catch(console.error)
-  .finally(() => prisma.$disconnect());
+main();

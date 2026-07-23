@@ -11,6 +11,7 @@ import { getAttendanceList, saveAttendance } from "@/app/actions/attendance";
 import { AttendanceStatus } from "@prisma/client";
 import { toast } from "sonner";
 import AttendanceReports from "@/components/attendance/AttendanceReports";
+import PracticalClassesTab from "./PracticalClassesTab";
 
 // Helper for formatting
 const formatDate = (date: Date) => {
@@ -23,19 +24,22 @@ const formatDay = (date: Date) => {
 
 export default function AttendanceClient({
   workspaceId,
-  batches
+  batches,
+  initialStudents
 }: {
   workspaceId: string;
   batches: any[];
+  initialStudents?: any[];
 }) {
   const [activeTab, setActiveTab] = useState("take_attendance");
   const [selectedBatch, setSelectedBatch] = useState(batches[0]?.id || "");
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
-  const [students, setStudents] = useState<any[]>([]);
+  const [students, setStudents] = useState<any[]>(initialStudents || []);
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [mounted, setMounted] = useState(false);
   const dateInputRef = useRef<HTMLInputElement>(null);
+  const isFirstRender = useRef(true);
 
   useEffect(() => {
     setMounted(true);
@@ -54,6 +58,10 @@ export default function AttendanceClient({
   };
 
   useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
     fetchStudents();
   }, [selectedBatch, selectedDate]);
 
@@ -86,7 +94,8 @@ export default function AttendanceClient({
   const displayDate = formatDate(new Date(selectedDate));
 
   const tabs = [
-    { id: "take_attendance", label: "Take Attendance", icon: Edit3 },
+    { id: "take_attendance", label: "Theory Classes", icon: Edit3 },
+    { id: "practical_classes", label: "Practical Classes", icon: CalendarDays },
     { id: "reports", label: "Attendance Reports", icon: BarChart3 },
   ];
 
@@ -287,6 +296,10 @@ export default function AttendanceClient({
           </div>
         </div>
       </div>
+      )}
+
+      {activeTab === "practical_classes" && (
+        <PracticalClassesTab workspaceId={workspaceId} />
       )}
 
       {activeTab === "reports" && (
