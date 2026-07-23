@@ -20,7 +20,8 @@ import {
   Settings,
   MoreVertical,
   CheckCircle2,
-  QrCode
+  QrCode,
+  Copy
 } from "lucide-react";
 import { QRCodeCanvas } from "qrcode.react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -43,26 +44,8 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 
-interface DocVariable {
-  id: string;
-  name: string;
-  type: "text" | "image" | "signature" | "qrcode";
-  x: number;
-  y: number;
-  fontSize?: number;
-  fontWeight?: string;
-  color?: string;
-  lineHeight?: number;
-  width?: number;
-  height?: number;
-  textAlign?: "left" | "center" | "right" | "justify";
-  qrContentTemplate?: string;
-  objectFit?: "cover" | "contain" | "fill";
-  borderRadius?: number;
-}
-
-
-
+import { DraggableElement } from "@/components/documents/DraggableElement";
+import { DocVariable } from "@/types/document";
 const DEFAULT_DEMO_DATA: Record<string, string> = {
   // Student Base
   studentName: "Suman Baidya",
@@ -282,6 +265,54 @@ export default function DocumentDesigner() {
     }
   };
 
+  // Keyboard Shortcuts for Nudging and Deleting
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (!selectedId || isPreview) return;
+
+      // Ignore if typing in an input or textarea
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+        return;
+      }
+
+      if (e.key === "Delete" || e.key === "Backspace") {
+        e.preventDefault();
+        setVariables(vars => vars.filter(v => v.id !== selectedId));
+        setSelectedId(null);
+        return;
+      }
+
+      const nudgeAmount = e.shiftKey ? 10 : 1;
+      let dx = 0;
+      let dy = 0;
+
+      if (e.key === "ArrowUp") dy = -nudgeAmount;
+      else if (e.key === "ArrowDown") dy = nudgeAmount;
+      else if (e.key === "ArrowLeft") dx = -nudgeAmount;
+      else if (e.key === "ArrowRight") dx = nudgeAmount;
+
+      if (dx !== 0 || dy !== 0) {
+        e.preventDefault();
+        setVariables(prev => prev.map(v => {
+          if (v.id === selectedId) {
+            const el = document.getElementById(`var-${selectedId}`);
+            const elWidth = el?.offsetWidth || 20;
+            const elHeight = el?.offsetHeight || 20;
+            return {
+              ...v,
+              x: Math.max(0, Math.min(canvasSize.width - elWidth, v.x + dx)),
+              y: Math.max(0, Math.min(canvasSize.height - elHeight, v.y + dy))
+            };
+          }
+          return v;
+        }));
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [selectedId, isPreview, canvasSize]);
+
   const DPI = 96;
   const MM_PER_INCH = 25.4;
 
@@ -331,6 +362,14 @@ export default function DocumentDesigner() {
 
   const parseQrContent = (template: string = "") => {
     return template.replace(/\{(\w+)\}/g, (_, key) => {
+      return previewData[key] || `{${key}}`;
+    });
+  };
+
+  const parseTextContent = (v: DocVariable) => {
+    const templateStr = v.textContent !== undefined ? v.textContent : `{${v.name}}`;
+    if (!isPreview) return templateStr;
+    return templateStr.replace(/\{(\w+)\}/g, (_, key) => {
       return previewData[key] || `{${key}}`;
     });
   };
@@ -452,7 +491,7 @@ export default function DocumentDesigner() {
       type,
       x: 50,
       y: 50,
-      ...(type === "text" && { fontSize: 16, fontWeight: "normal", color: "#000000", lineHeight: 1 }),
+      ...(type === "text" && { fontSize: 16, fontWeight: "normal", fontFamily: "Inter", color: "#000000", lineHeight: 1 }),
       ...(type === "image" && { width: 100, height: 100 }),
       ...(type === "signature" && { width: 120, height: 40 }),
       ...(type === "qrcode" && { width: 100, height: 100, qrContentTemplate: "{studentName} - {registrationNo}" }),
@@ -468,6 +507,19 @@ export default function DocumentDesigner() {
   const removeVariable = (id: string) => {
     setVariables(variables.filter(v => v.id !== id));
     setSelectedId(null);
+  };
+
+  const duplicateVariable = (id: string) => {
+    const v = variables.find(v => v.id === id);
+    if (!v) return;
+    const newVar = {
+      ...v,
+      id: crypto.randomUUID(),
+      x: v.x + 20,
+      y: v.y + 20
+    };
+    setVariables([...variables, newVar]);
+    setSelectedId(newVar.id);
   };
 
   const downloadPDF = async () => {
@@ -554,8 +606,11 @@ export default function DocumentDesigner() {
       const dx = moveEvent.clientX - dragRef.current.startX;
       const dy = moveEvent.clientY - dragRef.current.startY;
       
-      const newX = Math.max(0, Math.min(canvasSize.width - 20, dragRef.current.origX + dx));
-      const newY = Math.max(0, Math.min(canvasSize.height - 20, dragRef.current.origY + dy));
+      const elWidth = dragRef.current.el?.offsetWidth || 20;
+      const elHeight = dragRef.current.el?.offsetHeight || 20;
+
+      const newX = Math.max(0, Math.min(canvasSize.width - elWidth, dragRef.current.origX + dx));
+      const newY = Math.max(0, Math.min(canvasSize.height - elHeight, dragRef.current.origY + dy));
       
       // Update DOM directly for lag-free dragging
       if (dragRef.current.el) {
@@ -569,8 +624,11 @@ export default function DocumentDesigner() {
       const dx = upEvent.clientX - dragRef.current.startX;
       const dy = upEvent.clientY - dragRef.current.startY;
       
-      const finalX = Math.max(0, Math.min(canvasSize.width - 20, dragRef.current.origX + dx));
-      const finalY = Math.max(0, Math.min(canvasSize.height - 20, dragRef.current.origY + dy));
+      const elWidth = dragRef.current.el?.offsetWidth || 20;
+      const elHeight = dragRef.current.el?.offsetHeight || 20;
+
+      const finalX = Math.max(0, Math.min(canvasSize.width - elWidth, dragRef.current.origX + dx));
+      const finalY = Math.max(0, Math.min(canvasSize.height - elHeight, dragRef.current.origY + dy));
       
       // Only trigger heavy React re-render when drag completes
       if (finalX !== dragRef.current.origX || finalY !== dragRef.current.origY) {
@@ -594,6 +652,7 @@ export default function DocumentDesigner() {
   if (view === "list") {
     return (
       <div className="space-y-10 pb-24 max-w-[1600px] mx-auto">
+        <style dangerouslySetInnerHTML={{ __html: `@import url('https://fonts.googleapis.com/css2?family=Charm:wght@400;700&family=Inter:wght@400;700;900&family=Montserrat:wght@400;700;900&family=Open+Sans:wght@400;700;800&family=Oswald:wght@400;700&family=Pacifico&family=Playfair+Display:wght@400;700;900&family=Roboto:wght@400;700;900&display=swap');` }} />
         <AdminPageHeader 
           title="Document Design System" 
           description="Manage and architect premium printable layouts for your educational ecosystem."
@@ -731,6 +790,7 @@ export default function DocumentDesigner() {
 
   return (
     <div className="space-y-10 pb-24 max-w-[1600px] mx-auto">
+      <style dangerouslySetInnerHTML={{ __html: `@import url('https://fonts.googleapis.com/css2?family=Charm:wght@400;700&family=Inter:wght@400;700;900&family=Montserrat:wght@400;700;900&family=Open+Sans:wght@400;700;800&family=Oswald:wght@400;700&family=Pacifico&family=Playfair+Display:wght@400;700;900&family=Roboto:wght@400;700;900&display=swap');` }} />
       <AdminPageHeader 
         title={templateName} 
         description={`Designing ${templateType.toLowerCase()} layout with pixel precision.`}
@@ -785,9 +845,9 @@ export default function DocumentDesigner() {
         confirmText="Save and Set Active"
       />
 
-      <div className="grid grid-cols-1 xl:grid-cols-12 gap-10">
+      <div className="grid grid-cols-1 xl:grid-cols-12 gap-10 items-start">
         {/* Designer Sidebar */}
-        <div className="xl:col-span-3 space-y-6">
+        <div className="xl:col-span-3 space-y-6 sticky top-0 h-[100vh] overflow-y-auto custom-scrollbar pr-2 pb-4">
           <Card className="border-2 border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-sm">
             <CardHeader className="pb-4">
               <CardTitle className="text-lg font-bold flex items-center gap-2">
@@ -860,9 +920,14 @@ export default function DocumentDesigner() {
             <Card className="border-2 border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-sm">
               <CardHeader className="pb-4 flex flex-row items-center justify-between">
                 <CardTitle className="text-lg font-bold">Properties</CardTitle>
-                <Button variant="ghost" size="icon" onClick={() => removeVariable(selectedVar.id)} className="text-red-500 hover:bg-red-50 rounded-xl">
-                  <Trash2 className="h-4 w-4" />
-                </Button>
+                <div className="flex gap-2">
+                  <Button variant="ghost" size="icon" onClick={() => duplicateVariable(selectedVar.id)} className="text-blue-500 hover:bg-blue-50 rounded-xl" title="Duplicate Element">
+                    <Copy className="h-4 w-4" />
+                  </Button>
+                  <Button variant="ghost" size="icon" onClick={() => removeVariable(selectedVar.id)} className="text-red-500 hover:bg-red-50 rounded-xl" title="Delete Element">
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
               </CardHeader>
               <CardContent className="p-4">
                 <Accordion key={selectedVar.id} multiple defaultValue={["data", "appearance", "layout"]} className="w-full space-y-3">
@@ -884,6 +949,49 @@ export default function DocumentDesigner() {
                           />
                           <p className="text-[10px] text-slate-400 font-bold">Use {'{variableName}'} to insert dynamic data.</p>
                         </div>
+                      ) : selectedVar.type === 'text' ? (
+                        <div className="space-y-4">
+                          <div className="space-y-2">
+                            <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Content Format</Label>
+                            <textarea 
+                              value={selectedVar.textContent !== undefined ? selectedVar.textContent : `{${selectedVar.name}}`}
+                              onChange={(e) => updateVariable(selectedVar.id, { textContent: e.target.value })}
+                              className="w-full h-24 p-3 rounded-xl border-2 border-slate-200 bg-white font-mono text-sm resize-none focus:outline-none focus:border-primary/50"
+                              placeholder="e.g. <i>C/o</i> <b>{fatherName}</b>"
+                            />
+                            <p className="text-[10px] text-slate-400 font-bold">Use {'{variableName}'} for data. You can use HTML like &lt;b&gt;, &lt;i&gt;, &lt;span style=&quot;color:red&quot;&gt; for rich styling!</p>
+                          </div>
+                          
+                          <div className="space-y-2">
+                            <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Quick Insert Variable</Label>
+                            <Select
+                              onValueChange={(value: any) => {
+                                const current = selectedVar.textContent !== undefined ? selectedVar.textContent : `{${selectedVar.name}}`;
+                                updateVariable(selectedVar.id, { textContent: current + `{${value}}` });
+                              }}
+                            >
+                              <SelectTrigger className="w-full h-11 bg-white border-2 border-slate-200 rounded-xl font-bold px-3 focus:ring-0 focus:ring-offset-0">
+                                <SelectValue placeholder="Select to insert..." />
+                              </SelectTrigger>
+                              <SelectContent className="max-h-[300px]">
+                                {VARIABLE_GROUPS.map((group) => {
+                                  const filteredItems = group.items.filter(item => !['studentPhoto', 'studentSign', 'centerHeadSign', 'franchiseOwnerPhoto', 'franchiseOwnerSign', 'staffPhoto', 'staffSign', 'principalSign'].includes(item.id));
+                                  if (filteredItems.length === 0) return null;
+                                  return (
+                                    <div key={group.label} className="py-1">
+                                      <div className="font-black text-xs text-white uppercase tracking-wider bg-slate-900 dark:bg-black py-2 px-2 sticky top-0 z-10">{group.label}</div>
+                                      {filteredItems.map((item) => (
+                                        <SelectItem key={item.id} value={item.id} className="font-semibold cursor-pointer py-2 pl-6">
+                                          {item.label} <span className="text-[10px] text-slate-400 font-mono ml-2">({item.id})</span>
+                                        </SelectItem>
+                                      ))}
+                                    </div>
+                                  );
+                                })}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
                       ) : (
                         <div className="space-y-2">
                           <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Binding Variable</Label>
@@ -896,21 +1004,12 @@ export default function DocumentDesigner() {
                             </SelectTrigger>
                             <SelectContent className="max-h-[300px]">
                               {VARIABLE_GROUPS.map((group) => {
-                                const isImageVar = selectedVar.type === 'image' || selectedVar.type === 'signature';
                                 const imageKeys = ['studentPhoto', 'studentSign', 'centerHeadSign', 'franchiseOwnerPhoto', 'franchiseOwnerSign', 'staffPhoto', 'staffSign', 'principalSign'];
-                                
-                                const filteredItems = group.items.filter(item => {
-                                  if (isImageVar) return imageKeys.includes(item.id);
-                                  return !imageKeys.includes(item.id);
-                                });
-
+                                const filteredItems = group.items.filter(item => imageKeys.includes(item.id));
                                 if (filteredItems.length === 0) return null;
-
                                 return (
                                   <div key={group.label} className="py-1">
-                                    <div className="font-black text-xs text-white uppercase tracking-wider bg-slate-900 dark:bg-black py-2 px-2 sticky top-0 z-10">
-                                      {group.label}
-                                    </div>
+                                    <div className="font-black text-xs text-white uppercase tracking-wider bg-slate-900 dark:bg-black py-2 px-2 sticky top-0 z-10">{group.label}</div>
                                     {filteredItems.map((item) => (
                                       <SelectItem key={item.id} value={item.id} className="font-semibold cursor-pointer py-2 pl-6">
                                         {item.label} <span className="text-[10px] text-slate-400 font-mono ml-2">({item.id})</span>
@@ -964,6 +1063,27 @@ export default function DocumentDesigner() {
                                   <SelectItem value="center">Center</SelectItem>
                                   <SelectItem value="right">Right</SelectItem>
                                   <SelectItem value="justify">Justify</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            <div className="space-y-2 col-span-2">
+                              <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Font Family</Label>
+                              <Select
+                                value={selectedVar.fontFamily || "Inter"}
+                                onValueChange={(value: any) => updateVariable(selectedVar.id, { fontFamily: value })}
+                              >
+                                <SelectTrigger className="w-full h-10 bg-white border-2 border-slate-200 rounded-xl font-bold px-3">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="Inter"><span style={{ fontFamily: 'Inter' }}>Inter (Default)</span></SelectItem>
+                                  <SelectItem value="Roboto"><span style={{ fontFamily: 'Roboto' }}>Roboto</span></SelectItem>
+                                  <SelectItem value="Open Sans"><span style={{ fontFamily: 'Open Sans' }}>Open Sans</span></SelectItem>
+                                  <SelectItem value="Montserrat"><span style={{ fontFamily: 'Montserrat' }}>Montserrat</span></SelectItem>
+                                  <SelectItem value="Playfair Display"><span style={{ fontFamily: 'Playfair Display' }}>Playfair Display</span></SelectItem>
+                                  <SelectItem value="Charm"><span style={{ fontFamily: 'Charm' }}>Charm</span></SelectItem>
+                                  <SelectItem value="Pacifico"><span style={{ fontFamily: 'Pacifico' }}>Pacifico</span></SelectItem>
+                                  <SelectItem value="Oswald"><span style={{ fontFamily: 'Oswald' }}>Oswald</span></SelectItem>
                                 </SelectContent>
                               </Select>
                             </div>
@@ -1207,8 +1327,8 @@ export default function DocumentDesigner() {
         </div>
 
         {/* Canvas Area */}
-        <div className="xl:col-span-9 flex flex-col items-center">
-          <div className="w-full overflow-auto p-10 bg-slate-100 dark:bg-zinc-950 rounded-[3rem] border-2 border-slate-200 dark:border-zinc-800 shadow-inner min-h-[800px] flex justify-start">
+        <div className="xl:col-span-9 flex flex-col items-center sticky top-0 h-[100vh]">
+          <div className="w-full h-full overflow-auto p-10 bg-slate-100 dark:bg-zinc-950 rounded-[3rem] border-2 border-slate-200 dark:border-zinc-800 shadow-inner flex justify-start relative">
             <div className="relative shadow-2xl shrink-0 m-auto" style={{ width: `${canvasSize.width}px`, height: `${canvasSize.height}px` }}>
               <div 
                 ref={canvasRef}
@@ -1225,81 +1345,28 @@ export default function DocumentDesigner() {
 
               {/* Bleed/Safe Area Guide (Visual Only) */}
               {!isPreview && (
-                <div 
-                  className="absolute inset-[3mm] border border-dashed border-primary/20 pointer-events-none z-10"
-                  title="3mm Bleed/Safe Area Guide"
-                />
+                <>
+                  <div 
+                    className="absolute inset-[3mm] border border-dashed border-primary/20 pointer-events-none z-10"
+                    title="3mm Bleed/Safe Area Guide"
+                  />
+                  {/* Center Crosshair Guide */}
+                  <div className="absolute top-0 bottom-0 left-1/2 -translate-x-1/2 border-l border-dashed border-primary/30 pointer-events-none z-10" />
+                  <div className="absolute left-0 right-0 top-1/2 -translate-y-1/2 border-t border-dashed border-primary/30 pointer-events-none z-10" />
+                </>
               )}
 
               {variables.map((v) => (
-                <div
+                <DraggableElement 
                   key={v.id}
-                  id={`var-${v.id}`}
-                  onMouseDown={(e) => onMouseDown(e, v.id)}
-                  className={cn(
-                    "absolute cursor-move select-none",
-                    !isPreview && selectedId === v.id ? "ring-2 ring-primary ring-offset-2 z-50" : "z-40"
-                  )}
-                  style={{ 
-                    left: `${v.x}px`, 
-                    top: `${v.y}px`,
-                    transform: (!v.width && v.type === "text") 
-                      ? (v.textAlign === "center" ? "translateX(-50%)" : v.textAlign === "right" ? "translateX(-100%)" : "none")
-                      : "none"
-                  }}
-                >
-                  {v.type === "text" ? (
-                          <span style={{
-                            fontSize: `${v.fontSize}px`,
-                            fontWeight: v.fontWeight,
-                            color: v.color,
-                            whiteSpace: v.width ? "pre-wrap" : "pre",
-                            width: v.width ? `${v.width}px` : "auto",
-                            display: "block",
-                            textAlign: v.textAlign || "left",
-                            lineHeight: v.lineHeight || 1,
-                            margin: 0,
-                            padding: 0
-                          }}>
-                            {isPreview ? (previewData[v.name] || `{${v.name}}`) : `{${v.name}}`}
-                          </span>
-                  ) : (
-                    <div 
-                      style={{ 
-                        width: `${v.width}px`, 
-                        height: `${v.height}px`,
-                        backgroundColor: !isPreview ? "rgba(241, 245, 249, 0.5)" : "transparent",
-                        border: !isPreview ? "2px dashed #cbd5e1" : "none"
-                      }} 
-                      className="flex items-center justify-center overflow-hidden"
-                    >
-                      {isPreview ? (
-                        v.type === "qrcode" ? (
-                          <QRCodeCanvas
-                            value={parseQrContent(v.qrContentTemplate)}
-                            size={Math.min(v.width || 100, v.height || 100)}
-                            level="H"
-                            includeMargin={false}
-                          />
-                        ) : (
-                          <img 
-                            src={previewData[v.name] || ""} 
-                            crossOrigin="anonymous" 
-                            className="w-full h-full" 
-                            style={{ 
-                              objectFit: v.objectFit || "cover",
-                              borderRadius: v.borderRadius !== undefined ? `${v.borderRadius}px` : (v.type === "image" ? "8px" : "0")
-                            }}
-                          />
-                        )
-                      ) : (
-                        <div className="flex flex-col items-center gap-1" style={{ opacity: 0.4 }}>
-                          {v.type === "qrcode" ? <QrCode className="h-6 w-6" /> : v.type === "image" ? <ImageIcon className="h-6 w-6" /> : <Signature className="h-6 w-6" />}
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
+                  v={v}
+                  isPreview={isPreview}
+                  selectedId={selectedId}
+                  onMouseDown={onMouseDown}
+                  parseTextContent={parseTextContent}
+                  parseQrContent={parseQrContent}
+                  previewData={previewData}
+                />
               ))}
             </div>
             </div>

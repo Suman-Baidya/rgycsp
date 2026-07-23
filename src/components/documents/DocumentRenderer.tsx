@@ -366,6 +366,7 @@ export const DocumentRenderer = forwardRef<DocumentRendererRef, DocumentRenderer
         {/* Hidden Render Canvas Portaled to body to avoid affecting modal scroll */}
         {typeof document !== 'undefined' && createPortal(
           <div className="font-sans" style={{ position: 'absolute', top: 0, left: 0, pointerEvents: 'none', zIndex: -9999 }}>
+            <style dangerouslySetInnerHTML={{ __html: `@import url('https://fonts.googleapis.com/css2?family=Charm:wght@400;700&family=Inter:wght@400;700;900&family=Montserrat:wght@400;700;900&family=Open+Sans:wght@400;700;800&family=Oswald:wght@400;700&family=Pacifico&family=Playfair+Display:wght@400;700;900&family=Roboto:wght@400;700;900&display=swap');` }} />
             <div style={{ width: `${template.width}px`, height: `${template.height}px` }}>
               <div
                 ref={canvasRef}
@@ -422,12 +423,20 @@ export const DocumentRenderer = forwardRef<DocumentRendererRef, DocumentRenderer
                           top: `${item.y}px`,
                           width: `${item.width}px`,
                           height: `${item.height}px`,
-                          objectFit: item.objectFit || "cover",
-                          borderRadius: item.borderRadius !== undefined ? `${item.borderRadius}px` : (item.type === "image" ? "8px" : "0"),
+                          objectFit: item.objectFit || "fill",
+                          borderRadius: item.borderRadius !== undefined ? `${item.borderRadius}px` : "0",
                         }}
                         crossOrigin="anonymous"
                       />
                     );
+                  }
+
+                  let displayValue = mappedValue;
+                  if (item.type === "text") {
+                    const templateStr = item.textContent !== undefined ? item.textContent : `{${item.name}}`;
+                    displayValue = templateStr.replace(/\{(\w+)\}/g, (_, key) => {
+                      return mapVariable(key) || "";
+                    });
                   }
 
                   return (
@@ -442,20 +451,22 @@ export const DocumentRenderer = forwardRef<DocumentRendererRef, DocumentRenderer
                           : "none",
                       }}
                     >
-                      <span style={{
-                        fontSize: `${item.fontSize}px`,
-                        fontWeight: item.fontWeight,
-                        color: item.color,
-                        whiteSpace: item.width ? "pre-wrap" : "pre",
-                        width: item.width ? `${item.width}px` : "auto",
-                        display: "block",
-                        textAlign: item.textAlign || "left",
-                        lineHeight: item.lineHeight || 1,
-                        margin: 0,
-                        padding: 0
-                      }}>
-                        {mappedValue || " "}
-                      </span>
+                      <span 
+                        style={{
+                          fontSize: `${item.fontSize}px`,
+                          fontWeight: item.fontWeight,
+                          fontFamily: item.fontFamily || "Inter",
+                          color: item.color,
+                          whiteSpace: item.width ? "pre-wrap" : "pre",
+                          width: item.width ? `${item.width}px` : "auto",
+                          display: "block",
+                          textAlign: item.textAlign || "left",
+                          lineHeight: item.lineHeight || 1,
+                          margin: 0,
+                          padding: 0
+                        }}
+                        dangerouslySetInnerHTML={{ __html: displayValue || " " }}
+                      />
                     </div>
                   );
                 })}
