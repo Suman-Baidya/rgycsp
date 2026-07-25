@@ -120,6 +120,8 @@ export default function CoursesPageClient({ initialData, initialGroups = [] }: {
                     src={course.banner} 
                     alt={course.name} 
                     fill 
+                    priority={idx < 4}
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                     className="object-cover group- transition-transform duration-500"
                   />
                 ) : (

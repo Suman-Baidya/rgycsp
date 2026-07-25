@@ -355,12 +355,13 @@ export async function updateFranchiseApplicationStatus(
     });
 
     if (user) {
-      // If user already exists, update their username/roles
+      // If user already exists, update their username/roles/image
       await db.user.update({
         where: { id: user.id },
         data: {
           username: codeStr,
-          role: "USER"
+          role: "USER",
+          image: application.photoUrl || undefined
         }
       });
     } else {
@@ -371,7 +372,8 @@ export async function updateFranchiseApplicationStatus(
           email: application.email,
           username: codeStr,
           passwordHash: application.passwordHash,
-          role: "USER"
+          role: "USER",
+          image: application.photoUrl || null
         }
       });
     }
@@ -382,7 +384,7 @@ export async function updateFranchiseApplicationStatus(
         name: application.centerName,
         subdomain: subdomain,
         centerCode: codeStr,
-        logoUrl: application.photoUrl || null,
+        logoUrl: null, // Use default icon instead of applicant's photo
         isActive: true,
         tokensBalance: 100, // Initial seed tokens for the franchise
         siteSettings: {

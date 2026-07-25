@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link";
+import Image from "next/image";
 import { ChevronRight } from "lucide-react";
 
 interface PageHeaderProps {
@@ -21,14 +22,15 @@ export function PageHeader({ title: propTitle, subtitle: propSubtitle, bgImage: 
   return (
     <div className="relative h-[350px] md:h-[580px] w-full flex items-center justify-center overflow-hidden">
       {/* Background Image with Overlay */}
-      <div
-        className="absolute inset-0 z-0"
-        style={{
-          backgroundImage: `url(${bgImage})`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center'
-        }}
-      >
+      <div className="absolute inset-0 z-0">
+        <Image
+          src={bgImage}
+          alt={title}
+          fill
+          priority
+          className="object-cover object-center"
+          sizes="100vw"
+        />
         <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px]"></div>
       </div>
 

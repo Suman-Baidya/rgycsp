@@ -117,6 +117,7 @@ export function HeroSection({ data }: { data?: any }) {
                   alt={slide.title || "Hero Image"}
                   fill
                   priority={index === 0}
+                  sizes="100vw"
                   className="object-cover object-center"
                 />
                 {/* Cinematic dark overlays to ensure text pops perfectly */}
@@ -203,6 +204,7 @@ export function HeroSection({ data }: { data?: any }) {
                           <img
                             src={slide.offerImage}
                             alt="Promotion"
+                            fetchPriority={index === 0 ? "high" : "auto"}
                             className="relative z-10 h-[450px] w-auto object-contain drop-shadow-[0_40px_80px_rgba(0,0,0,0.6)] animate-float"
                           />
                         </motion.div>
