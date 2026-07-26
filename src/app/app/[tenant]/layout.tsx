@@ -1,5 +1,7 @@
 import { db } from "@/lib/prisma";
 import { notFound } from "next/navigation";
+import { headers } from "next/headers";
+import { auth } from "@/auth";
 
 export default async function TenantLayout({
   children,
@@ -16,6 +18,15 @@ export default async function TenantLayout({
   });
 
   if (!workspace || !workspace.isActive) {
+    notFound();
+  }
+
+  const reqHeaders = await headers();
+  const isSubdomain = reqHeaders.get("x-is-subdomain") === "true";
+  const session = await auth();
+  const isSuperAdmin = session?.user?.role === "SUPER_ADMIN";
+
+  if (isSubdomain && !workspace.isSubdomainEnabled && !isSuperAdmin) {
     notFound();
   }
 

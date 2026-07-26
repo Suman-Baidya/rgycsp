@@ -49,10 +49,14 @@ export default function StudentExamsClient({
   tenant
 }: {
   settings: any,
-  tenant: string
+  tenant: string,
+  exams?: any[]
 }) {
   const primaryColor = settings?.primaryColor || "#0f172a";
-  const [activeTab, setActiveTab] = useState("upcoming");
+  const [activeTab, setActiveTab] = useState("pending");
+
+  const pendingExams = (exams || []).filter(e => !e.results || e.results.length === 0);
+  const completedExams = (exams || []).filter(e => e.results && e.results.length > 0);
 
   const performanceData = [
     { subject: 'Math', A: 85, fullMark: 100 },
@@ -69,68 +73,6 @@ export default function StudentExamsClient({
     { name: 'Exam 3', score: 70 },
     { name: 'Exam 4', score: 90 },
     { name: 'Exam 5', score: 85 },
-  ];
-
-  const upcomingExams = [
-    {
-      id: "ex-1",
-      title: "Quarterly Mathematics Assessment",
-      course: "Advanced Calculus & Linear Algebra",
-      date: "2026-05-15",
-      time: "10:00 AM",
-      duration: "180 Mins",
-      totalMarks: 100,
-      status: "UPCOMING",
-      category: "Main Examination",
-      difficulty: "Advanced",
-      topics: ["Vector Spaces", "Integration", "Matrices"],
-      proctoring: "Remote AI Monitored",
-      admitIssued: true
-    },
-    {
-      id: "ex-2",
-      title: "Logical Reasoning & Aptitude",
-      course: "Critical Thinking Workshop",
-      date: "2026-05-03",
-      time: "02:30 PM",
-      duration: "90 Mins",
-      totalMarks: 150,
-      status: "LIVE",
-      category: "Weekly Skills Test",
-      difficulty: "Intermediate",
-      topics: ["Pattern Recognition", "Data Interpretation"],
-      proctoring: "On-Campus",
-      admitIssued: false
-    }
-  ];
-
-  const pastResults = [
-    {
-      id: "res-1",
-      title: "Mid-Term Physics Exam",
-      course: "Physics 101",
-      date: "2026-04-20",
-      marks: 85,
-      total: 100,
-      grade: "A",
-      status: "PASSED",
-      percentage: "85%",
-      globalRank: 12,
-      franchiseRank: 3
-    },
-    {
-      id: "res-2",
-      title: "English Literature - Unit 1",
-      course: "Literature Fundamentals",
-      date: "2026-04-05",
-      marks: 38,
-      total: 100,
-      grade: "F",
-      status: "FAILED",
-      percentage: "38%",
-      globalRank: 412,
-      franchiseRank: 45
-    }
   ];
 
   return (
@@ -238,7 +180,122 @@ export default function StudentExamsClient({
         </Card>
       </div>
 
+      <div className="mt-12 space-y-6">
+        <div className="flex gap-4 border-b border-slate-200 dark:border-white/10 pb-4">
+          <button 
+            onClick={() => setActiveTab('pending')}
+            className={cn("px-6 py-2 rounded-full font-bold text-sm transition-all", activeTab === 'pending' ? "text-white" : "text-slate-500 hover:bg-slate-100 dark:hover:bg-white/5")}
+            style={{ backgroundColor: activeTab === 'pending' ? primaryColor : 'transparent' }}
+          >
+            Pending Exams ({pendingExams.length})
+          </button>
+          <button 
+            onClick={() => setActiveTab('completed')}
+            className={cn("px-6 py-2 rounded-full font-bold text-sm transition-all", activeTab === 'completed' ? "text-white" : "text-slate-500 hover:bg-slate-100 dark:hover:bg-white/5")}
+            style={{ backgroundColor: activeTab === 'completed' ? primaryColor : 'transparent' }}
+          >
+            Completed Exams ({completedExams.length})
+          </button>
+        </div>
 
+        {activeTab === 'pending' && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {pendingExams.map(exam => (
+              <Card key={exam.id} className="rounded-3xl border-2 border-slate-100 dark:border-white/5 shadow-sm hover:shadow-xl transition-all group overflow-hidden">
+                <CardContent className="p-6 md:p-8 relative">
+                  <div className="flex justify-between items-start mb-6">
+                    <div>
+                      <Badge variant="outline" className="mb-3 px-3 py-1 font-bold text-xs bg-emerald-50 text-emerald-600 border-emerald-200">
+                        LIVE EXAM
+                      </Badge>
+                      <h3 className="text-xl md:text-2xl font-black text-slate-900 dark:text-white leading-tight mb-2">{exam.title}</h3>
+                      <p className="text-slate-500 font-medium text-sm flex items-center gap-2">
+                        <BookOpen className="w-4 h-4" /> {exam.course?.title || "General Exam"}
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4 mb-8 bg-slate-50 dark:bg-zinc-900/50 p-4 rounded-2xl">
+                    <div className="space-y-1">
+                      <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Duration</p>
+                      <p className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2"><Timer className="w-4 h-4 text-primary" /> {exam.duration || 60} Mins</p>
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Questions</p>
+                      <p className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2"><FileText className="w-4 h-4 text-primary" /> {exam._count?.questions || 0} Qs</p>
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Marks</p>
+                      <p className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2"><Target className="w-4 h-4 text-primary" /> {(exam._count?.questions || 0) * (exam.marksPerQuestion || 1)}</p>
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Passing Marks</p>
+                      <p className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-primary" /> {exam.passingMarks || 0}</p>
+                    </div>
+                  </div>
+                  
+                  <Button onClick={() => window.location.href = `/app/${tenant}/student/exams/${exam.id}/take`} className="w-full h-14 rounded-2xl font-bold text-lg shadow-xl shadow-primary/20 hover:scale-[1.02] transition-transform gap-2" style={{ backgroundColor: primaryColor }}>
+                    <PlayCircle className="w-5 h-5" /> Start Exam Now
+                  </Button>
+                </CardContent>
+              </Card>
+            ))}
+            
+            {pendingExams.length === 0 && (
+              <div className="col-span-full py-16 text-center">
+                <CheckCircle2 className="w-16 h-16 mx-auto mb-4 text-slate-300 dark:text-slate-700" />
+                <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">You're all caught up!</h3>
+                <p className="text-slate-500 font-medium max-w-sm mx-auto">There are no pending exams for you to take right now. Check back later.</p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {activeTab === 'completed' && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {completedExams.map(exam => {
+              const result = exam.results[0];
+              const totalMarks = (exam._count?.questions || 0) * (exam.marksPerQuestion || 1);
+              return (
+                <Card key={exam.id} className="rounded-3xl border-2 border-slate-100 dark:border-white/5 shadow-sm">
+                  <CardContent className="p-6 md:p-8">
+                    <div className="flex justify-between items-start mb-6">
+                      <div>
+                        <h3 className="text-xl font-black text-slate-900 dark:text-white mb-2">{exam.title}</h3>
+                        <p className="text-slate-500 font-medium text-sm flex items-center gap-2">
+                          <BookOpen className="w-4 h-4" /> {exam.course?.title || "General Exam"}
+                        </p>
+                      </div>
+                      <Badge className={cn("px-4 py-1.5 font-bold text-xs border-none", result.isPassed ? "bg-emerald-500 text-white" : "bg-red-500 text-white")}>
+                        {result.isPassed ? "PASSED" : "FAILED"}
+                      </Badge>
+                    </div>
+                    
+                    <div className="bg-slate-50 dark:bg-zinc-900/50 p-6 rounded-2xl flex justify-between items-center">
+                      <div>
+                        <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Score Obtained</p>
+                        <h4 className="text-4xl font-black text-slate-900 dark:text-white">{result.marksObtained}<span className="text-xl text-slate-400 font-bold">/{totalMarks}</span></h4>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Percentage</p>
+                        <h4 className="text-2xl font-black text-primary">{Math.round((result.marksObtained / totalMarks) * 100)}%</h4>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
+            
+            {completedExams.length === 0 && (
+              <div className="col-span-full py-16 text-center">
+                <FileText className="w-16 h-16 mx-auto mb-4 text-slate-300 dark:text-slate-700" />
+                <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">No Past Results</h3>
+                <p className="text-slate-500 font-medium max-w-sm mx-auto">You haven't completed any exams yet.</p>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
 
       {/* Analytics Dashboard - Vertical Stack */}
       <section className="flex flex-col gap-10">

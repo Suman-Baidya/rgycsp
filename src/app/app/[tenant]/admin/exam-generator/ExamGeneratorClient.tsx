@@ -11,6 +11,8 @@ import OfflineExamTab from "./OfflineExamTab";
 import StudentsResultTab from "./StudentsResultTab";
 import AdmitCardTab from "./AdmitCardTab";
 
+import { useSearchParams } from "next/navigation";
+
 export default function ExamGeneratorClient({
   workspaceId,
   workspaceTokens,
@@ -32,8 +34,11 @@ export default function ExamGeneratorClient({
   students: any[];
   chapters: any[];
 }) {
+  const searchParams = useSearchParams();
+  const initialTab = (searchParams.get("tab") as any) || "question";
+  
   const [mounted, setMounted] = useState(false);
-  const [activeTab, setActiveTab] = useState<"question" | "online" | "offline" | "result" | "admit">("question");
+  const [activeTab, setActiveTab] = useState<"question" | "online" | "offline" | "result" | "admit">(initialTab);
 
   useEffect(() => {
     setMounted(true);
@@ -87,7 +92,7 @@ export default function ExamGeneratorClient({
 
       <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
         {activeTab === "question" && <QuestionPapersTab workspaceId={workspaceId} workspaceTokens={workspaceTokens} courses={courses} chapters={chapters} />}
-        {activeTab === "online" && <OnlineExamTab />}
+        {activeTab === "online" && <OnlineExamTab exams={exams.filter(e => e.type === "ONLINE")} />}
         {activeTab === "offline" && <OfflineExamTab workspaceId={workspaceId} workspace={workspace} superAdminName={superAdminName} courses={courses} exams={exams} students={students} />}
         {activeTab === "result" && <StudentsResultTab students={students} courses={courses} batches={batches} />}
         {activeTab === "admit" && <AdmitCardTab students={students} courses={courses} batches={batches} exams={exams} />}

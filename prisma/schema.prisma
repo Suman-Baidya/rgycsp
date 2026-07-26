@@ -52,10 +52,17 @@ model Workspace {
   signatureUrl String?
   idProofUrl   String?
   isActive     Boolean @default(true)
+  isSubdomainEnabled Boolean @default(true)
 
   pinCode  String?
   state    String?
   district String?
+
+  ownerAddress  String?
+  ownerState    String?
+  ownerDistrict String?
+  ownerPinCode  String?
+  ownerPhotoUrl String?
 
   tokensBalance     Int   @default(0) // Custom Token Economy
   walletBalance     Float @default(0) // Franchise Wallet Balance
@@ -379,6 +386,7 @@ model StudentProfile {
   course    Course?   @relation(fields: [courseId], references: [id], onDelete: SetNull)
 
   attendances Attendance[]
+  examResults ExamResult[]
   invoices    Invoice[]
   semesters   StudentSemester[]
   examEnrollments ExamEnrollment[]
@@ -978,6 +986,13 @@ model Exam {
   
   isCompleted     Boolean  @default(false)
   forceUncomplete Boolean  @default(false)
+  isActive        Boolean  @default(true) // Active/Inactive toggle
+  
+  // Online Exam Configuration
+  marksPerQuestion Float?
+  passingMarks     Float?
+  questions        QuestionBank[]
+  results          ExamResult[]
   
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -1013,6 +1028,21 @@ model ExamEnrollment {
   @@unique([examShiftId, studentProfileId])
 }
 
+model ExamResult {
+  id               String   @id @default(cuid())
+  examId           String
+  studentProfileId String
+  marksObtained    Float
+  isPassed         Boolean  @default(false)
+  
+  exam             Exam     @relation(fields: [examId], references: [id], onDelete: Cascade)
+  student          StudentProfile @relation(fields: [studentProfileId], references: [id], onDelete: Cascade)
+
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@unique([examId, studentProfileId])
+}
 
 
 model Chapter {
@@ -1044,6 +1074,7 @@ model QuestionBank {
   
   workspace     Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   chapter       Chapter   @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+  exams         Exam[]
 
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt

@@ -67,10 +67,10 @@ export default async function WorkspacesPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {workspaceRoles.map((role) => {
+            {await Promise.all(workspaceRoles.map(async (role) => {
               const workspace = role.workspace;
-              const protocol = rootDomain.includes("localhost") ? "http" : "https";
-              const dashboardUrl = `${protocol}://${workspace.subdomain}.${rootDomain}/admin`;
+              const { getServerTenantLink } = await import("@/lib/routing-server");
+              const dashboardUrl = await getServerTenantLink("/admin", workspace.subdomain);
               
               return (
                 <Card key={workspace.id} className="group rounded-[2.5rem] border-white/20 dark:border-white/5 shadow-xl bg-white/80 dark:bg-zinc-900/80 backdrop-blur-sm overflow-hidden hover:shadow-2xl hover:-translate-y-1 transition-all duration-300">
@@ -112,7 +112,7 @@ export default async function WorkspacesPage() {
                   </CardContent>
                 </Card>
               );
-            })}
+            }))}
           </div>
         )}
       </main>

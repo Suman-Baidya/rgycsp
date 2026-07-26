@@ -117,6 +117,7 @@ export default auth((req) => {
       const rewriteUrl = new URL(`/app/${tenant}${path === "/" ? "" : path}`, req.url);
       const requestHeaders = new Headers(req.headers);
       requestHeaders.set('x-pathname', url.pathname);
+      requestHeaders.set('x-is-subdomain', 'true');
       
       return NextResponse.rewrite(rewriteUrl, {
         request: {

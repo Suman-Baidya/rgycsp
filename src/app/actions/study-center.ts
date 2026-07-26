@@ -22,7 +22,8 @@ export async function getStudyCenters() {
             address: true,
             googleMapLink: true
           }
-        }
+        },
+        isSubdomainEnabled: true,
       },
       orderBy: {
         name: 'asc'
@@ -33,5 +34,32 @@ export async function getStudyCenters() {
   } catch (error: any) {
     console.error("Failed to fetch study centers:", error);
     return { success: false, error: "Failed to fetch study centers" };
+  }
+}
+
+export async function getStudyCenterCourses(workspaceId: string) {
+  try {
+    const courses = await db.course.findMany({
+      where: {
+        workspaceId,
+        isActive: true,
+      },
+      select: {
+        id: true,
+        title: true,
+        category: true,
+        duration: true,
+        priceDisplay: true,
+        showFee: true,
+        feeAmount: true,
+      },
+      orderBy: {
+        title: 'asc'
+      }
+    });
+    return { success: true, courses };
+  } catch (error: any) {
+    console.error("Failed to fetch study center courses:", error);
+    return { success: false, error: "Failed to fetch study center courses" };
   }
 }

@@ -24,6 +24,31 @@ export async function createExam(workspaceId: string, data: { title: string, typ
   }
 }
 
+export async function createOnlineExam(workspaceId: string, data: { title: string, courseId?: string, duration?: string, date?: Date, marksPerQuestion?: number, passingMarks?: number, questionIds: string[] }) {
+  try {
+    const exam = await db.exam.create({
+      data: {
+        workspaceId,
+        title: data.title,
+        type: "ONLINE",
+        date: data.date,
+        courseId: data.courseId,
+        duration: data.duration,
+        marksPerQuestion: data.marksPerQuestion,
+        passingMarks: data.passingMarks,
+        questions: {
+          connect: data.questionIds.map(id => ({ id }))
+        }
+      }
+    });
+    revalidatePath(`/app/[tenant]/admin/exam-generator`, "page");
+    return { success: true, data: exam };
+  } catch (error: any) {
+    console.error("Failed to create online exam", error);
+    return { success: false, error: error.message };
+  }
+}
+
 export async function updateExam(id: string, data: { title: string, type: string, date?: Date, courseId?: string, duration?: string, syllabus?: string }, shifts: { name: string, startTime: string, endTime: string, capacity: number }[]) {
   try {
     const exam = await db.exam.update({
@@ -302,6 +327,40 @@ export async function toggleExamCompletion(id: string, isCompleted: boolean, for
   }
 }
 
+export async function toggleExamActiveStatus(id: string, isActive: boolean) {
+  try {
+    const exam = await db.exam.update({
+      where: { id },
+      data: { isActive }
+    });
+    revalidatePath(`/app/[tenant]/admin/exam-generator`, "page");
+    return { success: true, data: exam };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+}
+
+export async function getExamMeritList(examId: string) {
+  try {
+    const results = await db.examResult.findMany({
+      where: { examId },
+      include: {
+        student: {
+          select: {
+            fullName: true,
+            enrollmentNo: true,
+            phone: true
+          }
+        }
+      },
+      orderBy: { marksObtained: 'desc' }
+    });
+    return { success: true, data: results };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+}
+
 export async function bulkIssueAdmitCards(examId: string) {
   try {
     const enrollments = await db.examEnrollment.findMany({
@@ -325,3 +384,30 @@ export async function bulkIssueAdmitCards(examId: string) {
     return { success: false, error: error.message };
   }
 }
+
+export async function getExamForPdf(examId: string) {
+  try {
+    const exam = await db.exam.findUnique({
+      where: { id: examId },
+      include: {
+        course: true,
+        questions: true
+      }
+    });
+    
+    if (!exam) return { success: false, error: "Exam not found" };
+
+    const workspace = await db.workspace.findUnique({
+      where: { id: exam.workspaceId }
+    });
+
+    const superAdminSettings = await db.siteSettings.findFirst({
+      where: { workspaceId: null }
+    });
+
+    return { success: true, data: { exam, workspace, mainLogoUrl: superAdminSettings?.logoUrl } };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+}
+

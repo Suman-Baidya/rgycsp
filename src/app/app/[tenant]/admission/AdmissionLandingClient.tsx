@@ -7,16 +7,29 @@ import { UserPlus, Search, ArrowRight, Sparkles, ShieldCheck } from "lucide-reac
 import AdmissionFormClient from "./AdmissionFormClient";
 import { AdmissionStatusClient } from "./status/AdmissionStatusClient";
 import { motion, AnimatePresence } from "framer-motion";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
+import { useCallback } from "react";
 
-export default function AdmissionLandingClient({ workspaceId, workspaceName, config, courses, logoUrl, initialCourseId, fromGlobal }: any) {
-  const [view, setView] = useState<"choice" | "form" | "status">(initialCourseId ? "form" : "choice");
+export default function AdmissionLandingClient({ workspaceId, workspaceName, config, courses, logoUrl, initialCourseId, fromGlobal, currentView }: any) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  const setView = useCallback((newView: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (newView === "choice") {
+      params.delete("view");
+    } else {
+      params.set("view", newView);
+    }
+    router.push(`${pathname}?${params.toString()}`);
+  }, [pathname, searchParams, router]);
+
+  const view = currentView || "choice";
 
   if (view === "form") {
     return (
       <div className="space-y-6">
-        <Button variant="ghost" onClick={() => setView("choice")} className="font-bold text-slate-500 hover:text-primary">
-          ← Back to Options
-        </Button>
         <AdmissionFormClient 
           workspaceId={workspaceId} 
           workspaceName={workspaceName} 
@@ -32,9 +45,6 @@ export default function AdmissionLandingClient({ workspaceId, workspaceName, con
   if (view === "status") {
     return (
       <div className="space-y-6 flex flex-col items-center">
-        <Button variant="ghost" onClick={() => setView("choice")} className="self-start font-bold text-slate-500 hover:text-primary">
-          ← Back to Options
-        </Button>
         <AdmissionStatusClient 
           workspaceId={workspaceId} 
           workspaceName={workspaceName} 
@@ -53,60 +63,68 @@ export default function AdmissionLandingClient({ workspaceId, workspaceName, con
         className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto"
       >
         {/* NEW ADMISSION CARD */}
-        <Card 
-          className="group relative overflow-hidden rounded-[2.5rem] border-none shadow-2xl bg-white cursor-pointer transition-all hover:scale-[1.02] active:scale-95"
-          onClick={() => setView("form")}
+        <a 
+          href={`${pathname}?view=form`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="group relative overflow-hidden rounded-[2.5rem] border-none shadow-2xl bg-white transition-all hover:scale-[1.02] active:scale-95 block"
         >
-          <div className="absolute top-0 right-0 p-8 text-primary/10 group-hover:text-primary/20 transition-colors">
-            <UserPlus className="w-32 h-32 rotate-12" />
-          </div>
-          <CardContent className="p-10 relative z-10 space-y-6">
-            <div className="w-16 h-16 rounded-3xl bg-primary/10 text-primary flex items-center justify-center shadow-inner">
-              <UserPlus className="w-8 h-8" />
+          <Card className="border-none shadow-none bg-transparent">
+            <div className="absolute top-0 right-0 p-8 text-primary/10 group-hover:text-primary/20 transition-colors">
+              <UserPlus className="w-32 h-32 rotate-12" />
             </div>
-            <div className="space-y-2">
-              <h2 className="text-3xl font-bold tracking-tight text-slate-900">New Admission</h2>
-              <p className="text-slate-500 font-medium leading-relaxed">Start your journey with us. Fill out the application form to apply for our upcoming sessions.</p>
-            </div>
-            <div className="flex items-center gap-4 pt-4">
-              <Button className="rounded-2xl h-14 px-8 bg-slate-900 text-white font-bold tracking-widest text-xs group-hover:bg-primary transition-colors">
-                Apply Now <ArrowRight className="w-4 h-4 ml-2" />
-              </Button>
-              <div className="flex items-center gap-2 text-[10px] font-bold text-slate-400 tracking-widest">
-                <Sparkles className="w-3 h-3" /> Takes ~5 mins
+            <CardContent className="p-10 relative z-10 space-y-6">
+              <div className="w-16 h-16 rounded-3xl bg-primary/10 text-primary flex items-center justify-center shadow-inner">
+                <UserPlus className="w-8 h-8" />
               </div>
-            </div>
-          </CardContent>
-          <div className="h-2 bg-primary w-0 group-hover:w-full transition-all duration-500" />
-        </Card>
+              <div className="space-y-2">
+                <h2 className="text-3xl font-bold tracking-tight text-slate-900">New Admission</h2>
+                <p className="text-slate-500 font-medium leading-relaxed">Start your journey with us. Fill out the application form to apply for our upcoming sessions.</p>
+              </div>
+              <div className="flex items-center gap-4 pt-4">
+                <Button className="rounded-2xl h-14 px-8 bg-slate-900 text-white font-bold tracking-widest text-xs group-hover:bg-primary transition-colors pointer-events-none">
+                  Apply Now <ArrowRight className="w-4 h-4 ml-2" />
+                </Button>
+                <div className="flex items-center gap-2 text-[10px] font-bold text-slate-400 tracking-widest">
+                  <Sparkles className="w-3 h-3" /> Takes ~5 mins
+                </div>
+              </div>
+            </CardContent>
+            <div className="h-2 bg-primary w-0 group-hover:w-full transition-all duration-500" />
+          </Card>
+        </a>
 
         {/* STATUS CHECK CARD */}
-        <Card 
-          className="group relative overflow-hidden rounded-[2.5rem] border-none shadow-2xl bg-white cursor-pointer transition-all hover:scale-[1.02] active:scale-95"
-          onClick={() => setView("status")}
+        <a 
+          href={`${pathname}?view=status`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="group relative overflow-hidden rounded-[2.5rem] border-none shadow-2xl bg-white transition-all hover:scale-[1.02] active:scale-95 block"
         >
-          <div className="absolute top-0 right-0 p-8 text-blue-500/10 group-hover:text-blue-500/20 transition-colors">
-            <Search className="w-32 h-32 -rotate-12" />
-          </div>
-          <CardContent className="p-10 relative z-10 space-y-6">
-            <div className="w-16 h-16 rounded-3xl bg-blue-50 text-blue-600 flex items-center justify-center shadow-inner">
-              <Search className="w-8 h-8" />
+          <Card className="border-none shadow-none bg-transparent">
+            <div className="absolute top-0 right-0 p-8 text-blue-500/10 group-hover:text-blue-500/20 transition-colors">
+              <Search className="w-32 h-32 -rotate-12" />
             </div>
-            <div className="space-y-2">
-              <h2 className="text-3xl font-bold tracking-tight text-slate-900">Track Application</h2>
-              <p className="text-slate-500 font-medium leading-relaxed">Already applied? Check your application status, download receipts, or complete your enrollment.</p>
-            </div>
-            <div className="flex items-center gap-4 pt-4">
-              <Button variant="outline" className="rounded-2xl h-14 px-8 border-2 border-slate-200 text-slate-900 font-bold tracking-widest text-xs hover:bg-blue-50 hover:border-blue-200 transition-colors">
-                Check Status <ArrowRight className="w-4 h-4 ml-2 text-blue-500" />
-              </Button>
-              <div className="flex items-center gap-2 text-[10px] font-bold text-slate-400 tracking-widest">
-                <ShieldCheck className="w-3 h-3" /> Secure Login
+            <CardContent className="p-10 relative z-10 space-y-6">
+              <div className="w-16 h-16 rounded-3xl bg-blue-50 text-blue-600 flex items-center justify-center shadow-inner">
+                <Search className="w-8 h-8" />
               </div>
-            </div>
-          </CardContent>
-          <div className="h-2 bg-blue-500 w-0 group-hover:w-full transition-all duration-500" />
-        </Card>
+              <div className="space-y-2">
+                <h2 className="text-3xl font-bold tracking-tight text-slate-900">Track Application</h2>
+                <p className="text-slate-500 font-medium leading-relaxed">Already applied? Check your application status, download receipts, or complete your enrollment.</p>
+              </div>
+              <div className="flex items-center gap-4 pt-4">
+                <Button variant="outline" className="rounded-2xl h-14 px-8 border-2 border-slate-200 text-slate-900 font-bold tracking-widest text-xs hover:bg-blue-50 hover:border-blue-200 transition-colors pointer-events-none">
+                  Check Status <ArrowRight className="w-4 h-4 ml-2" />
+                </Button>
+                <div className="flex items-center gap-2 text-[10px] font-bold text-slate-400 tracking-widest">
+                  <ShieldCheck className="w-3 h-3" /> Secure Access
+                </div>
+              </div>
+            </CardContent>
+            <div className="h-2 bg-blue-500 w-0 group-hover:w-full transition-all duration-500" />
+          </Card>
+        </a>
       </motion.div>
     </AnimatePresence>
   );

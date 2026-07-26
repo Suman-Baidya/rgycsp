@@ -78,3 +78,20 @@ export async function bulkImportQuestions(
     return { success: false, error: error.message };
   }
 }
+
+export async function updateQuestion(id: string, data: { questionText: string; optionA: string; optionB: string; optionC: string; optionD: string; correctOption: string; }) {
+  try {
+    const question = await db.questionBank.update({ where: { id }, data });
+    revalidatePath('/app/[tenant]/admin/exam-generator', 'page');
+    return { success: true, data: question };
+  } catch (error: any) { return { success: false, error: error.message }; }
+}
+
+export async function deleteQuestion(id: string) {
+  try {
+    await db.questionBank.delete({ where: { id } });
+    revalidatePath('/app/[tenant]/admin/exam-generator', 'page');
+    return { success: true };
+  } catch (error: any) { return { success: false, error: error.message }; }
+}
+

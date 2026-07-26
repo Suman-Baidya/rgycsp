@@ -12,10 +12,11 @@ export default async function AdmissionPage({
   searchParams
 }: {
   params: Promise<{ tenant: string }>;
-  searchParams: Promise<{ courseId?: string, fromGlobal?: string }>;
+  searchParams: Promise<{ courseId?: string, fromGlobal?: string, view?: string }>;
 }) {
   const { tenant } = await params;
-  const { courseId, fromGlobal } = await searchParams;
+  const { courseId, fromGlobal, view } = await searchParams;
+  const currentView = view || (courseId ? "form" : "choice");
 
   const workspace = await db.workspace.findUnique({
     where: { subdomain: tenant?.toLowerCase() },
@@ -61,19 +62,22 @@ export default async function AdmissionPage({
         accentColor={workspace.siteSettings.accentColor || undefined} 
         fontFamily={workspace.siteSettings.fontFamily || undefined} 
       />
-      
-      <WorkspaceNavbar settings={workspace.siteSettings} user={session?.user} tenant={tenant} />
+      {workspace.isSubdomainEnabled && (
+        <>
+          <WorkspaceNavbar settings={workspace.siteSettings} user={session?.user} tenant={tenant} />
 
-      <WorkspacePageHeader 
-        title="Admission Portal" 
-        description={`Welcome to ${workspace.name} Admission Hub. Choose an option below to proceed.`}
-        breadcrumbs={[
-          { name: "Admission", href: `/app/${tenant}/admission` }
-        ]}
-        bgImage={workspace.siteSettings.pageHeaderBanner || undefined}
-        statusTitle="ENROLL"
-        statusSub="Active"
-      />
+          <WorkspacePageHeader 
+            title="Admission Portal" 
+            description={`Welcome to ${workspace.name} Admission Hub. Choose an option below to proceed.`}
+            breadcrumbs={[
+              { name: "Admission", href: `/app/${tenant}/admission` }
+            ]}
+            bgImage={workspace.siteSettings.pageHeaderBanner || undefined}
+            statusTitle="ENROLL"
+            statusSub="Active"
+          />
+        </>
+      )}
 
       <main className="flex-1 w-full bg-slate-50 dark:bg-zinc-950 py-16">
         <div className="max-w-6xl mx-auto px-4 md:px-6">
@@ -85,11 +89,14 @@ export default async function AdmissionPage({
             logoUrl={workspace.siteSettings.logoUrl}
             initialCourseId={courseId}
             fromGlobal={fromGlobal}
+            currentView={currentView}
           />
         </div>
       </main>
 
-      <WorkspaceFooter settings={workspace.siteSettings} tenant={tenant} />
+      {workspace.isSubdomainEnabled && (
+        <WorkspaceFooter settings={workspace.siteSettings} tenant={tenant} />
+      )}
     </div>
   );
 }

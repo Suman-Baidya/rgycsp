@@ -1,5 +1,6 @@
 import { db } from "@/lib/prisma";
 import { notFound } from "next/navigation";
+import { Suspense } from "react";
 import ExamGeneratorClient from "./ExamGeneratorClient";
 
 export default async function AIExamGeneratorPage({
@@ -61,22 +62,25 @@ export default async function AIExamGeneratorPage({
   const chapters = await db.chapter.findMany({
     where: { workspaceId: workspace.id },
     include: {
+      questions: { orderBy: { createdAt: "desc" } },
       _count: { select: { questions: true } }
     },
     orderBy: { createdAt: "desc" }
   });
 
   return (
-    <ExamGeneratorClient 
-      workspaceId={workspace.id}
-      workspaceTokens={workspace.tokensBalance}
-      workspace={workspace}
-      superAdminName={superAdminName}
-      exams={exams}
-      courses={courses}
-      batches={batches}
-      students={students}
-      chapters={chapters}
-    />
+    <Suspense fallback={<div className="p-10 flex justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div></div>}>
+      <ExamGeneratorClient 
+        workspaceId={workspace.id}
+        workspaceTokens={workspace.tokensBalance}
+        workspace={workspace}
+        superAdminName={superAdminName}
+        exams={exams}
+        courses={courses}
+        batches={batches}
+        students={students}
+        chapters={chapters}
+      />
+    </Suspense>
   );
 }

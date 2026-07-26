@@ -155,7 +155,7 @@ export function WorkspaceCourses({ data, dbCourses }: { data: any, dbCourses?: a
                     </div>
                   </div>
                   
-                  <div className="flex gap-2 mt-4">
+                  <div className="flex gap-2 mt-4 w-full">
                     <Button 
                       variant="outline"
                       onClick={() => {
@@ -172,13 +172,15 @@ export function WorkspaceCourses({ data, dbCourses }: { data: any, dbCourses?: a
                         });
                         setDetailsOpen(true);
                       }}
-                      className="w-full rounded-2xl h-11 font-bold transition-all border-border shadow-sm text-xs px-2"
+                      className="flex-1 rounded-2xl h-11 font-bold transition-all border-border shadow-sm text-xs px-1"
                     >
-                      View Details
+                      Details
                     </Button>
-                    <Button className="w-full rounded-2xl h-11 font-bold group-hover:bg-primary group-hover:text-primary-foreground transition-all border-none shadow-sm text-xs px-2">
-                      Enroll Now
-                    </Button>
+                    <a href={`/admission?view=form&courseId=${course.id}`} target="_blank" rel="noopener noreferrer" className="flex-1">
+                      <Button className="w-full rounded-2xl h-11 font-bold group-hover:bg-primary group-hover:text-primary-foreground transition-all border-none shadow-sm text-xs px-1">
+                        Enroll
+                      </Button>
+                    </a>
                   </div>
                 </CardContent>
               </Card>

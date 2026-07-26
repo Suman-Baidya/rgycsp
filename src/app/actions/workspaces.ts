@@ -9,6 +9,7 @@ export async function createWorkspace(data: any) {
     const { 
       name, 
       subdomain, 
+      isSubdomainEnabled,
       ownerName, 
       ownerEmail, 
       ownerPassword,
@@ -21,7 +22,14 @@ export async function createWorkspace(data: any) {
       pinCode,
       primaryColor,
       brandDescription,
-      centerCode
+      centerCode,
+      ownerAddress,
+      ownerState,
+      ownerDistrict,
+      ownerPinCode,
+      ownerPhotoUrl,
+      signatureUrl,
+      idProofUrl
     } = data;
 
     // 1. Check if subdomain exists
@@ -62,10 +70,18 @@ export async function createWorkspace(data: any) {
         name,
         subdomain: subdomain.toLowerCase(),
         isActive: true,
+        isSubdomainEnabled: isSubdomainEnabled ?? true,
         centerCode: centerCode || null,
         state: state || null,
         district: district || null,
         pinCode: pinCode || null,
+        ownerAddress: ownerAddress || null,
+        ownerState: ownerState || null,
+        ownerDistrict: ownerDistrict || null,
+        ownerPinCode: ownerPinCode || null,
+        ownerPhotoUrl: ownerPhotoUrl || null,
+        signatureUrl: signatureUrl || null,
+        idProofUrl: idProofUrl || null,
         siteSettings: {
           create: {
             siteName: name,
@@ -130,6 +146,7 @@ export async function updateCenterConfig(workspaceId: string, data: any) {
     const {
       name,
       subdomain,
+      isSubdomainEnabled,
       centerCode, // username of the admin
       ownerName,
       ownerEmail,
@@ -179,6 +196,7 @@ export async function updateCenterConfig(workspaceId: string, data: any) {
       data: {
         name,
         subdomain: subdomain ? subdomain.toLowerCase() : undefined,
+        isSubdomainEnabled: isSubdomainEnabled ?? undefined,
         centerCode,
         logoUrl,
         signatureUrl,

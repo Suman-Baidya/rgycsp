@@ -30,6 +30,13 @@ export default async function InstituteLandingPage({
 
   if (!workspace) notFound();
 
+  const session = await auth();
+  const isSuperAdmin = session?.user?.role === "SUPER_ADMIN";
+
+  if (!workspace.isSubdomainEnabled && !isSuperAdmin) {
+    notFound();
+  }
+
   const globalSettings = await db.siteSettings.findFirst({
     where: { workspaceId: null },
     include: {
@@ -125,8 +132,6 @@ export default async function InstituteLandingPage({
     return workspaceSettings.sections.find(s => s.type === type);
   };
 
-  const session = await auth();
-  
   // Fetch courses and events from the LMS model (Types updated)
   const allCourses = await (db.course as any).findMany({
     where: { workspaceId: workspace.id, isActive: true },

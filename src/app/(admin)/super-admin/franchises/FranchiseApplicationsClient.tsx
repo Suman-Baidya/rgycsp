@@ -67,6 +67,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import { AdminPageHeader } from "@/components/layout/AdminPageHeader";
 import { updateFranchiseApplicationStatus } from "@/app/actions/franchise";
 import { createWorkspace, updateCenterConfig, toggleWorkspaceStatus, deleteWorkspace, toggleDocumentAuthority } from "@/app/actions/workspaces";
@@ -123,6 +124,7 @@ export default function FranchiseApplicationsClient({
   const [workspaceFormData, setWorkspaceFormData] = useState({
     name: "",
     subdomain: "",
+    isSubdomainEnabled: true,
     ownerName: "",
     ownerEmail: "",
     ownerPassword: "",
@@ -135,10 +137,18 @@ export default function FranchiseApplicationsClient({
     pinCode: "",
     primaryColor: "#3b82f6",
     brandDescription: "Welcome to our center",
-    centerCode: ""
+    centerCode: "",
+    ownerAddress: "",
+    ownerState: "",
+    ownerDistrict: "",
+    ownerPinCode: "",
+    ownerPhotoUrl: "",
+    signatureUrl: "",
+    idProofUrl: ""
   });
 
   const wsItemsPerPage = 8;
+  const [activeWsStep, setActiveWsStep] = useState<number>(0);
 
   // Franchise Applications State
   const [searchTerm, setSearchTerm] = useState<string>("");
@@ -161,11 +171,12 @@ export default function FranchiseApplicationsClient({
   // Edit Center Config State
   const [editConfigOpen, setEditConfigOpen] = useState(false);
   const [isUpdatingConfig, setIsUpdatingConfig] = useState(false);
-  const [activeConfigTab, setActiveConfigTab] = useState<"general" | "owner" | "documents">("general");
+  const [activeEditStep, setActiveEditStep] = useState<number>(0);
   const [editConfigData, setEditConfigData] = useState<any>({
     workspaceId: "",
     name: "",
     subdomain: "",
+    isSubdomainEnabled: true,
     centerCode: "",
     ownerName: "",
     ownerEmail: "",
@@ -192,6 +203,7 @@ export default function FranchiseApplicationsClient({
       workspaceId: ws.id,
       name: ws.name,
       subdomain: ws.subdomain,
+      isSubdomainEnabled: ws.isSubdomainEnabled ?? true,
       centerCode: ws.centerCode || adminUser?.username || "",
       ownerName: adminUser?.name || "",
       ownerEmail: adminUser?.email || "",
@@ -202,7 +214,7 @@ export default function FranchiseApplicationsClient({
       idProofUrl: ws.idProofUrl || "",
       isActive: ws.isActive !== false
     });
-    setActiveConfigTab("general");
+    setActiveEditStep(0);
     setEditConfigOpen(true);
   };
 
@@ -782,7 +794,7 @@ export default function FranchiseApplicationsClient({
               </div>
             </DialogContent>
           </Dialog>
-          <Dialog open={wsOpen} onOpenChange={setWsOpen}>
+          <Dialog open={wsOpen} onOpenChange={(open) => { setWsOpen(open); if (!open) setActiveWsStep(0); }}>
             <DialogTrigger 
               render={
                 <Button className="h-11 px-6 rounded-xl gap-2 shadow-lg shadow-primary/20 bg-primary font-bold text-primary-foreground hover:scale-[1.02] active:scale-95 transition-all">
@@ -791,448 +803,700 @@ export default function FranchiseApplicationsClient({
                 </Button>
               }
             />
-              <DialogContent className="max-w-2xl rounded-[2rem] border-none shadow-2xl p-0 overflow-hidden bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800">
-                <div className="p-8 border-b border-slate-50 dark:border-slate-800 bg-slate-50/30 dark:bg-slate-800/20">
-                  <div className="flex items-center gap-4">
-                    <div className="h-14 w-14 rounded-2xl bg-primary/10 flex items-center justify-center border border-primary/20">
-                      <Building2 className="h-7 w-7 text-primary" />
+              <DialogContent className="max-w-5xl rounded-[2rem] border-none shadow-2xl p-0 overflow-hidden bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 flex flex-col md:flex-row h-[85vh] md:h-[650px]">
+                {/* Sidebar */}
+                <div className="w-full md:w-1/3 bg-slate-50 dark:bg-slate-900/50 border-b md:border-b-0 md:border-r border-slate-100 dark:border-slate-800 p-6 flex flex-col">
+                  <div className="flex items-center gap-4 mb-8">
+                    <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center shadow-lg shadow-primary/20">
+                      <Building2 className="h-6 w-6 text-white" />
                     </div>
                     <div>
-                      <h2 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Provision New Center</h2>
-                      <p className="text-slate-500 font-medium text-sm">Initialize a dedicated workspace instance for a franchise computer center.</p>
+                      <h2 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight leading-tight">Provision Center</h2>
+                      <p className="text-slate-500 font-medium text-xs mt-1">Initialize a new workspace</p>
                     </div>
+                  </div>
+
+                  <div className="flex-1 space-y-2 overflow-y-auto custom-scrollbar pr-2 pb-4">
+                    {[
+                      { id: 0, title: "Institutional Identity", icon: Building2, desc: "Name & subdomain" },
+                      { id: 1, title: "Location Details", icon: MapPin, desc: "Institute address" },
+                      { id: 2, title: "Director Details", icon: User, desc: "Master admin info" },
+                      { id: 3, title: "Director Location", icon: MapPin, desc: "Director address" },
+                      { id: 4, title: "Documents Upload", icon: FileText, desc: "Upload proofs" },
+                      { id: 5, title: "Theme & Branding", icon: Globe, desc: "Brand colors" },
+                    ].map((step) => {
+                      const isActive = activeWsStep === step.id;
+                      const Icon = step.icon;
+                      return (
+                        <button
+                          key={step.id}
+                          type="button"
+                          onClick={() => setActiveWsStep(step.id)}
+                          className={cn(
+                            "w-full text-left px-4 py-3.5 rounded-2xl transition-all flex items-start gap-3.5 relative overflow-hidden group",
+                            isActive 
+                              ? "bg-white dark:bg-slate-800 shadow-sm border border-slate-200 dark:border-slate-700 ring-1 ring-primary/5" 
+                              : "hover:bg-slate-200/50 dark:hover:bg-slate-800/50 border border-transparent"
+                          )}
+                        >
+                          {isActive && (
+                            <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary rounded-r-full" />
+                          )}
+                          <div className={cn(
+                            "h-10 w-10 shrink-0 rounded-xl flex items-center justify-center transition-all duration-300",
+                            isActive ? "bg-primary/10 text-primary shadow-inner" : "bg-slate-100 dark:bg-slate-800/80 text-slate-500 group-hover:text-slate-700 dark:group-hover:text-slate-300 group-hover:scale-105"
+                          )}>
+                            <Icon className="h-5 w-5" />
+                          </div>
+                          <div className="pt-0.5">
+                            <h4 className={cn("text-sm font-bold transition-colors", isActive ? "text-primary dark:text-white" : "text-slate-600 dark:text-slate-400")}>{step.title}</h4>
+                            <p className="text-[11px] font-medium text-slate-400 mt-0.5">{step.desc}</p>
+                          </div>
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
-                
-                <form onSubmit={handleCreateWorkspace} className="p-8 space-y-8 max-h-[70vh] overflow-y-auto custom-scrollbar">
-                  {/* Identity */}
-                  <div className="space-y-6">
-                    <div className="flex items-center gap-2 mb-4">
-                      <div className="h-1.5 w-1.5 rounded-full bg-primary" />
-                      <h3 className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Institutional Identity</h3>
-                    </div>
+
+                {/* Content Area */}
+                <form onSubmit={handleCreateWorkspace} className="flex-1 flex flex-col bg-white dark:bg-slate-900 relative h-full">
+                  <div className="flex-1 p-8 md:p-10 overflow-y-auto custom-scrollbar">
                     
-                    <div className="grid grid-cols-2 gap-6">
-                      <div className="space-y-2">
-                        <Label className="text-xs font-semibold text-slate-600 dark:text-slate-400 ml-1">Institute Name</Label>
-                        <Input 
-                          required
-                          placeholder="e.g. Zenith Academy"
-                          className="h-12 rounded-xl bg-slate-50 dark:bg-slate-800 border-none font-medium focus-visible:ring-2 focus-visible:ring-primary/20 transition-all"
-                          value={workspaceFormData.name}
-                          onChange={(e) => setWorkspaceFormData({ ...workspaceFormData, name: e.target.value })}
-                        />
+                    {/* Step 0: Identity */}
+                    <div className={cn("space-y-8 animate-in fade-in slide-in-from-right-4 duration-300", activeWsStep === 0 ? "block" : "hidden")}>
+                      <div className="space-y-2 mb-8">
+                        <h3 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">Institutional Identity</h3>
+                        <p className="text-slate-500 text-sm font-medium">Define the core identity of the franchise center.</p>
                       </div>
-                      <div className="space-y-2">
-                        <Label className="text-xs font-semibold text-slate-600 dark:text-slate-400 ml-1">Subdomain</Label>
-                        <div className="relative">
-                          <Input 
-                            required
-                            placeholder="zenith"
-                            className="h-12 rounded-xl bg-slate-50 dark:bg-slate-800 border-none font-medium pr-32 focus-visible:ring-2 focus-visible:ring-primary/20 transition-all"
-                            value={workspaceFormData.subdomain}
-                            onChange={(e) => setWorkspaceFormData({ ...workspaceFormData, subdomain: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '') })}
+                      
+                      <div className="space-y-6">
+                        <div className="space-y-2.5">
+                          <Label className="text-sm font-bold text-slate-700 dark:text-slate-300 ml-1">Institute Name</Label>
+                          <div className="relative group">
+                            <Building2 className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 group-focus-within:text-primary transition-colors" />
+                            <Input 
+                              required
+                              placeholder="e.g. Zenith Academy"
+                              className="h-14 pl-12 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 font-medium focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:border-primary/50 transition-all text-base shadow-sm"
+                              value={workspaceFormData.name}
+                              onChange={(e) => setWorkspaceFormData({ ...workspaceFormData, name: e.target.value })}
+                            />
+                          </div>
+                        </div>
+                        <div className="space-y-2.5">
+                          <Label className="text-sm font-bold text-slate-700 dark:text-slate-300 ml-1">Subdomain</Label>
+                          <div className="relative group">
+                            <Globe className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 z-10 group-focus-within:text-primary transition-colors" />
+                            <Input 
+                              required
+                              placeholder="zenith"
+                              className="h-14 pl-12 pr-32 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 font-medium focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:border-primary/50 transition-all text-base shadow-sm"
+                              value={workspaceFormData.subdomain}
+                              onChange={(e) => setWorkspaceFormData({ ...workspaceFormData, subdomain: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '') })}
+                            />
+                            <div className="absolute right-0 top-0 bottom-0 px-5 flex items-center bg-slate-100 dark:bg-slate-800 border-l border-slate-200 dark:border-slate-700 rounded-r-2xl text-slate-500 text-sm font-bold">
+                              .{rootDomain}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex items-center justify-between p-4 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/20">
+                          <div className="space-y-0.5">
+                            <Label className="text-base font-bold text-slate-900 dark:text-white">Subdomain Access</Label>
+                            <p className="text-sm text-slate-500 dark:text-slate-400">Enable or disable the public landing page for this franchise.</p>
+                          </div>
+                          <Switch
+                            checked={workspaceFormData.isSubdomainEnabled}
+                            onCheckedChange={(checked) => setWorkspaceFormData({ ...workspaceFormData, isSubdomainEnabled: checked })}
                           />
-                          <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400 uppercase">.{rootDomain}</span>
+                        </div>
+                        <div className="space-y-2.5">
+                          <Label className="text-sm font-bold text-slate-700 dark:text-slate-300 ml-1">Brief Description</Label>
+                          <div className="relative group">
+                            <FileText className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 group-focus-within:text-primary transition-colors" />
+                            <Input 
+                              placeholder="Short summary of the center..."
+                              className="h-14 pl-12 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 font-medium focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:border-primary/50 transition-all shadow-sm"
+                              value={workspaceFormData.brandDescription}
+                              onChange={(e) => setWorkspaceFormData({ ...workspaceFormData, brandDescription: e.target.value })}
+                            />
+                          </div>
                         </div>
                       </div>
                     </div>
 
-                    <div className="space-y-2">
-                      <Label className="text-xs font-semibold text-slate-600 dark:text-slate-400 ml-1">Brief Description</Label>
-                      <Input 
-                        placeholder="Short summary of the center..."
-                        className="h-12 rounded-xl bg-slate-50 dark:bg-slate-800 border-none font-medium focus-visible:ring-2 focus-visible:ring-primary/20 transition-all"
-                        value={workspaceFormData.brandDescription}
-                        onChange={(e) => setWorkspaceFormData({ ...workspaceFormData, brandDescription: e.target.value })}
-                      />
-                    </div>
-                  </div>
+                    {/* Step 1: Location */}
+                    <div className={cn("space-y-8 animate-in fade-in slide-in-from-right-4 duration-300", activeWsStep === 1 ? "block" : "hidden")}>
+                      <div className="space-y-2 mb-8">
+                        <h3 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">Location Details</h3>
+                        <p className="text-slate-500 text-sm font-medium">Where is the institute located?</p>
+                      </div>
+                      
+                      <div className="space-y-6">
+                        <div className="space-y-2.5">
+                          <Label className="text-sm font-bold text-slate-700 dark:text-slate-300 ml-1">Full Address</Label>
+                          <div className="relative group">
+                            <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 group-focus-within:text-primary transition-colors" />
+                            <Input 
+                              placeholder="Complete street address..."
+                              className="h-14 pl-12 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 font-medium focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:border-primary/50 transition-all shadow-sm"
+                              value={workspaceFormData.address}
+                              onChange={(e) => setWorkspaceFormData({ ...workspaceFormData, address: e.target.value })}
+                            />
+                          </div>
+                        </div>
 
-                  <div className="h-px bg-slate-100 dark:bg-slate-800 w-full" />
-
-                  {/* Location Details */}
-                  <div className="space-y-6">
-                    <div className="flex items-center gap-2 mb-4">
-                      <div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                      <h3 className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Location Details</h3>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label className="text-xs font-semibold text-slate-600 dark:text-slate-400 ml-1">Full Address</Label>
-                      <Input 
-                        placeholder="Complete street address..."
-                        className="h-12 rounded-xl bg-slate-50 dark:bg-slate-800 border-none font-medium focus-visible:ring-2 focus-visible:ring-primary/20 transition-all"
-                        value={workspaceFormData.address}
-                        onChange={(e) => setWorkspaceFormData({ ...workspaceFormData, address: e.target.value })}
-                      />
-                    </div>
-
-                    <div className="grid grid-cols-3 gap-6">
-                      <div className="space-y-2">
-                        <Label className="text-xs font-semibold text-slate-600 dark:text-slate-400 ml-1">State</Label>
-                        <Input 
-                          placeholder="e.g. West Bengal"
-                          className="h-12 rounded-xl bg-slate-50 dark:bg-slate-800 border-none font-medium focus-visible:ring-2 focus-visible:ring-primary/20 transition-all"
-                          value={workspaceFormData.state}
-                          onChange={(e) => setWorkspaceFormData({ ...workspaceFormData, state: e.target.value })}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label className="text-xs font-semibold text-slate-600 dark:text-slate-400 ml-1">District</Label>
-                        <Input 
-                          placeholder="e.g. North 24 Parganas"
-                          className="h-12 rounded-xl bg-slate-50 dark:bg-slate-800 border-none font-medium focus-visible:ring-2 focus-visible:ring-primary/20 transition-all"
-                          value={workspaceFormData.district}
-                          onChange={(e) => setWorkspaceFormData({ ...workspaceFormData, district: e.target.value })}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label className="text-xs font-semibold text-slate-600 dark:text-slate-400 ml-1">PIN Code</Label>
-                        <Input 
-                          placeholder="e.g. 700123"
-                          className="h-12 rounded-xl bg-slate-50 dark:bg-slate-800 border-none font-medium focus-visible:ring-2 focus-visible:ring-primary/20 transition-all"
-                          value={workspaceFormData.pinCode}
-                          onChange={(e) => setWorkspaceFormData({ ...workspaceFormData, pinCode: e.target.value })}
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="h-px bg-slate-100 dark:bg-slate-800 w-full" />
-
-                  {/* Contact Information */}
-                  <div className="space-y-6">
-                    <div className="flex items-center gap-2 mb-4">
-                      <div className="h-1.5 w-1.5 rounded-full bg-blue-500" />
-                      <h3 className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Contact Information</h3>
-                    </div>
-                    
-                    <div className="grid grid-cols-3 gap-6">
-                      <div className="space-y-2">
-                        <Label className="text-xs font-semibold text-slate-600 dark:text-slate-400 ml-1">Phone Number</Label>
-                        <Input 
-                          placeholder="+91 XXXXX XXXXX"
-                          className="h-12 rounded-xl bg-slate-50 dark:bg-slate-800 border-none font-medium focus-visible:ring-2 focus-visible:ring-primary/20 transition-all"
-                          value={workspaceFormData.contactPhone}
-                          onChange={(e) => setWorkspaceFormData({ ...workspaceFormData, contactPhone: e.target.value })}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label className="text-xs font-semibold text-slate-600 dark:text-slate-400 ml-1">WhatsApp</Label>
-                        <Input 
-                          placeholder="+91 XXXXX XXXXX"
-                          className="h-12 rounded-xl bg-slate-50 dark:bg-slate-800 border-none font-medium focus-visible:ring-2 focus-visible:ring-primary/20 transition-all"
-                          value={workspaceFormData.whatsapp}
-                          onChange={(e) => setWorkspaceFormData({ ...workspaceFormData, whatsapp: e.target.value })}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label className="text-xs font-semibold text-slate-600 dark:text-slate-400 ml-1">Support Email</Label>
-                        <Input 
-                          type="email"
-                          placeholder="support@institute.edu"
-                          className="h-12 rounded-xl bg-slate-50 dark:bg-slate-800 border-none font-medium focus-visible:ring-2 focus-visible:ring-primary/20 transition-all"
-                          value={workspaceFormData.contactEmail}
-                          onChange={(e) => setWorkspaceFormData({ ...workspaceFormData, contactEmail: e.target.value })}
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="h-px bg-slate-100 dark:bg-slate-800 w-full" />
-
-                  {/* Master Admin */}
-                  <div className="space-y-6">
-                    <div className="flex items-center gap-2 mb-4">
-                      <div className="h-1.5 w-1.5 rounded-full bg-purple-500" />
-                      <h3 className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Master Administrator</h3>
-                    </div>
-                    
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
-                      <div className="space-y-2">
-                        <Label className="text-xs font-semibold text-slate-600 dark:text-slate-400 ml-1">Center Code</Label>
-                        <Input 
-                          required
-                          placeholder="e.g. WB-001"
-                          className="h-12 rounded-xl bg-blue-50 dark:bg-blue-900/20 border-blue-100 dark:border-blue-800 font-bold uppercase text-blue-700 dark:text-blue-400 focus-visible:ring-2 focus-visible:ring-blue-500/20 transition-all"
-                          value={workspaceFormData.centerCode}
-                          onChange={(e) => setWorkspaceFormData({ ...workspaceFormData, centerCode: e.target.value })}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label className="text-xs font-semibold text-slate-600 dark:text-slate-400 ml-1">Admin Name</Label>
-                        <Input 
-                          required
-                          placeholder="Full Name"
-                          className="h-12 rounded-xl bg-slate-50 dark:bg-slate-800 border-none font-medium focus-visible:ring-2 focus-visible:ring-primary/20 transition-all"
-                          value={workspaceFormData.ownerName}
-                          onChange={(e) => setWorkspaceFormData({ ...workspaceFormData, ownerName: e.target.value })}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label className="text-xs font-semibold text-slate-600 dark:text-slate-400 ml-1">Login Email</Label>
-                        <Input 
-                          required
-                          type="email"
-                          placeholder="admin@institute.edu"
-                          className="h-12 rounded-xl bg-slate-50 dark:bg-slate-800 border-none font-medium focus-visible:ring-2 focus-visible:ring-primary/20 transition-all"
-                          value={workspaceFormData.ownerEmail}
-                          onChange={(e) => setWorkspaceFormData({ ...workspaceFormData, ownerEmail: e.target.value })}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label className="text-xs font-semibold text-slate-600 dark:text-slate-400 ml-1">Initial Password</Label>
-                        <Input 
-                          required
-                          type="password"
-                          placeholder="••••••••"
-                          className="h-12 rounded-xl bg-slate-50 dark:bg-slate-800 border-none font-medium focus-visible:ring-2 focus-visible:ring-primary/20 transition-all"
-                          value={workspaceFormData.ownerPassword}
-                          onChange={(e) => setWorkspaceFormData({ ...workspaceFormData, ownerPassword: e.target.value })}
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="h-px bg-slate-100 dark:bg-slate-800 w-full" />
-
-                  {/* Theme */}
-                  <div className="space-y-6">
-                    <div className="flex items-center gap-2 mb-4">
-                      <div className="h-1.5 w-1.5 rounded-full bg-amber-500" />
-                      <h3 className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Branding & Theme</h3>
-                    </div>
-                    
-                    <div className="flex items-center gap-6 p-5 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800">
-                      <div className="space-y-2 flex-1">
-                        <Label className="text-xs font-semibold text-slate-600 dark:text-slate-400 ml-1">Primary Color</Label>
-                        <div className="flex items-center gap-4">
-                          <input 
-                            type="color"
-                            className="h-10 w-10 rounded-lg border-none bg-transparent cursor-pointer"
-                            value={workspaceFormData.primaryColor}
-                            onChange={(e) => setWorkspaceFormData({ ...workspaceFormData, primaryColor: e.target.value })}
-                          />
-                          <Input 
-                            value={workspaceFormData.primaryColor}
-                            onChange={(e) => setWorkspaceFormData({ ...workspaceFormData, primaryColor: e.target.value })}
-                            className="h-10 flex-1 rounded-lg bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 font-mono text-sm uppercase"
-                          />
+                        <div className="grid grid-cols-2 gap-6">
+                          <div className="space-y-2.5">
+                            <Label className="text-sm font-bold text-slate-700 dark:text-slate-300 ml-1">State</Label>
+                            <Input 
+                              placeholder="e.g. West Bengal"
+                              className="h-14 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 font-medium focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:border-primary/50 transition-all px-4 shadow-sm"
+                              value={workspaceFormData.state}
+                              onChange={(e) => setWorkspaceFormData({ ...workspaceFormData, state: e.target.value })}
+                            />
+                          </div>
+                          <div className="space-y-2.5">
+                            <Label className="text-sm font-bold text-slate-700 dark:text-slate-300 ml-1">District</Label>
+                            <Input 
+                              placeholder="e.g. North 24 Parganas"
+                              className="h-14 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 font-medium focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:border-primary/50 transition-all px-4 shadow-sm"
+                              value={workspaceFormData.district}
+                              onChange={(e) => setWorkspaceFormData({ ...workspaceFormData, district: e.target.value })}
+                            />
+                          </div>
+                          <div className="space-y-2.5">
+                            <Label className="text-sm font-bold text-slate-700 dark:text-slate-300 ml-1">PIN Code</Label>
+                            <Input 
+                              placeholder="e.g. 700123"
+                              className="h-14 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 font-medium focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:border-primary/50 transition-all px-4 shadow-sm"
+                              value={workspaceFormData.pinCode}
+                              onChange={(e) => setWorkspaceFormData({ ...workspaceFormData, pinCode: e.target.value })}
+                            />
+                          </div>
                         </div>
                       </div>
-                      <p className="flex-1 text-[10px] font-medium text-slate-400 leading-relaxed italic">
-                        * Theme color automatically configures the franchise layout.
-                      </p>
+                    </div>
+
+                    {/* Step 2: Director Details */}
+                    <div className={cn("space-y-8 animate-in fade-in slide-in-from-right-4 duration-300", activeWsStep === 2 ? "block" : "hidden")}>
+                      <div className="space-y-2 mb-8">
+                        <h3 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">Director Details</h3>
+                        <p className="text-slate-500 text-sm font-medium">Create the master admin account for the franchise director.</p>
+                      </div>
+                      
+                      <div className="space-y-6">
+                        <div className="grid grid-cols-2 gap-6">
+                          <div className="space-y-2.5">
+                            <Label className="text-sm font-bold text-slate-700 dark:text-slate-300 ml-1">Center Code</Label>
+                            <Input 
+                              required
+                              placeholder="e.g. WB-001"
+                              className="h-14 rounded-2xl bg-blue-50 dark:bg-blue-900/10 border-blue-200 dark:border-blue-800 font-bold uppercase text-blue-700 dark:text-blue-400 focus-visible:ring-2 focus-visible:ring-blue-500/30 transition-all px-4 shadow-sm shadow-blue-500/5"
+                              value={workspaceFormData.centerCode}
+                              onChange={(e) => setWorkspaceFormData({ ...workspaceFormData, centerCode: e.target.value })}
+                            />
+                          </div>
+                          <div className="space-y-2.5">
+                            <Label className="text-sm font-bold text-slate-700 dark:text-slate-300 ml-1">Director Name</Label>
+                            <div className="relative group">
+                              <User className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 group-focus-within:text-primary transition-colors" />
+                              <Input 
+                                required
+                                placeholder="Full Name"
+                                className="h-14 pl-12 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 font-medium focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:border-primary/50 transition-all shadow-sm"
+                                value={workspaceFormData.ownerName}
+                                onChange={(e) => setWorkspaceFormData({ ...workspaceFormData, ownerName: e.target.value })}
+                              />
+                            </div>
+                          </div>
+                          <div className="space-y-2.5">
+                            <Label className="text-sm font-bold text-slate-700 dark:text-slate-300 ml-1">Login Email</Label>
+                            <Input 
+                              required
+                              type="email"
+                              placeholder="admin@institute.edu"
+                              className="h-14 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 font-medium focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:border-primary/50 transition-all px-4 shadow-sm"
+                              value={workspaceFormData.ownerEmail}
+                              onChange={(e) => setWorkspaceFormData({ ...workspaceFormData, ownerEmail: e.target.value })}
+                            />
+                          </div>
+                          <div className="space-y-2.5">
+                            <Label className="text-sm font-bold text-slate-700 dark:text-slate-300 ml-1">Initial Password</Label>
+                            <Input 
+                              required
+                              type="password"
+                              placeholder="••••••••"
+                              className="h-14 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 font-medium focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:border-primary/50 transition-all px-4 shadow-sm"
+                              value={workspaceFormData.ownerPassword}
+                              onChange={(e) => setWorkspaceFormData({ ...workspaceFormData, ownerPassword: e.target.value })}
+                            />
+                          </div>
+                          <div className="space-y-2.5">
+                            <Label className="text-sm font-bold text-slate-700 dark:text-slate-300 ml-1">Contact Phone</Label>
+                            <Input 
+                              placeholder="+91 XXXXX XXXXX"
+                              className="h-14 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 font-medium focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:border-primary/50 transition-all px-4 shadow-sm"
+                              value={workspaceFormData.contactPhone}
+                              onChange={(e) => setWorkspaceFormData({ ...workspaceFormData, contactPhone: e.target.value })}
+                            />
+                          </div>
+                          <div className="space-y-2.5">
+                            <Label className="text-sm font-bold text-slate-700 dark:text-slate-300 ml-1">WhatsApp</Label>
+                            <Input 
+                              placeholder="+91 XXXXX XXXXX"
+                              className="h-14 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 font-medium focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:border-primary/50 transition-all px-4 shadow-sm"
+                              value={workspaceFormData.whatsapp}
+                              onChange={(e) => setWorkspaceFormData({ ...workspaceFormData, whatsapp: e.target.value })}
+                            />
+                          </div>
+                          <div className="space-y-2.5 col-span-2">
+                            <Label className="text-sm font-bold text-slate-700 dark:text-slate-300 ml-1">Support Email (Optional)</Label>
+                            <Input 
+                              type="email"
+                              placeholder="support@institute.edu"
+                              className="h-14 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 font-medium focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:border-primary/50 transition-all px-4 shadow-sm"
+                              value={workspaceFormData.contactEmail}
+                              onChange={(e) => setWorkspaceFormData({ ...workspaceFormData, contactEmail: e.target.value })}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Step 3: Director Location */}
+                    <div className={cn("space-y-8 animate-in fade-in slide-in-from-right-4 duration-300", activeWsStep === 3 ? "block" : "hidden")}>
+                      <div className="space-y-2 mb-8">
+                        <h3 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">Director Location Details</h3>
+                        <p className="text-slate-500 text-sm font-medium">Permanent address of the director/owner.</p>
+                      </div>
+                      
+                      <div className="space-y-6">
+                        <div className="space-y-2.5">
+                          <Label className="text-sm font-bold text-slate-700 dark:text-slate-300 ml-1">Full Address</Label>
+                          <div className="relative group">
+                            <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 group-focus-within:text-primary transition-colors" />
+                            <Input 
+                              placeholder="Complete street address..."
+                              className="h-14 pl-12 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 font-medium focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:border-primary/50 transition-all shadow-sm"
+                              value={workspaceFormData.ownerAddress}
+                              onChange={(e) => setWorkspaceFormData({ ...workspaceFormData, ownerAddress: e.target.value })}
+                            />
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-6">
+                          <div className="space-y-2.5">
+                            <Label className="text-sm font-bold text-slate-700 dark:text-slate-300 ml-1">State</Label>
+                            <Input 
+                              placeholder="e.g. West Bengal"
+                              className="h-14 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 font-medium focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:border-primary/50 transition-all px-4 shadow-sm"
+                              value={workspaceFormData.ownerState}
+                              onChange={(e) => setWorkspaceFormData({ ...workspaceFormData, ownerState: e.target.value })}
+                            />
+                          </div>
+                          <div className="space-y-2.5">
+                            <Label className="text-sm font-bold text-slate-700 dark:text-slate-300 ml-1">District</Label>
+                            <Input 
+                              placeholder="e.g. North 24 Parganas"
+                              className="h-14 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 font-medium focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:border-primary/50 transition-all px-4 shadow-sm"
+                              value={workspaceFormData.ownerDistrict}
+                              onChange={(e) => setWorkspaceFormData({ ...workspaceFormData, ownerDistrict: e.target.value })}
+                            />
+                          </div>
+                          <div className="space-y-2.5">
+                            <Label className="text-sm font-bold text-slate-700 dark:text-slate-300 ml-1">PIN Code</Label>
+                            <Input 
+                              placeholder="e.g. 700123"
+                              className="h-14 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 font-medium focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:border-primary/50 transition-all px-4 shadow-sm"
+                              value={workspaceFormData.ownerPinCode}
+                              onChange={(e) => setWorkspaceFormData({ ...workspaceFormData, ownerPinCode: e.target.value })}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Step 4: Documents */}
+                    <div className={cn("space-y-8 animate-in fade-in slide-in-from-right-4 duration-300", activeWsStep === 4 ? "block" : "hidden")}>
+                      <div className="space-y-2 mb-8">
+                        <h3 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">Documents Upload</h3>
+                        <p className="text-slate-500 text-sm font-medium">Upload required proofs for the director.</p>
+                      </div>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div className="space-y-3">
+                          <Label className="text-sm font-bold text-slate-700 dark:text-slate-300 ml-1">Director Image</Label>
+                          <div className="rounded-3xl border-2 border-dashed border-slate-200 dark:border-slate-700 overflow-hidden bg-slate-50/50 dark:bg-slate-800/30 p-2 hover:bg-slate-100 dark:hover:bg-slate-800/50 transition-colors">
+                            <ImageUpload
+                              value={workspaceFormData.ownerPhotoUrl}
+                              onChange={(url) => setWorkspaceFormData({ ...workspaceFormData, ownerPhotoUrl: url })}
+                            />
+                          </div>
+                        </div>
+                        <div className="space-y-3">
+                          <Label className="text-sm font-bold text-slate-700 dark:text-slate-300 ml-1">Director Signature</Label>
+                          <div className="rounded-3xl border-2 border-dashed border-slate-200 dark:border-slate-700 overflow-hidden bg-slate-50/50 dark:bg-slate-800/30 p-2 hover:bg-slate-100 dark:hover:bg-slate-800/50 transition-colors">
+                            <ImageUpload
+                              value={workspaceFormData.signatureUrl}
+                              onChange={(url) => setWorkspaceFormData({ ...workspaceFormData, signatureUrl: url })}
+                            />
+                          </div>
+                        </div>
+                        <div className="space-y-3 col-span-1 md:col-span-2">
+                          <Label className="text-sm font-bold text-slate-700 dark:text-slate-300 ml-1">ID Proof (Aadhaar/PAN/Voter)</Label>
+                          <div className="rounded-3xl border-2 border-dashed border-slate-200 dark:border-slate-700 overflow-hidden bg-slate-50/50 dark:bg-slate-800/30 p-2 hover:bg-slate-100 dark:hover:bg-slate-800/50 transition-colors">
+                            <ImageUpload
+                              value={workspaceFormData.idProofUrl}
+                              onChange={(url) => setWorkspaceFormData({ ...workspaceFormData, idProofUrl: url })}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Step 5: Theme */}
+                    <div className={cn("space-y-8 animate-in fade-in slide-in-from-right-4 duration-300", activeWsStep === 5 ? "block" : "hidden")}>
+                      <div className="space-y-2 mb-8">
+                        <h3 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">Branding & Theme</h3>
+                        <p className="text-slate-500 text-sm font-medium">Set the primary color for the center's portal.</p>
+                      </div>
+                      
+                      <div className="flex items-center gap-6 p-8 rounded-[2rem] bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-800/80 dark:to-slate-800/30 border border-slate-200/50 dark:border-slate-700/50 shadow-inner">
+                        <div className="space-y-4 flex-1">
+                          <Label className="text-sm font-bold text-slate-700 dark:text-slate-300 ml-1">Primary Brand Color</Label>
+                          <div className="flex items-center gap-4 bg-white dark:bg-slate-900/50 p-2.5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm backdrop-blur-sm">
+                            <input 
+                              type="color"
+                              className="h-12 w-12 rounded-xl border-none bg-transparent cursor-pointer ml-1 hover:scale-105 transition-transform"
+                              value={workspaceFormData.primaryColor}
+                              onChange={(e) => setWorkspaceFormData({ ...workspaceFormData, primaryColor: e.target.value })}
+                            />
+                            <Input 
+                              value={workspaceFormData.primaryColor}
+                              onChange={(e) => setWorkspaceFormData({ ...workspaceFormData, primaryColor: e.target.value })}
+                              className="h-12 flex-1 border-none shadow-none focus-visible:ring-0 font-mono text-base uppercase bg-transparent font-bold text-slate-700 dark:text-slate-300"
+                            />
+                          </div>
+                          <p className="text-xs font-medium text-slate-500 dark:text-slate-400 pl-1">
+                            This color will be used for buttons, links, and accents across the franchise portal.
+                          </p>
+                        </div>
+                      </div>
                     </div>
                   </div>
                   
-                  <div className="flex items-center gap-3 pt-4">
+                  {/* Footer Navigation */}
+                  <div className="p-6 md:px-10 md:py-6 border-t border-slate-100 dark:border-slate-800/60 flex items-center justify-between bg-slate-50/50 dark:bg-slate-900/30 backdrop-blur-md">
                     <Button 
                       type="button" 
                       variant="ghost" 
-                      onClick={() => setWsOpen(false)}
-                      className="h-12 flex-1 rounded-xl font-bold"
+                      onClick={() => activeWsStep > 0 ? setActiveWsStep(activeWsStep - 1) : setWsOpen(false)}
+                      className="h-12 px-6 rounded-xl font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors"
                     >
-                      Cancel
+                      {activeWsStep > 0 ? "Previous" : "Cancel"}
                     </Button>
-                    <Button 
-                      type="submit" 
-                      disabled={isCreatingWorkspace}
-                      className="h-12 flex-[1.5] rounded-xl bg-primary font-bold text-primary-foreground shadow-lg shadow-primary/15"
-                    >
-                      {isCreatingWorkspace ? "Provisioning..." : "Provision Center"}
-                    </Button>
+                    
+                    {activeWsStep < 5 ? (
+                      <Button 
+                        type="button"
+                        onClick={() => setActiveWsStep(activeWsStep + 1)}
+                        className="h-12 px-8 rounded-xl bg-slate-900 hover:bg-slate-800 dark:bg-white dark:hover:bg-slate-100 text-white dark:text-slate-900 font-bold transition-all shadow-lg shadow-slate-900/20 dark:shadow-white/10"
+                      >
+                        Next Step
+                      </Button>
+                    ) : (
+                      <Button 
+                        type="submit" 
+                        disabled={isCreatingWorkspace}
+                        className="h-12 px-8 rounded-xl bg-primary hover:bg-primary/90 font-bold text-primary-foreground shadow-xl shadow-primary/25 transition-all hover:-translate-y-0.5"
+                      >
+                        {isCreatingWorkspace ? "Provisioning..." : "Provision Center"}
+                      </Button>
+                    )}
                   </div>
                 </form>
               </DialogContent>
             </Dialog>
 
-          <Dialog open={editConfigOpen} onOpenChange={setEditConfigOpen}>
-            <DialogContent className="max-w-3xl rounded-[2rem] border-none shadow-2xl p-0 overflow-hidden bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800">
-              <div className="p-8 border-b border-slate-50 dark:border-slate-800 bg-slate-50/30 dark:bg-slate-800/20">
-                <div className="flex items-center gap-4">
-                  <div className="h-14 w-14 rounded-2xl bg-blue-500/10 flex items-center justify-center border border-blue-500/20">
-                    <Settings className="h-7 w-7 text-blue-500" />
+          <Dialog open={editConfigOpen} onOpenChange={(open) => { setEditConfigOpen(open); if (!open) setActiveEditStep(0); }}>
+            <DialogContent className="max-w-5xl rounded-[2rem] border-none shadow-2xl p-0 overflow-hidden bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 flex flex-col md:flex-row h-[85vh] md:h-[650px]">
+              {/* Sidebar */}
+              <div className="w-full md:w-1/3 bg-slate-50 dark:bg-slate-900/50 border-b md:border-b-0 md:border-r border-slate-100 dark:border-slate-800 p-6 flex flex-col">
+                <div className="flex items-center gap-4 mb-8">
+                  <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-lg shadow-blue-500/20">
+                    <Settings className="h-6 w-6 text-white" />
                   </div>
                   <div>
-                    <h2 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Center Configuration</h2>
-                    <p className="text-slate-500 font-medium text-sm">Update identity, owner details, and documents for this franchise.</p>
+                    <h2 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight leading-tight">Center Config</h2>
+                    <p className="text-slate-500 font-medium text-xs mt-1">Update franchise settings</p>
                   </div>
+                </div>
+
+                <div className="flex-1 space-y-2 overflow-y-auto custom-scrollbar pr-2 pb-4">
+                  {[
+                    { id: 0, title: "General Information", icon: Building2, desc: "Name & subdomain" },
+                    { id: 1, title: "Owner Details", icon: User, desc: "Master admin info" },
+                    { id: 2, title: "Documents", icon: FileText, desc: "Update proofs" },
+                    { id: 3, title: "Danger Zone", icon: AlertCircle, desc: "Suspend or delete" },
+                  ].map((step) => {
+                    const isActive = activeEditStep === step.id;
+                    const Icon = step.icon;
+                    return (
+                      <button
+                        key={step.id}
+                        type="button"
+                        onClick={() => setActiveEditStep(step.id)}
+                        className={cn(
+                          "w-full text-left px-4 py-3.5 rounded-2xl transition-all flex items-start gap-3.5 relative overflow-hidden group",
+                          isActive 
+                            ? "bg-white dark:bg-slate-800 shadow-sm border border-slate-200 dark:border-slate-700 ring-1 ring-blue-500/10" 
+                            : "hover:bg-slate-200/50 dark:hover:bg-slate-800/50 border border-transparent"
+                        )}
+                      >
+                        {isActive && (
+                          <div className="absolute left-0 top-0 bottom-0 w-1 bg-blue-500 rounded-r-full" />
+                        )}
+                        <div className={cn(
+                          "h-10 w-10 shrink-0 rounded-xl flex items-center justify-center transition-all duration-300",
+                          isActive ? "bg-blue-500/10 text-blue-500 shadow-inner" : "bg-slate-100 dark:bg-slate-800/80 text-slate-500 group-hover:text-slate-700 dark:group-hover:text-slate-300 group-hover:scale-105"
+                        )}>
+                          <Icon className="h-5 w-5" />
+                        </div>
+                        <div className="pt-0.5">
+                          <h4 className={cn("text-sm font-bold transition-colors", isActive ? "text-blue-500 dark:text-white" : "text-slate-600 dark:text-slate-400")}>{step.title}</h4>
+                          <p className="text-[11px] font-medium text-slate-400 mt-0.5">{step.desc}</p>
+                        </div>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
-              
-              <form onSubmit={handleUpdateConfig} className="p-8 space-y-10 max-h-[70vh] overflow-y-auto custom-scrollbar">
-                {/* 1. General Info */}
-                <div className="space-y-6">
-                  <div className="flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-2">
-                    <Building2 className="h-5 w-5 text-blue-500" />
-                    <h3 className="text-lg font-bold text-slate-800 dark:text-slate-200">General Information</h3>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                      <Label className="text-xs font-semibold text-slate-600 ml-1">Institute Name</Label>
-                      <Input
-                        value={editConfigData.name}
-                        onChange={(e) => setEditConfigData({ ...editConfigData, name: e.target.value })}
-                        className="h-12 rounded-xl bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 px-4"
-                        required
-                      />
+
+              {/* Content Area */}
+              <form onSubmit={handleUpdateConfig} className="flex-1 flex flex-col bg-white dark:bg-slate-900 relative h-full">
+                <div className="flex-1 p-8 md:p-10 overflow-y-auto custom-scrollbar">
+                  
+                  {/* Step 0: General Info */}
+                  <div className={cn("space-y-8 animate-in fade-in slide-in-from-right-4 duration-300", activeEditStep === 0 ? "block" : "hidden")}>
+                    <div className="space-y-2 mb-8">
+                      <h3 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">General Information</h3>
+                      <p className="text-slate-500 text-sm font-medium">Update the institute's core identity.</p>
                     </div>
-                    <div className="space-y-2">
-                      <Label className="text-xs font-semibold text-slate-600 ml-1">Subdomain</Label>
-                      <div className="flex items-center">
-                        <Input
-                          value={editConfigData.subdomain}
-                          onChange={(e) => setEditConfigData({ ...editConfigData, subdomain: e.target.value.toLowerCase().replace(/[^a-z0-9]/g, "") })}
-                          className="h-12 rounded-l-xl rounded-r-none bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 px-4 text-right pr-1"
-                          required
-                        />
-                        <div className="h-12 px-4 flex items-center bg-slate-100 dark:bg-slate-800 border-y border-r border-slate-200 dark:border-slate-700 rounded-r-xl text-slate-500 text-sm font-bold">
-                          .{rootDomain}
+
+                    <div className="space-y-6">
+                      <div className="space-y-2.5">
+                        <Label className="text-sm font-bold text-slate-700 dark:text-slate-300 ml-1">Institute Name</Label>
+                        <div className="relative group">
+                          <Building2 className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
+                          <Input 
+                            required
+                            className="h-14 pl-12 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 font-medium focus-visible:ring-2 focus-visible:ring-blue-500/20 focus-visible:border-blue-500/50 transition-all shadow-sm"
+                            value={editConfigData.name}
+                            onChange={(e) => setEditConfigData({ ...editConfigData, name: e.target.value })}
+                          />
                         </div>
                       </div>
+
+                      <div className="space-y-2.5">
+                        <Label className="text-sm font-bold text-slate-700 dark:text-slate-300 ml-1">Subdomain</Label>
+                        <div className="relative group">
+                          <Globe className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 z-10 group-focus-within:text-blue-500 transition-colors" />
+                          <Input 
+                            required
+                            className="h-14 pl-12 pr-32 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 font-medium focus-visible:ring-2 focus-visible:ring-blue-500/20 focus-visible:border-blue-500/50 transition-all shadow-sm"
+                            value={editConfigData.subdomain}
+                            onChange={(e) => setEditConfigData({ ...editConfigData, subdomain: e.target.value.toLowerCase().replace(/[^a-z0-9]/g, "") })}
+                          />
+                          <div className="absolute right-0 top-0 bottom-0 px-5 flex items-center bg-slate-100 dark:bg-slate-800 border-l border-slate-200 dark:border-slate-700 rounded-r-2xl text-slate-500 text-sm font-bold">
+                            .{rootDomain}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between p-4 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/20">
+                        <div className="space-y-0.5">
+                          <Label className="text-base font-bold text-slate-900 dark:text-white">Subdomain Access</Label>
+                          <p className="text-sm text-slate-500 dark:text-slate-400">Enable or disable the public landing page.</p>
+                        </div>
+                        <Switch
+                          checked={editConfigData.isSubdomainEnabled}
+                          onCheckedChange={(checked) => setEditConfigData({ ...editConfigData, isSubdomainEnabled: checked })}
+                        />
+                      </div>
+
+                      <div className="space-y-2.5">
+                        <Label className="text-sm font-bold text-slate-700 dark:text-slate-300 ml-1">Contact Phone</Label>
+                        <Input
+                          value={editConfigData.contactPhone}
+                          onChange={(e) => setEditConfigData({ ...editConfigData, contactPhone: e.target.value })}
+                          className="h-14 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 font-medium focus-visible:ring-2 focus-visible:ring-blue-500/20 focus-visible:border-blue-500/50 transition-all px-4 shadow-sm"
+                        />
+                      </div>
+                      
+                      <div className="space-y-2.5">
+                        <Label className="text-sm font-bold text-slate-700 dark:text-slate-300 ml-1">Address</Label>
+                        <Input
+                          value={editConfigData.address}
+                          onChange={(e) => setEditConfigData({ ...editConfigData, address: e.target.value })}
+                          className="h-14 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 font-medium focus-visible:ring-2 focus-visible:ring-blue-500/20 focus-visible:border-blue-500/50 transition-all px-4 shadow-sm"
+                        />
+                      </div>
                     </div>
-                    <div className="space-y-2">
-                      <Label className="text-xs font-semibold text-slate-600 ml-1">Contact Phone</Label>
-                      <Input
-                        value={editConfigData.contactPhone}
-                        onChange={(e) => setEditConfigData({ ...editConfigData, contactPhone: e.target.value })}
-                        className="h-12 rounded-xl bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 px-4"
+                  </div>
+
+                  {/* Step 1: Owner Details */}
+                  <div className={cn("space-y-8 animate-in fade-in slide-in-from-right-4 duration-300", activeEditStep === 1 ? "block" : "hidden")}>
+                    <div className="space-y-2 mb-8">
+                      <h3 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">Owner Details</h3>
+                      <p className="text-slate-500 text-sm font-medium">Update the master admin information.</p>
+                    </div>
+                    
+                    <div className="space-y-6">
+                      <div className="space-y-2.5">
+                        <Label className="text-sm font-bold text-slate-700 dark:text-slate-300 ml-1">Center Code / App No.</Label>
+                        <Input
+                          value={editConfigData.centerCode}
+                          onChange={(e) => setEditConfigData({ ...editConfigData, centerCode: e.target.value })}
+                          className="h-14 rounded-2xl bg-blue-50/50 dark:bg-blue-500/10 border-blue-500/20 px-4 font-bold uppercase tracking-wider text-blue-700 dark:text-blue-400"
+                          required
+                          placeholder="WB-001"
+                        />
+                        <p className="text-xs text-slate-500 ml-2 mt-1">This is used as the unique identifier and admin username.</p>
+                      </div>
+
+                      <div className="space-y-2.5">
+                        <Label className="text-sm font-bold text-slate-700 dark:text-slate-300 ml-1">Owner Name</Label>
+                        <Input
+                          value={editConfigData.ownerName}
+                          onChange={(e) => setEditConfigData({ ...editConfigData, ownerName: e.target.value })}
+                          className="h-14 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 font-medium focus-visible:ring-2 focus-visible:ring-blue-500/20 focus-visible:border-blue-500/50 transition-all px-4 shadow-sm"
+                          required
+                        />
+                      </div>
+                      
+                      <div className="space-y-2.5">
+                        <Label className="text-sm font-bold text-slate-700 dark:text-slate-300 ml-1">Owner Email</Label>
+                        <Input
+                          type="email"
+                          value={editConfigData.ownerEmail}
+                          onChange={(e) => setEditConfigData({ ...editConfigData, ownerEmail: e.target.value })}
+                          className="h-14 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 font-medium focus-visible:ring-2 focus-visible:ring-blue-500/20 focus-visible:border-blue-500/50 transition-all px-4 shadow-sm"
+                          required
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Step 2: Documents */}
+                  <div className={cn("space-y-8 animate-in fade-in slide-in-from-right-4 duration-300", activeEditStep === 2 ? "block" : "hidden")}>
+                    <div className="space-y-2 mb-8">
+                      <h3 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">Documents Upload</h3>
+                      <p className="text-slate-500 text-sm font-medium">Update the required verification documents.</p>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <ImageUpload 
+                        value={editConfigData.logoUrl} 
+                        onChange={(url) => setEditConfigData({ ...editConfigData, logoUrl: url })} 
+                        label="Institute Logo" 
+                        folder={`RGYCSP/Workspaces/${editConfigData.subdomain}`} 
+                      />
+                      <ImageUpload 
+                        value={editConfigData.signatureUrl} 
+                        onChange={(url) => setEditConfigData({ ...editConfigData, signatureUrl: url })} 
+                        label="Owner Signature" 
+                        folder={`RGYCSP/Workspaces/${editConfigData.subdomain}`} 
+                      />
+                      <ImageUpload 
+                        value={editConfigData.idProofUrl} 
+                        onChange={(url) => setEditConfigData({ ...editConfigData, idProofUrl: url })} 
+                        label="ID Proof" 
+                        folder={`RGYCSP/Workspaces/${editConfigData.subdomain}`} 
                       />
                     </div>
-                    <div className="space-y-2 md:col-span-2">
-                      <Label className="text-xs font-semibold text-slate-600 ml-1">Address</Label>
-                      <Input
-                        value={editConfigData.address}
-                        onChange={(e) => setEditConfigData({ ...editConfigData, address: e.target.value })}
-                        className="h-12 rounded-xl bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 px-4"
-                      />
+                  </div>
+
+                  {/* Step 3: Danger Zone */}
+                  <div className={cn("space-y-8 animate-in fade-in slide-in-from-right-4 duration-300", activeEditStep === 3 ? "block" : "hidden")}>
+                    <div className="space-y-2 mb-8">
+                      <h3 className="text-3xl font-black text-red-600 dark:text-red-500 tracking-tight">Danger Zone</h3>
+                      <p className="text-red-500/70 text-sm font-medium">Critical actions for this franchise center.</p>
+                    </div>
+                    
+                    <div className="flex flex-col gap-4 bg-red-50/50 dark:bg-red-500/5 p-6 rounded-2xl border border-red-100 dark:border-red-900/30">
+                      <Button 
+                        type="button"
+                        variant="outline"
+                        className={cn(
+                          "h-14 px-6 rounded-xl font-bold border-2",
+                          editConfigData.isActive 
+                            ? "text-amber-600 border-amber-200 hover:bg-amber-100 dark:border-amber-900/50 dark:hover:bg-amber-900/20" 
+                            : "text-green-600 border-green-200 hover:bg-green-100 dark:border-green-900/50 dark:hover:bg-green-900/20"
+                        )}
+                        onClick={() => {
+                          confirmToggleWorkspaceStatus(editConfigData.workspaceId, editConfigData.isActive);
+                          setEditConfigOpen(false);
+                        }}
+                      >
+                        {editConfigData.isActive ? <><ShieldOff className="h-5 w-5 mr-2" /> Suspend Center</> : <><Shield className="h-5 w-5 mr-2" /> Activate Center</>}
+                      </Button>
+                      <Button 
+                        type="button"
+                        variant="destructive"
+                        className="h-14 px-6 rounded-xl font-bold bg-red-500 hover:bg-red-600 text-white"
+                        onClick={() => {
+                          confirmDeleteWorkspace(editConfigData.workspaceId);
+                          setEditConfigOpen(false);
+                        }}
+                      >
+                        <Trash2 className="h-5 w-5 mr-2" /> Delete Center
+                      </Button>
                     </div>
                   </div>
                 </div>
 
-                {/* 2. Owner Details */}
-                <div className="space-y-6">
-                  <div className="flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-2">
-                    <User className="h-5 w-5 text-purple-500" />
-                    <h3 className="text-lg font-bold text-slate-800 dark:text-slate-200">Owner Details & Center Code</h3>
+                {/* Footer Buttons */}
+                <div className="p-6 border-t border-slate-100 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50 backdrop-blur-md flex items-center justify-between mt-auto">
+                  <div className="flex items-center gap-2">
+                    {activeEditStep > 0 && (
+                      <Button 
+                        type="button"
+                        variant="ghost" 
+                        onClick={() => setActiveEditStep(activeEditStep - 1)}
+                        className="h-12 w-12 rounded-xl p-0 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500"
+                      >
+                        <ChevronLeft className="h-5 w-5" />
+                      </Button>
+                    )}
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-2 md:col-span-2">
-                      <Label className="text-xs font-semibold text-slate-600 ml-1">Center Code / App No. (e.g., WB-001)</Label>
-                      <Input
-                        value={editConfigData.centerCode}
-                        onChange={(e) => setEditConfigData({ ...editConfigData, centerCode: e.target.value })}
-                        className="h-12 rounded-xl bg-blue-50/50 dark:bg-blue-500/10 border-blue-500/20 px-4 font-bold uppercase tracking-wider text-blue-700 dark:text-blue-400"
-                        required
-                        placeholder="WB-001"
-                      />
-                      <p className="text-[10px] text-slate-500 ml-2">This is used as the unique identifier and admin username.</p>
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-xs font-semibold text-slate-600 ml-1">Owner Name</Label>
-                      <Input
-                        value={editConfigData.ownerName}
-                        onChange={(e) => setEditConfigData({ ...editConfigData, ownerName: e.target.value })}
-                        className="h-12 rounded-xl bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 px-4"
-                        required
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-xs font-semibold text-slate-600 ml-1">Owner Email</Label>
-                      <Input
-                        type="email"
-                        value={editConfigData.ownerEmail}
-                        onChange={(e) => setEditConfigData({ ...editConfigData, ownerEmail: e.target.value })}
-                        className="h-12 rounded-xl bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 px-4"
-                        required
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* 3. Documents */}
-                <div className="space-y-6">
-                  <div className="flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-2">
-                    <FileText className="h-5 w-5 text-emerald-500" />
-                    <h3 className="text-lg font-bold text-slate-800 dark:text-slate-200">Documents</h3>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <ImageUpload 
-                      value={editConfigData.logoUrl} 
-                      onChange={(url) => setEditConfigData({ ...editConfigData, logoUrl: url })} 
-                      label="Institute Logo" 
-                      folder={`RGYCSP/Workspaces/${editConfigData.subdomain}`} 
-                    />
-                    <ImageUpload 
-                      value={editConfigData.signatureUrl} 
-                      onChange={(url) => setEditConfigData({ ...editConfigData, signatureUrl: url })} 
-                      label="Owner Signature" 
-                      folder={`RGYCSP/Workspaces/${editConfigData.subdomain}`} 
-                    />
-                    <ImageUpload 
-                      value={editConfigData.idProofUrl} 
-                      onChange={(url) => setEditConfigData({ ...editConfigData, idProofUrl: url })} 
-                      label="ID Proof" 
-                      folder={`RGYCSP/Workspaces/${editConfigData.subdomain}`} 
-                    />
-                  </div>
-                </div>
-
-                {/* 4. Danger Zone */}
-                <div className="space-y-6 pt-4">
-                  <div className="flex items-center gap-2 border-b border-red-100 dark:border-red-900/30 pb-2">
-                    <AlertCircle className="h-5 w-5 text-red-500" />
-                    <h3 className="text-lg font-bold text-red-600 dark:text-red-500">Danger Zone</h3>
-                  </div>
-                  <div className="flex flex-col sm:flex-row items-center gap-4 bg-red-50/50 dark:bg-red-500/5 p-4 rounded-2xl border border-red-100 dark:border-red-900/30">
+                  
+                  <div className="flex gap-3">
                     <Button 
                       type="button"
-                      variant="outline"
-                      className={cn(
-                        "h-12 w-full sm:w-auto px-6 rounded-xl font-bold flex-1 border-2",
-                        editConfigData.isActive 
-                          ? "text-amber-600 border-amber-200 hover:bg-amber-100 dark:border-amber-900/50 dark:hover:bg-amber-900/20" 
-                          : "text-green-600 border-green-200 hover:bg-green-100 dark:border-green-900/50 dark:hover:bg-green-900/20"
-                      )}
-                      onClick={() => {
-                        confirmToggleWorkspaceStatus(editConfigData.workspaceId, editConfigData.isActive);
-                        setEditConfigOpen(false);
-                      }}
+                      variant="ghost" 
+                      onClick={() => setEditConfigOpen(false)}
+                      className="h-12 px-6 rounded-xl font-bold text-slate-500 hover:text-slate-900 dark:hover:text-white"
                     >
-                      {editConfigData.isActive ? <><ShieldOff className="h-4 w-4 mr-2" /> Suspend Center</> : <><Shield className="h-4 w-4 mr-2" /> Activate Center</>}
+                      Cancel
                     </Button>
-                    <Button 
-                      type="button"
-                      variant="destructive"
-                      className="h-12 w-full sm:w-auto px-6 rounded-xl font-bold bg-red-500 hover:bg-red-600 text-white flex-1"
-                      onClick={() => {
-                        confirmDeleteWorkspace(editConfigData.workspaceId);
-                        setEditConfigOpen(false);
-                      }}
-                    >
-                      <Trash2 className="h-4 w-4 mr-2" /> Delete Center
-                    </Button>
+                    {activeEditStep < 3 ? (
+                      <Button 
+                        type="button"
+                        onClick={() => setActiveEditStep(activeEditStep + 1)}
+                        className="h-12 px-8 rounded-xl bg-slate-900 hover:bg-slate-800 dark:bg-white dark:hover:bg-slate-100 text-white dark:text-slate-900 font-bold transition-all shadow-lg shadow-slate-900/20 dark:shadow-white/10"
+                      >
+                        Next Step
+                      </Button>
+                    ) : (
+                      <Button 
+                        type="submit" 
+                        disabled={isUpdatingConfig}
+                        className="h-12 px-8 rounded-xl bg-blue-600 hover:bg-blue-700 font-bold text-white shadow-xl shadow-blue-500/25 transition-all hover:-translate-y-0.5"
+                      >
+                        {isUpdatingConfig ? "Saving..." : "Save Configuration"}
+                      </Button>
+                    )}
                   </div>
-                </div>
-
-                <div className="pt-6 mt-6 border-t border-slate-100 dark:border-slate-800 flex gap-3 sticky bottom-0 bg-white dark:bg-slate-900 pb-2 z-10">
-                  <Button 
-                    type="button"
-                    variant="ghost" 
-                    onClick={() => setEditConfigOpen(false)}
-                    className="h-12 flex-1 rounded-xl font-bold bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700"
-                  >
-                    Cancel
-                  </Button>
-                  <Button 
-                    type="submit" 
-                    disabled={isUpdatingConfig}
-                    className="h-12 flex-[2] rounded-xl bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-500/20 font-bold"
-                  >
-                    {isUpdatingConfig ? "Saving Changes..." : "Save Configuration"}
-                  </Button>
                 </div>
               </form>
             </DialogContent>
