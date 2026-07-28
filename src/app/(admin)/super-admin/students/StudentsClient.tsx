@@ -121,6 +121,8 @@ export default function StudentsClient({ initialStudents, initialWorkspaces, ini
     idProofUrl: "",
     marksheetNo: "",
     certificateNo: "",
+    registrationNo: "",
+    admissionDate: "",
   });
 
   const handleEditClick = (student: any) => {
@@ -146,6 +148,7 @@ export default function StudentsClient({ initialStudents, initialWorkspaces, ini
     setEditFormData({
       fullName: student.fullName,
       enrollmentNo: student.enrollmentNo,
+      registrationNo: student.registrationNo || (student.registrations && student.registrations.length > 0 ? student.registrations[0].registrationNo : "") || "",
       marksheetNo: student.marksheetNo || "",
       certificateNo: student.certificateNo || "",
       loginPassword: student.loginPassword || "",
@@ -153,6 +156,7 @@ export default function StudentsClient({ initialStudents, initialWorkspaces, ini
       email: student.email || "",
       whatsapp: student.whatsapp || "",
       dob: student.dob ? new Date(student.dob).toLocaleDateString('en-GB') : "",
+      admissionDate: student.admissionDate ? new Date(student.admissionDate).toLocaleDateString('en-GB') : "",
       gender: student.gender || "",
       bloodGroup: student.bloodGroup || "",
       religion: student.religion || "",
@@ -254,6 +258,27 @@ export default function StudentsClient({ initialStudents, initialWorkspaces, ini
       if (dd && mm && yyyy) parsedDob = `${yyyy}-${mm}-${dd}`;
     }
 
+    let parsedAdmissionDate = editFormData.admissionDate;
+    if (parsedAdmissionDate && parsedAdmissionDate.includes('/')) {
+      const [dd, mm, yyyy] = parsedAdmissionDate.split('/');
+      if (dd && mm && yyyy) parsedAdmissionDate = `${yyyy}-${mm}-${dd}`;
+    }
+
+    const existingAdmDate = selectedStudent.admissionDate ? new Date(selectedStudent.admissionDate) : null;
+    const existingYear = existingAdmDate ? existingAdmDate.getFullYear() : null;
+    let newYear = null;
+    if (parsedAdmissionDate) {
+      newYear = new Date(parsedAdmissionDate).getFullYear();
+    }
+    
+    if (existingYear && newYear && existingYear !== newYear && selectedStudent.registrationNo) {
+       const confirmMsg = `Changing the admission date will automatically modify the student's registration number year from ${existingYear} to ${newYear}. Are you sure?`;
+       if (!window.confirm(confirmMsg)) {
+         setIsSubmitting(false);
+         return;
+       }
+    }
+
     const qualObj = {
       name: editFormData.qualName,
       year: editFormData.qualYear,
@@ -279,6 +304,7 @@ export default function StudentsClient({ initialStudents, initialWorkspaces, ini
     const payload = {
       ...restPayload,
       dob: parsedDob,
+      admissionDate: parsedAdmissionDate,
       qualification: qualObj,
       address: JSON.stringify(addrObj)
     };
@@ -1333,9 +1359,18 @@ export default function StudentsClient({ initialStudents, initialWorkspaces, ini
                           <Input required value={editFormData.enrollmentNo} onChange={e => setEditFormData({ ...editFormData, enrollmentNo: e.target.value })} className="h-11 rounded-xl" />
                         </div>
                         <div className="space-y-1.5">
+                          <label className="text-xs font-bold text-slate-400">Registration No</label>
+                          <Input value={editFormData.registrationNo} onChange={e => setEditFormData({ ...editFormData, registrationNo: e.target.value.toUpperCase() })} placeholder="e.g. WB002Y2026B00001" className="h-11 rounded-xl" />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-1.5">
                           <label className="text-xs font-bold text-slate-400">Login Password</label>
                           <Input type="text" value={editFormData.loginPassword} onChange={e => setEditFormData({ ...editFormData, loginPassword: e.target.value })} placeholder="Leave blank to keep current" className="h-11 rounded-xl" />
                         </div>
+                        {/* Placeholder for layout balance if needed */}
+                        <div className="hidden md:block"></div>
                       </div>
 
                       <div className="grid grid-cols-2 gap-4">
@@ -1362,6 +1397,22 @@ export default function StudentsClient({ initialStudents, initialWorkspaces, ini
                               if (val.length >= 2 && val.length < 4) val = val.slice(0, 2) + '/' + val.slice(2);
                               else if (val.length >= 4) val = val.slice(0, 2) + '/' + val.slice(2, 4) + '/' + val.slice(4, 8);
                               setEditFormData({ ...editFormData, dob: val });
+                            }}
+                            maxLength={10}
+                          />
+                        </div>
+                        <div className="space-y-1.5">
+                          <label className="text-xs font-bold text-slate-400">Admission Date</label>
+                          <Input
+                            type="text"
+                            placeholder="DD/MM/YYYY"
+                            value={editFormData.admissionDate}
+                            onChange={e => {
+                              let val = e.target.value.replace(/\D/g, '');
+                              if (val.length > 8) val = val.slice(0, 8);
+                              if (val.length >= 2 && val.length < 4) val = val.slice(0, 2) + '/' + val.slice(2);
+                              else if (val.length >= 4) val = val.slice(0, 2) + '/' + val.slice(2, 4) + '/' + val.slice(4, 8);
+                              setEditFormData({ ...editFormData, admissionDate: val });
                             }}
                             maxLength={10}
                             className="h-11 rounded-xl"

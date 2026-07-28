@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { Input } from "@/components/ui/input";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -102,10 +103,11 @@ export function GalleryList({ initialItems, categories }: { initialItems: Galler
                    isTall ? "md:row-span-2" : "md:col-span-1 md:row-span-1"
                  )}
                >
-                 <img 
+                 <Image 
+                   fill
                    src={item.image} 
                    alt={item.title || ""} 
-                   className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
+                   className="object-cover transition-transform duration-1000 group-hover:scale-110"
                  />
                  <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/10 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-500 flex flex-col justify-end p-5">
                    <div className="space-y-2 translate-y-4 group-hover:translate-y-0 transition-transform duration-500">

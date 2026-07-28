@@ -120,7 +120,11 @@ export async function getWorkspaces() {
       include: {
         roles: {
           where: { role: "ADMIN" },
-          include: { user: true },
+          include: { 
+            user: {
+              select: { id: true, name: true, username: true, email: true, image: true, role: true }
+            } 
+          },
         },
         _count: {
           select: { 

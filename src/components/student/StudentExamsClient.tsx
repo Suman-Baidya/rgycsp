@@ -46,7 +46,8 @@ import { cn } from "@/lib/utils";
 
 export default function StudentExamsClient({
   settings,
-  tenant
+  tenant,
+  exams = []
 }: {
   settings: any,
   tenant: string,

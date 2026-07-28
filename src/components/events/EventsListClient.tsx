@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { Calendar, Clock, MapPin, Search, ChevronLeft, ChevronRight, Filter } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -49,10 +50,11 @@ export function EventsListClient({ events }: { events: any[] }) {
       <Link href={`/events/${event.id}`} key={event.id} className="group relative bg-white dark:bg-zinc-900 rounded-[2rem] border border-slate-200 dark:border-zinc-800 overflow-hidden hover:shadow-2xl hover:shadow-primary/10 transition-all duration-300 hover:-translate-y-1 flex flex-col h-full">
         <div className="aspect-video w-full relative overflow-hidden bg-slate-100 dark:bg-zinc-800 border-b border-slate-100 dark:border-zinc-800">
           {event.image ? (
-            <img 
+            <Image 
+              fill
               src={event.image} 
               alt={event.title} 
-              className={`w-full h-full object-cover transition-transform duration-500 group- ${isPast ? 'grayscale opacity-80 group-hover:grayscale-0 group-hover:opacity-100' : ''}`}
+              className={`object-cover transition-transform duration-500 group- ${isPast ? 'grayscale opacity-80 group-hover:grayscale-0 group-hover:opacity-100' : ''}`}
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center bg-primary/5">

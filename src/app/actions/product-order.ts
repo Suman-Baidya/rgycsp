@@ -13,7 +13,9 @@ export async function getWorkspaceOrders(workspaceId: string) {
           include: {
             productVariant: {
               include: {
-                product: true
+                product: {
+                  select: { id: true, title: true, image: true, category: true }
+                }
               }
             }
           }
@@ -41,7 +43,9 @@ export async function getAllOrders() {
           include: {
             productVariant: {
               include: {
-                product: true
+                product: {
+                  select: { id: true, title: true, image: true, category: true }
+                }
               }
             }
           }

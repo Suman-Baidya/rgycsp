@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
+import Image from "next/image";
 import { getPostLoginRedirect } from "@/app/actions/auth";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -123,7 +124,7 @@ export function LoginForm({
                 <div className="absolute inset-0 rounded-[2rem] border border-white/50 dark:border-white/5 pointer-events-none shadow-[inset_0_2px_15px_rgba(0,0,0,0.03)] dark:shadow-[inset_0_2px_20px_rgba(255,255,255,0.05)]" />
 
                 {tenantLogo ? (
-                  <img src={tenantLogo} alt={tenantName} className="w-full h-full object-contain drop-shadow-md transition-transform duration-500 group-hover:brightness-110" />
+                  <Image fill src={tenantLogo} alt={tenantName} className="object-contain drop-shadow-md transition-transform duration-500 group-hover:brightness-110" />
                 ) : (
                   <GraduationCap className="w-10 h-10 text-primary drop-shadow-md transition-transform duration-500 group-hover:brightness-110" style={{ color: primaryColor || undefined }} />
                 )}

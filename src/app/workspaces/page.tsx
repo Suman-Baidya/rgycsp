@@ -28,6 +28,24 @@ export default async function WorkspacesPage() {
     }
   });
 
+  const studentProfiles = await db.studentProfile.findMany({
+    where: { userId: session.user.id },
+    include: {
+      workspace: {
+        include: { siteSettings: true }
+      }
+    }
+  });
+
+  // If the user only has a single student profile and no admin roles, directly redirect them.
+  if (workspaceRoles.length === 0 && studentProfiles.length === 1) {
+    const { getServerTenantLink } = await import("@/lib/routing-server");
+    const dashboardUrl = await getServerTenantLink("/student/dashboard", studentProfiles[0].workspace.subdomain);
+    redirect(dashboardUrl);
+  }
+
+  const hasAnyWorkspace = workspaceRoles.length > 0 || studentProfiles.length > 0;
+
   const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "localhost:3000";
 
   return (
@@ -50,7 +68,7 @@ export default async function WorkspacesPage() {
           </Button>
         </div>
 
-        {workspaceRoles.length === 0 ? (
+        {!hasAnyWorkspace ? (
           <div className="flex flex-col items-center justify-center py-20 text-center space-y-6 bg-white dark:bg-zinc-900 rounded-[2.5rem] border border-slate-100 dark:border-white/5 shadow-xl">
             <div className="w-24 h-24 bg-slate-50 dark:bg-zinc-800 rounded-3xl flex items-center justify-center">
               <Building2 className="w-12 h-12 text-slate-300" />
@@ -73,7 +91,7 @@ export default async function WorkspacesPage() {
               const dashboardUrl = await getServerTenantLink("/admin", workspace.subdomain);
               
               return (
-                <Card key={workspace.id} className="group rounded-[2.5rem] border-white/20 dark:border-white/5 shadow-xl bg-white/80 dark:bg-zinc-900/80 backdrop-blur-sm overflow-hidden hover:shadow-2xl hover:-translate-y-1 transition-all duration-300">
+                <Card key={`admin-${workspace.id}`} className="group rounded-[2.5rem] border-white/20 dark:border-white/5 shadow-xl bg-white/80 dark:bg-zinc-900/80 backdrop-blur-sm overflow-hidden hover:shadow-2xl hover:-translate-y-1 transition-all duration-300">
                   <div 
                     className="h-3 w-full" 
                     style={{ backgroundColor: workspace.siteSettings?.primaryColor || 'var(--primary)' }}
@@ -106,7 +124,54 @@ export default async function WorkspacesPage() {
                     
                     <Link href={dashboardUrl} target="_blank" className="block">
                       <Button className="w-full h-14 rounded-2xl font-black uppercase text-xs tracking-widest group-hover:bg-primary group-hover:text-white transition-all">
-                        Open Dashboard <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+                        Open Admin Dashboard <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+                      </Button>
+                    </Link>
+                  </CardContent>
+                </Card>
+              );
+            }))}
+
+            {await Promise.all(studentProfiles.map(async (profile) => {
+              const workspace = profile.workspace;
+              const { getServerTenantLink } = await import("@/lib/routing-server");
+              const dashboardUrl = await getServerTenantLink("/student/dashboard", workspace.subdomain);
+              
+              return (
+                <Card key={`student-${workspace.id}`} className="group rounded-[2.5rem] border-white/20 dark:border-white/5 shadow-xl bg-white/80 dark:bg-zinc-900/80 backdrop-blur-sm overflow-hidden hover:shadow-2xl hover:-translate-y-1 transition-all duration-300">
+                  <div 
+                    className="h-3 w-full" 
+                    style={{ backgroundColor: workspace.siteSettings?.primaryColor || 'var(--primary)' }}
+                  />
+                  <CardHeader className="p-8">
+                    <div className="flex items-center gap-4 mb-4">
+                      <div className="w-14 h-14 rounded-2xl bg-slate-50 dark:bg-zinc-800 border border-slate-100 dark:border-white/10 flex items-center justify-center p-2">
+                        {workspace.logoUrl ? (
+                          <div className="relative w-full h-full">
+                            <Image src={workspace.logoUrl} alt={workspace.name} fill className="object-contain" />
+                          </div>
+                        ) : (
+                          <Building2 className="w-8 h-8 text-primary" />
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <CardTitle className="text-xl font-black truncate">{workspace.name}</CardTitle>
+                        <p className="text-xs font-bold text-primary uppercase tracking-widest">STUDENT</p>
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="px-8 pb-8 space-y-6">
+                    <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-white/5 rounded-2xl border border-slate-100 dark:border-white/5">
+                      <div className="text-[10px] font-black uppercase tracking-widest text-slate-400">Status</div>
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                        <span className="text-[10px] font-black uppercase tracking-widest">Active</span>
+                      </div>
+                    </div>
+                    
+                    <Link href={dashboardUrl} target="_blank" className="block">
+                      <Button className="w-full h-14 rounded-2xl font-black uppercase text-xs tracking-widest group-hover:bg-primary group-hover:text-white transition-all">
+                        Open Student Portal <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
                       </Button>
                     </Link>
                   </CardContent>

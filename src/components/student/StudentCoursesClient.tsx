@@ -23,6 +23,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { getTenantLink } from "@/lib/routing";
 import CourseDetailsModal from "@/app/courses/CourseDetailsModal";
+import Image from "next/image";
 
 const Progress = ({ value, className, style }: { value?: number, className?: string, style?: React.CSSProperties }) => (
   <div
@@ -99,7 +100,7 @@ export default function StudentCoursesClient({
                {/* Left: Course Image/Preview */}
                <div className="lg:col-span-4 relative h-72 lg:h-auto overflow-hidden">
                   {currentCourse.image ? (
-                    <img src={currentCourse.image} alt={currentCourse.title} className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:brightness-110" />
+                    <Image src={currentCourse.image} alt={currentCourse.title} fill className="object-cover transition-transform duration-700 group-hover:brightness-110" />
                   ) : (
                     <div className="absolute inset-0 bg-primary/10 flex items-center justify-center">
                       <BookOpen className="w-20 h-20 text-primary/20" />
@@ -222,10 +223,10 @@ export default function StudentCoursesClient({
           {otherCourses.map((course, idx) => (
             <Card key={idx} className="group overflow-hidden border-border/40 hover:border-primary/30 transition-all hover:shadow-2xl hover:shadow-primary/5 rounded-[2.5rem] bg-white dark:bg-zinc-900 flex flex-col h-full">
               <div className="relative aspect-[16/10] overflow-hidden shrink-0">
-                <img 
+                <Image fill
                   src={course.image || "https://images.unsplash.com/photo-1509228468518-180dd48a5f5f?q=80&w=2070"} 
                   alt={course.title} 
-                  className="w-full h-full object-cover transition-transform duration-700 group-hover:brightness-110" 
+                  className="object-cover transition-transform duration-700 group-hover:brightness-110" 
                 />
                 
                 {/* Badges */}

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import Image from "next/image";
 import { 
   Building2, 
   Search, 
@@ -129,7 +130,7 @@ export function FranchisePageClient({ settings, initialWorkspaces }: FranchisePa
               
               <div className="absolute inset-0 z-0">
                 {bannerSection.content?.bannerUrl && (
-                  <img src={bannerSection.content.bannerUrl} alt="Offer Banner" className="w-full h-full object-cover group- transition-transform duration-1000" />
+                  <Image fill src={bannerSection.content.bannerUrl} alt="Offer Banner" className="object-cover group- transition-transform duration-1000" />
                 )}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-black/20"></div>
               </div>
@@ -303,7 +304,7 @@ export function FranchisePageClient({ settings, initialWorkspaces }: FranchisePa
       <section className="py-8 lg:py-12 relative flex items-center justify-center overflow-hidden min-h-[80vh]">
         {/* Static Background Image with Overlay */}
         <div className="absolute inset-0 z-0">
-          <img src={verificationSection?.content?.backgroundUrl || "https://cdn.pixabay.com/photo/2021/01/05/11/24/india-5890889_1280.jpg"} alt="Network Background" className="w-full h-full object-cover object-center" />
+          <Image fill src={verificationSection?.content?.backgroundUrl || "https://cdn.pixabay.com/photo/2021/01/05/11/24/india-5890889_1280.jpg"} alt="Network Background" className="object-cover object-center" />
           {/* Deep professional overlay - a mix of dark blue/slate to make the image look premium and not overpowering */}
           <div className="absolute inset-0 bg-slate-900/80 mix-blend-multiply"></div>
           <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-900/60 to-transparent"></div>

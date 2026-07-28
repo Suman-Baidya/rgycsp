@@ -81,7 +81,8 @@ export async function registerStudent(studentId: string, tenant: string) {
       
       const rawCode = workspace.centerCode || workspace.subdomain;
       const centerCode = rawCode.toUpperCase().replace(/[^A-Z0-9]/g, '');
-      const year = new Date().getFullYear();
+      const admissionDate = student.admissionDate ? new Date(student.admissionDate) : new Date();
+      const year = admissionDate.getFullYear();
       
       const regCount = await tx.studentRegistration.count();
       const seqNumber = String(regCount + 1).padStart(5, '0');
