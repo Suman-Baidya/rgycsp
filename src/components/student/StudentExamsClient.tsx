@@ -317,8 +317,8 @@ export default function StudentExamsClient({
               <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">Live Trend Analysis</span>
             </div>
           </CardHeader>
-          <CardContent className="h-[400px] pt-12 pb-8 px-6">
-            <ResponsiveContainer width="100%" height="100%">
+          <CardContent className="h-[400px] w-full pt-12 pb-8 px-6">
+            <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
               <BarChart data={scoreTrends} margin={{ top: 20, right: 30, left: 0, bottom: 0 }}>
                 <defs>
                   <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
@@ -376,8 +376,8 @@ export default function StudentExamsClient({
             </div>
             <CardDescription className="font-bold text-slate-400">Holistic analysis of subject-wise strengths and areas for improvement</CardDescription>
           </CardHeader>
-          <CardContent className="h-[450px] flex items-center justify-center py-10">
-            <ResponsiveContainer width="100%" height="100%">
+          <CardContent className="h-[450px] w-full flex items-center justify-center py-10">
+            <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
               <RadarChart cx="50%" cy="50%" outerRadius="80%" data={performanceData}>
                 <PolarGrid stroke="#e2e8f0" strokeDasharray="4 4" />
                 <PolarAngleAxis
