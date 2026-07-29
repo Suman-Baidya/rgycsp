@@ -15,7 +15,14 @@ export default async function StudentsPage({
     where: { subdomain: normalizedTenant }
   });
 
-  if (!workspace) notFound();
+  console.log("Students page hit for tenant:", normalizedTenant);
+  console.log("Workspace found:", !!workspace);
+
+  if (!workspace) {
+    console.log("Workspace was null! triggering notFound()");
+    notFound();
+    return <div>Workspace not found. Tenant: "{tenant}", Normalized: "{normalizedTenant}"</div>;
+  }
 
   const studentsResult = await getStudents(workspace.id);
   

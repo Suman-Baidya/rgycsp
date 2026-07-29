@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { getBatchAttendanceReport, getStudentAttendanceStats } from "@/app/actions/attendance";
+import { getStudents } from "@/app/actions/students";
 import { Calendar, Users, ChevronDown, CheckCircle2, XCircle, Search, CalendarDays, LineChart as LineChartIcon, Activity } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
@@ -12,10 +13,11 @@ import { Button } from "@/components/ui/button";
 
 type DurationType = "LAST_MONTH" | "LAST_6_MONTHS" | "FULL_COURSE";
 
-export default function AttendanceReports({ batches }: { batches: any[] }) {
+export default function AttendanceReports({ batches, workspaceId }: { batches: any[], workspaceId: string }) {
   const [viewMode, setViewMode] = useState<"BATCH" | "STUDENT">("BATCH");
   const [selectedBatch, setSelectedBatch] = useState(batches[0]?.id || "");
   const [selectedDuration, setSelectedDuration] = useState<DurationType>("LAST_MONTH");
+  const [attendanceType, setAttendanceType] = useState<"THEORY" | "PRACTICAL">("THEORY");
   const [isLoading, setIsLoading] = useState(false);
   
   // Data states
@@ -27,6 +29,7 @@ export default function AttendanceReports({ batches }: { batches: any[] }) {
   const [studentSearch, setStudentSearch] = useState("");
   const [selectedStudent, setSelectedStudent] = useState("");
   const [studentStats, setStudentStats] = useState<any>(null);
+  const [globalStudents, setGlobalStudents] = useState<any[]>([]);
 
   useEffect(() => {
     if (viewMode === "BATCH" && selectedBatch) {
@@ -40,12 +43,23 @@ export default function AttendanceReports({ batches }: { batches: any[] }) {
     }
   }, [selectedStudent, viewMode]);
 
-  // When selectedBatch changes, reset selected student if switching back to student view
-  useEffect(() => {
-    if (selectedBatch && viewMode === "STUDENT") {
-      loadBatchReport();
+  const loadGlobalStudents = async () => {
+    setIsLoading(true);
+    const result = await getStudents(workspaceId);
+    if (result.success) {
+      setGlobalStudents(result.data || []);
+    } else {
+      toast.error(result.error);
     }
-  }, [selectedBatch, viewMode]);
+    setIsLoading(false);
+  };
+
+  const handleSwitchToStudentView = () => {
+    setViewMode("STUDENT");
+    if (globalStudents.length === 0) {
+      loadGlobalStudents();
+    }
+  };
 
   const loadBatchReport = async () => {
     setIsLoading(true);
@@ -77,7 +91,9 @@ export default function AttendanceReports({ batches }: { batches: any[] }) {
       let overallTotal = 0;
 
       batchData.forEach(student => {
-        student.attendances.forEach((a: any) => {
+        const filteredAttendances = student.attendances.filter((a: any) => a.type === attendanceType);
+        
+        filteredAttendances.forEach((a: any) => {
           const dObj = new Date(a.date);
           const dStr = dObj.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
           if (!dateMap.has(dStr)) {
@@ -117,41 +133,72 @@ export default function AttendanceReports({ batches }: { batches: any[] }) {
       setBatchStats({ totalStudents: 0, totalClasses: 0, avgAttendance: 0 });
       setChartData([]);
     }
-  }, [batchData]);
+  }, [batchData, attendanceType]);
 
   // Student filtering for Student View
-  const filteredStudents = batchData.filter(s => 
-    s.fullName.toLowerCase().includes(studentSearch.toLowerCase()) || 
-    s.enrollmentNo.toLowerCase().includes(studentSearch.toLowerCase())
-  );
+  const filteredStudents = useMemo(() => {
+    return globalStudents.filter(s => 
+      s.fullName.toLowerCase().includes(studentSearch.toLowerCase()) || 
+      (s.enrollmentNo && s.enrollmentNo.toLowerCase().includes(studentSearch.toLowerCase()))
+    );
+  }, [globalStudents, studentSearch]);
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500 mt-8">
       
-      {/* View Mode Toggle */}
-      <div className="flex gap-4 border-b border-slate-200 dark:border-slate-800 pb-4">
-        <button 
-          onClick={() => setViewMode("BATCH")}
-          className={cn(
-            "px-6 py-2.5 rounded-xl text-sm font-bold transition-all",
-            viewMode === "BATCH" 
-              ? "bg-primary text-primary-foreground shadow-md" 
-              : "bg-slate-100 dark:bg-slate-800 text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-700"
-          )}
-        >
-          Batch Monthly View
-        </button>
-        <button 
-          onClick={() => { setViewMode("STUDENT"); loadBatchReport(); }}
-          className={cn(
-            "px-6 py-2.5 rounded-xl text-sm font-bold transition-all",
-            viewMode === "STUDENT" 
-              ? "bg-primary text-primary-foreground shadow-md" 
-              : "bg-slate-100 dark:bg-slate-800 text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-700"
-          )}
-        >
-          Student Summary View
-        </button>
+      {/* Consolidated Header Controls */}
+      <div className="flex flex-col md:flex-row justify-between items-center gap-4 border-b border-slate-200 dark:border-slate-800 pb-4">
+        <div className="flex gap-4 w-full md:w-auto overflow-x-auto custom-scrollbar pb-2 md:pb-0">
+          <button 
+            onClick={() => setViewMode("BATCH")}
+            className={cn(
+              "whitespace-nowrap px-6 py-2.5 rounded-xl text-sm font-bold transition-all",
+              viewMode === "BATCH" 
+                ? "bg-primary text-primary-foreground shadow-md" 
+                : "bg-slate-100 dark:bg-slate-800 text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-700"
+            )}
+          >
+            Batch Monthly View
+          </button>
+          <button 
+            onClick={handleSwitchToStudentView}
+            className={cn(
+              "whitespace-nowrap px-6 py-2.5 rounded-xl text-sm font-bold transition-all",
+              viewMode === "STUDENT" 
+                ? "bg-primary text-primary-foreground shadow-md" 
+                : "bg-slate-100 dark:bg-slate-800 text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-700"
+            )}
+          >
+            Student Summary View
+          </button>
+        </div>
+
+        {viewMode === "BATCH" && (
+          <div className="bg-slate-100 dark:bg-slate-800/50 p-1 rounded-2xl inline-flex shadow-inner w-full md:w-auto">
+            <button
+              onClick={() => setAttendanceType("THEORY")}
+              className={cn(
+                "flex-1 md:flex-none px-8 py-3 rounded-xl text-sm font-black transition-all",
+                attendanceType === "THEORY"
+                  ? "bg-white dark:bg-slate-700 text-primary shadow-md"
+                  : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+              )}
+            >
+              Theory Classes
+            </button>
+            <button
+              onClick={() => setAttendanceType("PRACTICAL")}
+              className={cn(
+                "flex-1 md:flex-none px-8 py-3 rounded-xl text-sm font-black transition-all",
+                attendanceType === "PRACTICAL"
+                  ? "bg-white dark:bg-slate-700 text-primary shadow-md"
+                  : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+              )}
+            >
+              Practical Classes
+            </button>
+          </div>
+        )}
       </div>
 
       {viewMode === "BATCH" && (
@@ -294,9 +341,10 @@ export default function AttendanceReports({ batches }: { batches: any[] }) {
                     </tr>
                   ) : batchData.length > 0 ? (
                     batchData.map((student) => {
-                      const totalMarkedDays = student.attendances.length;
-                      const presentDays = student.attendances.filter((a: any) => a.status === "PRESENT").length;
-                      const absentDays = student.attendances.filter((a: any) => a.status === "ABSENT").length;
+                      const filteredAttendances = student.attendances.filter((a: any) => a.type === attendanceType);
+                      const totalMarkedDays = filteredAttendances.length;
+                      const presentDays = filteredAttendances.filter((a: any) => a.status === "PRESENT").length;
+                      const absentDays = filteredAttendances.filter((a: any) => a.status === "ABSENT").length;
                       
                       const percent = totalMarkedDays > 0 ? Math.round((presentDays / totalMarkedDays) * 100) : 0;
                       
@@ -332,19 +380,8 @@ export default function AttendanceReports({ batches }: { batches: any[] }) {
           {/* Student Selector Sidebar */}
           <div className="lg:col-span-1 space-y-6">
             <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl border-2 border-slate-100 dark:border-slate-800 shadow-sm space-y-4">
-              <h3 className="text-sm font-bold tracking-widest text-slate-400">SELECT BATCH</h3>
-              <Select value={selectedBatch} onValueChange={setSelectedBatch}>
-                <SelectTrigger className="h-12 bg-slate-50 dark:bg-slate-900/50 rounded-xl">
-                  <SelectValue placeholder="Select batch">
-                    {batches.find(b => b.id === selectedBatch)?.name}
-                  </SelectValue>
-                </SelectTrigger>
-                <SelectContent>
-                  {batches.map(b => (
-                    <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <h3 className="text-sm font-bold tracking-widest text-slate-400">SEARCH STUDENTS</h3>
+              <p className="text-xs text-slate-500">Search globally across the franchise by name or enrollment ID.</p>
 
               <div className="relative pt-4">
                 <Search className="absolute left-3 top-1/2 translate-y-[10%] w-4 h-4 text-slate-400" />
@@ -357,23 +394,28 @@ export default function AttendanceReports({ batches }: { batches: any[] }) {
               </div>
 
               <div className="space-y-2 mt-4 max-h-96 overflow-y-auto pr-2 custom-scrollbar">
-                {filteredStudents.map(student => (
-                  <button
-                    key={student.id}
-                    onClick={() => setSelectedStudent(student.id)}
-                    className={cn(
-                      "w-full text-left p-3 rounded-xl transition-all duration-300 border-2",
-                      selectedStudent === student.id
-                        ? "bg-primary/5 border-primary text-primary"
-                        : "border-transparent hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400"
-                    )}
-                  >
-                    <div className="font-bold text-sm truncate">{student.fullName}</div>
-                    <div className="text-[10px] opacity-60 uppercase tracking-widest">{student.enrollmentNo}</div>
-                  </button>
-                ))}
-                {filteredStudents.length === 0 && (
-                  <p className="text-center text-xs text-slate-400 italic py-4">No students match search</p>
+                {studentSearch.length > 0 ? (
+                  filteredStudents.length > 0 ? (
+                    filteredStudents.map(student => (
+                      <button
+                        key={student.id}
+                        onClick={() => setSelectedStudent(student.id)}
+                        className={cn(
+                          "w-full text-left p-3 rounded-xl transition-all duration-300 border-2",
+                          selectedStudent === student.id
+                            ? "bg-primary/5 border-primary text-primary"
+                            : "border-transparent hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400"
+                        )}
+                      >
+                        <div className="font-bold text-sm truncate">{student.fullName}</div>
+                        <div className="text-[10px] opacity-60 uppercase tracking-widest">{student.enrollmentNo}</div>
+                      </button>
+                    ))
+                  ) : (
+                    <p className="text-center text-xs text-slate-400 italic py-4">No students match search</p>
+                  )
+                ) : (
+                  <p className="text-center text-xs text-slate-400 italic py-4">Type a name or ID to search</p>
                 )}
               </div>
             </div>
@@ -391,45 +433,108 @@ export default function AttendanceReports({ batches }: { batches: any[] }) {
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
               </div>
             ) : studentStats ? (
-              <div className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl border-2 border-slate-100 dark:border-slate-800 shadow-sm flex flex-col items-center justify-center text-center">
-                    <span className="text-5xl font-black text-primary">{studentStats.percentage}%</span>
-                    <span className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-2">Overall Attendance</span>
-                  </div>
-                  <div className="bg-emerald-50 dark:bg-emerald-900/10 p-6 rounded-3xl border-2 border-emerald-100 dark:border-emerald-900/30 shadow-sm flex flex-col items-center justify-center text-center">
-                    <span className="text-5xl font-black text-emerald-600 dark:text-emerald-400">{studentStats.presentDays}</span>
-                    <span className="text-xs font-bold text-emerald-600/70 dark:text-emerald-400/70 uppercase tracking-widest mt-2">Days Present</span>
-                  </div>
-                  <div className="bg-red-50 dark:bg-red-900/10 p-6 rounded-3xl border-2 border-red-100 dark:border-red-900/30 shadow-sm flex flex-col items-center justify-center text-center">
-                    <span className="text-5xl font-black text-red-600 dark:text-red-400">{studentStats.absentDays}</span>
-                    <span className="text-xs font-bold text-red-600/70 dark:text-red-400/70 uppercase tracking-widest mt-2">Days Absent</span>
-                  </div>
+              <div className="space-y-8">
+                {/* Theory Stats */}
+                <div className="space-y-6">
+                  <h3 className="font-bold text-lg border-b-2 border-slate-100 dark:border-slate-800 pb-2 flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary">T</div>
+                    Theory Classes Summary
+                  </h3>
+                  {studentStats.THEORY && (
+                    <>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl border-2 border-slate-100 dark:border-slate-800 shadow-sm flex flex-col items-center justify-center text-center">
+                          <span className="text-4xl font-black text-primary">{studentStats.THEORY.percentage}%</span>
+                          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-2">Overall</span>
+                        </div>
+                        <div className="bg-emerald-50 dark:bg-emerald-900/10 p-6 rounded-3xl border-2 border-emerald-100 dark:border-emerald-900/30 shadow-sm flex flex-col items-center justify-center text-center">
+                          <span className="text-4xl font-black text-emerald-600 dark:text-emerald-400">{studentStats.THEORY.presentDays}</span>
+                          <span className="text-[10px] font-bold text-emerald-600/70 dark:text-emerald-400/70 uppercase tracking-widest mt-2">Present</span>
+                        </div>
+                        <div className="bg-red-50 dark:bg-red-900/10 p-6 rounded-3xl border-2 border-red-100 dark:border-red-900/30 shadow-sm flex flex-col items-center justify-center text-center">
+                          <span className="text-4xl font-black text-red-600 dark:text-red-400">{studentStats.THEORY.absentDays}</span>
+                          <span className="text-[10px] font-bold text-red-600/70 dark:text-red-400/70 uppercase tracking-widest mt-2">Absent</span>
+                        </div>
+                      </div>
+
+                      <div className="bg-white dark:bg-slate-900 rounded-3xl border-2 border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden p-6">
+                        <h4 className="font-bold text-sm mb-4 flex items-center gap-2 text-slate-500">
+                          <CalendarDays className="w-4 h-4" />
+                          Recent Theory Records
+                        </h4>
+                        
+                        {studentStats.THEORY.recentRecords.length > 0 ? (
+                          <div className="space-y-3">
+                            {studentStats.THEORY.recentRecords.slice(0, 5).map((record: any, idx: number) => (
+                              <div key={idx} className="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50">
+                                <span className="font-semibold text-sm text-slate-700 dark:text-slate-300">
+                                  {new Date(record.date).toLocaleDateString('en-GB', { weekday: 'short', month: 'short', day: 'numeric' })}
+                                </span>
+                                {record.status === "PRESENT" ? (
+                                  <span className="px-2 py-1 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">PRESENT</span>
+                                ) : (
+                                  <span className="px-2 py-1 rounded-full text-[10px] font-bold bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400">ABSENT</span>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="text-xs text-slate-400 italic">No recent theory records.</p>
+                        )}
+                      </div>
+                    </>
+                  )}
                 </div>
 
-                <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] border-2 border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden p-8">
-                  <h3 className="font-bold text-lg mb-6 flex items-center gap-2">
-                    <CalendarDays className="w-5 h-5 text-primary" />
-                    Recent Records (Last 10 Days)
+                {/* Practical Stats */}
+                <div className="space-y-6">
+                  <h3 className="font-bold text-lg border-b-2 border-slate-100 dark:border-slate-800 pb-2 flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-full bg-amber-500/10 flex items-center justify-center text-amber-600 dark:text-amber-400">P</div>
+                    Practical Classes Summary
                   </h3>
-                  
-                  {studentStats.recentRecords.length > 0 ? (
-                    <div className="space-y-4">
-                      {studentStats.recentRecords.map((record: any, idx: number) => (
-                        <div key={idx} className="flex items-center justify-between p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50">
-                          <span className="font-semibold text-slate-700 dark:text-slate-300">
-                            {new Date(record.date).toLocaleDateString('en-GB', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
-                          </span>
-                          {record.status === "PRESENT" ? (
-                            <span className="px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">PRESENT</span>
-                          ) : (
-                            <span className="px-3 py-1 rounded-full text-xs font-bold bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400">ABSENT</span>
-                          )}
+                  {studentStats.PRACTICAL && (
+                    <>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl border-2 border-slate-100 dark:border-slate-800 shadow-sm flex flex-col items-center justify-center text-center">
+                          <span className="text-4xl font-black text-amber-600 dark:text-amber-400">{studentStats.PRACTICAL.percentage}%</span>
+                          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-2">Overall</span>
                         </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-slate-400 italic">No attendance records found for this student.</p>
+                        <div className="bg-emerald-50 dark:bg-emerald-900/10 p-6 rounded-3xl border-2 border-emerald-100 dark:border-emerald-900/30 shadow-sm flex flex-col items-center justify-center text-center">
+                          <span className="text-4xl font-black text-emerald-600 dark:text-emerald-400">{studentStats.PRACTICAL.presentDays}</span>
+                          <span className="text-[10px] font-bold text-emerald-600/70 dark:text-emerald-400/70 uppercase tracking-widest mt-2">Present</span>
+                        </div>
+                        <div className="bg-red-50 dark:bg-red-900/10 p-6 rounded-3xl border-2 border-red-100 dark:border-red-900/30 shadow-sm flex flex-col items-center justify-center text-center">
+                          <span className="text-4xl font-black text-red-600 dark:text-red-400">{studentStats.PRACTICAL.absentDays}</span>
+                          <span className="text-[10px] font-bold text-red-600/70 dark:text-red-400/70 uppercase tracking-widest mt-2">Absent</span>
+                        </div>
+                      </div>
+
+                      <div className="bg-white dark:bg-slate-900 rounded-3xl border-2 border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden p-6">
+                        <h4 className="font-bold text-sm mb-4 flex items-center gap-2 text-slate-500">
+                          <CalendarDays className="w-4 h-4" />
+                          Recent Practical Records
+                        </h4>
+                        
+                        {studentStats.PRACTICAL.recentRecords.length > 0 ? (
+                          <div className="space-y-3">
+                            {studentStats.PRACTICAL.recentRecords.slice(0, 5).map((record: any, idx: number) => (
+                              <div key={idx} className="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50">
+                                <span className="font-semibold text-sm text-slate-700 dark:text-slate-300">
+                                  {new Date(record.date).toLocaleDateString('en-GB', { weekday: 'short', month: 'short', day: 'numeric' })}
+                                </span>
+                                {record.status === "PRESENT" ? (
+                                  <span className="px-2 py-1 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">PRESENT</span>
+                                ) : (
+                                  <span className="px-2 py-1 rounded-full text-[10px] font-bold bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400">ABSENT</span>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="text-xs text-slate-400 italic">No recent practical records.</p>
+                        )}
+                      </div>
+                    </>
                   )}
                 </div>
               </div>

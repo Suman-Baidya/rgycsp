@@ -2,7 +2,7 @@
 
 import { db } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
-import { AttendanceStatus } from "@prisma/client";
+import { AttendanceStatus, AttendanceType } from "@prisma/client";
 
 export async function getBatches(workspaceId: string) {
   try {
@@ -18,7 +18,7 @@ export async function getBatches(workspaceId: string) {
   }
 }
 
-export async function getAttendanceList(batchId: string, date: Date) {
+export async function getAttendanceList(batchId: string, date: Date, type: AttendanceType = "THEORY") {
   try {
     // Set date to start of day to match @@unique constraint
     const targetDate = new Date(date);
@@ -28,7 +28,7 @@ export async function getAttendanceList(batchId: string, date: Date) {
       where: { batchId },
       include: {
         attendances: {
-          where: { date: targetDate }
+          where: { date: targetDate, type }
         }
       },
       orderBy: { fullName: "asc" }
@@ -49,10 +49,39 @@ export async function getAttendanceList(batchId: string, date: Date) {
   }
 }
 
+export async function getStudentsAttendance(studentIds: string[], date: Date) {
+  try {
+    const targetDate = new Date(date);
+    targetDate.setHours(0, 0, 0, 0);
+
+    const attendances = await db.attendance.findMany({
+      where: {
+        studentProfileId: { in: studentIds },
+        date: targetDate,
+        type: "PRACTICAL"
+      }
+    });
+
+    const attendanceMap: Record<string, { status: string; remarks: string | null }> = {};
+    attendances.forEach(a => {
+      attendanceMap[a.studentProfileId] = {
+        status: a.status,
+        remarks: a.remarks
+      };
+    });
+
+    return { success: true, data: attendanceMap };
+  } catch (error: any) {
+    console.error("Error fetching students attendance:", error);
+    return { success: false, error: "Failed to fetch student attendance." };
+  }
+}
+
 export async function saveAttendance(
   workspaceId: string, 
   date: Date, 
-  records: { studentId: string; status: AttendanceStatus; remarks?: string }[]
+  records: { studentId: string; status: AttendanceStatus; remarks?: string }[],
+  type: AttendanceType = "THEORY"
 ) {
   try {
     const targetDate = new Date(date);
@@ -63,9 +92,10 @@ export async function saveAttendance(
       records.map(record => 
         db.attendance.upsert({
           where: {
-            studentProfileId_date: {
+            studentProfileId_date_type: {
               studentProfileId: record.studentId,
-              date: targetDate
+              date: targetDate,
+              type
             }
           },
           update: {
@@ -76,6 +106,7 @@ export async function saveAttendance(
             workspaceId,
             studentProfileId: record.studentId,
             date: targetDate,
+            type,
             status: record.status,
             remarks: record.remarks || null
           }
@@ -115,7 +146,8 @@ export async function getBatchAttendanceReport(batchId: string, duration: "LAST_
           where: dateFilter ? { date: dateFilter } : undefined,
           select: {
             date: true,
-            status: true
+            status: true,
+            type: true
           }
         }
       },
@@ -136,19 +168,22 @@ export async function getStudentAttendanceStats(studentId: string) {
       orderBy: { date: "desc" }
     });
 
-    const totalDays = attendances.length;
-    const presentDays = attendances.filter(a => a.status === "PRESENT").length;
-    const absentDays = attendances.filter(a => a.status === "ABSENT").length;
-    const percentage = totalDays > 0 ? Math.round((presentDays / totalDays) * 100) : 0;
+    const calculateStats = (records: any[]) => {
+      const totalDays = records.length;
+      const presentDays = records.filter(a => a.status === "PRESENT").length;
+      const absentDays = records.filter(a => a.status === "ABSENT").length;
+      const percentage = totalDays > 0 ? Math.round((presentDays / totalDays) * 100) : 0;
+      return { totalDays, presentDays, absentDays, percentage, recentRecords: records.slice(0, 10) };
+    };
+
+    const theoryRecords = attendances.filter(a => a.type === "THEORY");
+    const practicalRecords = attendances.filter(a => a.type === "PRACTICAL");
 
     return { 
       success: true, 
       data: {
-        totalDays,
-        presentDays,
-        absentDays,
-        percentage,
-        recentRecords: attendances.slice(0, 10)
+        THEORY: calculateStats(theoryRecords),
+        PRACTICAL: calculateStats(practicalRecords),
       } 
     };
   } catch (error: any) {

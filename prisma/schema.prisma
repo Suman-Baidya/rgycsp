@@ -409,6 +409,7 @@ model Attendance {
   workspaceId      String
   date             DateTime // The day of attendance
   status           AttendanceStatus // PRESENT, ABSENT, LATE, HALF_DAY
+  type             AttendanceType   @default(THEORY)
   remarks          String?
 
   student   StudentProfile @relation(fields: [studentProfileId], references: [id], onDelete: Cascade)
@@ -417,7 +418,7 @@ model Attendance {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@unique([studentProfileId, date])
+  @@unique([studentProfileId, date, type])
 }
 
 enum AttendanceStatus {
@@ -425,6 +426,11 @@ enum AttendanceStatus {
   ABSENT
   LATE
   HALF_DAY
+}
+
+enum AttendanceType {
+  THEORY
+  PRACTICAL
 }
 
 // ============================================

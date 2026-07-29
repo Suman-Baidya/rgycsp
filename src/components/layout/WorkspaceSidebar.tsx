@@ -63,6 +63,9 @@ export function WorkspaceSidebar({
       : false;
 
   const TenantNavLink = ({ href, children, className, onClick }: any) => {
+    if (isSubdomainMode) {
+      return <a href={href} className={className} onClick={onClick}>{children}</a>;
+    }
     return <Link href={href} className={className} onClick={onClick}>{children}</Link>;
   };
 

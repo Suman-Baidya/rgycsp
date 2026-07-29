@@ -113,14 +113,17 @@ export async function assignStudentToSlot(workspaceId: string, enrollmentNo: str
   try {
     const result = await db.$transaction(async (tx) => {
       // 1. Find the student
-      const student = await tx.studentProfile.findUnique({
+      console.log(`[DEBUG] Looking for student: workspaceId='${workspaceId}', enrollmentNo='${enrollmentNo.trim()}'`);
+      const student = await tx.studentProfile.findFirst({
         where: {
-          workspaceId_enrollmentNo: {
-            workspaceId,
-            enrollmentNo,
-          },
+          workspaceId,
+          enrollmentNo: {
+            equals: enrollmentNo.trim(),
+            mode: "insensitive"
+          }
         },
       });
+      console.log(`[DEBUG] Found student:`, student ? student.id : "null");
 
       if (!student) {
         throw new Error("Student not found with this enrollment number");

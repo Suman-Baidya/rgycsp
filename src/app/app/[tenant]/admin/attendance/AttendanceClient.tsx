@@ -81,7 +81,7 @@ export default function AttendanceClient({
     }
 
     setIsSaving(true);
-    const result = await saveAttendance(workspaceId, new Date(selectedDate), students);
+    const result = await saveAttendance(workspaceId, new Date(selectedDate), students, "THEORY");
     if (result.success) {
       toast.success("Attendance saved successfully!");
     } else {
@@ -303,7 +303,7 @@ export default function AttendanceClient({
       )}
 
       {activeTab === "reports" && (
-        <AttendanceReports batches={batches} />
+        <AttendanceReports batches={batches} workspaceId={workspaceId} />
       )}
       </div>
     </div>

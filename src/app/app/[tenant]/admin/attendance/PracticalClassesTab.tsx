@@ -2,8 +2,9 @@
 
 import { useState, useEffect, useRef, useMemo } from "react";
 import { getPracticalConfig, getWeeklySchedules, assignStudentToSlot, updateStudentSchedule, removeStudentFromSlot, createPracticalSlot, deletePracticalSlot, updatePracticalConfig } from "@/app/actions/practical-classes";
+import { getStudentsAttendance, saveAttendance } from "@/app/actions/attendance";
 import { toast } from "sonner";
-import { Plus, Users, Clock, Settings, X, GripVertical, Trash2, AlertTriangle, Save, ChevronLeft, ChevronRight, Search } from "lucide-react";
+import { Plus, Users, Clock, Settings, X, GripVertical, Trash2, AlertTriangle, Save, ChevronLeft, ChevronRight, Search, CheckCircle2, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
@@ -36,6 +37,8 @@ export default function PracticalClassesTab({ workspaceId }: { workspaceId: stri
 
   // Current Batch
   const [isViewingCurrentBatch, setIsViewingCurrentBatch] = useState(false);
+  const [attendanceRecords, setAttendanceRecords] = useState<Record<string, { status: any, remarks: string }>>({});
+  const [isSavingAttendance, setIsSavingAttendance] = useState(false);
   const now = new Date();
   const currentDay = now.getDay();
   const currentMinutes = now.getHours() * 60 + now.getMinutes();
@@ -83,17 +86,17 @@ export default function PracticalClassesTab({ workspaceId }: { workspaceId: stri
   const [deleteConfirmScheduleId, setDeleteConfirmScheduleId] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchData();
+    fetchData(true);
   }, []);
 
-  const fetchData = async () => {
-    setIsLoading(true);
+  const fetchData = async (showLoading = true) => {
+    if (showLoading) setIsLoading(true);
     const [configRes, schedulesRes] = await Promise.all([
       getPracticalConfig(workspaceId),
       getWeeklySchedules(workspaceId)
     ]);
     
-    if (configRes.success) {
+    if (configRes.success && configRes.config) {
       setConfig(configRes.config);
       setCapacity(configRes.config.capacityPerSlot || 30);
       let parsedOffDays = [];
@@ -105,8 +108,59 @@ export default function PracticalClassesTab({ workspaceId }: { workspaceId: stri
       }
       setOffDays(parsedOffDays);
     }
-    if (schedulesRes.success) setSchedules(schedulesRes.schedules);
+    if (schedulesRes.success && schedulesRes.schedules) setSchedules(schedulesRes.schedules);
     setIsLoading(false);
+  };
+
+  useEffect(() => {
+    if (isViewingCurrentBatch) {
+      const activeSlots = config?.slots?.filter((slot: any) => {
+        const start = parseTime(slot.startTime);
+        let end = parseTime(slot.endTime);
+        if (end < start) end += 24 * 60;
+        let current = (new Date()).getHours() * 60 + (new Date()).getMinutes();
+        if (end > 24 * 60 && current < start) current += 24 * 60;
+        return current >= start && current <= end;
+      }) || [];
+      const activeSlotIds = activeSlots.map((s: any) => s.id);
+      const activeSchedulesLocal = schedules.filter(s => s.dayOfWeek === currentDay && activeSlotIds.includes(s.slotId));
+      
+      if (activeSchedulesLocal.length > 0) {
+        const studentIds = activeSchedulesLocal.map(s => s.student?.id || s.studentProfileId);
+        getStudentsAttendance(studentIds, new Date()).then(res => {
+          if (res.success && res.data) {
+            setAttendanceRecords(res.data as Record<string, { status: any; remarks: string }>);
+          }
+        });
+      } else {
+        setAttendanceRecords({});
+      }
+    }
+  }, [isViewingCurrentBatch, config, schedules]);
+
+  const handleAttendanceChange = (studentId: string, status: string) => {
+    setAttendanceRecords(prev => ({
+      ...prev,
+      [studentId]: { ...prev[studentId], status }
+    }));
+  };
+
+  const handleSaveAttendance = async () => {
+    setIsSavingAttendance(true);
+    const recordsToSave = Object.keys(attendanceRecords).map(studentId => ({
+      studentId,
+      status: attendanceRecords[studentId].status,
+      remarks: attendanceRecords[studentId].remarks || ""
+    }));
+
+    const res = await saveAttendance(workspaceId, new Date(), recordsToSave as any, "PRACTICAL");
+    if (res.success) {
+      toast.success("Attendance saved successfully");
+      setIsViewingCurrentBatch(false);
+    } else {
+      toast.error(res.error || "Failed to save attendance");
+    }
+    setIsSavingAttendance(false);
   };
 
   const handleSaveConfig = async () => {
@@ -142,7 +196,7 @@ export default function PracticalClassesTab({ workspaceId }: { workspaceId: stri
       setEnrollmentNo("");
       fetchData(); // refresh
     } else {
-      toast.error(res.error);
+      toast.error((res as any).error || "An error occurred");
     }
   };
 
@@ -154,7 +208,7 @@ export default function PracticalClassesTab({ workspaceId }: { workspaceId: stri
       setDeleteConfirmScheduleId(null);
       fetchData();
     } else {
-      toast.error(res.error);
+      toast.error((res as any).error || "An error occurred");
     }
   };
 
@@ -172,7 +226,7 @@ export default function PracticalClassesTab({ workspaceId }: { workspaceId: stri
       setNewSlotEnd("");
       fetchData();
     } else {
-      toast.error(res.error);
+      toast.error((res as any).error || "An error occurred");
     }
   };
 
@@ -183,7 +237,7 @@ export default function PracticalClassesTab({ workspaceId }: { workspaceId: stri
       toast.success("Slot deleted successfully");
       fetchData();
     } else {
-      toast.error(res.error);
+      toast.error((res as any).error || "An error occurred");
     }
   };
 
@@ -206,12 +260,20 @@ export default function PracticalClassesTab({ workspaceId }: { workspaceId: stri
     const scheduleId = e.dataTransfer.getData("scheduleId");
     if (!scheduleId) return;
 
+    // Optimistic UI Update
+    const originalSchedules = [...schedules];
+    setSchedules(prev => prev.map(s => 
+      s.id === scheduleId ? { ...s, dayOfWeek: targetDay, slotId: targetSlot } : s
+    ));
+
     const res = await updateStudentSchedule(scheduleId, workspaceId, targetSlot, targetDay);
     if (res.success) {
       toast.success("Student moved successfully");
-      fetchData();
+      fetchData(false); // Sync in background without loading flicker
     } else {
-      toast.error(res.error);
+      // Revert to original state if backend fails
+      setSchedules(originalSchedules);
+      toast.error((res as any).error || "An error occurred");
     }
   };
 
@@ -782,15 +844,59 @@ export default function PracticalClassesTab({ workspaceId }: { workspaceId: stri
                     Total: {activeSchedules.length}
                   </span>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[400px] overflow-y-auto custom-scrollbar pr-2">
-                  {activeSchedules.map((schedule, idx) => (
-                    <div key={schedule.id} className="flex items-center gap-3 p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50">
-                      <div className="w-8 h-8 flex items-center justify-center shrink-0 bg-emerald-100 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400 rounded-lg text-sm font-black">
-                        {idx + 1}
+                <div className="grid grid-cols-1 gap-3 max-h-[400px] overflow-y-auto custom-scrollbar pr-2">
+                  {activeSchedules.map((schedule, idx) => {
+                    const studentId = schedule.student?.id || schedule.studentProfileId;
+                    const status = attendanceRecords[studentId]?.status;
+                    return (
+                      <div key={schedule.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 hover:border-emerald-200 dark:hover:border-emerald-500/30 transition-all">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 flex items-center justify-center shrink-0 bg-emerald-100 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400 rounded-lg text-sm font-black">
+                            {idx + 1}
+                          </div>
+                          <div>
+                            <div className="font-bold text-slate-700 dark:text-slate-200 truncate">{schedule.student.fullName}</div>
+                            <div className="text-xs text-slate-400">{schedule.student.enrollmentNo}</div>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2 self-end sm:self-auto w-full sm:w-auto mt-2 sm:mt-0">
+                          <Button 
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleAttendanceChange(studentId, "PRESENT")}
+                            className={cn("flex-1 sm:flex-none h-9 px-4 rounded-lg font-bold border", 
+                              status === "PRESENT" 
+                                ? "bg-emerald-50 border-emerald-500 text-emerald-600 dark:bg-emerald-500/20 dark:border-emerald-500 dark:text-emerald-400" 
+                                : "border-slate-200 text-slate-500 hover:border-emerald-200 hover:text-emerald-600"
+                            )}
+                          >
+                            <CheckCircle2 className="w-4 h-4 mr-1.5" /> Present
+                          </Button>
+                          <Button 
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleAttendanceChange(studentId, "ABSENT")}
+                            className={cn("flex-1 sm:flex-none h-9 px-4 rounded-lg font-bold border", 
+                              status === "ABSENT" 
+                                ? "bg-red-50 border-red-500 text-red-600 dark:bg-red-500/20 dark:border-red-500 dark:text-red-400" 
+                                : "border-slate-200 text-slate-500 hover:border-red-200 hover:text-red-600"
+                            )}
+                          >
+                            <XCircle className="w-4 h-4 mr-1.5" /> Absent
+                          </Button>
+                        </div>
                       </div>
-                      <span className="font-bold text-slate-700 dark:text-slate-200 truncate">{schedule.student.fullName}</span>
-                    </div>
-                  ))}
+                    );
+                  })}
+                </div>
+                <div className="flex justify-end pt-4 mt-2 border-t border-slate-200 dark:border-slate-800">
+                  <Button 
+                    onClick={handleSaveAttendance} 
+                    disabled={isSavingAttendance || Object.keys(attendanceRecords).length === 0}
+                    className="h-12 px-8 rounded-xl font-black bg-emerald-500 hover:bg-emerald-600 text-white shadow-lg shadow-emerald-500/20 transition-all"
+                  >
+                    {isSavingAttendance ? "Saving..." : "Save Attendance"}
+                  </Button>
                 </div>
               </div>
             )}

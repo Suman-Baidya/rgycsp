@@ -34,6 +34,11 @@ export async function getStudentProfile(workspaceId: string) {
               include: {
                 marks: true
               }
+            },
+            practicalSchedules: {
+              include: {
+                slot: true
+              }
             }
           }
         }

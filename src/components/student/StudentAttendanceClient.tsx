@@ -1,6 +1,7 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { 
   CheckCircle2, 
   XCircle, 
@@ -11,7 +12,9 @@ import {
   ArrowUpRight,
   ChevronRight,
   Activity,
-  BarChart2
+  BookOpen,
+  Monitor,
+  X
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -32,22 +35,43 @@ import {
 } from "recharts";
 
 export default function StudentAttendanceClient({ 
-  attendances, 
-  stats, 
+  theoryAttendances, 
+  practicalAttendances,
+  theoryStats,
+  practicalStats, 
+  theorySchedule,
+  practicalSchedule,
   settings, 
   tenant 
 }: { 
-  attendances: any[], 
-  stats: any, 
+  theoryAttendances: any[], 
+  practicalAttendances: any[],
+  theoryStats: any, 
+  practicalStats: any, 
+  theorySchedule: any,
+  practicalSchedule: any[],
   settings: any, 
   tenant: string 
 }) {
   const primaryColor = settings?.primaryColor || "#0f172a";
-  const [timeRange, setTimeRange] = React.useState("6m");
+  const [timeRange, setTimeRange] = useState("6m");
+  const [viewMode, setViewMode] = useState<"THEORY" | "PRACTICAL">("THEORY");
+  const [showSchedule, setShowSchedule] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const daysOfWeek = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
+  const activeAttendances = viewMode === "THEORY" ? theoryAttendances : practicalAttendances;
+  const activeStats = viewMode === "THEORY" ? theoryStats : practicalStats;
+  const activeColor = viewMode === "THEORY" ? primaryColor : "#f59e0b";
 
   const attendanceData = [
-    { name: "Present", value: stats.present + stats.late },
-    { name: "Absent", value: stats.absent },
+    { name: "Present", value: activeStats.present + activeStats.late },
+    { name: "Absent", value: activeStats.absent },
   ];
 
   const allMonthlyTrend = [
@@ -81,44 +105,165 @@ export default function StudentAttendanceClient({
           <p className="text-slate-500 font-medium text-lg">Monitor your presence and punctuality trends.</p>
         </div>
         <div className="flex gap-4">
-          <Button variant="outline" className="rounded-2xl font-bold gap-2 h-12 px-6 border-slate-200 dark:border-white/10">
-            <Filter className="w-4 h-4" /> Filter Records
+          <Button 
+            variant={showSchedule ? "default" : "outline"}
+            onClick={() => setShowSchedule(!showSchedule)}
+            className="rounded-2xl font-bold gap-2 h-11 px-6 shadow-sm border-slate-200 dark:border-white/10 hidden sm:flex"
+            style={showSchedule ? { backgroundColor: primaryColor, color: "white" } : {}}
+          >
+            <CalendarIcon className="w-4 h-4" /> My Schedule
           </Button>
-          <Button className="rounded-2xl font-bold gap-2 h-12 px-8 shadow-xl shadow-primary/20" style={{ backgroundColor: primaryColor }}>
-            <Download className="w-4 h-4" /> Export Report
-          </Button>
+
+          <div className="flex bg-slate-100 dark:bg-zinc-800/50 p-1 rounded-2xl h-11">
+            <button
+              onClick={() => setViewMode("THEORY")}
+              className={cn(
+                "px-6 py-2.5 rounded-xl font-bold text-sm tracking-wide transition-all duration-300 flex items-center gap-2",
+                viewMode === "THEORY" 
+                  ? "bg-white dark:bg-zinc-700 text-slate-900 dark:text-white shadow-sm" 
+                  : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+              )}
+            >
+              <BookOpen className="w-4 h-4" /> Theory
+            </button>
+            <button
+              onClick={() => setViewMode("PRACTICAL")}
+              className={cn(
+                "px-6 py-2.5 rounded-xl font-bold text-sm tracking-wide transition-all duration-300 flex items-center gap-2",
+                viewMode === "PRACTICAL" 
+                  ? "bg-white dark:bg-zinc-700 text-slate-900 dark:text-white shadow-sm" 
+                  : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+              )}
+            >
+              <Monitor className="w-4 h-4" /> Practical
+            </button>
+          </div>
         </div>
       </div>
+      
+      {/* Mobile Schedule Button */}
+      <div className="sm:hidden w-full">
+        <Button 
+          variant={showSchedule ? "default" : "outline"}
+          onClick={() => setShowSchedule(!showSchedule)}
+          className="rounded-2xl font-bold gap-2 w-full h-12 shadow-sm border-slate-200 dark:border-white/10"
+          style={showSchedule ? { backgroundColor: primaryColor, color: "white" } : {}}
+        >
+          <CalendarIcon className="w-4 h-4" /> My Schedule
+        </Button>
+      </div>
+
+      {/* Schedule Modal Popup via Portal */}
+      {mounted && showSchedule && createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300">
+          <div className="bg-slate-50 dark:bg-zinc-900 w-full max-w-4xl rounded-[2.5rem] shadow-2xl border border-slate-200/50 dark:border-white/10 overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-300">
+            <div className="px-8 py-6 border-b border-slate-200/50 dark:border-white/5 flex items-center justify-between bg-white dark:bg-zinc-900 sticky top-0 z-10">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center text-white" style={{ backgroundColor: primaryColor }}>
+                  <CalendarIcon className="w-5 h-5" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-slate-900 dark:text-white">My Weekly Schedule</h2>
+                  <p className="text-sm font-medium text-slate-500">Your assigned batch and lab slots</p>
+                </div>
+              </div>
+              <button 
+                onClick={() => setShowSchedule(false)}
+                className="w-10 h-10 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 flex items-center justify-center text-slate-500 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <div className="p-8 overflow-y-auto custom-scrollbar">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <Card className="rounded-[2rem] border border-slate-200 dark:border-white/10 shadow-sm hover:shadow-md transition-shadow bg-white dark:bg-zinc-800/50 overflow-hidden relative">
+                  <div className="absolute top-0 left-0 w-2 h-full" style={{ backgroundColor: primaryColor }} />
+                  <CardHeader className="pb-2 px-8 pt-8">
+                    <CardTitle className="text-xl font-bold flex items-center gap-2">
+                      <BookOpen className="w-6 h-6" style={{ color: primaryColor }} /> Theory Batch
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="px-8 pb-8">
+                    <div className="space-y-6 mt-4">
+                      <div>
+                        <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">Assigned Batch</p>
+                        <p className="font-bold text-slate-900 dark:text-white text-xl">{theorySchedule.batchName}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">Class Timings</p>
+                        <p className="font-medium text-slate-600 dark:text-slate-300 whitespace-pre-wrap leading-relaxed bg-slate-50 dark:bg-zinc-900 p-4 rounded-2xl border border-slate-100 dark:border-white/5">{theorySchedule.schedule}</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+                
+                <Card className="rounded-[2rem] border border-slate-200 dark:border-white/10 shadow-sm hover:shadow-md transition-shadow bg-white dark:bg-zinc-800/50 overflow-hidden relative">
+                  <div className="absolute top-0 left-0 w-2 h-full bg-amber-500" />
+                  <CardHeader className="pb-2 px-8 pt-8">
+                    <CardTitle className="text-xl font-bold flex items-center gap-2">
+                      <Monitor className="w-6 h-6 text-amber-500" /> Practical Lab Slots
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="px-8 pb-8">
+                    {practicalSchedule && practicalSchedule.length > 0 ? (
+                      <div className="space-y-3 mt-4">
+                        {practicalSchedule.map((ps: any, idx: number) => (
+                          <div key={idx} className="flex items-center gap-4 p-4 rounded-2xl border border-slate-100 dark:border-white/5 bg-slate-50 dark:bg-zinc-900 hover:border-amber-500/30 transition-colors">
+                            <div className="w-12 h-12 rounded-xl bg-amber-500/10 text-amber-500 flex flex-col items-center justify-center font-bold text-sm uppercase shrink-0">
+                              {daysOfWeek[ps.dayOfWeek].substring(0, 3)}
+                            </div>
+                            <div>
+                              <p className="font-bold text-base text-slate-900 dark:text-white">{daysOfWeek[ps.dayOfWeek]}</p>
+                              <p className="text-sm font-medium text-slate-500">{ps.slot?.startTime} - {ps.slot?.endTime}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="mt-4 p-8 text-center rounded-2xl bg-slate-50 dark:bg-zinc-900 border border-dashed border-slate-200 dark:border-white/10">
+                        <Monitor className="w-8 h-8 text-slate-300 mx-auto mb-3" />
+                        <p className="text-sm font-medium text-slate-500">No practical lab slots assigned yet.</p>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
 
       {/* Summary Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
         <StatsCard 
-          label="Attendance Rate" 
-          value={`${stats.percentage}%`} 
+          label={`${viewMode === 'THEORY' ? 'Theory' : 'Practical'} Attendance`} 
+          value={`${activeStats.percentage}%`} 
           subtext="Overall performance"
           icon={<ArrowUpRight className="w-5 h-5" />} 
-          color={primaryColor} 
+          color={activeColor} 
         />
         <StatsCard 
           label="Present Days" 
-          value={stats.present.toString()} 
+          value={activeStats.present.toString()} 
           subtext="On-time sessions"
           icon={<CheckCircle2 className="w-5 h-5" />} 
           color="#10b981" 
         />
         <StatsCard 
-          label="Late Arrivals" 
-          value={stats.late.toString()} 
-          subtext="Needs attention"
-          icon={<Clock className="w-5 h-5" />} 
-          color="#f59e0b" 
-        />
-        <StatsCard 
           label="Absent Days" 
-          value={stats.absent.toString()} 
+          value={activeStats.absent.toString()} 
           subtext="Unexcused leaves"
           icon={<XCircle className="w-5 h-5" />} 
           color="#ef4444" 
+        />
+        <StatsCard 
+          label="Total Classes" 
+          value={activeStats.total.toString()} 
+          subtext="Conducted sessions"
+          icon={<BookOpen className="w-5 h-5" />} 
+          color="#3b82f6" 
         />
       </div>
 
@@ -126,8 +271,8 @@ export default function StudentAttendanceClient({
       <section className="space-y-6">
         <div className="flex items-center justify-between">
           <h2 className="text-xl font-bold tracking-tight flex items-center gap-2">
-            <div className="w-2 h-8 rounded-full" style={{ backgroundColor: primaryColor }} />
-            Attendance Analytics
+            <div className="w-2 h-8 rounded-full" style={{ backgroundColor: activeColor }} />
+            {viewMode === 'THEORY' ? 'Theory' : 'Practical'} Analytics
           </h2>
         </div>
 
@@ -155,6 +300,7 @@ export default function StudentAttendanceClient({
                       ? "bg-white dark:bg-zinc-800 text-primary shadow-sm" 
                       : "text-slate-500 hover:text-slate-900 dark:hover:text-white"
                   )}
+                  style={{ color: timeRange === range.value ? activeColor : undefined }}
                 >
                   {range.label}
                 </button>
@@ -186,7 +332,7 @@ export default function StudentAttendanceClient({
                 <Bar 
                   dataKey="present" 
                   name="Present Days" 
-                  fill={primaryColor} 
+                  fill={activeColor} 
                   radius={[6, 6, 0, 0]} 
                   barSize={32}
                 />
@@ -226,7 +372,7 @@ export default function StudentAttendanceClient({
                     paddingAngle={8}
                     dataKey="value"
                   >
-                    <Cell fill={primaryColor} />
+                    <Cell fill={activeColor} />
                     <Cell fill="#ef4444" />
                   </Pie>
                   <Tooltip 
@@ -235,7 +381,7 @@ export default function StudentAttendanceClient({
                 </PieChart>
               </ResponsiveContainer>
               <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none pt-8">
-                <span className="text-4xl font-bold" style={{ color: primaryColor }}>{stats.percentage}%</span>
+                <span className="text-4xl font-bold" style={{ color: activeColor }}>{activeStats.percentage}%</span>
                 <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Rate</span>
               </div>
             </CardContent>
@@ -253,9 +399,9 @@ export default function StudentAttendanceClient({
               <CalendarIcon className="w-5 h-5 text-slate-400" />
             </CardHeader>
             <CardContent className="p-0">
-              {attendances.length > 0 ? (
-                <div className="divide-y divide-slate-50 dark:divide-white/5">
-                  {attendances.map((record: any) => (
+              {activeAttendances.length > 0 ? (
+                <div className="divide-y divide-slate-50 dark:divide-white/5 max-h-[400px] overflow-y-auto custom-scrollbar">
+                  {activeAttendances.map((record: any) => (
                     <div key={record.id} className="p-6 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-white/5 transition-colors group">
                       <div className="flex items-center gap-6">
                         <div className={cn(
@@ -293,7 +439,7 @@ export default function StudentAttendanceClient({
                     <CalendarIcon className="w-10 h-10 text-slate-200" />
                   </div>
                   <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">No Records Yet</h3>
-                  <p className="text-slate-500 font-medium max-w-xs mx-auto text-sm">Attendance logs will appear here once your instructors start recording your presence.</p>
+                  <p className="text-slate-500 font-medium max-w-xs mx-auto text-sm">No {viewMode.toLowerCase()} attendance logs found.</p>
                 </div>
               )}
             </CardContent>
@@ -308,7 +454,6 @@ function StatsCard({ label, value, subtext, icon, color }: any) {
   return (
     <Card className="rounded-[2rem] border border-slate-100 dark:border-white/5 bg-white dark:bg-zinc-900/50 shadow-sm hover:shadow-xl transition-all duration-500 group overflow-hidden">
       <CardContent className="p-8 relative">
-        {/* Subtle background accent */}
         <div 
           className="absolute -right-4 -top-4 w-24 h-24 rounded-full opacity-5 group-hover:opacity-10 transition-opacity blur-2xl" 
           style={{ backgroundColor: color }}
