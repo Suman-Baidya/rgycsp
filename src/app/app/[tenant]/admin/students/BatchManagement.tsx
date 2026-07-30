@@ -49,7 +49,9 @@ export default function BatchManagement({
     capacity: "30",
     teacherName: "",
     startDate: "",
-    endDate: ""
+    endDate: "",
+    startTime: "",
+    endTime: ""
   });
 
   const filteredBatches = batches.filter(b => 
@@ -68,7 +70,9 @@ export default function BatchManagement({
         capacity: batch.capacity?.toString() || "30",
         teacherName: batch.teacherName || "",
         startDate: batch.startDate ? new Date(batch.startDate).toISOString().split('T')[0] : "",
-        endDate: batch.endDate ? new Date(batch.endDate).toISOString().split('T')[0] : ""
+        endDate: batch.endDate ? new Date(batch.endDate).toISOString().split('T')[0] : "",
+        startTime: batch.startTime || "",
+        endTime: batch.endTime || ""
       });
     } else {
       setEditingBatch(null);
@@ -79,7 +83,9 @@ export default function BatchManagement({
         capacity: "30",
         teacherName: "",
         startDate: "",
-        endDate: ""
+        endDate: "",
+        startTime: "",
+        endTime: ""
       });
     }
     setIsModalOpen(true);
@@ -101,6 +107,8 @@ export default function BatchManagement({
         teacherName: formData.teacherName,
         startDate: formData.startDate ? new Date(formData.startDate) : undefined,
         endDate: formData.endDate ? new Date(formData.endDate) : undefined,
+        startTime: formData.startTime || undefined,
+        endTime: formData.endTime || undefined,
       };
 
       if (editingBatch) {
@@ -212,7 +220,10 @@ export default function BatchManagement({
                 )}
                 <div className="flex items-center gap-3 text-sm text-slate-500">
                   <Clock className="w-4 h-4 text-slate-400" />
-                  <span className="font-medium">{batch.schedule || "No schedule set"}</span>
+                  <span className="font-medium">
+                    {batch.schedule || "No schedule set"} 
+                    {batch.startTime ? ` (${batch.startTime} - ${batch.endTime})` : ""}
+                  </span>
                 </div>
                 
                 {/* Capacity Progress Bar */}
@@ -323,13 +334,34 @@ export default function BatchManagement({
             </div>
 
             <div className="space-y-2">
-              <Label className="text-xs font-bold uppercase tracking-widest text-slate-400 ml-1">Schedule</Label>
+              <Label className="text-xs font-bold uppercase tracking-widest text-slate-400 ml-1">Schedule (Days)</Label>
               <Input 
                 value={formData.schedule} 
                 onChange={(e) => setFormData({ ...formData, schedule: e.target.value })} 
-                placeholder="e.g., Mon, Wed, Fri - 10:00 AM" 
+                placeholder="e.g., Mon, Wed, Fri" 
                 className="h-12 rounded-2xl font-bold"
               />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label className="text-xs font-bold uppercase tracking-widest text-slate-400 ml-1">Class Start Time (Theory)</Label>
+                <Input 
+                  type="time"
+                  value={formData.startTime} 
+                  onChange={(e) => setFormData({ ...formData, startTime: e.target.value })} 
+                  className="h-12 rounded-2xl font-bold"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-xs font-bold uppercase tracking-widest text-slate-400 ml-1">Class End Time (Theory)</Label>
+                <Input 
+                  type="time"
+                  value={formData.endTime} 
+                  onChange={(e) => setFormData({ ...formData, endTime: e.target.value })} 
+                  className="h-12 rounded-2xl font-bold"
+                />
+              </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4">

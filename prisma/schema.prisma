@@ -142,6 +142,7 @@ model SiteSettings {
   navigation     Json? // [{ label: 'Home', href: '/', isActive: true }, ...]
   navbarConfig   Json? // { showNavbar, showTopBar, showMenus, ctaPrimary: {text, link}, ctaSecondary: {text, link} }
   floatingConfig Json? // { enableWhatsApp, enableChatbot, chatbotName, welcomeMessage }
+  attendanceConfig Json? // { enableAlerts: boolean, threshold: number }
 
   globalIdCardAccess    Boolean @default(true)
   globalAdmitCardAccess Boolean @default(true)
@@ -260,6 +261,8 @@ model Batch {
   teacherName String?
   startDate   DateTime?
   endDate     DateTime?
+  startTime   String?
+  endTime     String?
 
   workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   course    Course?   @relation(fields: [courseId], references: [id], onDelete: SetNull)

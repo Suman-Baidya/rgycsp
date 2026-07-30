@@ -12,6 +12,8 @@ export async function createBatch(data: {
   teacherName?: string;
   startDate?: Date;
   endDate?: Date;
+  startTime?: string;
+  endTime?: string;
 }) {
   try {
     const batch = await db.batch.create({
@@ -24,6 +26,8 @@ export async function createBatch(data: {
         teacherName: data.teacherName,
         startDate: data.startDate,
         endDate: data.endDate,
+        startTime: data.startTime,
+        endTime: data.endTime,
       },
     });
 
@@ -43,6 +47,8 @@ export async function updateBatch(id: string, data: {
   teacherName?: string;
   startDate?: Date;
   endDate?: Date;
+  startTime?: string;
+  endTime?: string;
 }) {
   try {
     const batch = await db.batch.update({

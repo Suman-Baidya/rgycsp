@@ -52,14 +52,7 @@ export function StudentSidebar({
   };
 
   const generateLink = (path: string) => {
-    if (workspaceBase === undefined) {
-      return getTenantLink(path, tenant, pathname);
-    }
-    const cleanPath = path.startsWith('/') ? path : `/${path}`;
-    if (path.startsWith('http') || path.startsWith('mailto:') || path.startsWith('tel:')) return path;
-    if (workspaceBase && cleanPath.startsWith(workspaceBase)) return cleanPath;
-    if (workspaceBase === "") return cleanPath;
-    return `${workspaceBase}${cleanPath}`.replace(/\/+/g, '/');
+    return getTenantLink(path, tenant, pathname);
   };
 
   const navItems = [

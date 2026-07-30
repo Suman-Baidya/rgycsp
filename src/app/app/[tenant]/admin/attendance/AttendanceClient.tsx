@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { AdminPageHeader } from "@/components/layout/AdminPageHeader";
-import { Calendar, Users, Save, CheckCircle2, XCircle, Clock, AlertCircle, ChevronDown, CalendarDays, BarChart3, Edit3 } from "lucide-react";
+import { Calendar, Users, Save, CheckCircle2, XCircle, Clock, AlertCircle, ChevronDown, CalendarDays, BarChart3, Edit3, Camera } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -12,6 +12,7 @@ import { AttendanceStatus } from "@prisma/client";
 import { toast } from "sonner";
 import AttendanceReports from "@/components/attendance/AttendanceReports";
 import PracticalClassesTab from "./PracticalClassesTab";
+import QRScanner from "@/components/attendance/QRScanner";
 
 // Helper for formatting
 const formatDate = (date: Date) => {
@@ -71,6 +72,11 @@ export default function AttendanceClient({
     ));
   };
 
+  const handleMarkAllPresent = () => {
+    setStudents(prev => prev.map(s => ({ ...s, status: "PRESENT" })));
+    toast.success(`Marked all ${students.length} students as present.`);
+  };
+
   const handleSave = async () => {
     if (students.length === 0) return;
     
@@ -96,6 +102,7 @@ export default function AttendanceClient({
   const tabs = [
     { id: "take_attendance", label: "Theory Classes", icon: Edit3 },
     { id: "practical_classes", label: "Practical Classes", icon: CalendarDays },
+    { id: "qr_scanner", label: "QR Scanner", icon: Camera },
     { id: "reports", label: "Attendance Reports", icon: BarChart3 },
   ];
 
@@ -127,14 +134,25 @@ export default function AttendanceClient({
                  />
                </div>
            </div>
-           <Button 
-             onClick={handleSave} 
-             disabled={isSaving || students.length === 0}
-             className="w-full sm:w-auto h-11 rounded-xl px-8 font-bold shadow-lg shadow-primary/20 flex items-center gap-2"
-           >
-             {isSaving ? <Clock className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-             Save Register
-           </Button>
+           <div className="flex w-full sm:w-auto items-center gap-2">
+             <Button 
+               onClick={handleMarkAllPresent} 
+               disabled={isSaving || students.length === 0}
+               variant="outline"
+               className="w-full sm:w-auto h-11 rounded-xl px-4 font-bold border-emerald-200 text-emerald-600 hover:bg-emerald-50 hover:text-emerald-700 dark:border-emerald-900/30 dark:text-emerald-400 dark:hover:bg-emerald-900/20"
+             >
+               <CheckCircle2 className="w-4 h-4 mr-2" />
+               Mark All Present
+             </Button>
+             <Button 
+               onClick={handleSave} 
+               disabled={isSaving || students.length === 0}
+               className="w-full sm:w-auto h-11 rounded-xl px-8 font-bold shadow-lg shadow-primary/20 flex items-center gap-2"
+             >
+               {isSaving ? <Clock className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+               Save Register
+             </Button>
+           </div>
         </div>
       </AdminPageHeader>
 
@@ -300,6 +318,12 @@ export default function AttendanceClient({
 
       {activeTab === "practical_classes" && (
         <PracticalClassesTab workspaceId={workspaceId} />
+      )}
+
+      {activeTab === "qr_scanner" && (
+        <div className="py-6">
+           <QRScanner workspaceId={workspaceId} type="THEORY" />
+        </div>
       )}
 
       {activeTab === "reports" && (

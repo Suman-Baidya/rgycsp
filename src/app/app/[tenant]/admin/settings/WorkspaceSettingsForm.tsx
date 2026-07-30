@@ -48,6 +48,7 @@ export function WorkspaceSettingsForm({ settings }: { settings: any }) {
   const [brandDescription, setBrandDescription] = useState(settings.brandDescription);
   const [socialLinks, setSocialLinks] = useState(settings.socialLinks || {});
   const [pageHeaderBanner, setPageHeaderBanner] = useState(settings.pageHeaderBanner);
+  const [attendanceConfig, setAttendanceConfig] = useState(settings.attendanceConfig || { enableAlerts: false, threshold: 75 });
   const DEFAULT_NAV = [
     { name: "Home", href: "/", id: "home", isActive: true },
     { name: "About", href: "/about", id: "about", isActive: true },
@@ -160,6 +161,7 @@ export function WorkspaceSettingsForm({ settings }: { settings: any }) {
         socialLinks,
         navigation,
         pageHeaderBanner,
+        attendanceConfig,
       });
       if (result.success) toast.success("Institute settings updated");
       else toast.error(result.error || "Update failed");
@@ -182,6 +184,7 @@ export function WorkspaceSettingsForm({ settings }: { settings: any }) {
                 { value: "sections", label: "Landing Page", icon: Layout },
                 { value: "events", label: "Events", icon: Calendar },
                 { value: "notices", label: "Notice Board", icon: Bell },
+                { value: "attendance", label: "Attendance Config", icon: UserCheck },
                 { value: "gallery", label: "Gallery", icon: ImageIcon },
                 { value: "legal", label: "Legal & Help", icon: ShieldCheck },
               ].map((tab) => (
@@ -625,6 +628,49 @@ export function WorkspaceSettingsForm({ settings }: { settings: any }) {
                </p>
              </div>
              <LegalContentEditor settings={settings} />
+          </TabsContent>
+
+          <TabsContent value="attendance" className="mt-0 w-full space-y-10 focus-visible:outline-none">
+            <div className="flex flex-col gap-2 mb-8">
+              <h2 className="text-2xl font-black tracking-tight">Attendance Configurations</h2>
+              <p className="text-muted-foreground text-sm font-medium">Configure automated low attendance alerts.</p>
+            </div>
+            
+            <div className="p-8 rounded-[3rem] border bg-white dark:bg-zinc-900 shadow-md space-y-8">
+              <div className="flex items-center justify-between p-6 bg-zinc-50 dark:bg-zinc-800/50 rounded-2xl border border-border">
+                <div className="flex flex-col gap-1">
+                  <h3 className="font-bold text-lg">Automated Low Attendance Alerts</h3>
+                  <p className="text-xs text-muted-foreground font-medium">Send automatic notifications to students when their attendance drops below the threshold.</p>
+                </div>
+                <Switch 
+                  checked={attendanceConfig.enableAlerts} 
+                  onCheckedChange={(val) => setAttendanceConfig({ ...attendanceConfig, enableAlerts: val })} 
+                />
+              </div>
+
+              {attendanceConfig.enableAlerts && (
+                <div className="space-y-4 p-6 bg-blue-50/50 dark:bg-blue-900/10 rounded-2xl border border-blue-100 dark:border-blue-900/30">
+                  <Label className="text-xs font-black uppercase tracking-widest text-blue-600 dark:text-blue-400">Alert Threshold (%)</Label>
+                  <div className="flex items-center gap-4">
+                    <Input 
+                      type="number"
+                      min="1"
+                      max="99"
+                      value={attendanceConfig.threshold || 75} 
+                      onChange={(e) => setAttendanceConfig({ ...attendanceConfig, threshold: parseInt(e.target.value) || 75 })} 
+                      className="h-14 bg-white dark:bg-zinc-900 border-border/40 rounded-2xl px-6 font-bold w-32" 
+                    />
+                    <span className="font-medium text-sm text-muted-foreground">Alert when attendance drops below this percentage.</span>
+                  </div>
+                </div>
+              )}
+
+              <div className="pt-4 flex justify-end border-t border-border/40 mt-8">
+                <Button onClick={handleSaveGeneral} disabled={isSaving} className="h-14 px-10 gap-3 rounded-2xl font-black text-lg bg-primary text-primary-foreground shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all border-none">
+                  <Save className="h-5 w-5" /> {isSaving ? "Saving..." : "Save Configuration"}
+                </Button>
+              </div>
+            </div>
           </TabsContent>
 
           <TabsContent value="sections" className="mt-0 w-full space-y-10 focus-visible:outline-none">

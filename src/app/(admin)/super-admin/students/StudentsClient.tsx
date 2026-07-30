@@ -1791,7 +1791,7 @@ export default function StudentsClient({ initialStudents, initialWorkspaces, ini
                               </TableCell>
                               <TableCell className="text-right py-3">
                                 <div className="flex items-center justify-end gap-1">
-                                  <DocumentRenderer ref={el => { docRefs.current[uniqueKey] = el; }} type={`MARKSHEET_SEM_${sem.semesterNumber}`} student={selectedStudentForDocs} semesterNumber={sem.semesterNumber} />
+                                  <DocumentRenderer ref={el => { docRefs.current[uniqueKey] = el; }} type="MARKSHEET" student={selectedStudentForDocs} semesterNumber={sem.semesterNumber} />
                                   <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-500 hover:text-blue-600" onClick={() => docRefs.current[uniqueKey]?.preview()}><Eye className="w-4 h-4" /></Button>
                                   <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-500 hover:text-emerald-600" onClick={() => docRefs.current[uniqueKey]?.downloadPDF()}><Download className="w-4 h-4" /></Button>
                                 </div>

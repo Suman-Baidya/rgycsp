@@ -84,7 +84,7 @@ export async function importWorkspacesCSV(rows: any[]) {
       const workspace = await db.workspace.create({
         data: {
           name,
-          subdomain,
+          subdomain: subdomain.toLowerCase(),
           isActive: true,
           centerCode: codeToUse,
           state: state || null,

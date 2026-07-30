@@ -51,9 +51,10 @@ const DEFAULT_DEMO_DATA: Record<string, string> = {
   studentName: "Suman Baidya",
   studentPhoto: "https://api.dicebear.com/7.x/avataaars/svg?seed=student",
   studentSign: "https://api.dicebear.com/7.x/bottts/svg?seed=sign",
-  registrationNo: "123456",
-  certificateNo: "123456",
-  marksheetNo: "123456",
+  enrollmentNo: "ENR-2026-9876",
+  registrationNo: "REG-123456",
+  certificateNo: "CERT-789012",
+  marksheetNo: "MK-345678",
   dob: "12-05-1998",
   gender: "Male",
   bloodGroup: "O+",
@@ -97,6 +98,12 @@ const DEFAULT_DEMO_DATA: Record<string, string> = {
   percentage: "88.0%",
   grade: "A+",
   resultStatus: "PASS",
+  semesterName: "SEMESTER - I",
+  totalSemesterMarks: "528/600",
+  grandTotalMarks: "1056/1200",
+  grandPercentage: "88.0%",
+  grandGrade: "A+",
+  division: "1st Division",
 
   // Staff
   staffName: "Alice Smith",
@@ -130,7 +137,8 @@ const VARIABLE_GROUPS = [
       { id: "studentName", label: "Full Name" },
       { id: "studentPhoto", label: "Profile Picture" },
       { id: "studentSign", label: "Student Signature" },
-      { id: "registrationNo", label: "Enrollment Number" },
+      { id: "enrollmentNo", label: "Enrollment Number" },
+      { id: "registrationNo", label: "Registration Number" },
       { id: "certificateNo", label: "Certificate Number" },
       { id: "marksheetNo", label: "Marksheet Number" },
       { id: "dob", label: "Date of Birth" },
@@ -170,7 +178,6 @@ const VARIABLE_GROUPS = [
   {
     label: "Marksheet Variables",
     items: [
-      { id: "semesterName", label: "Semester Name" },
       { id: "unit1Name", label: "Unit 1 Name" }, { id: "unit1Marks", label: "Unit 1 Marks" },
       { id: "unit2Name", label: "Unit 2 Name" }, { id: "unit2Marks", label: "Unit 2 Marks" },
       { id: "unit3Name", label: "Unit 3 Name" }, { id: "unit3Marks", label: "Unit 3 Marks" },
@@ -184,7 +191,13 @@ const VARIABLE_GROUPS = [
       { id: "totalMaxMarks", label: "Total Max Marks" },
       { id: "percentage", label: "Percentage" },
       { id: "grade", label: "Grade" },
-      { id: "resultStatus", label: "Result (Pass/Fail)" },
+      { id: "resultStatus", label: "Result Status (Pass/Fail)" },
+      { id: "semesterName", label: "Semester Name (e.g., SEMESTER - I)" },
+      { id: "totalSemesterMarks", label: "Semester Total (e.g., 528/600)" },
+      { id: "grandTotalMarks", label: "Grand Total (e.g., 1056/1200)" },
+      { id: "grandPercentage", label: "Grand Percentage" },
+      { id: "grandGrade", label: "Grand Grade (A+, A, etc.)" },
+      { id: "division", label: "Division (1st, 2nd, etc.)" },
     ]
   },
   {
@@ -235,6 +248,7 @@ export default function DocumentDesigner() {
   const [currentId, setCurrentId] = useState<string | null>(null);
   const [templateName, setTemplateName] = useState("Untitled Document");
   const [templateType, setTemplateType] = useState("CERTIFICATE");
+  const [quickInsertKey, setQuickInsertKey] = useState(0);
   const [backgroundUrl, setBackgroundUrl] = useState<string | null>(null);
   const [variables, setVariables] = useState<DocVariable[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -484,17 +498,24 @@ export default function DocumentDesigner() {
     setTemplateToDelete(null);
   };
 
-  const addVariable = (type: "text" | "image" | "signature" | "qrcode") => {
+  const addVariable = (type: "text" | "image" | "signature" | "qrcode" | "attendance_qr") => {
+    const isAttendance = type === "attendance_qr";
+    const actualType = isAttendance ? "qrcode" : type;
+    
     const newVar: DocVariable = {
       id: crypto.randomUUID(),
-      name: type === "text" ? "studentName" : type === "qrcode" ? "qrCode" : "studentPhoto",
-      type,
+      name: actualType === "text" ? "studentName" : actualType === "qrcode" ? (isAttendance ? "attendanceQr" : "qrCode") : "studentPhoto",
+      type: actualType,
       x: 50,
       y: 50,
-      ...(type === "text" && { fontSize: 16, fontWeight: "normal", fontFamily: "Inter", color: "#000000", lineHeight: 1 }),
-      ...(type === "image" && { width: 100, height: 100 }),
-      ...(type === "signature" && { width: 120, height: 40 }),
-      ...(type === "qrcode" && { width: 100, height: 100, qrContentTemplate: "{studentName} - {registrationNo}" }),
+      ...(actualType === "text" && { fontSize: 16, fontWeight: "normal", fontFamily: "Inter", color: "#000000", lineHeight: 1 }),
+      ...(actualType === "image" && { width: 100, height: 100 }),
+      ...(actualType === "signature" && { width: 120, height: 40 }),
+      ...(actualType === "qrcode" && { 
+        width: 100, 
+        height: 100, 
+        qrContentTemplate: isAttendance ? "{enrollmentNo}" : "{studentName} - {enrollmentNo}" 
+      }),
     };
     setVariables([...variables, newVar]);
     setSelectedId(newVar.id);
@@ -871,12 +892,7 @@ export default function DocumentDesigner() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="CERTIFICATE">Students Certificate</SelectItem>
-                      <SelectItem value="MARKSHEET_SEM_1">Marksheet Sem 1</SelectItem>
-                      <SelectItem value="MARKSHEET_SEM_2">Marksheet Sem 2</SelectItem>
-                      <SelectItem value="MARKSHEET_SEM_3">Marksheet Sem 3</SelectItem>
-                      <SelectItem value="MARKSHEET_SEM_4">Marksheet Sem 4</SelectItem>
-                      <SelectItem value="MARKSHEET_SEM_5">Marksheet Sem 5</SelectItem>
-                      <SelectItem value="MARKSHEET_SEM_6">Marksheet Sem 6</SelectItem>
+                      <SelectItem value="MARKSHEET">Marksheet</SelectItem>
                       <SelectItem value="ADMIT_CARD">Admit Card</SelectItem>
                       <SelectItem value="STUDENT_ID">Student ID Card</SelectItem>
                       <SelectItem value="STAFF_ID">Staff Id Card</SelectItem>
@@ -903,15 +919,15 @@ export default function DocumentDesigner() {
               </Button>
               <Button variant="outline" onClick={() => addVariable("image")} className="h-auto py-4 flex-col gap-2 rounded-2xl hover:bg-primary/5 dark:hover:bg-primary/10 dark:border-slate-800 group">
                 <div className="w-8 h-8 rounded-lg bg-purple-500/10 flex items-center justify-center group-hover:bg-purple-500/20"><ImageIcon className="h-4 w-4 text-purple-600 dark:text-purple-400" /></div>
-                <span className="font-bold text-xs dark:text-slate-300">Photo</span>
-              </Button>
-              <Button variant="outline" onClick={() => addVariable("signature")} className="h-auto py-4 flex-col gap-2 rounded-2xl hover:bg-primary/5 dark:hover:bg-primary/10 dark:border-slate-800 group">
-                <div className="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center group-hover:bg-amber-500/20"><Signature className="h-4 w-4 text-amber-600 dark:text-amber-400" /></div>
-                <span className="font-bold text-xs dark:text-slate-300">Signature</span>
+                <span className="font-bold text-xs dark:text-slate-300 text-center">Image /<br/>Signature</span>
               </Button>
               <Button variant="outline" onClick={() => addVariable("qrcode")} className="h-auto py-4 flex-col gap-2 rounded-2xl hover:bg-primary/5 dark:hover:bg-primary/10 dark:border-slate-800 group">
                 <div className="w-8 h-8 rounded-lg bg-green-500/10 flex items-center justify-center group-hover:bg-green-500/20"><QrCode className="h-4 w-4 text-green-600 dark:text-green-400" /></div>
-                <span className="font-bold text-xs dark:text-slate-300">QR Code</span>
+                <span className="font-bold text-xs dark:text-slate-300 text-center">Custom<br/>QR Code</span>
+              </Button>
+              <Button variant="outline" onClick={() => addVariable("attendance_qr")} className="h-auto py-4 flex-col gap-2 rounded-2xl border-indigo-200 hover:bg-indigo-50 dark:border-indigo-900 dark:hover:bg-indigo-900/20 group">
+                <div className="w-8 h-8 rounded-lg bg-indigo-500/10 flex items-center justify-center group-hover:bg-indigo-500/20"><QrCode className="h-4 w-4 text-indigo-600 dark:text-indigo-400" /></div>
+                <span className="font-bold text-xs text-indigo-700 dark:text-indigo-300 text-center">Attendance<br/>Scanner QR</span>
               </Button>
             </CardContent>
           </Card>
@@ -965,9 +981,12 @@ export default function DocumentDesigner() {
                           <div className="space-y-2">
                             <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Quick Insert Variable</Label>
                             <Select
+                              key={quickInsertKey}
                               onValueChange={(value: any) => {
+                                if (!value) return;
                                 const current = selectedVar.textContent !== undefined ? selectedVar.textContent : `{${selectedVar.name}}`;
                                 updateVariable(selectedVar.id, { textContent: current + `{${value}}` });
+                                setQuickInsertKey(prev => prev + 1);
                               }}
                             >
                               <SelectTrigger className="w-full h-11 bg-white border-2 border-slate-200 rounded-xl font-bold px-3 focus:ring-0 focus:ring-offset-0">

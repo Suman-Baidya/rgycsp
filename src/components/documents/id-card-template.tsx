@@ -2,6 +2,7 @@
 
 import { useRef } from 'react';
 import { Button } from '@/components/ui/button';
+import { QRCodeCanvas } from 'qrcode.react';
 
 interface IdCardProps {
   instituteName: string;
@@ -75,11 +76,9 @@ export function IdCardTemplate({
           </div>
         </div>
 
-        {/* Card Footer */}
         <div className="h-10 bg-zinc-100 mt-auto flex items-center justify-between px-3">
            <div className="text-[8px] text-zinc-500 pr-2">Valid for academic year 2026-27</div>
-           {/* Placeholder for QR Code */}
-           <div className="w-6 h-6 bg-zinc-300 rounded border border-zinc-400"></div>
+           <QRCodeCanvas value={enrollmentNo} size={24} />
         </div>
       </div>
     </div>

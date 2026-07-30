@@ -117,7 +117,8 @@ export const DocumentRenderer = forwardRef<DocumentRendererRef, DocumentRenderer
       switch (varName) {
         // Base Student Fields
         case "studentName": return student.fullName || "";
-        case "registrationNo": return student.registrationNo || student.enrollmentNo || "";
+        case "enrollmentNo": return student.enrollmentNo || "";
+        case "registrationNo": return student.registrationNo || "";
         case "certificateNo": return student.certificateNo || "";
         case "marksheetNo": return student.marksheetNo || "";
         case "dob": return student.dob ? new Date(student.dob).toLocaleDateString('en-GB') : "";
@@ -180,9 +181,13 @@ export const DocumentRenderer = forwardRef<DocumentRendererRef, DocumentRenderer
         case "examRollNo": return activeExam?.rollNo || "";
         
         // Marksheet Fields (Fallback to static if not deeply mapped yet)
+        // Marksheet Fields
         case "semesterName": {
           const activeSem = semesterNumber ? student?.semesters?.find((s:any) => s.semesterNumber === semesterNumber) : ((student?.semesters && student.semesters.length > 0) ? student.semesters[0] : null);
-          return activeSem ? `Semester ${activeSem.semesterNumber}` : (semesterNumber ? `Semester ${semesterNumber}` : "");
+          if (!activeSem) return "";
+          const roman = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X"];
+          const numStr = roman[activeSem.semesterNumber - 1] || activeSem.semesterNumber.toString();
+          return `SEMESTER - ${numStr}`;
         }
         case "unit1Name": return "Subject 1"; case "unit1Marks": return "";
         case "unit2Name": return "Subject 2"; case "unit2Marks": return "";
@@ -216,6 +221,12 @@ export const DocumentRenderer = forwardRef<DocumentRendererRef, DocumentRenderer
           const activeSem = semesterNumber ? student?.semesters?.find((s:any) => s.semesterNumber === semesterNumber) : ((student?.semesters && student.semesters.length > 0) ? student.semesters[0] : null);
           return activeSem?.marks ? `${activeSem.marks.reduce((sum: number, m: any) => sum + (m.maxMarks || 100), 0)}` : "600";
         }
+        case "totalSemesterMarks": {
+          const activeSem = semesterNumber ? student?.semesters?.find((s:any) => s.semesterNumber === semesterNumber) : ((student?.semesters && student.semesters.length > 0) ? student.semesters[0] : null);
+          if (!activeSem) return "";
+          const max = activeSem.marks ? activeSem.marks.reduce((sum: number, m: any) => sum + (m.maxMarks || 100), 0) : 600;
+          return `${activeSem.totalMarks}/${max}`;
+        }
         case "percentage": {
           const activeSem = semesterNumber ? student?.semesters?.find((s:any) => s.semesterNumber === semesterNumber) : ((student?.semesters && student.semesters.length > 0) ? student.semesters[0] : null);
           return activeSem ? `${activeSem.percentage}` : "";
@@ -227,6 +238,49 @@ export const DocumentRenderer = forwardRef<DocumentRendererRef, DocumentRenderer
         case "resultStatus": {
           const activeSem = semesterNumber ? student?.semesters?.find((s:any) => s.semesterNumber === semesterNumber) : ((student?.semesters && student.semesters.length > 0) ? student.semesters[0] : null);
           return activeSem ? `${activeSem.status}` : "";
+        }
+        
+        // Cumulative Fields
+        case "grandTotalMarks":
+        case "grandPercentage":
+        case "grandGrade":
+        case "division": {
+          const activeSem = semesterNumber ? student?.semesters?.find((s:any) => s.semesterNumber === semesterNumber) : ((student?.semesters && student.semesters.length > 0) ? student.semesters[0] : null);
+          if (!activeSem || !student?.semesters) return "";
+          
+          const previousSems = student.semesters.filter((s: any) => s.semesterNumber <= activeSem.semesterNumber);
+          let grandObtained = 0;
+          let grandMax = 0;
+          
+          previousSems.forEach((sem: any) => {
+            grandObtained += sem.totalMarks || 0;
+            if (sem.marks && sem.marks.length > 0) {
+              grandMax += sem.marks.reduce((sum: number, m: any) => sum + (m.maxMarks || 100), 0);
+            } else {
+              grandMax += 600;
+            }
+          });
+          
+          const grandPercentRaw = grandMax > 0 ? (grandObtained / grandMax) * 100 : 0;
+          const grandPercentStr = grandPercentRaw.toFixed(2) + "%";
+          
+          let grandGrade = "FAIL";
+          if (grandPercentRaw >= 80) grandGrade = "A+";
+          else if (grandPercentRaw >= 70) grandGrade = "A";
+          else if (grandPercentRaw >= 60) grandGrade = "B+";
+          else if (grandPercentRaw >= 50) grandGrade = "B";
+          else if (grandPercentRaw >= 40) grandGrade = "C";
+
+          let divisionStr = "Fail";
+          if (grandPercentRaw >= 60) divisionStr = "1st Division";
+          else if (grandPercentRaw >= 50) divisionStr = "2nd Division";
+          else if (grandPercentRaw >= 40) divisionStr = "3rd Division";
+
+          if (varName === "grandTotalMarks") return `${grandObtained}/${grandMax}`;
+          if (varName === "grandPercentage") return grandPercentStr;
+          if (varName === "grandGrade") return grandGrade;
+          if (varName === "division") return divisionStr;
+          return "";
         }
 
         // Staff specific
@@ -378,7 +432,7 @@ export const DocumentRenderer = forwardRef<DocumentRendererRef, DocumentRenderer
                 {config.map((item: any) => {
                   if (item.type === "qrcode") {
                     const parseQrContent = (template: string = "") => {
-                      return template.replace(/\{(\w+)\}/g, (_, key) => {
+                      return template.replace(/\{(\w+)\}/g, (_: string, key: string) => {
                         return mapVariable(key) || "";
                       });
                     };
@@ -434,7 +488,7 @@ export const DocumentRenderer = forwardRef<DocumentRendererRef, DocumentRenderer
                   let displayValue = mappedValue;
                   if (item.type === "text") {
                     const templateStr = item.textContent !== undefined ? item.textContent : `{${item.name}}`;
-                    displayValue = templateStr.replace(/\{(\w+)\}/g, (_, key) => {
+                    displayValue = templateStr.replace(/\{(\w+)\}/g, (_: string, key: string) => {
                       return mapVariable(key) || "";
                     });
                   }
