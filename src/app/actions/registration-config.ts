@@ -16,10 +16,12 @@ export async function getRegistrationConfig() {
           certificateDigits: 4,
           marksheetPrefix: "MS",
           marksheetDigits: 4,
-          autoDocumentIssueEnabled: false,
+          autoMarksheetIssueEnabled: false,
+          autoCertificateIssueEnabled: false,
+          autoQuickIssueEnabled: false,
           autoMarksheetDays: 2,
           autoCertificateDays: 30,
-          autoIssueAfterRequestHours: 1,
+          autoIssueAfterRequestMinutes: 60,
         }
       });
     }
@@ -38,10 +40,12 @@ export async function updateRegistrationConfig(data: {
   certificateDigits?: number;
   marksheetPrefix: string;
   marksheetDigits?: number;
-  autoDocumentIssueEnabled?: boolean;
+  autoMarksheetIssueEnabled?: boolean;
+  autoCertificateIssueEnabled?: boolean;
+  autoQuickIssueEnabled?: boolean;
   autoMarksheetDays?: number;
   autoCertificateDays?: number;
-  autoIssueAfterRequestHours?: number;
+  autoIssueAfterRequestMinutes?: number;
 }) {
   try {
     if (data.enrollmentDigits !== undefined) {

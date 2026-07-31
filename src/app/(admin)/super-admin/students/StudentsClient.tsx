@@ -15,7 +15,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Checkbox } from "@/components/ui/checkbox";
 import { AdminPageHeader } from "@/components/layout/AdminPageHeader";
 import { ImageUpload } from "@/components/ui/ImageUpload";
-import { updateStudent } from "@/app/actions/students";
+import { updateStudent, toggleStudentActiveStatus, deleteStudent } from "@/app/actions/students";
 import { issueStudentDocument, markStudentsAsNotPrinted } from "@/app/actions/student-documents";
 import { registerStudent } from "@/app/actions/student-registration";
 import { updateRegistrationConfig } from "@/app/actions/registration-config";
@@ -75,10 +75,12 @@ export default function StudentsClient({ initialStudents, initialWorkspaces, ini
     certificateDigits: initialConfig?.certificateDigits || 4,
     marksheetPrefix: initialConfig?.marksheetPrefix || "MS",
     marksheetDigits: initialConfig?.marksheetDigits || 4,
-    autoDocumentIssueEnabled: initialConfig?.autoDocumentIssueEnabled || false,
+    autoMarksheetIssueEnabled: initialConfig?.autoMarksheetIssueEnabled || false,
+    autoCertificateIssueEnabled: initialConfig?.autoCertificateIssueEnabled || false,
+    autoQuickIssueEnabled: initialConfig?.autoQuickIssueEnabled || false,
     autoMarksheetDays: initialConfig?.autoMarksheetDays || 2,
     autoCertificateDays: initialConfig?.autoCertificateDays || 30,
-    autoIssueAfterRequestHours: initialConfig?.autoIssueAfterRequestHours || 1,
+    autoIssueAfterRequestMinutes: initialConfig?.autoIssueAfterRequestMinutes || 60,
   });
   const [isSavingConfig, setIsSavingConfig] = useState(false);
 
@@ -241,10 +243,21 @@ export default function StudentsClient({ initialStudents, initialWorkspaces, ini
     }
   };
 
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (!studentToDelete) return;
-    toast.info(`Delete functionality for ${studentToDelete.fullName} will be implemented soon!`);
-    setStudentToDelete(null);
+    const toastId = toast.loading(`Deleting ${studentToDelete.fullName}...`);
+    try {
+      const res = await deleteStudent(studentToDelete.id);
+      if (res.success) {
+        toast.success("Student deleted successfully!", { id: toastId });
+        setStudentToDelete(null);
+        router.refresh();
+      } else {
+        toast.error(res.error || "Failed to delete student", { id: toastId });
+      }
+    } catch (error: any) {
+      toast.error(error.message || "An error occurred", { id: toastId });
+    }
   };
 
   const handleUpdate = async (e: React.FormEvent) => {
@@ -351,7 +364,12 @@ export default function StudentsClient({ initialStudents, initialWorkspaces, ini
         dobStr.includes(searchLower) ||
         adminDateStr.includes(searchLower);
 
-      const matchesStatus = s.status === statusFilter;
+      let matchesStatus = false;
+      if (statusFilter === "PAUSED") {
+        matchesStatus = s.isActive === false;
+      } else {
+        matchesStatus = s.status === statusFilter && s.isActive !== false;
+      }
 
       let matchesRequest = true;
       if (showRequestsOnly && statusFilter === "REGISTERED") {
@@ -377,17 +395,22 @@ export default function StudentsClient({ initialStudents, initialWorkspaces, ini
 
   // Stats for cards
   const stats = useMemo(() => {
-    let registered = 0, unregistered = 0, passout = 0;
+    let registered = 0, unregistered = 0, passout = 0, paused = 0;
     initialStudents.forEach(s => {
-      if (s.status === "REGISTERED") registered++;
-      else if (s.status === "UNREGISTERED") unregistered++;
-      else if (s.status === "PASS_OUT") passout++;
+      if (s.isActive === false) {
+        paused++;
+      } else {
+        if (s.status === "REGISTERED") registered++;
+        else if (s.status === "UNREGISTERED") unregistered++;
+        else if (s.status === "PASS_OUT") passout++;
+      }
     });
     return {
       total: initialStudents.length,
       registered,
       unregistered,
-      passout
+      passout,
+      paused
     };
   }, [initialStudents]);
 
@@ -395,6 +418,7 @@ export default function StudentsClient({ initialStudents, initialWorkspaces, ini
     { id: "UNREGISTERED", label: "Pending Registration", icon: User },
     { id: "REGISTERED", label: "Registered Students", icon: UserCheck },
     { id: "PASS_OUT", label: "Pass Out", icon: GraduationCap },
+    { id: "PAUSED", label: "Paused", icon: ShieldCheck },
     { id: "CONFIG", label: "Configuration", icon: Settings },
   ];
 
@@ -462,12 +486,13 @@ export default function StudentsClient({ initialStudents, initialWorkspaces, ini
         description="Global directory of all students registered across all franchise workspaces."
       />
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
         {[
           { label: "Total Students", value: stats.total, icon: Users, color: "text-blue-500", bg: "bg-blue-500/10" },
           { label: "Registered", value: stats.registered, icon: CheckCircle, color: "text-emerald-500", bg: "bg-emerald-500/10" },
           { label: "Unregistered", value: stats.unregistered, icon: FileText, color: "text-amber-500", bg: "bg-amber-500/10" },
           { label: "Pass Out", value: stats.passout, icon: GraduationCap, color: "text-purple-500", bg: "bg-purple-500/10" },
+          { label: "Paused", value: stats.paused, icon: ShieldCheck, color: "text-rose-500", bg: "bg-rose-500/10" },
         ].map((stat, i) => (
           <Card key={i} className="border-none shadow-sm rounded-[2rem] overflow-hidden bg-white dark:bg-slate-900">
             <CardContent className="p-6">
@@ -714,55 +739,90 @@ export default function StudentsClient({ initialStudents, initialWorkspaces, ini
                         </div>
                         <h3 className="font-bold text-slate-800 dark:text-slate-200">Automatic Document Issue</h3>
                       </div>
-                      <div onClick={(e) => e.stopPropagation()}>
-                        <Switch 
-                          checked={configData.autoDocumentIssueEnabled}
-                          onCheckedChange={(checked) => setConfigData(prev => ({ ...prev, autoDocumentIssueEnabled: checked }))}
-                          className="data-[state=checked]:bg-primary"
-                        />
-                      </div>
                     </div>
                   </AccordionTrigger>
                   <AccordionContent className="p-6 pt-2 border-t border-slate-100 dark:border-slate-800">
-                    <div className="mt-4">
-                      {configData.autoDocumentIssueEnabled ? (
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-8">
+                      {/* Marksheet Settings */}
+                      <div className="p-4 bg-slate-50 dark:bg-slate-800/30 rounded-xl border border-slate-100 dark:border-slate-800">
+                        <div className="flex items-center justify-between mb-4">
                           <div>
+                            <label className="text-sm font-bold text-slate-700 dark:text-slate-300 block mb-1">Auto Marksheet Issue</label>
+                            <p className="text-xs text-slate-500">Automatically issue marksheets to students.</p>
+                          </div>
+                          <Switch 
+                            checked={configData.autoMarksheetIssueEnabled}
+                            onCheckedChange={(checked) => setConfigData(prev => ({ ...prev, autoMarksheetIssueEnabled: checked }))}
+                            className="data-[state=checked]:bg-primary"
+                          />
+                        </div>
+                        {configData.autoMarksheetIssueEnabled && (
+                          <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700">
                             <label className="text-sm font-bold text-slate-700 dark:text-slate-300 block mb-1">Marksheet Delay (Days)</label>
                             <p className="text-xs text-slate-500 mb-3">Days after franchise uploads marks to auto-issue marksheet.</p>
                             <Input 
                               type="number"
                               value={configData.autoMarksheetDays} 
                               onChange={e => setConfigData(prev => ({ ...prev, autoMarksheetDays: parseInt(e.target.value) || 0 }))}
-                              className="h-12 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-xl"
+                              className="h-12 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-xl"
                             />
                           </div>
+                        )}
+                      </div>
+
+                      {/* Certificate Settings */}
+                      <div className="p-4 bg-slate-50 dark:bg-slate-800/30 rounded-xl border border-slate-100 dark:border-slate-800">
+                        <div className="flex items-center justify-between mb-4">
                           <div>
+                            <label className="text-sm font-bold text-slate-700 dark:text-slate-300 block mb-1">Auto Certificate Issue</label>
+                            <p className="text-xs text-slate-500">Automatically issue certificates to students.</p>
+                          </div>
+                          <Switch 
+                            checked={configData.autoCertificateIssueEnabled}
+                            onCheckedChange={(checked) => setConfigData(prev => ({ ...prev, autoCertificateIssueEnabled: checked }))}
+                            className="data-[state=checked]:bg-primary"
+                          />
+                        </div>
+                        {configData.autoCertificateIssueEnabled && (
+                          <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700">
                             <label className="text-sm font-bold text-slate-700 dark:text-slate-300 block mb-1">Certificate Delay (Days)</label>
                             <p className="text-xs text-slate-500 mb-3">Days after final marksheet is published to auto-issue certificate.</p>
                             <Input 
                               type="number"
                               value={configData.autoCertificateDays} 
                               onChange={e => setConfigData(prev => ({ ...prev, autoCertificateDays: parseInt(e.target.value) || 0 }))}
-                              className="h-12 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-xl"
+                              className="h-12 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-xl"
                             />
                           </div>
-                          <div className="col-span-1 md:col-span-2">
-                            <label className="text-sm font-bold text-slate-700 dark:text-slate-300 block mb-1">Quick Issue Delay (Hours)</label>
-                            <p className="text-xs text-slate-500 mb-3">Hours to wait after a franchise admin clicks "Request Quick Issue" before auto-approving the documents. Set to 0 to disable quick auto-issue (requires manual approval).</p>
+                        )}
+                      </div>
+
+                      {/* Quick Issue Delay */}
+                      <div className="p-4 bg-slate-50 dark:bg-slate-800/30 rounded-xl border border-slate-100 dark:border-slate-800 col-span-1 md:col-span-2">
+                        <div className="flex items-center justify-between mb-4">
+                          <div>
+                            <label className="text-sm font-bold text-slate-700 dark:text-slate-300 block mb-1">Auto Quick Issue</label>
+                            <p className="text-xs text-slate-500">Automatically issue documents when a franchise clicks "Request Quick Issue".</p>
+                          </div>
+                          <Switch 
+                            checked={configData.autoQuickIssueEnabled}
+                            onCheckedChange={(checked) => setConfigData(prev => ({ ...prev, autoQuickIssueEnabled: checked }))}
+                            className="data-[state=checked]:bg-primary"
+                          />
+                        </div>
+                        {configData.autoQuickIssueEnabled && (
+                          <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700">
+                            <label className="text-sm font-bold text-slate-700 dark:text-slate-300 block mb-1">Quick Issue Delay (Minutes)</label>
+                            <p className="text-xs text-slate-500 mb-3">Minutes to wait after a franchise admin clicks "Request Quick Issue" before auto-approving the documents.</p>
                             <Input 
                               type="number"
-                              value={configData.autoIssueAfterRequestHours} 
-                              onChange={e => setConfigData(prev => ({ ...prev, autoIssueAfterRequestHours: parseInt(e.target.value) || 0 }))}
-                              className="h-12 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-xl max-w-sm"
+                              value={configData.autoIssueAfterRequestMinutes} 
+                              onChange={e => setConfigData(prev => ({ ...prev, autoIssueAfterRequestMinutes: parseInt(e.target.value) || 0 }))}
+                              className="h-12 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-xl max-w-sm"
                             />
                           </div>
-                        </div>
-                      ) : (
-                        <div className="text-center py-8 text-slate-500 dark:text-slate-400 text-sm">
-                          Automatic document issuance is currently disabled. Documents will require manual approval.
-                        </div>
-                      )}
+                        )}
+                      </div>
                     </div>
                   </AccordionContent>
                 </AccordionItem>
@@ -953,7 +1013,7 @@ export default function StudentsClient({ initialStudents, initialWorkspaces, ini
                           <p className="font-bold font-mono text-sm text-indigo-600 dark:text-indigo-400">{student.enrollmentNo}</p>
                           <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mt-1">Enrollment No</p>
                         </div>
-                        {(student.status === "REGISTERED" || student.status === "PASS_OUT") && student.registrations && student.registrations.length > 0 && (
+                        {(student.status === "REGISTERED" || student.status === "PASS_OUT") && (student.registrations && student.registrations.length > 0) && (
                           <div className="text-left md:text-right w-1/2 md:w-auto">
                             <p className="font-bold font-mono text-sm text-emerald-600 dark:text-emerald-400">{student.registrations[student.registrations.length - 1].registrationNo}</p>
                             <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mt-1">Reg No</p>
@@ -1064,6 +1124,23 @@ export default function StudentsClient({ initialStudents, initialWorkspaces, ini
                                 className="cursor-pointer gap-2 py-2.5"
                               >
                                 <GraduationCap className="h-4 w-4 text-slate-400" /> Manage Result
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                className={cn("cursor-pointer gap-2 py-2.5 transition-colors", student.isActive !== false ? "text-amber-600 hover:text-amber-700 hover:bg-amber-50 focus:text-amber-700 focus:bg-amber-50" : "text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 focus:text-emerald-700 focus:bg-emerald-50")}
+                                onClick={async (e) => {
+                                  e.stopPropagation();
+                                  const currentlyActive = student.isActive !== false;
+                                  const toastId = toast.loading(currentlyActive ? "Pausing student..." : "Reactivating student...");
+                                  const res = await toggleStudentActiveStatus(student.id, !currentlyActive);
+                                  if (res.success) {
+                                    toast.success(`Student ${currentlyActive ? 'paused' : 'reactivated'} successfully!`, { id: toastId });
+                                    router.refresh();
+                                  } else {
+                                    toast.error(res.error || "Failed to update status", { id: toastId });
+                                  }
+                                }}
+                              >
+                                <ShieldCheck className="h-4 w-4" /> {student.isActive !== false ? "Pause" : "Re Active"}
                               </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
@@ -1664,6 +1741,7 @@ export default function StudentsClient({ initialStudents, initialWorkspaces, ini
                   {!certStatus.isCertAuto ? (
                     <Switch 
                       checked={!!selectedStudentForDocs?.certificateApproved} 
+                      disabled={!!selectedStudentForDocs?.certificateApproved && selectedStudentForDocs.status === "PASS_OUT"}
                       onCheckedChange={(checked) => {
                         if (docRefs.current['CERTIFICATE'] && !docRefs.current['CERTIFICATE']?.hasTemplate()) {
                           toast.error(`Design template for Certificate does not exist yet!`);

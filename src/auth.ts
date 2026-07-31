@@ -108,6 +108,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                 console.log("AUTH: User does not belong to tenant", tenant);
                 throw new Error("You do not have access to this franchise portal.");
               }
+
+              if (hasProfile && !hasProfile.isActive) {
+                console.log("AUTH: Student is paused.");
+                throw new Error("Your account has been temporarily paused. Please contact your center admin.");
+              }
             }
           }
 

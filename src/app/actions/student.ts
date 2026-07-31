@@ -52,6 +52,10 @@ export async function getStudentProfile(workspaceId: string) {
       return { success: false, error: "Access denied. Not a student of this workspace." };
     }
 
+    if (user.studentProfile && !user.studentProfile.isActive) {
+      return { success: false, error: "Your account is temporarily paused. Please contact your center admin." };
+    }
+
     return { success: true, data: user };
   } catch (error: any) {
     console.error("Error fetching student profile:", error);

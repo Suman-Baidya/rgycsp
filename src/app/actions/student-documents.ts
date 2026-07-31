@@ -2,6 +2,7 @@
 
 import { db } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { isValidIssueGap, isValidMarksheetGap, getRequiredMarksheetCount, getExpectedUnitsForSemester } from "@/lib/course-utils";
 
 export async function getPendingDocumentRequestsCount() {
   try {
@@ -29,9 +30,54 @@ export async function getPendingDocumentRequestsCount() {
 
 export async function issueStudentDocument(studentId: string, documentType: "MARKSHEET" | "CERTIFICATE" | "STUDENT_ID" | "ADMIT_CARD", status: boolean, semesterNumber?: number) {
   try {
+    const student = await db.studentProfile.findUnique({ 
+      where: { id: studentId },
+      include: { course: true, semesters: { include: { marks: true } } }
+    });
+    
+    if (!student) return { success: false, error: "Student not found" };
+
+    if (documentType === "CERTIFICATE") {
+      if (status === false && student.status === "PASS_OUT") {
+         return { success: false, error: "Cannot un-issue a certificate once the student has passed out." };
+      }
+      if (status === true && student.course?.duration) {
+         const gapCheck = isValidIssueGap(student.admissionDate, student.course.duration);
+         if (!gapCheck.valid) {
+           return { success: false, error: `Minimum course duration not met. Certificate can be issued after ${gapCheck.requiredDate.toLocaleDateString('en-GB')}` };
+         }
+         const requiredCount = getRequiredMarksheetCount(student.course.duration);
+         const issuedCount = student.semesters.filter((s: any) => s.marksheetApproved).length;
+         if (issuedCount < requiredCount) {
+           return { success: false, error: `Cannot issue certificate. This course requires ${requiredCount} marksheets, but only ${issuedCount} are approved.` };
+         }
+      }
+    }
+
+    if (documentType === "MARKSHEET" && semesterNumber && status === true) {
+      if (student.course?.duration) {
+        const gapCheck = isValidMarksheetGap(student.admissionDate, semesterNumber, student.course.duration);
+        if (!gapCheck.valid) {
+          return { success: false, error: `Minimum duration for Semester ${semesterNumber} not met. Marksheet can be issued after ${gapCheck.requiredDate.toLocaleDateString('en-GB')}` };
+        }
+      }
+      
+      if (semesterNumber > 1) {
+        const prevSem = student.semesters.find((s: any) => s.semesterNumber === semesterNumber - 1);
+        if (!prevSem || !prevSem.marksheetApproved) {
+          return { success: false, error: `Cannot issue Semester ${semesterNumber} marksheet because Semester ${semesterNumber - 1} marksheet is not approved.` };
+        }
+      }
+
+      const sem = student.semesters.find((s: any) => s.semesterNumber === semesterNumber);
+      const expectedUnits = getExpectedUnitsForSemester(student.course, semesterNumber);
+      if (!sem || !sem.marks || sem.marks.length < expectedUnits) {
+        return { success: false, error: `Cannot issue marksheet. All ${expectedUnits} unit marks have not been entered for Semester ${semesterNumber}.` };
+      }
+    }
+
     if (documentType === "MARKSHEET" && semesterNumber) {
       if (status === true) {
-        const student = await db.studentProfile.findUnique({ where: { id: studentId } });
         let marksheetNoToUse = student?.marksheetNo;
 
         if (!marksheetNoToUse) {
@@ -78,8 +124,7 @@ export async function issueStudentDocument(studentId: string, documentType: "MAR
     let data: any = {};
     
     if (documentType === "CERTIFICATE" && status === true) {
-      const student = await db.studentProfile.findUnique({ where: { id: studentId } });
-      if (student && !student.certificateNo) {
+      if (!student.certificateNo) {
         let newCertificateNo = "";
         await db.$transaction(async (tx) => {
           let config = await tx.registrationConfig.findFirst();
@@ -99,7 +144,14 @@ export async function issueStudentDocument(studentId: string, documentType: "MAR
 
     switch (documentType) {
       case "MARKSHEET": data.marksheetApproved = status; if (status === false) data.marksheetIssuedToStudent = false; break;
-      case "CERTIFICATE": data.certificateApproved = status; if (status === false) data.certificateIssuedToStudent = false; break;
+      case "CERTIFICATE": 
+        data.certificateApproved = status; 
+        if (status === false) {
+          data.certificateIssuedToStudent = false; 
+        } else {
+          data.status = "PASS_OUT"; // Change status to PASS_OUT when certificate is approved
+        }
+        break;
       case "STUDENT_ID": data.registrationCardApproved = status; if (status === false) data.registrationCardIssuedToStudent = false; break;
       case "ADMIT_CARD": data.admitCardApproved = status; if (status === false) data.admitCardIssuedToStudent = false; break;
     }
@@ -341,7 +393,23 @@ export async function requestDocumentIssue(studentId: string) {
       return { success: false, error: "Course topics not configured properly." };
     }
 
+    // 1. Time Gap Validation
+    if (student.course.duration) {
+      const gapCheck = isValidIssueGap(student.admissionDate, student.course.duration);
+      if (!gapCheck.valid) {
+        return { success: false, error: `Minimum course duration not met. Certificate request can be made after ${gapCheck.requiredDate.toLocaleDateString('en-GB')}` };
+      }
+    }
+
+    // 2. Marksheet Count Validation
     const semesters = Object.keys(topicsObj);
+    if (student.course.duration) {
+       const requiredCount = getRequiredMarksheetCount(student.course.duration);
+       if (semesters.length < requiredCount) {
+         return { success: false, error: `Course requires ${requiredCount} marksheets but only ${semesters.length} are configured in topics.` };
+       }
+    }
+
     for (let i = 0; i < semesters.length; i++) {
       const semKey = semesters[i];
       const semNumber = i + 1;

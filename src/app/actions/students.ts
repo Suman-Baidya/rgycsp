@@ -201,8 +201,11 @@ export async function updateStudent(id: string, data: any) {
     let finalRegistrationNo = existing.registrationNo;
     let autoResolvedConflict = false;
 
+    console.log("Updating student:", id, "with admissionDate:", admissionDate);
+
     if (admissionDate) {
       updateData.admissionDate = new Date(admissionDate);
+      console.log("Parsed updateData.admissionDate:", updateData.admissionDate);
       
       if (existing.registrationNo) {
         const newYearStr = updateData.admissionDate.getFullYear().toString();
@@ -363,6 +366,55 @@ export async function adminUpdateStudentPassword(studentId: string, newPassword:
     revalidatePath('/app/[tenant]/admin/students');
     return { success: true };
   } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+}
+
+export async function toggleStudentActiveStatus(id: string, isActive: boolean) {
+  try {
+    const session = await auth();
+    if (session?.user?.role !== "SUPER_ADMIN") return { success: false, error: "Unauthorized" };
+
+    const student = await db.studentProfile.update({
+      where: { id },
+      data: { isActive }
+    });
+    revalidatePath("/");
+    return { success: true, data: student };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+}
+
+export async function deleteStudent(id: string) {
+  try {
+    const session = await auth();
+    if (session?.user?.role !== "SUPER_ADMIN") return { success: false, error: "Unauthorized" };
+
+    // Find the student to get the userId so we can delete the User record too
+    const student = await db.studentProfile.findUnique({
+      where: { id },
+      select: { userId: true }
+    });
+
+    if (!student) return { success: false, error: "Student not found" };
+
+    // Delete the student profile
+    await db.studentProfile.delete({
+      where: { id }
+    });
+
+    // If there's an associated User record, delete it
+    if (student.userId) {
+      await db.user.delete({
+        where: { id: student.userId }
+      });
+    }
+
+    revalidatePath("/");
+    return { success: true };
+  } catch (error: any) {
+    console.error("Delete Student Error:", error);
     return { success: false, error: error.message };
   }
 }

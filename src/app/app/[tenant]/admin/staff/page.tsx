@@ -22,9 +22,9 @@ export default async function StaffPage({
   const staffResult = await getStaff(workspace.id);
 
   return (
-    <StaffManagementClient 
-      workspaceId={workspace.id} 
-      initialStaff={staffResult.data ?? []} 
+    <StaffManagementClient
+      workspaceId={workspace.id}
+      initialStaff={staffResult.data ?? []}
     />
   );
 }

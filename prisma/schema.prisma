@@ -362,6 +362,7 @@ model StudentProfile {
   idProofUrl   String?
 
   status        StudentStatus @default(UNREGISTERED)
+  isActive      Boolean       @default(true)
   admissionDate DateTime      @default(now())
   applicationId String?       @unique
 
@@ -645,6 +646,7 @@ enum StudentStatus {
   UNREGISTERED
   REGISTERED
   PASS_OUT
+  SUSPENDED
 }
 
 // ============================================
@@ -1106,10 +1108,12 @@ model RegistrationConfig {
   marksheetDigits    Int      @default(4)
   marksheetNextSeq   Int      @default(1)
   
-  autoDocumentIssueEnabled Boolean @default(false)
+  autoMarksheetIssueEnabled Boolean @default(false)
+  autoCertificateIssueEnabled Boolean @default(false)
+  autoQuickIssueEnabled    Boolean @default(false)
   autoMarksheetDays        Int     @default(2)
   autoCertificateDays      Int     @default(30)
-  autoIssueAfterRequestHours Int   @default(1)
+  autoIssueAfterRequestMinutes Int   @default(60)
 
   updatedAt          DateTime @updatedAt
 }

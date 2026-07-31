@@ -44,7 +44,8 @@ export async function verifyRegistration(identifier: string) {
               { status: "REGISTERED" },
               { status: "PASS_OUT" }
             ]
-          }
+          },
+          { isActive: true }
         ]
       },
       select: {
@@ -92,10 +93,15 @@ export async function verifyCertificate(identifier: string) {
   try {
     const student = await db.studentProfile.findFirst({
       where: { 
-        OR: [
-          { certificateNo: identifier }, 
-          { registrationNo: identifier },
-          { registrations: { some: { registrationNo: identifier } } }
+        AND: [
+          {
+            OR: [
+              { certificateNo: identifier }, 
+              { registrationNo: identifier },
+              { registrations: { some: { registrationNo: identifier } } }
+            ] 
+          },
+          { isActive: true }
         ] 
       },
       select: {
@@ -148,10 +154,15 @@ export async function verifyMarksheet(identifier: string) {
     // Look up by marksheetNo directly on StudentProfile, or fallback to registrationNo
     const student = await db.studentProfile.findFirst({
       where: { 
-        OR: [
-          { marksheetNo: identifier } as any,
-          { registrationNo: identifier },
-          { registrations: { some: { registrationNo: identifier } } }
+        AND: [
+          {
+            OR: [
+              { marksheetNo: identifier }, 
+              { registrationNo: identifier },
+              { registrations: { some: { registrationNo: identifier } } }
+            ]
+          },
+          { isActive: true }
         ]
       },
       include: {
