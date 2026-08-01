@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { QRCodeCanvas } from "qrcode.react";
+import { QRCodeSVG } from "qrcode.react";
 
 export interface DocumentRendererRef {
   downloadPDF: () => Promise<void>;
@@ -141,6 +141,26 @@ export const DocumentRenderer = forwardRef<DocumentRendererRef, DocumentRenderer
         case "courseName": return student.course?.title || "";
         case "courseCode": return student.course?.code || "";
         case "courseDuration": return student.course?.duration ? `${student.course.duration} Months` : "";
+        case "coursePeriod": {
+          if (!student.admissionDate) return "";
+          const startDate = new Date(student.admissionDate);
+          const durationStr = student.course?.duration ? student.course.duration.toString() : "0";
+          const monthsMatch = durationStr.match(/(\d+)/);
+          const durationMonths = monthsMatch ? parseInt(monthsMatch[1], 10) : 0;
+          
+          if (durationMonths === 0) return "";
+          
+          const endDate = new Date(startDate);
+          // Calculate end date based on duration. e.g. for 12 months, MAR to FEB is duration - 1
+          endDate.setMonth(endDate.getMonth() + durationMonths - 1);
+          
+          const formatMonthYear = (d: Date) => {
+            const m = d.toLocaleString('en-US', { month: 'short' }).toUpperCase();
+            return `${m}.${d.getFullYear()}`;
+          };
+          
+          return `${formatMonthYear(startDate)} TO ${formatMonthYear(endDate)}`;
+        }
         case "batchName": return student.batch?.name || "";
         case "batchTime": return student.batch?.timing || "";
         
@@ -163,12 +183,18 @@ export const DocumentRenderer = forwardRef<DocumentRendererRef, DocumentRenderer
         case "staffSign": return ""; // Staff context specific
 
         // System & Notice
-        case "issueDate": return new Date().toLocaleDateString('en-GB');
+        case "issueDate": {
+          const d = new Date();
+          return `${d.getDate().toString().padStart(2, '0')}/${(d.getMonth() + 1).toString().padStart(2, '0')}/${d.getFullYear()}`;
+        }
         case "validUntil": 
           const valid = new Date();
           valid.setFullYear(valid.getFullYear() + 1);
-          return valid.toLocaleDateString('en-GB');
-        case "noticeDate": return new Date().toLocaleDateString('en-GB');
+          return `${valid.getDate().toString().padStart(2, '0')}/${(valid.getMonth() + 1).toString().padStart(2, '0')}/${valid.getFullYear()}`;
+        case "noticeDate": {
+          const nDate = new Date();
+          return `${nDate.getDate().toString().padStart(2, '0')}/${(nDate.getMonth() + 1).toString().padStart(2, '0')}/${nDate.getFullYear()}`;
+        }
         case "noticeTitle": return "";
         case "noticeBody": return "";
         
@@ -331,9 +357,8 @@ export const DocumentRenderer = forwardRef<DocumentRendererRef, DocumentRenderer
           await document.fonts.ready;
         }
 
-        const { toJpeg } = await import("html-to-image");
-        const imgData = await toJpeg(canvasRef.current, { 
-          quality: 1.0,
+        const { toPng } = await import("html-to-image");
+        const imgData = await toPng(canvasRef.current, { 
           pixelRatio: 4,
           backgroundColor: '#ffffff'
         });
@@ -367,7 +392,7 @@ export const DocumentRenderer = forwardRef<DocumentRendererRef, DocumentRenderer
           unit: "px",
           format: [template.width, template.height]
         });
-        pdf.addImage(imgData, "JPEG", 0, 0, template.width, template.height);
+        pdf.addImage(imgData, "PNG", 0, 0, template.width, template.height, undefined, "FAST");
         pdf.save(`${student?.fullName || "Student"}_${type}.pdf`);
         toast.success("PDF Downloaded successfully", { id: loadingToast });
       },
@@ -452,7 +477,7 @@ export const DocumentRenderer = forwardRef<DocumentRendererRef, DocumentRenderer
                           overflow: "hidden"
                         }}
                       >
-                        <QRCodeCanvas
+                        <QRCodeSVG
                           value={parseQrContent(item.qrContentTemplate)}
                           size={Math.min(item.width || 100, item.height || 100)}
                           level="H"

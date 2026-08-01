@@ -1,6 +1,6 @@
 import React from "react";
 import { QrCode, Image as ImageIcon, Signature } from "lucide-react";
-import { QRCodeCanvas } from "qrcode.react";
+import { QRCodeSVG } from "qrcode.react";
 import { cn } from "@/lib/utils";
 import { DocVariable } from "@/types/document";
 
@@ -68,7 +68,7 @@ export const DraggableElement = React.memo(({
         >
           {isPreview ? (
             v.type === "qrcode" ? (
-              <QRCodeCanvas
+              <QRCodeSVG
                 value={parseQrContent(v.qrContentTemplate)}
                 size={Math.min(v.width || 100, v.height || 100)}
                 level="H"

@@ -23,7 +23,7 @@ import {
   QrCode,
   Copy
 } from "lucide-react";
-import { QRCodeCanvas } from "qrcode.react";
+import { QRCodeSVG } from "qrcode.react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -70,6 +70,7 @@ const DEFAULT_DEMO_DATA: Record<string, string> = {
   courseDuration: "12 Months",
   batchName: "Morning Batch A",
   batchTime: "10:00 AM - 12:00 PM",
+  coursePeriod: "MAR.2024 TO FEB.2025",
   
   // Franchise / Center
   franchiseName: "Zenith Coding Academy",
@@ -98,7 +99,6 @@ const DEFAULT_DEMO_DATA: Record<string, string> = {
   percentage: "88.0%",
   grade: "A+",
   resultStatus: "PASS",
-  semesterName: "SEMESTER - I",
   totalSemesterMarks: "528/600",
   grandTotalMarks: "1056/1200",
   grandPercentage: "88.0%",
@@ -114,7 +114,7 @@ const DEFAULT_DEMO_DATA: Record<string, string> = {
   staffPhone: "1234567890",
 
   // System & Notice
-  issueDate: "May 15, 2024",
+  issueDate: "15/05/2024",
   validUntil: "May 14, 2025",
   principalSign: "https://api.dicebear.com/7.x/bottts/svg?seed=principal",
   noticeTitle: "Urgent Meeting Notice",
@@ -157,6 +157,7 @@ const VARIABLE_GROUPS = [
       { id: "courseName", label: "Course Title" },
       { id: "courseCode", label: "Course Code" },
       { id: "courseDuration", label: "Course Duration" },
+      { id: "coursePeriod", label: "Course Period" },
       { id: "batchName", label: "Batch Name" },
       { id: "batchTime", label: "Batch Timing" },
     ]
@@ -517,30 +518,36 @@ export default function DocumentDesigner() {
         qrContentTemplate: isAttendance ? "{enrollmentNo}" : "{studentName} - {enrollmentNo}" 
       }),
     };
-    setVariables([...variables, newVar]);
+    setVariables(prev => [...prev, newVar]);
     setSelectedId(newVar.id);
   };
 
   const updateVariable = (id: string, updates: Partial<DocVariable>) => {
-    setVariables(variables.map(v => v.id === id ? { ...v, ...updates } : v));
+    setVariables(prev => prev.map(v => v.id === id ? { ...v, ...updates } : v));
   };
 
   const removeVariable = (id: string) => {
-    setVariables(variables.filter(v => v.id !== id));
+    setVariables(prev => prev.filter(v => v.id !== id));
     setSelectedId(null);
   };
 
   const duplicateVariable = (id: string) => {
-    const v = variables.find(v => v.id === id);
-    if (!v) return;
-    const newVar = {
-      ...v,
-      id: crypto.randomUUID(),
-      x: v.x + 20,
-      y: v.y + 20
-    };
-    setVariables([...variables, newVar]);
-    setSelectedId(newVar.id);
+    // Generate new ID and state synchronously
+    const newId = crypto.randomUUID();
+    
+    setVariables(prev => {
+      const v = prev.find(item => item.id === id);
+      if (!v) return prev;
+      const newVar = {
+        ...v,
+        id: newId,
+        x: v.x + 20,
+        y: v.y + 20
+      };
+      return [...prev, newVar];
+    });
+    
+    setSelectedId(newId);
   };
 
   const downloadPDF = async () => {
@@ -567,9 +574,8 @@ export default function DocumentDesigner() {
       }));
 
       // 2. Capture canvas with high scale for printing (300 DPI target)
-      const { toJpeg } = await import("html-to-image");
-      const imgData = await toJpeg(canvasRef.current, {
-        quality: 1.0,
+      const { toPng } = await import("html-to-image");
+      const imgData = await toPng(canvasRef.current, {
         pixelRatio: 4,
         backgroundColor: '#ffffff'
       });
@@ -582,7 +588,7 @@ export default function DocumentDesigner() {
         format: [fromPx(canvasSize.width, "mm"), fromPx(canvasSize.height, "mm")]
       });
       
-      pdf.addImage(imgData, "JPEG", 0, 0, fromPx(canvasSize.width, "mm"), fromPx(canvasSize.height, "mm"), undefined, 'FAST');
+      pdf.addImage(imgData, "PNG", 0, 0, fromPx(canvasSize.width, "mm"), fromPx(canvasSize.height, "mm"), undefined, 'FAST');
       
       // Add metadata
       pdf.setProperties({

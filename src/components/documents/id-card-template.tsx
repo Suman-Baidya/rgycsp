@@ -1,85 +1,103 @@
 "use client"
 
-import { useRef } from 'react';
-import { Button } from '@/components/ui/button';
-import { QRCodeCanvas } from 'qrcode.react';
+import React from 'react';
+import { QRCodeSVG } from 'qrcode.react';
 
-interface IdCardProps {
-  instituteName: string;
-  studentName: string;
+interface IdCardTemplateProps {
+  fullName: string;
   enrollmentNo: string;
-  batchName: string;
-  bloodGroup?: string;
-  phone?: string;
-  photoUrl?: string; // Eventually fetched from Cloudinary
+  courseName: string;
+  bloodGroup: string;
+  phone: string;
+  validUntil: string;
+  photoUrl: string;
+  signatureUrl: string;
+  workspaceName: string;
+  workspaceLogo: string;
+  centerCode: string;
 }
 
 export function IdCardTemplate({
-  instituteName,
-  studentName,
+  fullName,
   enrollmentNo,
-  batchName,
-  bloodGroup = "O+",
+  courseName,
+  bloodGroup,
   phone,
-  photoUrl = "https://via.placeholder.com/150"
-}: IdCardProps) {
-  const printRef = useRef<HTMLDivElement>(null);
-
-  const handlePrint = () => {
-    window.print();
-  };
-
+  validUntil,
+  photoUrl,
+  signatureUrl,
+  workspaceName,
+  workspaceLogo,
+  centerCode,
+}: IdCardTemplateProps) {
   return (
-    <div className="flex flex-col gap-4 items-center">
-      <Button onClick={handlePrint} variant="outline" className="print:hidden">
-        Print / Download PDF
-      </Button>
-      
-      <div 
-        ref={printRef}
-        className="w-[2.125in] h-[3.375in] bg-white border-2 border-zinc-200 rounded-xl overflow-hidden shadow-lg flex flex-col print:shadow-none print:border-none relative"
-      >
-        {/* Card Header styling / branding */}
-        <div className="h-16 bg-primary text-primary-foreground flex items-center justify-center text-center p-2">
-          <h2 className="font-bold text-sm tracking-tight leading-tight">{instituteName}</h2>
+    <div className="w-[85.6mm] h-[54mm] bg-white rounded-lg shadow-sm border overflow-hidden flex relative" style={{ boxSizing: 'border-box' }}>
+      {/* Front Side */}
+      <div className="w-[54mm] h-[85.6mm] flex flex-col relative bg-gradient-to-b from-blue-50 to-white" style={{ transform: 'rotate(-90deg) translate(-54mm, 0)', transformOrigin: 'top left' }}>
+        {/* Header */}
+        <div className="bg-blue-900 text-white p-2 text-center flex flex-col items-center">
+          {workspaceLogo ? (
+            <img src={workspaceLogo} alt="Logo" className="h-6 object-contain mb-1" />
+          ) : (
+            <div className="text-[10px] font-bold truncate w-full">{workspaceName}</div>
+          )}
+          <div className="text-[6px] opacity-80 uppercase tracking-widest">Student ID Card</div>
+        </div>
+
+        {/* Body */}
+        <div className="flex-1 p-2 flex flex-col items-center pt-3 relative">
+          <div className="w-16 h-20 bg-slate-100 border-2 border-white shadow-md rounded-md overflow-hidden mb-2 relative z-10">
+            {photoUrl ? (
+              <img src={photoUrl} alt={fullName} className="w-full h-full object-cover" />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center text-slate-300">Photo</div>
+            )}
+          </div>
+          
+          <div className="text-center w-full relative z-10">
+            <h2 className="text-sm font-bold text-slate-900 truncate leading-tight">{fullName}</h2>
+            <div className="text-[8px] font-bold text-blue-600 truncate mt-0.5">{courseName}</div>
+            
+            <div className="mt-2 text-left space-y-0.5 px-2">
+              <div className="flex text-[7px]">
+                <span className="w-12 font-bold text-slate-500">ID No</span>
+                <span className="font-bold text-slate-900">: {enrollmentNo}</span>
+              </div>
+              <div className="flex text-[7px]">
+                <span className="w-12 font-bold text-slate-500">Center</span>
+                <span className="font-bold text-slate-900">: {centerCode}</span>
+              </div>
+              <div className="flex text-[7px]">
+                <span className="w-12 font-bold text-slate-500">Phone</span>
+                <span className="font-bold text-slate-900">: {phone}</span>
+              </div>
+              <div className="flex text-[7px]">
+                <span className="w-12 font-bold text-slate-500">Blood Grp</span>
+                <span className="font-bold text-red-600">: {bloodGroup}</span>
+              </div>
+              <div className="flex text-[7px]">
+                <span className="w-12 font-bold text-slate-500">Valid Till</span>
+                <span className="font-bold text-slate-900">: {validUntil}</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="absolute bottom-2 right-2 opacity-80">
+           <QRCodeSVG value={enrollmentNo} size={24} />
+          </div>
+          <div className="absolute bottom-2 left-2 w-16 text-center">
+            {signatureUrl ? (
+              <img src={signatureUrl} alt="Signature" className="h-6 w-full object-contain" />
+            ) : (
+              <div className="h-6 border-b border-dashed border-slate-300 w-full mb-1"></div>
+            )}
+            <div className="text-[5px] text-slate-500">Authorized Signatory</div>
+          </div>
         </div>
         
-        {/* Photo Container */}
-        <div className="flex justify-center -mt-6 z-10">
-          <div className="w-20 h-24 bg-zinc-100 border-4 border-white rounded-md overflow-hidden shadow-sm">
-            <img src={photoUrl} alt="Student" className="w-full h-full object-cover" />
-          </div>
-        </div>
-
-        {/* Student Details */}
-        <div className="flex-1 flex flex-col items-center mt-2 px-3 text-zinc-900">
-          <h3 className="font-bold text-lg leading-none">{studentName}</h3>
-          <p className="text-[10px] text-zinc-500 font-medium uppercase tracking-wider mt-1">{batchName}</p>
-          
-          <div className="w-full mt-4 space-y-1 align-left">
-             <div className="flex justify-between text-[10px]">
-               <span className="font-bold">ID NO:</span>
-               <span>{enrollmentNo}</span>
-             </div>
-             <div className="flex justify-between text-[10px]">
-               <span className="font-bold">DOB:</span>
-               <span>21-Apr-2010</span>
-             </div>
-             <div className="flex justify-between text-[10px]">
-               <span className="font-bold">BLOOD:</span>
-               <span className="text-red-500 font-bold">{bloodGroup}</span>
-             </div>
-             <div className="flex justify-between text-[10px]">
-               <span className="font-bold">PHONE:</span>
-               <span>{phone || "N/A"}</span>
-             </div>
-          </div>
-        </div>
-
-        <div className="h-10 bg-zinc-100 mt-auto flex items-center justify-between px-3">
-           <div className="text-[8px] text-zinc-500 pr-2">Valid for academic year 2026-27</div>
-           <QRCodeCanvas value={enrollmentNo} size={24} />
-        </div>
+        {/* Background Decorative */}
+        <div className="absolute -right-8 -top-8 w-24 h-24 bg-blue-100/50 rounded-full blur-xl pointer-events-none" />
+        <div className="absolute -left-8 -bottom-8 w-24 h-24 bg-blue-100/50 rounded-full blur-xl pointer-events-none" />
       </div>
     </div>
   );
