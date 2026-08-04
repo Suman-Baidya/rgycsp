@@ -22,6 +22,7 @@ export async function getStudents(workspaceId: string) {
         admissionApp: {
           select: { appliedCourse: true, createdAt: true, email: true, photoUrl: true, signatureUrl: true, idProofUrl: true }
         },
+        invoices: { select: { amount: true, status: true } },
         registrations: true,
         semesters: { include: { marks: true } }
       },
@@ -74,7 +75,7 @@ export async function createStudent(workspaceId: string, data: any) {
       fullName, enrollmentNo, phone, email, whatsapp, 
       dob, gender, religion, caste, bloodGroup, address,
       parentName, parentPhone, fatherName, motherName, guardianPhone, batchId, courseId, qualification,
-      photoUrl, signatureUrl, idProofUrl, loginPassword: providedPassword 
+      photoUrl, signatureUrl, idProofUrl, loginPassword: providedPassword, paymentType
     } = data;
 
     // Generate Enrollment Number (e.g., RGY12345678)
@@ -137,6 +138,7 @@ export async function createStudent(workspaceId: string, data: any) {
         photoUrl: photoUrl || null,
         signatureUrl: signatureUrl || null,
         idProofUrl: idProofUrl || null,
+        paymentType: paymentType || "ONE_TIME",
       }
     });
 
@@ -188,6 +190,9 @@ export async function updateStudent(id: string, data: any) {
       signatureUrl: signatureUrl || null,
       idProofUrl: idProofUrl || null,
     };
+    if (data.paymentType !== undefined) {
+      updateData.paymentType = data.paymentType;
+    }
     if (loginPassword !== undefined) {
       updateData.loginPassword = loginPassword || null;
     }

@@ -123,7 +123,7 @@ export async function generateStudentPaymentStructure(studentProfileId: string, 
     }
 
     // 4. Generate Course Fee / Installments
-    if (course.isInstallmentBased && course.installmentAmount && course.totalInstallments) {
+    if (student.paymentType === "EMI" && course.isInstallmentBased && course.installmentAmount && course.totalInstallments) {
       for (let i = 1; i <= course.totalInstallments; i++) {
         // Due dates spaced by 1 month starting from next month
         const dueDate = new Date();
@@ -140,7 +140,7 @@ export async function generateStudentPaymentStructure(studentProfileId: string, 
           installmentNo: i,
         });
       }
-    } else if (!course.isInstallmentBased && course.totalCourseFee > 0) {
+    } else if (course.totalCourseFee > 0) {
       newInvoices.push({
         workspaceId,
         studentProfileId,
@@ -238,3 +238,81 @@ export async function updateInvoiceProof(invoiceId: string, paymentProofUrl: str
   }
 }
 
+
+export async function getPendingFeePayments(workspaceId: string) {
+  try {
+    const invoices = await db.invoice.findMany({
+      where: {
+        workspaceId,
+        status: "PENDING",
+        paymentProof: { not: null }
+      },
+      include: {
+        student: {
+          select: { fullName: true, enrollmentNo: true, phone: true }
+        }
+      },
+      orderBy: { dueDate: "asc" }
+    });
+    return { success: true, data: invoices };
+  } catch (error: any) {
+    console.error("Failed to fetch pending fee payments:", error);
+    return { success: false, error: error.message };
+  }
+}
+
+export async function getPendingFeePaymentsCount(workspaceId: string) {
+  try {
+    const count = await db.invoice.count({
+      where: {
+        workspaceId,
+        status: "PENDING",
+        paymentProof: { not: null }
+      }
+    });
+    return { success: true, count };
+  } catch (error: any) {
+    console.error("Failed to fetch pending fee payments count:", error);
+    return { success: false, error: error.message };
+  }
+}
+
+export async function rejectInvoiceProof(invoiceId: string, reason: string) {
+  try {
+    const invoice = await db.invoice.update({
+      where: { id: invoiceId },
+      data: {
+        paymentProof: null,
+        rejectionReason: reason
+      }
+    });
+
+    revalidatePath(`/app/[tenant]/student/dashboard/fees`);
+    revalidatePath(`/app/[tenant]/admin/students`);
+    
+    return { success: true, data: invoice };
+  } catch (error: any) {
+    console.error("Failed to reject invoice proof:", error);
+    return { success: false, error: error.message };
+  }
+}
+
+export async function updateInvoiceInfo(invoiceId: string, data: { amount: number; dueDate: string }) {
+  try {
+    const session = await auth();
+    if (!session?.user) return { success: false, error: "Unauthorized" };
+
+    const updated = await db.invoice.update({
+      where: { id: invoiceId },
+      data: {
+        amount: Number(data.amount),
+        dueDate: new Date(data.dueDate)
+      }
+    });
+
+    return { success: true, data: updated };
+  } catch (error: any) {
+    console.error("Error updating invoice:", error);
+    return { success: false, error: "Failed to update invoice" };
+  }
+}

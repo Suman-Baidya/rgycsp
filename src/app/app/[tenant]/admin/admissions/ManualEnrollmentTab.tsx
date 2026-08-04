@@ -127,7 +127,7 @@ export default function ManualEnrollmentTab({
   };
 
   const [formData, setFormData] = useState({
-    fullName: "", email: "", mobile: "", whatsapp: "", courseId: "", batchId: "", fees: "",
+    fullName: "", email: "", mobile: "", whatsapp: "", courseId: "", batchId: "", fees: "", paymentType: "ONE_TIME",
     fatherName: "", motherName: "", guardianPhone: "", dob: "", gender: "", bloodGroup: "", religion: "", caste: "",
     vill: "", po: "", ps: "", dist: "", pin: "", state: "",
     qualName: "", qualYear: "", qualPercent: "", qualBoard: "",
@@ -176,6 +176,7 @@ export default function ManualEnrollmentTab({
       photoUrl: draft.photoUrl || "",
       signatureUrl: draft.signatureUrl || "",
       idProofUrl: draft.idProofUrl || "",
+      paymentType: draft.paymentType || "ONE_TIME",
       customData: draft.customData || {}
     });
     setIsFormOpen(true);
@@ -185,7 +186,7 @@ export default function ManualEnrollmentTab({
   const clearForm = () => {
     setActiveDraftId(null);
     setFormData({
-      fullName: "", email: "", mobile: "", whatsapp: "", courseId: "", batchId: "", fees: "",
+      fullName: "", email: "", mobile: "", whatsapp: "", courseId: "", batchId: "", fees: "", paymentType: "ONE_TIME",
       fatherName: "", motherName: "", guardianPhone: "", dob: "", gender: "", bloodGroup: "", religion: "", caste: "",
       vill: "", po: "", ps: "", dist: "", pin: "", state: "",
       qualName: "", qualYear: "", qualPercent: "", qualBoard: "",
@@ -620,14 +621,24 @@ export default function ManualEnrollmentTab({
                           <option value="">Select Batch</option>
                           {batches.filter(b => !b.courseId || b.courseId === formData.courseId).map(b => {
                             const isFull = (b._count?.students || 0) >= (b.capacity || 30);
+                            const timing = b.startTime && b.endTime ? ` (${b.startTime} - ${b.endTime})` : "";
                             return (
                               <option key={b.id} value={b.id} disabled={isFull}>
-                                {b.name} {isFull ? "(Full)" : `(${b._count?.students || 0}/${b.capacity || 30})`}
+                                {b.name}{timing} {isFull ? " - Full" : ` - (${b._count?.students || 0}/${b.capacity || 30})`}
                               </option>
                             );
                           })}
                         </select>
                       </div>
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-bold text-slate-400">Payment Type *</label>
+                        <select value={formData.paymentType} onChange={(e) => setFormData({...formData, paymentType: e.target.value})} className="flex h-11 w-full rounded-xl border-2 border-slate-100 bg-background px-3 py-2 text-sm focus:border-primary outline-none">
+                          <option value="ONE_TIME">One Time Payment</option>
+                          <option value="EMI">EMI (Installments)</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-1 gap-4 mt-4">
                       <div className="space-y-1.5">
                         <label className="text-xs font-bold text-slate-400">Admission Fees Received</label>
                         <Input type="number" value={formData.fees} onChange={e => setFormData({...formData, fees: e.target.value})} className="h-11 rounded-xl" placeholder="₹ Amount" />

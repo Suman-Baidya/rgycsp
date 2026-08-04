@@ -27,6 +27,8 @@ export default async function AdmissionsPage({
           name: true, 
           courseId: true,
           capacity: true,
+          startTime: true,
+          endTime: true,
           _count: { select: { students: true } }
         }
       }

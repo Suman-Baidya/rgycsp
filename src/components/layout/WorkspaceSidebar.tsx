@@ -23,17 +23,20 @@ import {
   MapPinned,
   ShoppingCart,
   UserCog,
+  Receipt,
+  IndianRupee,
   GraduationCap,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { detectTenant, getTenantLink, isActivePath, WORKSPACE_ROUTES } from "@/lib/routing";
+import { detectTenant, getTenantLink, isActivePath, WORKSPACE_ROUTES, getRoutingConfig } from "@/lib/routing";
 import { signOut } from "next-auth/react";
 
 export function WorkspaceSidebar({ 
   tenant: propTenant,
   workspaceBase,
   admissionsCount = 0,
+  pendingFeesCount = 0,
   isStateManager = false,
   userRole = "ADMIN",
   userPermissions = []
@@ -41,6 +44,7 @@ export function WorkspaceSidebar({
   tenant?: string;
   workspaceBase?: string;
   admissionsCount?: number;
+  pendingFeesCount?: number;
   isStateManager?: boolean;
   userRole?: string;
   userPermissions?: string[];
@@ -50,17 +54,15 @@ export function WorkspaceSidebar({
   const [isMounted, setIsMounted] = useState(false);
   const pathname = usePathname();
   
-  // Robust tenant detection using unified utility
-  const tenant = propTenant || detectTenant(pathname, typeof window !== 'undefined' ? window.location.host : undefined);
+  const routingConfig = getRoutingConfig(pathname, typeof window !== 'undefined' ? window.location.host : undefined, propTenant);
+  const tenant = propTenant || routingConfig.tenant;
   const displayTenant = tenant || "Workspace";
 
-  // Component to safely handle Next.js App Router subdomain rewrite bug (flight tree mismatch)
-  // We can accurately determine subdomain mode if workspaceBase is an empty string
-  const isSubdomainMode = workspaceBase !== undefined 
-    ? workspaceBase === "" 
-    : typeof window !== 'undefined' 
-      ? (window.location.host.includes('.') && !window.location.host.startsWith('192.') && !window.location.host.startsWith('127.'))
-      : false;
+  // Safely handle Subdomain mode detection using the passed workspaceBase prop
+  // In Subdomain mode, workspaceBase is "". In Subdirectory mode, it's "/app/[tenant]"
+  // This avoids a hydration mismatch between SSR and Client, which was causing Next.js 
+  // to intercept `<a>` tag clicks and throw 404s.
+  const isSubdomainMode = workspaceBase === "";
 
   const TenantNavLink = ({ href, children, className, onClick }: any) => {
     if (isSubdomainMode) {
@@ -70,7 +72,7 @@ export function WorkspaceSidebar({
   };
 
   const generateLink = (path: string) => {
-    return getTenantLink(path, tenant, pathname);
+    return getTenantLink(path, displayTenant, pathname);
   };
 
   const allNavItems = [
@@ -78,6 +80,7 @@ export function WorkspaceSidebar({
     { id: "wallet", name: "Wallet", href: generateLink(WORKSPACE_ROUTES.ADMIN_WALLET), icon: Wallet },
     { id: "staff", name: "Staff & Roles", href: generateLink(WORKSPACE_ROUTES.ADMIN_STAFF), icon: UserCheck },
     { id: "students", name: "Students", href: generateLink(WORKSPACE_ROUTES.ADMIN_STUDENTS), icon: Users },
+    { id: "fees", name: "Fees Manage", href: generateLink(WORKSPACE_ROUTES.ADMIN_FEES), icon: IndianRupee },
     { id: "admissions", name: "Admissions", href: generateLink(WORKSPACE_ROUTES.ADMIN_ADMISSIONS), icon: UserPlus },
     { id: "attendance", name: "Attendance", href: generateLink(WORKSPACE_ROUTES.ADMIN_ATTENDANCE), icon: Calendar },
     { id: "courses", name: "Courses", href: generateLink(WORKSPACE_ROUTES.ADMIN_COURSES), icon: BookOpen },
@@ -177,37 +180,53 @@ export function WorkspaceSidebar({
                   isCollapsed ? "justify-center h-10 w-10 mx-auto" : ""
                 )}
               >
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 w-full">
                   <item.icon className={cn(
                     "h-5 w-5 transition-colors",
                     isActive ? "text-white" : "text-zinc-400 group-hover:text-white"
                   )} />
                   
                   {!isCollapsed && (
-                    <motion.span 
+                    <motion.span
                       initial={{ opacity: 0, x: -10 }}
                       animate={{ opacity: 1, x: 0 }}
-                      className="font-medium whitespace-nowrap flex-1"
+                      className="font-medium whitespace-nowrap flex-1 flex justify-between items-center pr-2"
                     >
-                      {item.name}
+                      <span>{item.name}</span>
+                      {item.name === "Admissions" && admissionsCount > 0 && (
+                        <span className="h-5 min-w-5 px-1.5 bg-red-500 text-white text-[10px] font-black rounded flex items-center justify-center animate-pulse shadow-[0_0_10px_rgba(239,68,68,0.5)]">
+                          {admissionsCount}
+                        </span>
+                      )}
+                      {item.id === "fees" && pendingFeesCount > 0 && (
+                        <span className="h-5 min-w-5 px-1.5 bg-red-500 text-white text-[10px] font-black rounded flex items-center justify-center animate-pulse shadow-[0_0_10px_rgba(239,68,68,0.5)]">
+                          {pendingFeesCount}
+                        </span>
+                      )}
                     </motion.span>
                   )}
 
-                  {!isCollapsed && item.name === "Admissions" && admissionsCount > 0 && (
-                    <span className="ml-auto flex items-center justify-center min-w-[1.25rem] h-5 px-1 rounded-lg text-[10px] font-bold bg-red-500 text-white shadow-sm">
-                      {admissionsCount}
-                    </span>
+                  {isCollapsed && item.name === "Admissions" && admissionsCount > 0 && (
+                    <div className="absolute top-2 right-2 w-2.5 h-2.5 bg-red-500 rounded-full animate-pulse shadow-[0_0_10px_rgba(239,68,68,0.5)] border-2 border-zinc-950"></div>
                   )}
 
-                  {isCollapsed && item.name === "Admissions" && admissionsCount > 0 && (
-                    <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white rounded-full text-[9px] font-bold flex items-center justify-center shadow-lg ring-2 ring-zinc-950 animate-pulse">
-                      {admissionsCount}
-                    </div>
+                  {isCollapsed && item.id === "fees" && pendingFeesCount > 0 && (
+                    <div className="absolute top-2 right-2 w-2.5 h-2.5 bg-red-500 rounded-full animate-pulse shadow-[0_0_10px_rgba(239,68,68,0.5)] border-2 border-zinc-950"></div>
                   )}
 
                   {isCollapsed && (
-                    <div className="absolute left-full ml-4 px-2 py-1 bg-zinc-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50 whitespace-nowrap border border-white/10 shadow-xl">
+                    <div className="absolute left-full ml-4 px-2 py-1 bg-zinc-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50 whitespace-nowrap border border-white/10 shadow-xl flex items-center gap-2">
                       {item.name}
+                      {item.name === "Admissions" && admissionsCount > 0 && (
+                        <div className="ml-auto flex h-5 min-w-[20px] items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white">
+                          {admissionsCount}
+                        </div>
+                      )}
+                      {item.id === "fees" && pendingFeesCount > 0 && (
+                        <div className="ml-auto flex h-5 min-w-[20px] items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white">
+                          {pendingFeesCount}
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
@@ -220,11 +239,10 @@ export function WorkspaceSidebar({
         <div className={cn("border-t border-white/5 transition-all duration-300", isCollapsed ? "p-2" : "p-4")}>
           <div 
             onClick={async () => {
-              const origin = typeof window !== 'undefined' ? `${window.location.protocol}//${window.location.host}` : '';
-              const workspaceBase = getTenantLink("/", tenant, pathname);
-              const target = `${origin}${workspaceBase}`;
+              const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "localhost:3000";
+              const protocol = typeof window !== 'undefined' && window.location.hostname.includes("localhost") ? "http" : "https";
               await signOut({ redirect: false });
-              window.location.href = target;
+              window.location.href = `${protocol}://${rootDomain}/`;
             }}
             className={cn(
               "flex items-center gap-3 rounded-xl hover:bg-red-500/10 hover:text-red-500 transition-all cursor-pointer group relative overflow-hidden",
@@ -345,11 +363,10 @@ export function WorkspaceSidebar({
               <div className="p-4 border-t border-white/5 bg-zinc-950">
                 <div 
                   onClick={async () => {
-                    const origin = typeof window !== 'undefined' ? `${window.location.protocol}//${window.location.host}` : '';
-                    const workspaceBase = getTenantLink("/", tenant, pathname);
-                    const target = `${origin}${workspaceBase}`;
+                    const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "localhost:3000";
+                    const protocol = typeof window !== 'undefined' && window.location.hostname.includes("localhost") ? "http" : "https";
                     await signOut({ redirect: false });
-                    window.location.href = target;
+                    window.location.href = `${protocol}://${rootDomain}/`;
                   }}
                   className="flex items-center gap-3 px-4 py-3.5 rounded-xl hover:bg-red-500/10 bg-red-500/5 text-red-500 transition-all cursor-pointer"
                 >

@@ -36,12 +36,33 @@ export default async function StudentFeesPage({
   const invoicesRes = await getStudentInvoices(studentProfile.id);
   const configRes = await getFranchisePaymentConfig(workspace.id);
 
+  const siteSettings = await db.siteSettings.findUnique({
+    where: { workspaceId: workspace.id }
+  });
+
+  const globalSiteSettings = await db.siteSettings.findFirst({
+    where: { workspaceId: null }
+  });
+
+  const workspaceInfo = {
+    name: siteSettings?.siteName || workspace.name,
+    phone: siteSettings?.contactPhone || "",
+    email: siteSettings?.contactEmail || "",
+    address: siteSettings?.address || workspace.ownerAddress || "",
+    logoUrl: siteSettings?.logoUrl || workspace.logoUrl || "",
+    globalLogoUrl: globalSiteSettings?.logoUrl || "",
+    globalSiteName: globalSiteSettings?.siteName || "RGYCSP",
+    centerCode: workspace.centerCode || "",
+    primaryColor: siteSettings?.primaryColor || "#0f766e"
+  };
+
   return (
     <StudentFeesClient 
       workspaceId={workspace.id}
       student={studentProfile}
       invoices={invoicesRes.data || []}
       paymentConfig={configRes.data || null}
+      workspaceInfo={workspaceInfo}
     />
   );
 }

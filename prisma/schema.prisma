@@ -356,6 +356,7 @@ model StudentProfile {
   religion      String?
   caste         String?
   qualification Json? // { name, year, percentage, board }
+  paymentType   String  @default("ONE_TIME") // ONE_TIME or EMI
 
   photoUrl     String?
   signatureUrl String?
@@ -609,6 +610,7 @@ model AdmissionApplication {
 
   // Custom Data (New)
   customData Json? // { fieldId: value }
+  paymentType String? @default("ONE_TIME")
 
   // Step 4: Documents
   photoUrl     String?

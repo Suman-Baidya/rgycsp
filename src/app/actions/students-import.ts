@@ -144,7 +144,8 @@ export async function importStudentsCSV(workspaceId: string, students: any[]) {
             address,
             bloodGroup,
             religion,
-            caste
+            caste,
+            paymentType: (record.paymentType?.trim() || record.PaymentType?.trim() || "ONE_TIME").toUpperCase() === "EMI" ? "EMI" : "ONE_TIME"
           }
         });
 

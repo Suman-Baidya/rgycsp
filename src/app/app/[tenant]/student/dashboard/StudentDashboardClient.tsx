@@ -36,7 +36,12 @@ export default function StudentDashboardClient({ workspaceName, logoUrl, applica
             <p className="text-slate-500 font-bold uppercase tracking-widest text-xs">{workspaceName} Student Portal</p>
           </div>
         </div>
-        <Button variant="ghost" onClick={() => signOut()} className="rounded-xl font-bold text-red-500 hover:bg-red-50 h-12 px-6">
+        <Button variant="ghost" onClick={async () => {
+          const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "localhost:3000";
+          const protocol = typeof window !== 'undefined' && window.location.hostname.includes("localhost") ? "http" : "https";
+          await signOut({ redirect: false });
+          window.location.href = `${protocol}://${rootDomain}/`;
+        }} className="rounded-xl font-bold text-red-500 hover:bg-red-50 h-12 px-6">
           <LogOut className="w-4 h-4 mr-2" /> Sign Out
         </Button>
       </div>

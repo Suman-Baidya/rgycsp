@@ -116,6 +116,7 @@ export async function submitAdmissionApplication(workspaceId: string, data: any,
         email: data.email,
         qualification: data.qualification,
         customData: data.customData || {},
+        paymentType: data.paymentType || "ONE_TIME",
         photoUrl: data.photoUrl,
         signatureUrl: data.signatureUrl,
         idProofUrl: data.idProofUrl,
@@ -291,6 +292,7 @@ export async function updateApplicationStatus(id: string, status: string, reject
           signatureUrl: application.signatureUrl || null,
           idProofUrl: application.idProofUrl || null,
           status: "UNREGISTERED",
+          paymentType: application.paymentType || "ONE_TIME",
         }
       });
 

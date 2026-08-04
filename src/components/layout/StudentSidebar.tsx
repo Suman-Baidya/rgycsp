@@ -167,11 +167,10 @@ export function StudentSidebar({
         <div className={cn("border-t border-white/5 transition-all duration-300", isCollapsed ? "p-2" : "p-4")}>
           <div 
             onClick={async () => {
-              const origin = typeof window !== 'undefined' ? `${window.location.protocol}//${window.location.host}` : '';
-              const workspaceBaseUrl = getTenantLink("/", tenant, pathname);
-              const target = `${origin}${workspaceBaseUrl}`;
+              const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "localhost:3000";
+              const protocol = typeof window !== 'undefined' && window.location.hostname.includes("localhost") ? "http" : "https";
               await signOut({ redirect: false });
-              window.location.href = target;
+              window.location.href = `${protocol}://${rootDomain}/`;
             }}
             className={cn(
               "flex items-center gap-3 rounded-xl hover:bg-red-500/10 hover:text-red-500 transition-all cursor-pointer group relative overflow-hidden",
@@ -266,11 +265,10 @@ export function StudentSidebar({
               <div className="p-4 border-t border-white/5 bg-slate-900">
                 <div 
                   onClick={async () => {
-                    const origin = typeof window !== 'undefined' ? `${window.location.protocol}//${window.location.host}` : '';
-                    const workspaceBaseUrl = getTenantLink("/", tenant, pathname);
-                    const target = `${origin}${workspaceBaseUrl}`;
+                    const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "localhost:3000";
+                    const protocol = typeof window !== 'undefined' && window.location.hostname.includes("localhost") ? "http" : "https";
                     await signOut({ redirect: false });
-                    window.location.href = target;
+                    window.location.href = `${protocol}://${rootDomain}/`;
                   }}
                   className="flex items-center gap-3 px-4 py-3.5 rounded-xl hover:bg-red-500/10 bg-red-500/5 text-red-500 transition-all cursor-pointer"
                 >

@@ -28,7 +28,7 @@ export default async function WorkspaceAdminDashboard({
   });
 
   if (!workspace) {
-    return <div>Workspace not found</div>;
+    throw new Error("Workspace not found"); // Should be caught by layout notFound()
   }
 
   // Get user session and permissions

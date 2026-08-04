@@ -287,12 +287,31 @@ export default function CourseList({
                         <span className="text-sm font-bold text-slate-700 dark:text-slate-300">{globalCourse.duration || "N/A"}</span>
                       </td>
                       <td className="p-6 hidden lg:table-cell">
-                        <div className="flex flex-col gap-1">
-                          <span className="text-lg font-black text-primary">₹{activePrice.toLocaleString()}</span>
+                        <div className="flex flex-col gap-1.5">
                           {localOverride ? (
-                            <span className="text-[10px] text-green-600 font-bold bg-green-50 dark:bg-green-500/10 px-2 py-0.5 rounded-full w-max">Custom Pricing</span>
+                            <>
+                              <span className="text-sm font-black text-primary">
+                                Full: ₹{localOverride.totalCourseFee?.toLocaleString() || 0}
+                              </span>
+                              {localOverride.isInstallmentBased && (
+                                <span className="text-sm font-black text-indigo-600 dark:text-indigo-400">
+                                  EMI: ₹{localOverride.installmentAmount} × {localOverride.totalInstallments}
+                                </span>
+                              )}
+                              <div className="flex items-center gap-2 text-[10px] font-bold text-slate-500">
+                                <span>Adm: ₹{localOverride.admissionFee || 0}</span>
+                                <span>•</span>
+                                <span>Reg: ₹{localOverride.registrationFee || 0}</span>
+                              </div>
+                              <span className="text-[10px] text-green-600 font-bold bg-green-50 dark:bg-green-500/10 px-2 py-0.5 rounded-full w-max mt-1">
+                                Custom Pricing
+                              </span>
+                            </>
                           ) : (
-                            <span className="text-[10px] text-muted-foreground font-bold">Global Pricing</span>
+                            <>
+                              <span className="text-lg font-black text-primary">₹{activePrice?.toLocaleString() || 0}</span>
+                              <span className="text-[10px] text-muted-foreground font-bold">Global Pricing</span>
+                            </>
                           )}
                         </div>
                       </td>
@@ -438,6 +457,16 @@ export default function CourseList({
               </div>
             </div>
 
+            <div className="space-y-2 p-4 bg-slate-50 dark:bg-zinc-900/50 rounded-xl border border-border">
+              <Label>Total Course Fee (One-Time Payment) (₹)</Label>
+              <Input 
+                type="number" 
+                value={pricingForm.totalCourseFee}
+                onChange={e => setPricingForm({...pricingForm, totalCourseFee: Number(e.target.value)})}
+                className="h-12 rounded-xl"
+              />
+            </div>
+
             <div className="flex items-center gap-3 p-4 bg-indigo-50/50 dark:bg-indigo-900/10 rounded-xl border border-indigo-100 dark:border-indigo-900/30">
               <Switch 
                 checked={pricingForm.isInstallmentBased}
@@ -445,12 +474,12 @@ export default function CourseList({
                 className="data-[state=checked]:bg-indigo-600"
               />
               <div>
-                <Label className="font-bold block text-indigo-900 dark:text-indigo-200">Installment Based Course (EMI)</Label>
-                <span className="text-xs text-indigo-600/70 dark:text-indigo-400">If disabled, it's a one-time total course fee.</span>
+                <Label className="font-bold block text-indigo-900 dark:text-indigo-200">Enable EMI Option</Label>
+                <span className="text-xs text-indigo-600/70 dark:text-indigo-400">If enabled, students can choose between One-Time or EMI during admission.</span>
               </div>
             </div>
 
-            {pricingForm.isInstallmentBased ? (
+            {pricingForm.isInstallmentBased && (
               <div className="grid grid-cols-2 gap-4 p-4 bg-slate-50 dark:bg-zinc-900/50 rounded-xl border border-border">
                 <div className="space-y-2">
                   <Label>EMI Amount (₹/mo)</Label>
@@ -470,16 +499,6 @@ export default function CourseList({
                     className="h-12 rounded-xl"
                   />
                 </div>
-              </div>
-            ) : (
-              <div className="space-y-2 p-4 bg-slate-50 dark:bg-zinc-900/50 rounded-xl border border-border">
-                <Label>Total Course Fee (₹)</Label>
-                <Input 
-                  type="number" 
-                  value={pricingForm.totalCourseFee}
-                  onChange={e => setPricingForm({...pricingForm, totalCourseFee: Number(e.target.value)})}
-                  className="h-12 rounded-xl"
-                />
               </div>
             )}
             
@@ -510,6 +529,28 @@ export default function CourseList({
                 <Label className="font-bold block">Show Course Fee</Label>
                 <span className="text-xs text-muted-foreground">Toggle public visibility of the price.</span>
               </div>
+              </div>
+            </div>
+
+            {/* Dynamic Fee Summary Preview */}
+            <div className="p-5 bg-indigo-50 dark:bg-indigo-900/10 border border-indigo-100 dark:border-indigo-900/30 rounded-xl space-y-3 shadow-inner">
+              <h4 className="font-black text-indigo-900 dark:text-indigo-200 flex items-center gap-2">
+                <IndianRupee className="w-4 h-4" /> Student Payment Preview
+              </h4>
+              <div className="text-sm space-y-3">
+                <p className="text-slate-700 dark:text-slate-300 leading-relaxed">
+                  <span className="font-black text-slate-900 dark:text-white uppercase tracking-wider text-[10px] bg-white dark:bg-zinc-950 px-2 py-1 rounded shadow-sm mr-2">One-Time Payers</span> 
+                  Will pay <strong className="text-indigo-700 dark:text-indigo-400">₹{Number(pricingForm.admissionFee) + Number(pricingForm.registrationFee) + Number(pricingForm.examFee) + Number(pricingForm.totalCourseFee)}</strong> total. 
+                  <span className="block text-xs mt-1 text-slate-500">(₹{Number(pricingForm.admissionFee) + Number(pricingForm.registrationFee)} admission/reg + ₹{Number(pricingForm.totalCourseFee)} course fee + ₹{Number(pricingForm.examFee)} exam fee).</span>
+                </p>
+                {pricingForm.isInstallmentBased && (
+                  <p className="text-slate-700 dark:text-slate-300 leading-relaxed pt-2 border-t border-indigo-200/50 dark:border-indigo-800/50">
+                    <span className="font-black text-slate-900 dark:text-white uppercase tracking-wider text-[10px] bg-white dark:bg-zinc-950 px-2 py-1 rounded shadow-sm mr-2">EMI Payers</span> 
+                    Will pay <strong className="text-indigo-700 dark:text-indigo-400">₹{Number(pricingForm.admissionFee) + Number(pricingForm.registrationFee)}</strong> upfront + 
+                    <strong className="text-indigo-700 dark:text-indigo-400"> ₹{Number(pricingForm.installmentAmount)}/mo</strong> for {Number(pricingForm.totalInstallments)} months.
+                    <span className="block text-xs mt-1 text-slate-500">(Total expected: ₹{Number(pricingForm.admissionFee) + Number(pricingForm.registrationFee) + Number(pricingForm.examFee) + (Number(pricingForm.installmentAmount) * Number(pricingForm.totalInstallments))})</span>
+                  </p>
+                )}
               </div>
             </div>
 

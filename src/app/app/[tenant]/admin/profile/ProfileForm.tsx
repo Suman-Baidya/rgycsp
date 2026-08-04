@@ -146,7 +146,12 @@ export function ProfileForm({ user, roleName = "Franchise Admin", tenant }: Prof
           
           <Button 
             variant="outline" 
-            onClick={() => signOut({ callbackUrl: "/" })}
+            onClick={async () => {
+              const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "localhost:3000";
+              const protocol = typeof window !== 'undefined' && window.location.hostname.includes("localhost") ? "http" : "https";
+              await signOut({ redirect: false });
+              window.location.href = `${protocol}://${rootDomain}/`;
+            }}
             className="w-full md:w-auto gap-2 text-destructive border-destructive/20 hover:bg-destructive hover:text-white transition-colors shrink-0 mb-2"
           >
             <LogOut className="h-4 w-4" />

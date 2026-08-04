@@ -30,7 +30,10 @@ export default async function StudentLayout({
     include: { siteSettings: true }
   });
 
-  if (!workspace) redirect("/");
+  if (!workspace) {
+    const target = await getServerTenantLink("/", tenant);
+    redirect(target);
+  }
 
   const homeHref = await getServerTenantLink("/", tenant);
   const workspaceBase = await getServerWorkspaceBase(tenant);

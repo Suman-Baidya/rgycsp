@@ -25,7 +25,7 @@ export default async function AdmissionPage({
       admissionConfig: true,
       courses: {
         where: { isActive: true },
-        select: { id: true, title: true }
+        select: { id: true, title: true, isInstallmentBased: true }
       }
     }
   });

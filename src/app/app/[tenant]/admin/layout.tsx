@@ -1,10 +1,12 @@
 import { auth } from "@/auth";
 import Link from "next/link";
+import { notFound } from "next/navigation";
 import { WorkspaceSidebar } from "@/components/layout/WorkspaceSidebar";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { getServerTenantLink, getServerWorkspaceBase } from "@/lib/routing-server";
 import { db } from "@/lib/prisma";
 import { getPendingApplicationsCount } from "@/app/actions/admin-applications";
+import { getPendingFeePaymentsCount } from "@/app/actions/payments";
 import { AdminRouteGuard } from "@/components/layout/AdminRouteGuard";
 
 export default async function WorkspaceAdminLayout({
@@ -17,20 +19,30 @@ export default async function WorkspaceAdminLayout({
   const session = await auth();
   const { tenant } = await params;
   
-  // Fetch workspace and admissions count
   const workspace = await db.workspace.findUnique({
     where: { subdomain: tenant?.toLowerCase() },
     select: { id: true, isStateManager: true }
   });
 
+  if (!workspace) {
+    notFound();
+  }
+
   let admissionsCount = 0;
+  let pendingFeesCount = 0;
   let userRole = "UNAUTHORIZED";
   let userPermissions: string[] = [];
 
   if (workspace && session?.user) {
-    const countResult = await getPendingApplicationsCount(workspace.id);
+    const [countResult, feesCountResult] = await Promise.all([
+      getPendingApplicationsCount(workspace.id),
+      getPendingFeePaymentsCount(workspace.id)
+    ]);
     if (countResult.success) {
       admissionsCount = countResult.data ?? 0;
+    }
+    if (feesCountResult.success) {
+      pendingFeesCount = feesCountResult.count ?? 0;
     }
 
     if (session.user.role === "SUPER_ADMIN") {
@@ -67,6 +79,7 @@ export default async function WorkspaceAdminLayout({
         tenant={tenant} 
         workspaceBase={workspaceBase} 
         admissionsCount={admissionsCount} 
+        pendingFeesCount={pendingFeesCount}
         isStateManager={workspace?.isStateManager || false}
         userRole={userRole}
         userPermissions={userPermissions}

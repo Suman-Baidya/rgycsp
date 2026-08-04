@@ -15,8 +15,8 @@ export default auth((req) => {
     if (!isLoggedIn) {
       return NextResponse.redirect(new URL('/login', req.url));
     }
-    if (userRole !== 'SUPER_ADMIN' && userRole !== 'SUPER_ADMIN_MANAGER') {
-      // If logged in but not a super admin or manager, redirect to root or error
+    if (userRole !== 'SUPER_ADMIN' && userRole !== 'SUPER_ADMIN_MANAGER' && !req.auth?.user?.isDeveloper) {
+      // If logged in but not a super admin, manager, or developer, redirect to root or error
       return NextResponse.redirect(new URL('/', req.url));
     }
   }

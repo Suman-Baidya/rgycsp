@@ -15,7 +15,7 @@ import { getPincodeDetails } from "@/app/actions/pincode";
 import { submitAdmissionApplication, sendAdmissionOTP, verifyAdmissionOTP } from "@/app/actions/admission";
 import { ImageUpload } from "@/components/ui/ImageUpload";
 import { toast } from "sonner";
-import { ArrowRight, ArrowLeft, CheckCircle2, Download, Copy, Loader2, Mail, ShieldCheck, Calculator, RefreshCw } from "lucide-react";
+import { ArrowRight, ArrowLeft, CheckCircle2, Download, Copy, Loader2, Mail, ShieldCheck, Calculator, RefreshCw, IndianRupee } from "lucide-react";
 import Link from "next/link";
 import { useParams, usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -23,6 +23,7 @@ import { cn } from "@/lib/utils";
 // Form Schema
 const formSchema = z.object({
   courseId: z.string().optional(),
+  paymentType: z.string().optional(),
   appliedCourse: z.string().min(1, "Course is required"),
   fullName: z.string().min(2, "Full name is required"),
   fatherName: z.string().optional(),
@@ -96,7 +97,7 @@ export default function AdmissionFormClient({ workspaceId, workspaceName, config
       vill: "", po: "", ps: "", dist: "", pin: "", state: "",
       mobile: "", whatsapp: "", email: "",
       qualName: "", qualYear: "", qualPercent: "", qualBoard: "",
-      photoUrl: "", signatureUrl: "", idProofUrl: "", courseId: "", appliedCourse: "",
+      photoUrl: "", signatureUrl: "", idProofUrl: "", courseId: "", paymentType: "ONE_TIME", appliedCourse: "",
       customData: {}
     }
   });
@@ -424,6 +425,64 @@ export default function AdmissionFormClient({ workspaceId, workspaceName, config
                     </SelectContent>
                   </Select>
                 </div>
+
+                {(() => {
+                  const selectedCourseData = courses?.find((c: any) => c.title === watch("appliedCourse"));
+                  if (!selectedCourseData?.isInstallmentBased) return null;
+                  
+                  const admissionTotal = (selectedCourseData.admissionFee || 0) + (selectedCourseData.registrationFee || 0);
+                  const fullTotal = admissionTotal + (selectedCourseData.examFee || 0) + (selectedCourseData.totalCourseFee || 0);
+                  const emiTotal = admissionTotal + (selectedCourseData.examFee || 0) + ((selectedCourseData.installmentAmount || 0) * (selectedCourseData.totalInstallments || 0));
+
+                  return (
+                    <div className="space-y-4 md:col-span-2 bg-gradient-to-br from-indigo-50/50 to-white dark:from-indigo-950/20 dark:to-zinc-950 p-6 rounded-3xl border border-indigo-100 dark:border-indigo-900/30">
+                      <div>
+                        <Label className="text-base font-black text-indigo-950 dark:text-indigo-100 flex items-center gap-2">
+                          Payment Preference <span className="text-red-500">*</span>
+                        </Label>
+                        <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mt-1">This course supports flexible payment. Choose the plan that works best for you.</p>
+                      </div>
+                      <div className="flex flex-col sm:flex-row gap-4">
+                        <label className={cn("relative flex-1 flex flex-col p-5 rounded-2xl border-2 cursor-pointer transition-all", watch("paymentType") === "ONE_TIME" ? "border-indigo-600 bg-indigo-50/50 dark:bg-indigo-900/20 shadow-md shadow-indigo-600/10" : "border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 hover:border-indigo-300")}>
+                          <input type="radio" className="sr-only" {...form.register("paymentType")} value="ONE_TIME" />
+                          <div className="flex justify-between items-start mb-2">
+                            <span className={cn("font-black text-lg", watch("paymentType") === "ONE_TIME" ? "text-indigo-700 dark:text-indigo-400" : "text-slate-900 dark:text-white")}>One-Time</span>
+                            {watch("paymentType") === "ONE_TIME" && <CheckCircle2 className="w-5 h-5 text-indigo-600" />}
+                          </div>
+                          <span className="text-2xl font-black text-slate-900 dark:text-white mb-2 flex items-center">
+                            <IndianRupee className="w-5 h-5 mr-1 opacity-50" /> {fullTotal}
+                          </span>
+                          <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Pay in full</span>
+                          
+                          <div className="mt-4 pt-4 border-t border-slate-200 dark:border-zinc-800 space-y-1 text-xs font-medium text-slate-600 dark:text-slate-400">
+                            <div className="flex justify-between"><span>Admission + Reg:</span> <span className="font-bold text-slate-900 dark:text-slate-300">₹{admissionTotal}</span></div>
+                            <div className="flex justify-between"><span>Course Fee:</span> <span className="font-bold text-slate-900 dark:text-slate-300">₹{selectedCourseData.totalCourseFee || 0}</span></div>
+                            <div className="flex justify-between"><span>Exam Fee:</span> <span className="font-bold text-slate-900 dark:text-slate-300">₹{selectedCourseData.examFee || 0}</span></div>
+                          </div>
+                        </label>
+                        
+                        <label className={cn("relative flex-1 flex flex-col p-5 rounded-2xl border-2 cursor-pointer transition-all", watch("paymentType") === "EMI" ? "border-indigo-600 bg-indigo-50/50 dark:bg-indigo-900/20 shadow-md shadow-indigo-600/10" : "border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 hover:border-indigo-300")}>
+                          <input type="radio" className="sr-only" {...form.register("paymentType")} value="EMI" />
+                          <div className="flex justify-between items-start mb-2">
+                            <span className={cn("font-black text-lg", watch("paymentType") === "EMI" ? "text-indigo-700 dark:text-indigo-400" : "text-slate-900 dark:text-white")}>EMI Plan</span>
+                            {watch("paymentType") === "EMI" && <CheckCircle2 className="w-5 h-5 text-indigo-600" />}
+                          </div>
+                          <span className="text-2xl font-black text-slate-900 dark:text-white mb-2 flex items-center">
+                            <IndianRupee className="w-5 h-5 mr-1 opacity-50" /> {selectedCourseData.installmentAmount}<span className="text-sm text-slate-500 font-medium ml-1">/mo</span>
+                          </span>
+                          <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">For {selectedCourseData.totalInstallments} Months</span>
+                          
+                          <div className="mt-4 pt-4 border-t border-slate-200 dark:border-zinc-800 space-y-1 text-xs font-medium text-slate-600 dark:text-slate-400">
+                            <div className="flex justify-between"><span>Upfront (Adm+Reg):</span> <span className="font-bold text-slate-900 dark:text-slate-300">₹{admissionTotal}</span></div>
+                            <div className="flex justify-between"><span>Exam Fee:</span> <span className="font-bold text-slate-900 dark:text-slate-300">₹{selectedCourseData.examFee || 0}</span></div>
+                            <div className="flex justify-between font-bold text-indigo-700 dark:text-indigo-400 mt-2 border-t border-indigo-200/50 dark:border-indigo-800/50 pt-2"><span>Expected Total:</span> <span>₹{emiTotal}</span></div>
+                          </div>
+                        </label>
+                      </div>
+                    </div>
+                  );
+                })()}
+
                 <div className="space-y-2">
                   <Label>Full Name *</Label>
                   <Input {...form.register("fullName")} className="h-12 rounded-xl" />

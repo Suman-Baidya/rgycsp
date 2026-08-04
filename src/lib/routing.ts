@@ -129,6 +129,7 @@ export const WORKSPACE_ROUTES = {
   ADMIN: "/admin",
   ADMIN_STAFF: "/admin/staff",
   ADMIN_STUDENTS: "/admin/students",
+  ADMIN_FEES: "/admin/fees",
   ADMIN_COURSES: "/admin/courses",
   ADMIN_ADMISSIONS: "/admin/admissions",
   ADMIN_ATTENDANCE: "/admin/attendance",
@@ -172,7 +173,7 @@ export function isActivePath(pathname: string, href: string, exact = false): boo
 
   // For parent highlighting (e.g., /admin should highlight when on /admin/staff)
   // But we must be careful not to highlight "/" or base admin routes on every sub-page
-  if (h === "" || h === "/" || h.endsWith("/admin") || h.endsWith("/super-admin")) {
+  if (h === "" || h === "/" || h.endsWith("/admin") || h.endsWith("/super-admin") || h.endsWith("/student/dashboard")) {
     return p === h;
   }
 

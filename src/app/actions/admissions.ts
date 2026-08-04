@@ -50,6 +50,7 @@ export async function saveDraftApplication(workspaceId: string, data: any, appli
       signatureUrl: data.signatureUrl || null,
       idProofUrl: data.idProofUrl || null,
       status: "DRAFT" as any,
+      paymentType: data.paymentType || "ONE_TIME",
       customData
     };
 
@@ -124,6 +125,7 @@ export async function updatePendingApplication(workspaceId: string, applicationI
       photoUrl: data.photoUrl || null,
       signatureUrl: data.signatureUrl || null,
       idProofUrl: data.idProofUrl || null,
+      paymentType: data.paymentType || "ONE_TIME",
       customData
     };
 
@@ -300,6 +302,7 @@ export async function bulkRegisterStudentsAction(workspaceId: string, studentsDa
             status: "DRAFT" as any,
             source: "CSV" as any,
             tempPassword: tempPassword,
+            paymentType: data.paymentType || "ONE_TIME",
             customData: {
               intendedBatchId: batchId,
               intendedFees: data.fees || null

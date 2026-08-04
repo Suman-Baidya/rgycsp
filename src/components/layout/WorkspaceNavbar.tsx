@@ -69,7 +69,7 @@ export function WorkspaceNavbar({ settings, user, tenant: propTenant }: { settin
     return () => window.removeEventListener("scroll", handleScroll);
   }, [user, settings.workspaceId]);
 
-  const dashboardHref = workspaceRole === "STUDENT" ? studentBase : adminBase;
+  const dashboardHref = (workspaceRole === "STUDENT" || (!workspaceRole && user?.role === "STUDENT")) ? studentBase : adminBase;
   const dashboardLabel = "Dashboard";
 
   const socialLinks = settings.socialLinks || {};
@@ -155,10 +155,10 @@ export function WorkspaceNavbar({ settings, user, tenant: propTenant }: { settin
         <DropdownMenuSeparator className="bg-slate-50 dark:bg-slate-800" />
         <DropdownMenuItem
           onClick={async () => {
-            const origin = typeof window !== 'undefined' ? `${window.location.protocol}//${window.location.host}` : '';
-            const target = `${origin}${workspaceBase || '/'}`;
+            const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "localhost:3000";
+            const protocol = typeof window !== 'undefined' && window.location.hostname.includes("localhost") ? "http" : "https";
             await signOut({ redirect: false });
-            window.location.href = target;
+            window.location.href = `${protocol}://${rootDomain}/`;
           }}
           className="rounded-xl h-10 gap-3 font-bold text-xs uppercase tracking-widest cursor-pointer text-red-500 focus:bg-red-500 focus:text-white"
         >
@@ -374,10 +374,10 @@ export function WorkspaceNavbar({ settings, user, tenant: propTenant }: { settin
                         <UserIcon className="w-4 h-4" />
                       </Link>
                       <button onClick={async () => {
-                        const origin = typeof window !== 'undefined' ? `${window.location.protocol}//${window.location.host}` : '';
-                        const target = `${origin}${workspaceBase || '/'}`;
+                        const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "localhost:3000";
+                        const protocol = typeof window !== 'undefined' && window.location.hostname.includes("localhost") ? "http" : "https";
                         await signOut({ redirect: false });
-                        window.location.href = target;
+                        window.location.href = `${protocol}://${rootDomain}/`;
                       }} className="p-2.5 bg-red-500/10 text-red-500 rounded-full hover:bg-red-500/20 transition-colors">
                         <LogOut className="w-4 h-4" />
                       </button>

@@ -1,21 +1,25 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
-import { Search, IndianRupee, History, AlertCircle, CheckCircle2, User, BookOpen, Clock, Loader2, Calendar, Receipt, Settings2 } from "lucide-react";
+import { Search, IndianRupee, History, AlertCircle, CheckCircle2, User, BookOpen, Clock, Loader2, Calendar, Receipt, Settings2, Edit, Download } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { generateStudentPaymentStructure, getStudentInvoices, recordManualOfflinePayment } from "@/app/actions/payments";
+import { generateStudentPaymentStructure, getStudentInvoices, recordManualOfflinePayment, updateInvoiceInfo } from "@/app/actions/payments";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 export default function MakePaymentTab({ 
   workspaceId, 
-  students 
+  students,
+  pendingFees,
+  workspaceInfo
 }: { 
   workspaceId: string;
   students: any[];
+  pendingFees?: any[];
+  workspaceInfo?: any;
 }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedStudent, setSelectedStudent] = useState<any>(null);
@@ -28,6 +32,14 @@ export default function MakePaymentTab({
   const [selectedInvoice, setSelectedInvoice] = useState<any>(null);
   const [paymentForm, setPaymentForm] = useState({ method: "CASH", notes: "" });
   const [isProcessing, setIsProcessing] = useState(false);
+
+  const [rejectModalOpen, setRejectModalOpen] = useState(false);
+  const [rejectReason, setRejectReason] = useState("");
+  const [isRejecting, setIsRejecting] = useState(false);
+
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [editForm, setEditForm] = useState({ amount: 0, dueDate: "" });
+  const [isEditing, setIsEditing] = useState(false);
 
   const filteredStudents = useMemo(() => {
     if (!searchTerm) return [];
@@ -91,30 +103,38 @@ export default function MakePaymentTab({
     }
   };
 
+  const openEditModal = (invoice: any) => {
+    setSelectedInvoice(invoice);
+    setEditForm({ 
+      amount: invoice.amount, 
+      dueDate: invoice.dueDate ? new Date(invoice.dueDate).toISOString().split('T')[0] : "" 
+    });
+    setEditModalOpen(true);
+  };
+
+  const handleEditInvoice = async () => {
+    if (!selectedInvoice) return;
+    setIsEditing(true);
+    const res = await updateInvoiceInfo(selectedInvoice.id, editForm);
+    setIsEditing(false);
+    
+    if (res.success) {
+      toast.success("Invoice updated successfully!");
+      setEditModalOpen(false);
+      fetchInvoices(selectedStudent.id);
+    } else {
+      toast.error(res.error || "Failed to update invoice");
+    }
+  };
+
   const downloadReceipt = async (invoice: any) => {
-    const { jsPDF } = await import("jspdf");
-    const doc = new jsPDF();
-    doc.setFontSize(22);
-    doc.text("PAYMENT RECEIPT", 105, 20, { align: "center" });
-    
-    doc.setFontSize(12);
-    doc.text(`Receipt No: REC-${invoice.id.substring(0, 8).toUpperCase()}`, 20, 40);
-    doc.text(`Date: ${new Date(invoice.paidDate).toLocaleDateString()}`, 20, 50);
-    
-    doc.text(`Student Name: ${selectedStudent.fullName}`, 20, 70);
-    doc.text(`Enrollment No: ${selectedStudent.enrollmentNo}`, 20, 80);
-    doc.text(`Course: ${selectedStudent.course?.title || "N/A"}`, 20, 90);
-    
-    doc.text(`Fee Details: ${invoice.notes || invoice.feeType}`, 20, 110);
-    doc.text(`Payment Method: ${invoice.paymentMethod || "Offline"}`, 20, 120);
-    
-    doc.setFontSize(16);
-    doc.text(`Amount Paid: Rs. ${invoice.amount}`, 20, 140);
-    
-    doc.setFontSize(10);
-    doc.text("Thank you for your payment.", 105, 180, { align: "center" });
-    
-    doc.save(`Receipt_${selectedStudent.enrollmentNo}_${invoice.feeType}.pdf`);
+    const { generateInvoicePDF } = await import("@/lib/invoiceUtils");
+    await generateInvoicePDF({
+      workspaceInfo,
+      student: selectedStudent,
+      invoice,
+      allInvoices: invoices
+    });
   };
 
   const totalPaid = invoices.filter(i => i.status === "PAID").reduce((sum, i) => sum + i.amount, 0);
@@ -177,16 +197,16 @@ export default function MakePaymentTab({
               </div>
             </div>
             
-            <div className="flex gap-4">
+            <div className="flex gap-6">
               <div className="text-right">
                 <p className="text-[10px] uppercase font-black tracking-widest text-muted-foreground mb-1">Course</p>
-                <div className="flex items-center gap-2 text-sm font-bold bg-white dark:bg-zinc-950 px-3 py-1.5 rounded-lg border border-border shadow-sm">
+                <div className="flex items-center gap-2 text-sm font-bold text-slate-800 dark:text-slate-200">
                   <BookOpen className="w-4 h-4 text-primary" /> {selectedStudent.course?.title || 'N/A'}
                 </div>
               </div>
               <div className="text-right">
                 <p className="text-[10px] uppercase font-black tracking-widest text-muted-foreground mb-1">Batch</p>
-                <div className="flex items-center gap-2 text-sm font-bold bg-white dark:bg-zinc-950 px-3 py-1.5 rounded-lg border border-border shadow-sm">
+                <div className="flex items-center gap-2 text-sm font-bold text-slate-800 dark:text-slate-200">
                   <Clock className="w-4 h-4 text-primary" /> {selectedStudent.batch?.name || 'N/A'}
                 </div>
               </div>
@@ -280,19 +300,26 @@ export default function MakePaymentTab({
                             ₹{inv.amount}
                           </td>
                           <td className="px-6 py-4 text-right">
-                            {inv.status !== "PAID" && (
-                              <Button size="sm" onClick={() => openPaymentModal(inv)} className="rounded-lg font-bold shadow-md shadow-primary/20">
-                                Record Payment
-                              </Button>
-                            )}
-                            {inv.status === "PAID" && (
-                              <div className="flex flex-col items-end gap-1">
-                                <span className="text-xs font-bold text-muted-foreground">Paid on {new Date(inv.paidDate).toLocaleDateString()}</span>
-                                <Button variant="outline" size="sm" onClick={() => downloadReceipt(inv)} className="h-7 text-xs px-2 py-0">
-                                  Download Receipt
-                                </Button>
-                              </div>
-                            )}
+                            <div className="flex items-center justify-end gap-2">
+                              {inv.status !== "PAID" && (
+                                <>
+                                  <Button size="sm" variant="outline" onClick={() => openEditModal(inv)} className="w-8 h-8 p-0 rounded-lg group" title="Edit Invoice">
+                                    <Edit className="w-4 h-4 text-slate-500 group-hover:text-primary transition-colors" />
+                                  </Button>
+                                  <Button size="sm" onClick={() => openPaymentModal(inv)} className="rounded-lg font-bold shadow-md shadow-primary/20">
+                                    Record Payment
+                                  </Button>
+                                </>
+                              )}
+                              {inv.status === "PAID" && (
+                                <div className="flex items-center gap-3">
+                                  <span className="text-xs font-bold text-muted-foreground">Paid on {new Date(inv.paidDate).toLocaleDateString()}</span>
+                                  <Button variant="outline" size="sm" onClick={() => downloadReceipt(inv)} className="w-8 h-8 p-0 rounded-lg group" title="Download Receipt">
+                                    <Download className="w-4 h-4 text-primary group-hover:scale-110 transition-transform" />
+                                  </Button>
+                                </div>
+                              )}
+                            </div>
                           </td>
                         </tr>
                       ))}
@@ -354,6 +381,44 @@ export default function MakePaymentTab({
         </DialogContent>
       </Dialog>
 
+      {/* Edit Invoice Modal */}
+      <Dialog open={editModalOpen} onOpenChange={setEditModalOpen}>
+        <DialogContent className="sm:max-w-md rounded-[2rem] p-8 border-none shadow-2xl">
+          <DialogHeader className="mb-4">
+            <DialogTitle className="text-2xl font-black text-slate-900 dark:text-white flex items-center gap-2">
+              <Edit className="w-5 h-5 text-primary" /> Edit Invoice
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-6">
+            <div className="space-y-2">
+              <Label>Amount (₹)</Label>
+              <Input 
+                type="number"
+                value={editForm.amount} 
+                onChange={e => setEditForm({...editForm, amount: Number(e.target.value)})}
+                className="h-12 rounded-xl"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Due Date</Label>
+              <Input 
+                type="date"
+                value={editForm.dueDate} 
+                onChange={e => setEditForm({...editForm, dueDate: e.target.value})}
+                className="h-12 rounded-xl"
+              />
+            </div>
+
+            <div className="flex gap-3 pt-2">
+              <Button type="button" variant="outline" onClick={() => setEditModalOpen(false)} className="flex-1 h-12 rounded-xl">Cancel</Button>
+              <Button onClick={handleEditInvoice} disabled={isEditing} className="flex-1 h-12 rounded-xl font-bold shadow-lg shadow-primary/20">
+                {isEditing ? <Loader2 className="w-5 h-5 animate-spin" /> : "Save Changes"}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

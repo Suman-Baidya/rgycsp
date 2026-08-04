@@ -271,8 +271,8 @@ export async function markAttendanceByQR(
 
     // 2. Check timings to determine class type
     const now = new Date();
-    // Format as HH:mm
-    const currentTimeStr = now.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' });
+    // Format as HH:mm (Deterministic instead of relying on server locale)
+    const currentTimeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
     const currentDayOfWeek = now.getDay();
     
     let determinedType: AttendanceType | null = null;

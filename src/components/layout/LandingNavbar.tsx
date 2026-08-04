@@ -71,8 +71,8 @@ export function LandingNavbar({ settings, user, isHome }: { settings?: any, user
   const contactPhone = settings?.contactPhone || "8944899747";
   const logoUrl = settings?.logoUrl || "/logo.png";
 
-  const dashboardHref = (user?.role === "SUPER_ADMIN" || user?.role === "SUPER_ADMIN_MANAGER") ? "/super-admin" : "/workspaces";
-  const dashboardLabel = (user?.role === "SUPER_ADMIN" || user?.role === "SUPER_ADMIN_MANAGER") ? "Global Admin" : "My Workspaces";
+  const dashboardHref = (user?.role === "SUPER_ADMIN" || user?.role === "SUPER_ADMIN_MANAGER" || user?.isDeveloper) ? "/super-admin" : "/workspaces";
+  const dashboardLabel = (user?.role === "SUPER_ADMIN" || user?.role === "SUPER_ADMIN_MANAGER" || user?.isDeveloper) ? "Global Admin" : "My Workspaces";
 
   // Navbar Logic Config with deep fallbacks
   const config = {
@@ -190,7 +190,12 @@ export function LandingNavbar({ settings, user, isHome }: { settings?: any, user
             </Link>
             <DropdownMenuSeparator className="my-2 bg-slate-50 dark:bg-zinc-900" />
             <DropdownMenuItem
-              onClick={() => signOut({ callbackUrl: "/" })}
+              onClick={async () => {
+                const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "localhost:3000";
+                const protocol = typeof window !== 'undefined' && window.location.hostname.includes("localhost") ? "http" : "https";
+                await signOut({ redirect: false });
+                window.location.href = `${protocol}://${rootDomain}/`;
+              }}
               className="rounded-xl h-11 gap-3 font-bold text-xs uppercase tracking-widest cursor-pointer text-red-500 focus:bg-red-500 focus:text-white"
             >
               <LogOut className="h-4 w-4" /> Sign Out
@@ -433,7 +438,12 @@ export function LandingNavbar({ settings, user, isHome }: { settings?: any, user
                     <Link href="/profile" onClick={() => setIsOpen(false)} className="p-2.5 bg-slate-100 dark:bg-zinc-900 rounded-full hover:text-primary transition-colors">
                       <UserIcon className="w-4 h-4" />
                     </Link>
-                    <button onClick={() => signOut({ callbackUrl: "/" })} className="p-2.5 bg-red-500/10 text-red-500 rounded-full hover:bg-red-500/20 transition-colors">
+                    <button onClick={async () => {
+                      const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "localhost:3000";
+                      const protocol = typeof window !== 'undefined' && window.location.hostname.includes("localhost") ? "http" : "https";
+                      await signOut({ redirect: false });
+                      window.location.href = `${protocol}://${rootDomain}/`;
+                    }} className="p-2.5 bg-red-500/10 text-red-500 rounded-full hover:bg-red-500/20 transition-colors">
                       <LogOut className="w-4 h-4" />
                     </button>
                   </>

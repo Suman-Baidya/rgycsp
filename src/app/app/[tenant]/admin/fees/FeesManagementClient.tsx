@@ -9,19 +9,25 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { updateFranchisePaymentConfig } from "@/app/actions/payments";
 import { toast } from "sonner";
-import { CldUploadWidget } from "next-cloudinary";
+import { ImageUpload } from "@/components/ui/ImageUpload";
 import Image from "next/image";
 import MakePaymentTab from "./MakePaymentTab";
+import PaymentRequestsTab from "./PaymentRequestsTab";
 import PaymentReportsTab from "./PaymentReportsTab";
+import { AdminPageHeader } from "@/components/layout/AdminPageHeader";
 
 export default function FeesManagementClient({ 
   workspaceId,
   students,
-  paymentConfig
+  pendingFees,
+  paymentConfig,
+  workspaceInfo
 }: { 
   workspaceId: string;
   students: any[];
+  pendingFees?: any[];
   paymentConfig: any;
+  workspaceInfo?: any;
 }) {
   const [activeTab, setActiveTab] = useState("make_payment");
 
@@ -47,60 +53,85 @@ export default function FeesManagementClient({
     }
   };
 
-  const handleQrUpload = (result: any) => {
-    if (result?.info?.secure_url) {
-      setConfigForm(prev => ({ ...prev, qrCodeUrl: result.info.secure_url }));
+  const handleQrUpload = (url: string) => {
+    if (url) {
+      setConfigForm(prev => ({ ...prev, qrCodeUrl: url }));
       toast.success("QR Code uploaded successfully");
     }
   };
 
   return (
     <div className="space-y-6">
+      <AdminPageHeader 
+        title="Fees Management" 
+        description="Manage student fees, configure payment methods, and view comprehensive payment reports."
+      />
+
       {/* Sub Tabs */}
-      <div className="flex border-b border-border/40">
+      <div className="flex flex-nowrap overflow-x-auto no-scrollbar gap-2 p-2 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm max-w-full">
         <button
           onClick={() => setActiveTab("make_payment")}
           className={cn(
-            "px-6 py-3 font-bold text-sm transition-colors border-b-2",
-            activeTab === "make_payment" ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"
+            "flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 whitespace-nowrap shrink-0",
+            activeTab === "make_payment"
+              ? "bg-slate-100 dark:bg-slate-800 text-primary shadow-inner"
+              : "text-slate-500 hover:text-slate-900 hover:bg-slate-50 dark:hover:text-white dark:hover:bg-slate-800/50"
           )}
         >
-          <div className="flex items-center gap-2">
-            <CreditCard className="w-4 h-4" /> Make Payment
-          </div>
+          <CreditCard className="w-4 h-4" /> Make Payment
+        </button>
+        <button
+          onClick={() => setActiveTab("requests")}
+          className={cn(
+            "flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 whitespace-nowrap shrink-0",
+            activeTab === "requests"
+              ? "bg-red-100 dark:bg-red-900/40 text-red-600 dark:text-red-500 shadow-inner"
+              : "text-slate-500 hover:text-slate-900 hover:bg-slate-50 dark:hover:text-white dark:hover:bg-slate-800/50"
+          )}
+        >
+          <Receipt className="w-4 h-4" /> Payment Requests
+          {pendingFees && pendingFees.length > 0 && (
+            <span className="ml-1 h-5 min-w-5 px-1.5 bg-red-500 text-white text-[10px] font-black rounded flex items-center justify-center animate-pulse shadow-[0_0_10px_rgba(239,68,68,0.5)]">
+              {pendingFees.length}
+            </span>
+          )}
         </button>
         <button
           onClick={() => setActiveTab("reports")}
           className={cn(
-            "px-6 py-3 font-bold text-sm transition-colors border-b-2",
-            activeTab === "reports" ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"
+            "flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 whitespace-nowrap shrink-0",
+            activeTab === "reports"
+              ? "bg-slate-100 dark:bg-slate-800 text-primary shadow-inner"
+              : "text-slate-500 hover:text-slate-900 hover:bg-slate-50 dark:hover:text-white dark:hover:bg-slate-800/50"
           )}
         >
-          <div className="flex items-center gap-2">
-            <History className="w-4 h-4" /> Payments Reports
-          </div>
+          <History className="w-4 h-4" /> Payments Reports
         </button>
         <button
           onClick={() => setActiveTab("config")}
           className={cn(
-            "px-6 py-3 font-bold text-sm transition-colors border-b-2",
-            activeTab === "config" ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"
+            "flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 whitespace-nowrap shrink-0",
+            activeTab === "config"
+              ? "bg-slate-100 dark:bg-slate-800 text-primary shadow-inner"
+              : "text-slate-500 hover:text-slate-900 hover:bg-slate-50 dark:hover:text-white dark:hover:bg-slate-800/50"
           )}
         >
-          <div className="flex items-center gap-2">
-            <Settings2 className="w-4 h-4" /> Payments Config
-          </div>
+          <Settings2 className="w-4 h-4" /> Payments Config
         </button>
       </div>
 
       {/* Content */}
       <div className="bg-white dark:bg-zinc-950 p-6 rounded-3xl border border-border/40 shadow-sm min-h-[500px]">
+        {activeTab === "requests" && (
+          <PaymentRequestsTab workspaceId={workspaceId} pendingFees={pendingFees} />
+        )}
+
         {activeTab === "make_payment" && (
-          <MakePaymentTab workspaceId={workspaceId} students={students} />
+          <MakePaymentTab workspaceId={workspaceId} students={students} workspaceInfo={workspaceInfo} />
         )}
 
         {activeTab === "reports" && (
-          <PaymentReportsTab workspaceId={workspaceId} />
+          <PaymentReportsTab workspaceId={workspaceId} workspaceInfo={workspaceInfo} />
         )}
 
         {activeTab === "config" && (
@@ -138,24 +169,23 @@ export default function FeesManagementClient({
                           <div className="relative w-40 h-40 rounded-xl overflow-hidden border-2 border-primary/20">
                             <Image src={configForm.qrCodeUrl} alt="QR Code" fill className="object-cover" />
                             <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
-                              <CldUploadWidget uploadPreset={process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET} onSuccess={handleQrUpload}>
-                                {({ open }) => (
-                                  <Button variant="secondary" size="sm" onClick={(e) => { e.preventDefault(); open(); }}>
-                                    <Edit3 className="w-4 h-4 mr-2" /> Change
-                                  </Button>
-                                )}
-                              </CldUploadWidget>
+                              <ImageUpload
+                                value={null}
+                                onChange={handleQrUpload}
+                                folder={`RGYCSP/${workspaceId}/qr-codes`}
+                                label="Change QR"
+                              />
                             </div>
                           </div>
                         ) : (
-                          <CldUploadWidget uploadPreset={process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET} onSuccess={handleQrUpload}>
-                            {({ open }) => (
-                              <button onClick={(e) => { e.preventDefault(); open(); }} className="w-full h-40 rounded-2xl border-2 border-dashed border-slate-300 dark:border-slate-700 flex flex-col items-center justify-center gap-2 text-muted-foreground hover:bg-slate-50 dark:hover:bg-zinc-900 hover:text-primary hover:border-primary transition-all">
-                                <Upload className="w-8 h-8" />
-                                <span className="font-bold text-sm">Upload QR Code</span>
-                              </button>
-                            )}
-                          </CldUploadWidget>
+                          <div className="w-full">
+                            <ImageUpload
+                              value={null}
+                              onChange={handleQrUpload}
+                              folder={`RGYCSP/${workspaceId}/qr-codes`}
+                              label="Upload QR Code"
+                            />
+                          </div>
                         )}
                       </div>
                     </div>

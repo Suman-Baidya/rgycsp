@@ -1325,6 +1325,17 @@ export default function StudentList({
                         checked={!!selectedStudent?.certificateIssuedToStudent} 
                         disabled={selectedStudent?.status === "PASS_OUT"}
                         onCheckedChange={(checked) => {
+                          if (checked) {
+                            const remainingBalance = (selectedStudent?.invoices || [])
+                              .filter((i: any) => i.status === "PENDING" || i.status === "OVERDUE")
+                              .reduce((sum: number, i: any) => sum + Number(i.amount), 0);
+                            
+                            if (remainingBalance > 0) {
+                              toast.error(`Cannot issue certificate. Student has a pending fee balance of Rs. ${remainingBalance.toFixed(2)}`);
+                              return;
+                            }
+                          }
+
                           if (docRefs.current['CERTIFICATE'] && !docRefs.current['CERTIFICATE']?.hasTemplate()) {
                             toast.error(`Design template for Certificate does not exist yet!`);
                             return;

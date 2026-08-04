@@ -2,12 +2,11 @@
 
 import { useState, useEffect } from "react";
 import { AdminPageHeader } from "@/components/layout/AdminPageHeader";
-import { User, UserCheck, GraduationCap, LayoutGrid, Receipt, Plus } from "lucide-react";
+import { User, UserCheck, GraduationCap, LayoutGrid } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import StudentList from "./StudentList";
 import BatchManagement from "./BatchManagement";
-import FeesManagementClient from "./FeesManagementClient";
 
 export default function StudentsManagementClient({ 
   workspaceId, 
@@ -36,7 +35,6 @@ export default function StudentsManagementClient({
     { id: "registered", label: "Active Registered", icon: UserCheck },
     { id: "pass_out", label: "Pass Out Students", icon: GraduationCap },
     { id: "batches", label: "Batches & Schedules", icon: LayoutGrid },
-    { id: "invoices", label: "Fee Management", icon: Receipt },
   ];
 
   if (!mounted) return null;
@@ -83,14 +81,6 @@ export default function StudentsManagementClient({
             workspaceId={workspaceId} 
             batches={batches} 
             courses={courses} 
-          />
-        )}
-        
-        {activeTab === "invoices" && (
-          <FeesManagementClient 
-            workspaceId={workspaceId} 
-            students={initialStudents} 
-            paymentConfig={paymentConfig} 
           />
         )}
       </div>
