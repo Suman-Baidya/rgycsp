@@ -140,7 +140,19 @@ export const DocumentRenderer = forwardRef<DocumentRendererRef, DocumentRenderer
         // Course & Batch Fields
         case "courseName": return student.course?.title || "";
         case "courseCode": return student.course?.code || "";
-        case "courseDuration": return student.course?.duration ? `${student.course.duration} Months` : "";
+        case "courseDuration": {
+          if (!student.course?.duration) return "";
+          const dur = String(student.course.duration).trim();
+          const match = dur.match(/(\d+)/);
+          if (match) {
+            const num = match[1];
+            if (/year/i.test(dur)) return `${num} Year${num !== '1' ? 's' : ''}`;
+            if (/week/i.test(dur)) return `${num} Week${num !== '1' ? 's' : ''}`;
+            if (/day/i.test(dur)) return `${num} Day${num !== '1' ? 's' : ''}`;
+            return `${num} Month${num !== '1' ? 's' : ''}`;
+          }
+          return dur;
+        }
         case "coursePeriod": {
           if (!student.admissionDate) return "";
           const startDate = new Date(student.admissionDate);
@@ -359,7 +371,7 @@ export const DocumentRenderer = forwardRef<DocumentRendererRef, DocumentRenderer
 
         const { toPng } = await import("html-to-image");
         const imgData = await toPng(canvasRef.current, { 
-          pixelRatio: 4,
+          pixelRatio: 2,
           backgroundColor: '#ffffff'
         });
         return imgData;

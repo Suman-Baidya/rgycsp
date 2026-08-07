@@ -8,17 +8,22 @@ import { LogOut } from "lucide-react";
 import Link from "next/link";
 
 export default async function StudentDashboardPage({
-  params
+  params,
+  searchParams
 }: {
   params: Promise<{ tenant: string }>;
+  searchParams: Promise<{ studentId?: string }>;
 }) {
   const { tenant } = await params;
+  const { studentId } = await searchParams;
   const workspace = await getWorkspaceByTenant(tenant);
   
   if (!workspace) redirect(await getServerTenantLink("/", tenant));
 
-  const result = await getStudentProfile(workspace.id);
-  const homeHref = await getServerTenantLink("/", tenant);
+  const [result, homeHref] = await Promise.all([
+    getStudentProfile(workspace.id, studentId),
+    getServerTenantLink("/", tenant)
+  ]);
 
   if (!result.success) {
     return (

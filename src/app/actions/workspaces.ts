@@ -44,7 +44,15 @@ export async function createWorkspace(data: any) {
     // 2. Check if user exists, or create user
     let user = await db.user.findUnique({
       where: { email: ownerEmail },
+      include: { workspaceRoles: true }
     });
+
+    if (user) {
+      const hasAdminRole = user.workspaceRoles.some(role => role.role === "ADMIN");
+      if (hasAdminRole) {
+        return { success: false, error: "This email is already registered to another institute. One email can only be used for one institute." };
+      }
+    }
 
     if (!user) {
       const passwordHash = await bcrypt.hash(ownerPassword, 10);

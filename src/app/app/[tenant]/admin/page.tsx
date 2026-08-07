@@ -57,14 +57,27 @@ export default async function WorkspaceAdminDashboard({
   const sixMonthsAgo = new Date();
   sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
 
-  const studentsByMonth = await db.studentProfile.groupBy({
-    by: ['admissionDate'],
-    _count: { id: true },
-    where: { 
-      workspaceId: workspace.id,
-      admissionDate: { gte: sixMonthsAgo }
-    },
-  });
+  const [studentsByMonth, coursesWithBatches] = await Promise.all([
+    db.studentProfile.groupBy({
+      by: ['admissionDate'],
+      _count: { id: true },
+      where: { 
+        workspaceId: workspace.id,
+        admissionDate: { gte: sixMonthsAgo }
+      },
+    }),
+    db.course.findMany({
+      where: { workspaceId: workspace.id },
+      select: {
+        title: true,
+        batches: {
+          select: {
+            _count: { select: { students: true } }
+          }
+        }
+      }
+    })
+  ]);
 
   const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
   const admissionTrend = Array.from({ length: 6 }).map((_, i) => {
@@ -73,19 +86,6 @@ export default async function WorkspaceAdminDashboard({
     const month = d.getMonth();
     const count = studentsByMonth.filter(s => new Date(s.admissionDate).getMonth() === month).reduce((acc, curr) => acc + curr._count.id, 0);
     return { name: monthNames[month], value: count };
-  });
-
-  // Fetch course distribution (aggregated through batches)
-  const coursesWithBatches = await db.course.findMany({
-    where: { workspaceId: workspace.id },
-    select: {
-      title: true,
-      batches: {
-        select: {
-          _count: { select: { students: true } }
-        }
-      }
-    }
   });
 
   const studentDistData = coursesWithBatches.length > 0 
@@ -181,7 +181,7 @@ export default async function WorkspaceAdminDashboard({
             )}
             {hasAccess("settings") && (
               <Link href={await getServerTenantLink("/admin/settings", tenant)}>
-                <Button size="lg" variant="outline" className="rounded-2xl font-bold border-white/20 hover:bg-white/10 h-14 px-10">
+                <Button size="lg" variant="outline" className="rounded-2xl font-bold border-white/20 bg-transparent text-white hover:bg-white/10 hover:text-white h-14 px-10">
                   Landing Page Settings
                 </Button>
               </Link>

@@ -38,10 +38,7 @@ export default {
         token.systemPermissions = (user as any).systemPermissions;
         token.isDeveloper = user.email === process.env.DEVELOPER_EMAIL;
       }
-      if (trigger === 'update' && session?.user) {
-        token.role = session.user.role;
-        token.systemPermissions = session.user.systemPermissions;
-      }
+      // Removed unsafe client-side trigger === 'update' block
       return token;
     },
     async redirect({ url, baseUrl }) {

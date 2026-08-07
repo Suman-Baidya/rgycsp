@@ -351,10 +351,18 @@ export async function updateFranchiseApplicationStatus(
 
     // Check if user exists by email
     let user = await db.user.findUnique({
-      where: { email: application.email }
+      where: { email: application.email },
+      include: { workspaceRoles: true }
     });
 
+    let finalUserId: string;
+
     if (user) {
+      const hasAdminRole = user.workspaceRoles.some(role => role.role === "ADMIN");
+      if (hasAdminRole) {
+        return { success: false, error: "This applicant's email is already registered to an existing institute. One email can only be used for one institute." };
+      }
+
       // If user already exists, update their username/roles/image
       await db.user.update({
         where: { id: user.id },
@@ -364,9 +372,10 @@ export async function updateFranchiseApplicationStatus(
           image: application.photoUrl || undefined
         }
       });
+      finalUserId = user.id;
     } else {
       // Create new user
-      user = await db.user.create({
+      const newUser = await db.user.create({
         data: {
           name: application.fullName,
           email: application.email,
@@ -376,6 +385,7 @@ export async function updateFranchiseApplicationStatus(
           image: application.photoUrl || null
         }
       });
+      finalUserId = newUser.id;
     }
 
     // Create Workspace and WorkspaceRole
@@ -402,7 +412,7 @@ export async function updateFranchiseApplicationStatus(
     // Bind Owner to Workspace as ADMIN
     await db.workspaceRole.create({
       data: {
-        userId: user.id,
+        userId: finalUserId,
         workspaceId: workspace.id,
         role: "ADMIN"
       }

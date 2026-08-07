@@ -2,6 +2,7 @@ import { auth } from "@/auth";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { WorkspaceSidebar } from "@/components/layout/WorkspaceSidebar";
+import { WorkspaceAdminHeader } from "@/components/layout/WorkspaceAdminHeader";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { getServerTenantLink, getServerWorkspaceBase } from "@/lib/routing-server";
 import { db } from "@/lib/prisma";
@@ -21,7 +22,7 @@ export default async function WorkspaceAdminLayout({
   
   const workspace = await db.workspace.findUnique({
     where: { subdomain: tenant?.toLowerCase() },
-    select: { id: true, isStateManager: true }
+    select: { id: true, isStateManager: true, walletBalance: true, name: true, centerCode: true }
   });
 
   if (!workspace) {
@@ -69,7 +70,7 @@ export default async function WorkspaceAdminLayout({
   const workspaceBase = await getServerWorkspaceBase(tenant);
 
   return (
-    <div className="flex min-h-screen bg-background text-foreground transition-colors duration-300">
+    <div className="flex h-screen overflow-hidden bg-background text-foreground transition-colors duration-300">
       <AdminRouteGuard 
         tenant={tenant} 
         userRole={userRole} 
@@ -85,22 +86,14 @@ export default async function WorkspaceAdminLayout({
         userPermissions={userPermissions}
       />
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        <header className="h-16 border-b border-border/40 bg-background/50 backdrop-blur-md flex items-center px-4 lg:px-8 sticky top-0 z-40">
-          <div className="lg:hidden ml-14 font-bold tracking-tight text-lg text-foreground capitalize truncate max-w-[200px]">
-            {tenant} Admin
-          </div>
-          <div className="hidden lg:flex items-center gap-2 text-sm text-muted-foreground">
-            <Link href={homeHref} className="hover:text-foreground">Home</Link>
-            <span>/</span>
-            <span className="text-foreground font-medium capitalize">{tenant} Dashboard</span>
-          </div>
-          <div className="ml-auto flex items-center gap-4">
-            <ThemeToggle />
-            <div className="h-9 w-9 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-[10px] font-bold text-primary">
-              WA
-            </div>
-          </div>
-        </header>
+        <WorkspaceAdminHeader 
+          tenantName={workspace.name}
+          workspaceBase={workspaceBase}
+          walletBalance={workspace.walletBalance}
+          userName={session?.user?.name || "Admin"}
+          userImage={session?.user?.image}
+          centerCode={workspace.centerCode}
+        />
         <main className="flex-1 overflow-y-auto custom-scrollbar">
           {children}
         </main>

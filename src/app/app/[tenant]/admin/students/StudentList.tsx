@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Plus, Search, MoreVertical, UserPlus, Phone, Mail, GraduationCap, FileText, Eye, Pencil, Database, Download, Loader2, CheckCircle, Calendar, User, Award, ShieldCheck, Clock, Rocket, KeyRound } from "lucide-react";
+import { Plus, Search, MoreVertical, UserPlus, Phone, Mail, GraduationCap, FileText, Eye, Pencil, Database, Download, Loader2, CheckCircle, Calendar, User, Award, ShieldCheck, Clock, Rocket, KeyRound, LayoutDashboard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -30,6 +30,8 @@ import { importStudentsCSV } from "@/app/actions/students-import";
 import { registerStudent, markStudentAsPassOut, toggleDocumentApproval } from "@/app/actions/student-registration";
 import { toast } from "sonner";
 import { useRouter, usePathname, useParams } from "next/navigation";
+import { useSession } from "next-auth/react";
+import { setImpersonation } from "@/app/actions/impersonate";
 import Link from "next/link";
 import { ImageUpload } from "@/components/ui/ImageUpload";
 import { Switch } from "@/components/ui/switch";
@@ -58,6 +60,23 @@ export default function StudentList({
   const [open, setOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState<any>(null);
+  
+  const { update } = useSession();
+  
+  const handleImpersonate = async (studentId: string) => {
+    const loadingId = toast.loading("Connecting to student dashboard...");
+    try {
+      const result = await setImpersonation(studentId);
+      if (result.success) {
+        toast.success("Connected!", { id: loadingId });
+        window.open(`${workspaceBase}/student/dashboard`, '_blank');
+      } else {
+        toast.error(result.error || "Failed to impersonate", { id: loadingId });
+      }
+    } catch (e) {
+      toast.error("An error occurred", { id: loadingId });
+    }
+  };
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [manageResultStudent, setManageResultStudent] = useState<any>(null);
   const [importOpen, setImportOpen] = useState(false);
@@ -662,201 +681,344 @@ export default function StudentList({
               <div className="flex items-center justify-end gap-3 shrink-0">
                 <Dialog>
                   <DialogTrigger render={
-                    <Button variant="outline" size="sm" className="rounded-xl h-10 font-bold text-[10px] gap-2 border-2 border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all">
-                      <Eye className="h-3.5 w-3.5 text-primary" />
-                      View Details
+                    <Button variant="outline" size="icon" className="rounded-xl h-10 w-10 border-2 border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all" title="View Profile">
+                      <Eye className="h-4 w-4 text-primary" />
                     </Button>
                   } />
-                <DialogContent className={`max-w-2xl rounded-[2rem] border-none shadow-2xl p-0 overflow-hidden transition-all duration-300 ${passwordModalOpen ? "blur-md brightness-75 scale-[0.98]" : ""}`}>
-                  <div className="bg-primary h-32 w-full relative">
-                    <div className="absolute -bottom-12 left-8 p-1 bg-white dark:bg-slate-900 rounded-3xl shadow-xl">
-                      <Avatar className="h-24 w-24 rounded-2xl border-4 border-white dark:border-slate-900 shadow-sm">
-                        <AvatarImage src={student.photoUrl || student.admissionApp?.photoUrl || undefined} className="object-cover" />
-                        <AvatarFallback className="bg-primary/10 text-primary text-2xl font-bold rounded-2xl">
-                          {student.fullName.charAt(0)}
-                        </AvatarFallback>
-                      </Avatar>
-                    </div>
-                  </div>
-                  
-                  <div className="px-8 pt-16 pb-8 space-y-8 bg-white dark:bg-slate-900">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <h2 className="text-2xl font-bold text-slate-900 dark:text-white uppercase">{student.fullName}</h2>
-                        <div className="flex flex-wrap items-center gap-4 mt-2">
-                          <p className="text-xs font-bold text-slate-500 dark:text-slate-400 tracking-wider flex items-center gap-1.5">
-                            <span className="text-[10px] uppercase text-slate-400">ENR:</span> {student.enrollmentNo}
-                          </p>
-                          {(student.status === "REGISTERED" || student.status === "PASS_OUT") && student.registrations?.length > 0 && (
-                            <p className="text-xs font-bold text-indigo-600 dark:text-indigo-400 tracking-wider flex items-center gap-1.5">
-                              <span className="text-[10px] uppercase text-indigo-400">REG:</span> {student.registrations[student.registrations.length - 1].registrationNo}
-                            </p>
-                          )}
-                          <div className="text-xs font-bold text-amber-500 tracking-wider flex items-center gap-1.5">
-                            <span className="text-[10px] uppercase text-amber-400/80">Password:</span> {student.loginPassword || "Not Set"}
-                            <Button 
-                              variant="ghost" 
-                              size="sm" 
-                              onClick={() => {
+                <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col overflow-hidden rounded-[2.5rem] p-0 border-2 border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/50">
+                  <div className="flex-1 overflow-y-auto p-6 sm:p-8 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-slate-200 dark:[&::-webkit-scrollbar-thumb]:bg-slate-700 [&::-webkit-scrollbar-thumb]:rounded-full">
+                    <div className="space-y-4">
+                      {/* Header Profile Section */}
+                      <div className="flex flex-col md:flex-row gap-6 items-start md:items-center bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                        <Avatar className="h-24 w-24 border-4 border-slate-50 dark:border-slate-800 shadow-xl">
+                          <AvatarImage src={student.photoUrl || student.admissionApp?.photoUrl || undefined} className="object-cover" />
+                          <AvatarFallback className="bg-primary/10 text-primary text-2xl font-bold">
+                            {student.fullName.charAt(0)}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1 space-y-2">
+                          <div className="flex flex-col md:flex-row md:items-center gap-3">
+                            <h2 className="text-2xl font-black tracking-tight text-slate-900 dark:text-white uppercase">
+                              {student.fullName}
+                            </h2>
+                            <Badge className={`rounded-full px-3 py-1 text-[10px] font-black tracking-widest uppercase ${student.status === "REGISTERED" ? "bg-emerald-500 hover:bg-emerald-600 text-white" : student.status === "PASS_OUT" ? "bg-amber-500 hover:bg-amber-600 text-white" : "bg-slate-400 hover:bg-slate-500 text-white"}`}>
+                              {student.status.replace("_", " ")}
+                            </Badge>
+                          </div>
+                          <div className="flex flex-wrap items-center gap-4 text-sm font-medium text-slate-500">
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-xs font-bold uppercase tracking-widest text-slate-400">ENR:</span>
+                              <Badge variant="outline" className="text-xs font-bold font-mono text-primary border-primary/20 bg-primary/5">{student.enrollmentNo}</Badge>
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-xs font-bold uppercase tracking-widest text-slate-400">PWD:</span>
+                              <Badge variant="outline" className="text-xs font-bold font-mono text-amber-600 border-amber-600/20 bg-amber-600/5 cursor-pointer hover:bg-amber-600/10 transition-colors" onClick={() => {
                                 setNewPassword("");
                                 setConfirmPassword("");
                                 setSelectedStudent(student);
                                 setPasswordModalOpen(true);
-                              }}
-                              className="h-6 w-6 p-0 hover:bg-amber-100 dark:hover:bg-amber-900/30 text-amber-600 dark:text-amber-400 rounded-full"
-                            >
-                              <Pencil className="h-3 w-3" />
-                            </Button>
+                              }}>
+                                {student.loginPassword || "Not Set"}
+                              </Badge>
+                            </div>
+                            {student.phone && <div className="flex items-center gap-1.5"><Phone className="h-4 w-4" /> {student.phone}</div>}
+                          </div>
+                        </div>
+                        
+                        {/* Action Buttons */}
+                        <div className="flex flex-row gap-3 w-full md:w-auto mt-4 md:mt-0 justify-end md:ml-auto">
+                          <Button 
+                            onClick={() => handleEditClick(student)} 
+                            size="icon"
+                            variant="outline"
+                            title="Edit Profile"
+                            className="rounded-xl shadow-sm border-slate-200 dark:border-slate-700"
+                          >
+                            <Pencil className="h-4 w-4 text-slate-700 dark:text-slate-300" />
+                          </Button>
+                          <Button 
+                            onClick={() => handleImpersonate(student.id)} 
+                            size="icon"
+                            className="rounded-xl shadow-md shadow-primary/20 bg-primary text-primary-foreground hover:scale-105 transition-transform"
+                            title="Dashboard"
+                          >
+                            <LayoutDashboard className="h-4 w-4" />
+                          </Button>
+                          {student.applicationId && (
+                            <Link href={`${workspaceBase}/admission/print/${student.applicationId}`} target="_blank">
+                              <Button size="icon" variant="outline" className="rounded-xl shadow-sm border-slate-200 dark:border-slate-700" title="Download Form">
+                                <Download className="h-4 w-4 text-slate-700 dark:text-slate-300" />
+                              </Button>
+                            </Link>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Horizontal Documents Status & Admission Date */}
+                      <div className="flex flex-wrap items-center justify-between gap-4 bg-white dark:bg-slate-900 p-2.5 pl-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                        <div className="flex flex-wrap items-center gap-2 flex-1">
+                          {[
+                            { label: "Admit Card", val: student.admitCardApproved },
+                            { label: "Marksheet", val: student.marksheetApproved },
+                            { label: "Certificate", val: student.certificateApproved },
+                          ].map((doc, idx) => (
+                            <div key={idx} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-semibold shadow-sm transition-colors ${doc.val ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20' : 'bg-slate-50 text-slate-500 border-slate-200 dark:bg-slate-800/50 dark:border-slate-700'}`}>
+                              {doc.val ? (
+                                <CheckCircle className="h-3.5 w-3.5" />
+                              ) : (
+                                <div className="h-1.5 w-1.5 rounded-full bg-amber-400 mx-1" />
+                              )}
+                              <span>{doc.label}</span>
+                            </div>
+                          ))}
+                        </div>
+                        
+                        <div className="flex items-center gap-3 px-6 py-2 rounded-2xl bg-primary/5 border border-primary/10 min-w-[180px] justify-center shadow-inner">
+                          <Calendar className="h-6 w-6 text-primary" />
+                          <div className="flex flex-col">
+                             <span className="text-[10px] font-black text-primary/70 uppercase tracking-widest leading-none mb-1">Admission Date</span>
+                             <span className="text-sm font-bold text-primary leading-none">{new Date(student.admissionDate).toLocaleDateString('en-GB')}</span>
                           </div>
                         </div>
                       </div>
-                      <Badge className="bg-primary/10 text-primary hover:bg-primary/20 border-none font-bold px-4 py-1 rounded-full text-[10px]">
-                        Active Student
-                      </Badge>
-                    </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                      <div className="space-y-6">
-                        <div className="space-y-4">
-                          <h4 className="text-[10px] font-bold text-slate-400 tracking-widest border-b border-slate-100 dark:border-slate-800 pb-2">Academic Info</h4>
-                          <div className="space-y-3">
-                            <div className="flex items-center gap-3">
-                              <div className="h-8 w-8 rounded-lg bg-slate-50 dark:bg-slate-800 flex items-center justify-center">
-                                <GraduationCap className="h-4 w-4 text-slate-400" />
+                      {/* Stacked Layout for details */}
+                      <div className="flex flex-col gap-4">
+                        {/* Academic Stats */}
+                        <Card className="rounded-[2rem] border-slate-200 dark:border-slate-800 shadow-sm bg-white dark:bg-slate-900 overflow-hidden flex flex-col">
+                          <CardHeader className="bg-slate-50/50 dark:bg-slate-800/20 border-b border-slate-100 dark:border-slate-800 pb-4">
+                            <h3 className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2">
+                              <GraduationCap className="h-5 w-5 text-primary" /> Academic Profile
+                            </h3>
+                          </CardHeader>
+                          <CardContent className="p-6">
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                              <div className="md:col-span-2">
+                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Course</p>
+                                <p className="font-semibold text-slate-900 dark:text-white">{student.course?.title || student.batch?.course?.title || "Not Assigned"}</p>
                               </div>
                               <div>
-                                <p className="text-[9px] font-bold text-slate-400">Batch / Course</p>
-                                <p className="text-sm font-bold text-slate-700 dark:text-slate-200 uppercase">{student.batch?.name || "Not Assigned"}</p>
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-3">
-                              <div className="h-8 w-8 rounded-lg bg-slate-50 dark:bg-slate-800 flex items-center justify-center">
-                                <FileText className="h-4 w-4 text-slate-400" />
+                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Batch</p>
+                                <p className="font-semibold text-slate-900 dark:text-white">{student.batch?.name || "Not Assigned"}</p>
                               </div>
                               <div>
-                                <p className="text-[9px] font-bold text-slate-400">Admission Date</p>
-                                <p className="text-sm font-bold text-slate-700 dark:text-slate-200 uppercase" suppressHydrationWarning>
-                                  {new Date(student.admissionDate).toLocaleDateString('en-GB')}
+                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Course Duration</p>
+                                <p className="font-semibold text-slate-900 dark:text-white">{student.course?.duration || student.batch?.course?.duration || "N/A"}</p>
+                              </div>
+                              <div>
+                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Remaining Months</p>
+                                <p className="font-semibold text-slate-900 dark:text-white">
+                                  {(() => {
+                                    const durationStr = student.course?.duration || student.batch?.course?.duration;
+                                    if (!durationStr || !student.admissionDate) return "N/A";
+                                    const match = durationStr.match(/(\d+)/);
+                                    if (match) {
+                                      const durationMonths = parseInt(match[1]);
+                                      const isYears = durationStr.toLowerCase().includes('year');
+                                      const totalMonths = isYears ? durationMonths * 12 : durationMonths;
+                                      
+                                      const admissionDate = new Date(student.admissionDate);
+                                      const currentDate = new Date();
+                                      const monthsPassed = (currentDate.getFullYear() - admissionDate.getFullYear()) * 12 + (currentDate.getMonth() - admissionDate.getMonth());
+                                      
+                                      const remaining = totalMonths - monthsPassed;
+                                      return remaining > 0 ? `${remaining} Months` : "Completed";
+                                    }
+                                    return "N/A";
+                                  })()}
                                 </p>
                               </div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="space-y-6">
-                        <div className="space-y-4">
-                          <h4 className="text-[10px] font-bold text-slate-400 tracking-widest border-b border-slate-100 dark:border-slate-800 pb-2">Contact Details</h4>
-                          <div className="space-y-3">
-                            <div className="flex items-center gap-3">
-                              <div className="h-8 w-8 rounded-lg bg-slate-50 dark:bg-slate-800 flex items-center justify-center">
-                                <Phone className="h-4 w-4 text-slate-400" />
+                              <div>
+                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Fees Remaining</p>
+                                <p className="font-semibold text-amber-600 dark:text-amber-500">
+                                  {(() => {
+                                    if (!student.invoices || student.invoices.length === 0) return "₹0.00";
+                                    const due = student.invoices.filter((i: any) => i.status !== "PAID").reduce((sum: number, val: any) => sum + (val.amount || 0), 0);
+                                    return due > 0 ? `₹${due.toFixed(2)}` : "₹0.00";
+                                  })()}
+                                </p>
                               </div>
                               <div>
-                                <p className="text-[9px] font-bold text-slate-400">Phone Number</p>
-                                <p className="text-sm font-bold text-slate-700 dark:text-slate-200 uppercase">{student.phone || "N/A"}</p>
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-3">
-                              <div className="h-8 w-8 rounded-lg bg-slate-50 dark:bg-slate-800 flex items-center justify-center">
-                                <Mail className="h-4 w-4 text-slate-400" />
+                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Attendance</p>
+                                <p className="font-semibold text-slate-900 dark:text-white">
+                                  {(() => {
+                                    if (!student.attendances || student.attendances.length === 0) return "No Data";
+                                    const present = student.attendances.filter((a: any) => a.status === "PRESENT").length;
+                                    return `${Math.round((present / student.attendances.length) * 100)}%`;
+                                  })()}
+                                </p>
                               </div>
                               <div>
-                                <p className="text-[9px] font-bold text-slate-400">Email Address</p>
-                                <p className="text-sm font-bold text-slate-700 dark:text-slate-200 truncate max-w-[180px] lowercase">{student.email || "N/A"}</p>
+                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Status</p>
+                                <p className={`font-semibold ${student.status === "PASS_OUT" ? "text-emerald-600 dark:text-emerald-500" : "text-blue-600 dark:text-blue-400"}`}>
+                                  {student.status === "PASS_OUT" ? "Completed" : "In Progress"}
+                                </p>
+                              </div>
+                              
+                              {(() => {
+                                let qual: any = null;
+                                try {
+                                  qual = typeof student.qualification === 'string' ? JSON.parse(student.qualification) : student.qualification;
+                                } catch(e){}
+                                if(qual && qual.name) {
+                                  return (
+                                    <div className="md:col-span-4 pt-4 mt-2 border-t border-slate-100 dark:border-slate-800">
+                                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Highest Qualification</p>
+                                      <p className="font-semibold text-slate-900 dark:text-white">{qual.name} ({qual.year}) - {qual.percentage}%</p>
+                                    </div>
+                                  );
+                                }
+                                return null;
+                              })()}
+                            </div>
+                          </CardContent>
+                        </Card>
+
+                        {/* Personal Details */}
+                        <Card className="rounded-[2rem] border-slate-200 dark:border-slate-800 shadow-sm bg-white dark:bg-slate-900 overflow-hidden">
+                          <CardHeader className="bg-slate-50/50 dark:bg-slate-800/20 border-b border-slate-100 dark:border-slate-800 pb-4">
+                            <h3 className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2">
+                              <User className="h-5 w-5 text-blue-500" /> Personal Details
+                            </h3>
+                          </CardHeader>
+                          <CardContent className="p-6">
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                              <div>
+                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Date of Birth</p>
+                                <p className="font-semibold text-slate-900 dark:text-white">{student.dob ? new Date(student.dob).toLocaleDateString('en-GB') : "N/A"}</p>
+                              </div>
+                              <div>
+                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Gender</p>
+                                <p className="font-semibold text-slate-900 dark:text-white capitalize">{student.gender || "N/A"}</p>
+                              </div>
+                              <div>
+                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Blood Group</p>
+                                <p className="font-semibold text-slate-900 dark:text-white">{student.bloodGroup || "N/A"}</p>
+                              </div>
+                              <div>
+                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Religion / Caste</p>
+                                <p className="font-semibold text-slate-900 dark:text-white capitalize">{(student.religion || "N/A")} / {(student.caste || "N/A")}</p>
+                              </div>
+                              <div className="md:col-span-2">
+                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Father's Name</p>
+                                <p className="font-semibold text-slate-900 dark:text-white">{student.fatherName || "N/A"}</p>
+                              </div>
+                              <div className="md:col-span-2">
+                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Mother's Name</p>
+                                <p className="font-semibold text-slate-900 dark:text-white">{student.motherName || "N/A"}</p>
+                              </div>
+                              
+                              <div className="md:col-span-4 pt-4 border-t border-slate-100 dark:border-slate-800 grid grid-cols-1 md:grid-cols-2 gap-6">
+                                  <div>
+                                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Contact Details</p>
+                                      <div className="space-y-2">
+                                        {student.email && (
+                                            <div className="flex items-center gap-2 text-sm">
+                                                <Mail className="h-4 w-4 text-slate-400" />
+                                                <span className="font-medium text-slate-700 dark:text-slate-300">{student.email}</span>
+                                            </div>
+                                        )}
+                                        {student.whatsapp && (
+                                            <div className="flex items-center gap-2 text-sm">
+                                                <Phone className="h-4 w-4 text-emerald-500" />
+                                                <span className="font-medium text-slate-700 dark:text-slate-300">{student.whatsapp} (WhatsApp)</span>
+                                            </div>
+                                        )}
+                                      </div>
+                                  </div>
+                                  <div>
+                                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Full Address</p>
+                                      <p className="font-semibold text-slate-700 dark:text-slate-300 leading-relaxed text-sm">
+                                          {(() => {
+                                          let addrObj: any = {};
+                                          try {
+                                              addrObj = typeof student.address === 'string' ? JSON.parse(student.address) : student.address;
+                                          } catch(e) {}
+                                          if(addrObj?.vill) {
+                                              return `${addrObj.vill}, PO: ${addrObj.po || "N/A"}, PS: ${addrObj.ps || "N/A"}, Dist: ${addrObj.dist || "N/A"}, State: ${addrObj.state || "N/A"} - ${addrObj.pin || "N/A"}`;
+                                          }
+                                          return student.address || "N/A";
+                                          })()}
+                                      </p>
+                                  </div>
                               </div>
                             </div>
-                          </div>
-                        </div>
+                          </CardContent>
+                        </Card>
                       </div>
-                    </div>
-
-                    <div className="pt-6 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        {student.applicationId && (
-                          <Link href={`${workspaceBase}/admission/print/${student.applicationId}`} target="_blank">
-                            <Button variant="ghost" size="sm" className="font-bold text-[10px] text-primary gap-2 hover:bg-primary/5">
-                              <FileText className="h-3 w-3" />
-                              View Original Form
-                            </Button>
-                          </Link>
-                        )}
-                      </div>
-                      
-                      {(() => {
-                        const certStatus = globalConfig ? getDocumentStatus(student, null, globalConfig as any) : { finalCertIssued: student.certificateIssuedToStudent, finalCertApproved: student.certificateApproved, isCertAuto: false };
-                        const isIssued = certStatus.finalCertIssued || certStatus.finalCertApproved || certStatus.isCertAuto;
-                        
-                        if (isIssued) return null;
-                        
-                        return (
-                          <Button 
-                            onClick={() => handleEditClick(student)}
-                            variant="outline" 
-                            className="rounded-xl font-bold px-6 h-10 border-slate-200 dark:border-slate-800"
-                          >
-                            Edit Profile
-                          </Button>
-                        );
-                      })()}
                     </div>
                   </div>
                 </DialogContent>
               </Dialog>
 
               <Dialog open={passwordModalOpen} onOpenChange={setPasswordModalOpen}>
-                <DialogContent className="max-w-sm rounded-[2.5rem] border-0 shadow-2xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl p-8">
-                  <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 to-transparent rounded-[2.5rem] pointer-events-none" />
-                  <DialogHeader className="space-y-3">
-                    <div className="w-12 h-12 bg-amber-100 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400 rounded-2xl flex items-center justify-center mb-2">
-                      <KeyRound className="w-6 h-6" />
+                <DialogContent className="max-w-md rounded-[2.5rem] border border-white/10 shadow-2xl bg-white/90 dark:bg-slate-950/80 backdrop-blur-3xl p-8 overflow-hidden">
+                  <div className="absolute inset-0 bg-gradient-to-b from-amber-500/5 via-transparent to-transparent pointer-events-none" />
+                  
+                  <div className="relative z-10 flex flex-col items-center text-center space-y-4 mb-8">
+                    <div className="w-20 h-20 bg-amber-500/10 text-amber-500 rounded-[2rem] flex items-center justify-center relative group">
+                      <div className="absolute inset-0 bg-amber-500/20 rounded-[2rem] blur-xl group-hover:bg-amber-500/30 transition-all duration-500"></div>
+                      <KeyRound className="w-10 h-10 relative z-10" />
                     </div>
-                    <DialogTitle className="text-2xl font-black text-slate-900 dark:text-white">Update Password</DialogTitle>
-                    <p className="text-sm font-medium text-slate-500 dark:text-slate-400 leading-relaxed">
-                      Change password for <span className="font-bold text-slate-800 dark:text-slate-200">{student?.fullName}</span>. This will immediately update their login access.
-                    </p>
-                  </DialogHeader>
-                  <form onSubmit={handlePasswordUpdate} className="space-y-5 mt-6 relative z-10">
-                    <div className="space-y-2">
-                      <Label className="text-xs font-bold uppercase tracking-wider text-slate-500 ml-1">New Password</Label>
-                      <Input 
-                        type="text" 
-                        value={newPassword}
-                        onChange={e => setNewPassword(e.target.value)}
-                        className="bg-slate-50 dark:bg-slate-950 border-2 border-slate-100 dark:border-slate-800/50 rounded-2xl h-12 px-4 focus-visible:ring-amber-500/50 focus-visible:border-amber-500/50 font-medium"
-                        placeholder="Enter new password"
-                        required
-                        minLength={4}
-                      />
+                    <div>
+                      <DialogTitle className="text-3xl font-black text-slate-900 dark:text-white tracking-tight mb-2">Secure Reset</DialogTitle>
+                      <p className="text-sm font-medium text-slate-500 dark:text-slate-400 leading-relaxed max-w-[280px] mx-auto">
+                        Updating app access for <span className="font-bold text-slate-800 dark:text-amber-500">{student?.fullName}</span>
+                      </p>
                     </div>
-                    <div className="space-y-2">
-                      <Label className="text-xs font-bold uppercase tracking-wider text-slate-500 ml-1">Confirm Password</Label>
-                      <Input 
-                        type="text" 
-                        value={confirmPassword}
-                        onChange={e => setConfirmPassword(e.target.value)}
-                        className="bg-slate-50 dark:bg-slate-950 border-2 border-slate-100 dark:border-slate-800/50 rounded-2xl h-12 px-4 focus-visible:ring-amber-500/50 focus-visible:border-amber-500/50 font-medium"
-                        placeholder="Re-enter password"
-                        required
-                        minLength={4}
-                      />
+                  </div>
+
+                  <form onSubmit={handlePasswordUpdate} className="space-y-6 relative z-10">
+                    <div className="space-y-5">
+                      <div className="space-y-2 relative group">
+                        <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-4 group-focus-within:text-amber-500 transition-colors">New Password</Label>
+                        <div className="relative">
+                          <Input 
+                            type="text" 
+                            value={newPassword}
+                            onChange={e => setNewPassword(e.target.value)}
+                            className="bg-white/50 dark:bg-black/50 border-2 border-slate-200 dark:border-white/5 rounded-2xl h-14 pl-12 pr-4 focus-visible:ring-amber-500/20 focus-visible:border-amber-500 font-mono text-lg tracking-widest transition-all duration-300 placeholder:text-slate-300 dark:placeholder:text-slate-700"
+                            placeholder="••••••••"
+                            required
+                            minLength={4}
+                          />
+                          <KeyRound className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 group-focus-within:text-amber-500 transition-colors" />
+                        </div>
+                      </div>
+                      
+                      <div className="space-y-2 relative group">
+                        <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-4 group-focus-within:text-amber-500 transition-colors">Confirm Password</Label>
+                        <div className="relative">
+                          <Input 
+                            type="text" 
+                            value={confirmPassword}
+                            onChange={e => setConfirmPassword(e.target.value)}
+                            className="bg-white/50 dark:bg-black/50 border-2 border-slate-200 dark:border-white/5 rounded-2xl h-14 pl-12 pr-4 focus-visible:ring-amber-500/20 focus-visible:border-amber-500 font-mono text-lg tracking-widest transition-all duration-300 placeholder:text-slate-300 dark:placeholder:text-slate-700"
+                            placeholder="••••••••"
+                            required
+                            minLength={4}
+                          />
+                          <ShieldCheck className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 group-focus-within:text-amber-500 transition-colors" />
+                        </div>
+                      </div>
                     </div>
-                    <div className="pt-6 flex gap-3">
+
+                    <div className="pt-4 flex gap-4">
                       <Button 
                         type="button" 
                         variant="ghost" 
                         onClick={() => setPasswordModalOpen(false)}
-                        className="rounded-2xl font-bold h-12 flex-1 hover:bg-slate-100 dark:hover:bg-slate-800"
+                        className="rounded-2xl font-bold h-14 flex-1 bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 dark:text-white transition-colors"
                       >
                         Cancel
                       </Button>
                       <Button 
                         type="submit" 
                         disabled={isSubmitting}
-                        className="rounded-2xl font-bold h-12 flex-1 bg-amber-500 hover:bg-amber-600 text-white shadow-lg shadow-amber-500/25"
+                        className="rounded-2xl font-bold h-14 flex-1 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-white shadow-xl shadow-amber-500/25 hover:shadow-amber-500/40 hover:-translate-y-0.5 transition-all duration-300"
                       >
                         {isSubmitting ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : <ShieldCheck className="h-5 w-5 mr-2" />}
-                        Update
+                        Update Access
                       </Button>
                     </div>
                   </form>
@@ -882,6 +1044,9 @@ export default function StudentList({
                         <MoreVertical className="h-4 w-4" />
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="w-56 rounded-xl">
+                        <DropdownMenuItem onClick={(e) => { e.preventDefault(); handleImpersonate(student.id); }} className="cursor-pointer py-2.5 my-0.5 font-bold text-slate-700 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400">
+                          <LayoutDashboard className="mr-2 h-4 w-4" /> View Dashboard
+                        </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => { setSelectedStudent(student); setDocsModalOpen(true); }} className="cursor-pointer py-2.5 my-0.5 font-bold text-slate-700 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400">
                           <FileText className="mr-2 h-4 w-4" /> Manage Document
                         </DropdownMenuItem>

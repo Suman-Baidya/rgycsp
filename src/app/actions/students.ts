@@ -23,6 +23,7 @@ export async function getStudents(workspaceId: string) {
           select: { appliedCourse: true, createdAt: true, email: true, photoUrl: true, signatureUrl: true, idProofUrl: true }
         },
         invoices: { select: { amount: true, status: true } },
+        attendances: { select: { status: true } },
         registrations: true,
         semesters: { include: { marks: true } }
       },
@@ -54,6 +55,8 @@ export async function getAllPlatformStudents() {
         admissionApp: {
           select: { appliedCourse: true, createdAt: true, email: true, photoUrl: true, signatureUrl: true, idProofUrl: true }
         },
+        invoices: { select: { amount: true, status: true } },
+        attendances: { select: { status: true } },
         registrations: true,
         semesters: { include: { marks: true } }
       },

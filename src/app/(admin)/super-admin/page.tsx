@@ -19,23 +19,24 @@ function formatTimeAgo(date: Date) {
 }
 
 export default async function SuperAdminOverviewPage() {
-  // 1. Fetch live metrics from DB
-  const totalWorkspaces = await db.workspace.count();
-  const activeCenters = await db.workspace.count({
-    where: { isActive: true }
-  });
-  const totalStudents = await db.studentProfile.count();
+  // Fetch live metrics from DB in parallel
+  const [
+    totalWorkspaces,
+    activeCenters,
+    totalStudents,
+    tokensSum,
+    recentNotifications,
+    allWorkspaces
+  ] = await Promise.all([
+    db.workspace.count(),
+    db.workspace.count({ where: { isActive: true } }),
+    db.studentProfile.count(),
+    db.workspace.aggregate({ _sum: { tokensBalance: true } }),
+    db.notification.findMany({ take: 5, orderBy: { createdAt: "desc" } }),
+    db.workspace.findMany({ select: { createdAt: true, tokensBalance: true } })
+  ]);
   
-  const tokensSum = await db.workspace.aggregate({
-    _sum: { tokensBalance: true }
-  });
   const totalTokens = tokensSum._sum.tokensBalance ?? 0;
-
-  // 2. Fetch recent global notifications
-  const recentNotifications = await db.notification.findMany({
-    take: 5,
-    orderBy: { createdAt: "desc" }
-  });
 
   const recentActivity = recentNotifications.map(n => ({
     id: n.id,
@@ -45,11 +46,6 @@ export default async function SuperAdminOverviewPage() {
     time: formatTimeAgo(n.createdAt),
     link: n.link || undefined
   }));
-
-  // 3. Fetch monthly workspace growth for past 7 months
-  const allWorkspaces = await db.workspace.findMany({
-    select: { createdAt: true, tokensBalance: true }
-  });
 
   const chartData = [];
   const now = new Date();

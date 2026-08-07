@@ -36,13 +36,8 @@ import {
 
 export default function StudentDashboardClient({ student, tenant, settings, notices, dashboardData }: { student: any, tenant: string, settings: any, notices: any[], dashboardData?: any }) {
   const pathname = usePathname();
-  const [mounted, setMounted] = React.useState(false);
   const profile = student.studentProfile || {};
   const primaryColor = settings?.primaryColor || "#0f172a";
-
-  React.useEffect(() => {
-    setMounted(true);
-  }, []);
 
   const displayNotices = notices && notices.length > 0 ? notices.slice(0, 3) : [];
   const upcomingExams = dashboardData?.upcomingExams || [];
@@ -66,7 +61,7 @@ export default function StudentDashboardClient({ student, tenant, settings, noti
     { month: "Jun", score: 92 },
   ];
 
-  if (!mounted) return null;
+
 
   return (
     <div className="pb-20">

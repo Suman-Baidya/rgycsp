@@ -3,14 +3,50 @@
 import { db } from "@/lib/prisma";
 import { auth } from "@/auth";
 import { getDocumentStatus } from "@/lib/document-utils";
+import { cookies } from "next/headers";
 
-export async function getStudentProfile(workspaceId: string) {
+export async function getStudentProfile(workspaceId: string, overrideProfileId?: string) {
   try {
     const session = await auth();
     if (!session?.user) return { success: false, error: "Not authenticated" };
 
+    const cookieStore = await cookies();
+    const impersonatedId = cookieStore.get("impersonated_profile_id")?.value;
+    const effectiveProfileId = impersonatedId || overrideProfileId;
+
+    let targetUserId = session.user.id;
+
+    if (effectiveProfileId) {
+      const isGlobalAdmin = session.user.role === "SUPER_ADMIN" || 
+                            session.user.role === "SUPER_ADMIN_MANAGER" || 
+                            session.user.email === process.env.DEVELOPER_EMAIL;
+      
+      let isFranchiseAdmin = false;
+      if (!isGlobalAdmin) {
+        const role = await db.workspaceRole.findFirst({
+          where: { workspaceId, userId: session.user.id }
+        });
+        isFranchiseAdmin = role?.role === "ADMIN" || role?.role === "MANAGER" || role?.role === "TEACHER";
+      }
+
+      if (!isGlobalAdmin && !isFranchiseAdmin) {
+        return { success: false, error: "Unauthorized to view other students." };
+      }
+
+      const targetStudent = await db.studentProfile.findUnique({
+        where: { id: effectiveProfileId },
+        select: { userId: true, workspaceId: true }
+      });
+
+      if (!targetStudent || targetStudent.workspaceId !== workspaceId || !targetStudent.userId) {
+         return { success: false, error: "Student not found." };
+      }
+      
+      targetUserId = targetStudent.userId;
+    }
+
     const user = await db.user.findUnique({
-      where: { id: session.user.id },
+      where: { id: targetUserId },
       include: {
         workspaceRoles: {
           where: { workspaceId }
@@ -84,6 +120,27 @@ export async function getStudentDashboardData(workspaceId: string, studentProfil
   try {
     const session = await auth();
     if (!session?.user) return { success: false, error: "Not authenticated" };
+
+    const isGlobalAdmin = session.user.role === "SUPER_ADMIN" || 
+                          session.user.role === "SUPER_ADMIN_MANAGER" || 
+                          session.user.email === process.env.DEVELOPER_EMAIL;
+    
+    let isFranchiseAdmin = false;
+    if (!isGlobalAdmin) {
+      const role = await db.workspaceRole.findFirst({
+        where: { workspaceId, userId: session.user.id }
+      });
+      isFranchiseAdmin = role?.role === "ADMIN" || role?.role === "MANAGER" || role?.role === "TEACHER";
+    }
+
+    const studentProfile = await db.studentProfile.findUnique({
+       where: { id: studentProfileId },
+       select: { userId: true }
+    });
+
+    if (!isGlobalAdmin && !isFranchiseAdmin && studentProfile?.userId !== session.user.id) {
+       return { success: false, error: "Unauthorized access to dashboard data." };
+    }
 
     // 1. Fetch Invoices for Balance
     const invoices = await db.invoice.findMany({

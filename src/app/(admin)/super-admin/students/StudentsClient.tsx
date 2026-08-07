@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useMemo, useRef } from "react";
+import Link from "next/link";
 import {
   Users, GraduationCap, Building2, Search,
   Eye, Pencil, ChevronLeft, ChevronRight, CheckCircle, FileText, Calendar, Mail, Phone, MoreHorizontal, User, UserCheck, Trash2, ShieldCheck, Download, ExternalLink, Settings, Save, Printer
@@ -15,14 +16,16 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Checkbox } from "@/components/ui/checkbox";
 import { AdminPageHeader } from "@/components/layout/AdminPageHeader";
 import { ImageUpload } from "@/components/ui/ImageUpload";
-import { updateStudent, toggleStudentActiveStatus, deleteStudent } from "@/app/actions/students";
+import { updateStudent, toggleStudentActiveStatus, deleteStudent, adminUpdateStudentPassword } from "@/app/actions/students";
 import { issueStudentDocument, markStudentsAsNotPrinted } from "@/app/actions/student-documents";
 import { registerStudent } from "@/app/actions/student-registration";
 import { updateRegistrationConfig } from "@/app/actions/registration-config";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { cn } from "@/lib/utils";
+import { setImpersonation } from "@/app/actions/impersonate";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import {
   DropdownMenu,
@@ -50,6 +53,7 @@ interface StudentsClientProps {
 
 export default function StudentsClient({ initialStudents, initialWorkspaces, initialConfig }: StudentsClientProps) {
   const router = useRouter();
+  const { update } = useSession();
 
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("REGISTERED");
@@ -65,6 +69,11 @@ export default function StudentsClient({ initialStudents, initialWorkspaces, ini
   // View State
   const [viewOpen, setViewOpen] = useState(false);
   const [selectedStudentForView, setSelectedStudentForView] = useState<any>(null);
+
+  // Password Reset State
+  const [passwordModalOpen, setPasswordModalOpen] = useState(false);
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
 
   // Config State
   const [configData, setConfigData] = useState({
@@ -126,6 +135,47 @@ export default function StudentsClient({ initialStudents, initialWorkspaces, ini
     registrationNo: "",
     admissionDate: "",
   });
+
+  const handleImpersonate = async (studentId: string, subdomain: string) => {
+    const loadingId = toast.loading("Connecting to student dashboard...");
+    try {
+      const result = await setImpersonation(studentId);
+      if (result.success) {
+        toast.success("Connected!", { id: loadingId });
+        window.open(`/app/${subdomain}/student/dashboard`, '_blank');
+      } else {
+        toast.error(result.error || "Failed to impersonate", { id: loadingId });
+      }
+    } catch (e) {
+      toast.error("An error occurred", { id: loadingId });
+    }
+  };
+
+  const handlePasswordUpdate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (newPassword !== confirmPassword) {
+      toast.error("Passwords do not match!");
+      return;
+    }
+    if (newPassword.length < 4) {
+      toast.error("Password must be at least 4 characters long.");
+      return;
+    }
+    setIsSubmitting(true);
+    const res = await adminUpdateStudentPassword(selectedStudentForView?.id, newPassword);
+    setIsSubmitting(false);
+    
+    if (res.success) {
+      toast.success("Student password updated successfully!");
+      setPasswordModalOpen(false);
+      setNewPassword("");
+      setConfirmPassword("");
+      setSelectedStudentForView({ ...selectedStudentForView, loginPassword: newPassword });
+      router.refresh();
+    } else {
+      toast.error(res.error || "Failed to update password");
+    }
+  };
 
   const handleEditClick = (student: any) => {
     setSelectedStudent(student);
@@ -1163,25 +1213,25 @@ export default function StudentsClient({ initialStudents, initialWorkspaces, ini
         <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col overflow-hidden rounded-[2.5rem] p-0 border-2 border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/50">
           {selectedStudentForView && (
             <div className="flex-1 overflow-y-auto p-6 sm:p-8 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-slate-200 dark:[&::-webkit-scrollbar-thumb]:bg-slate-700 [&::-webkit-scrollbar-thumb]:rounded-full">
-              <div className="space-y-6">
+              <div className="space-y-4">
                 {/* Header Profile Section */}
                 <div className="flex flex-col md:flex-row gap-6 items-start md:items-center bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm">
                   <Avatar className="h-24 w-24 border-4 border-slate-50 dark:border-slate-800 shadow-xl">
-                    <AvatarImage src={selectedStudentForView.photoUrl || selectedStudentForView.admissionApp?.photoUrl} className="object-cover" />
+                    <AvatarImage src={selectedStudentForView.photoUrl || selectedStudentForView.admissionApp?.photoUrl || undefined} className="object-cover" />
                     <AvatarFallback className="bg-primary/10 text-primary text-2xl font-bold">
                       {selectedStudentForView.fullName.charAt(0)}
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex-1 space-y-2">
                     <div className="flex flex-col md:flex-row md:items-center gap-3">
-                      <h2 className="text-2xl font-black tracking-tight text-slate-900 dark:text-white">
+                      <h2 className="text-2xl font-black tracking-tight text-slate-900 dark:text-white uppercase">
                         {selectedStudentForView.fullName}
                       </h2>
                       <Badge className={cn(
                         "rounded-full px-3 py-1 text-[10px] font-black tracking-widest uppercase",
-                        selectedStudentForView.status === "REGISTERED" ? "bg-emerald-500 hover:bg-emerald-600" :
-                        selectedStudentForView.status === "PASS_OUT" ? "bg-amber-500 hover:bg-amber-600" :
-                        "bg-slate-400 hover:bg-slate-500"
+                        selectedStudentForView.status === "REGISTERED" ? "bg-emerald-500 hover:bg-emerald-600 text-white" :
+                        selectedStudentForView.status === "PASS_OUT" ? "bg-amber-500 hover:bg-amber-600 text-white" :
+                        "bg-slate-400 hover:bg-slate-500 text-white"
                       )}>
                         {selectedStudentForView.status.replace("_", " ")}
                       </Badge>
@@ -1193,33 +1243,78 @@ export default function StudentsClient({ initialStudents, initialWorkspaces, ini
                       </div>
                       <div className="flex items-center gap-1.5">
                         <span className="text-xs font-bold uppercase tracking-widest text-slate-400">PWD:</span>
-                        <Badge variant="outline" className="text-xs font-bold font-mono text-amber-600 border-amber-600/20 bg-amber-600/5">{selectedStudentForView.loginPassword || "Not Set"}</Badge>
+                        <Badge variant="outline" className="text-xs font-bold font-mono text-amber-600 border-amber-600/20 bg-amber-600/5 cursor-pointer hover:bg-amber-600/10 transition-colors" onClick={() => {
+                          setNewPassword("");
+                          setConfirmPassword("");
+                          setPasswordModalOpen(true);
+                        }}>
+                          {selectedStudentForView.loginPassword || "Not Set"}
+                        </Badge>
                       </div>
-                      <div className="flex items-center gap-1.5"><Calendar className="h-4 w-4" /> Joined {new Date(selectedStudentForView.admissionDate).toLocaleDateString()}</div>
                       {selectedStudentForView.phone && <div className="flex items-center gap-1.5"><Phone className="h-4 w-4" /> {selectedStudentForView.phone}</div>}
                     </div>
                   </div>
                   
                   {/* Action Buttons */}
-                  <div className="flex flex-col gap-2 w-full md:w-auto mt-4 md:mt-0">
+                  <div className="flex flex-row gap-3 w-full md:w-auto mt-4 md:mt-0 justify-end md:ml-auto">
                     <Button 
                       onClick={() => { setViewOpen(false); handleEditClick(selectedStudentForView); }} 
-                      className="w-full md:w-[160px] rounded-xl shadow-sm" 
+                      size="icon"
                       variant="outline"
+                      title="Edit Profile"
+                      className="rounded-xl shadow-sm border-slate-200 dark:border-slate-700"
                     >
-                      <Pencil className="h-4 w-4 mr-2" /> Edit Profile
+                      <Pencil className="h-4 w-4 text-slate-700 dark:text-slate-300" />
                     </Button>
                     <Button 
-                      onClick={() => window.open(`/app/${selectedStudentForView.workspace?.subdomain}/student/dashboard`, '_blank')} 
-                      className="w-full md:w-[160px] rounded-xl shadow-md shadow-primary/20 bg-primary text-primary-foreground hover:scale-[1.02] transition-transform"
+                      onClick={() => handleImpersonate(selectedStudentForView.id, selectedStudentForView.workspace?.subdomain)} 
+                      size="icon"
+                      className="rounded-xl shadow-md shadow-primary/20 bg-primary text-primary-foreground hover:scale-105 transition-transform"
+                      title="Dashboard"
                     >
-                      <ExternalLink className="h-4 w-4 mr-2" /> Dashboard
+                      <ExternalLink className="h-4 w-4" />
                     </Button>
+                    {selectedStudentForView.applicationId && (
+                      <Link href={`/app/${selectedStudentForView.workspace?.subdomain}/admission/print/${selectedStudentForView.applicationId}`} target="_blank">
+                        <Button size="icon" variant="outline" className="rounded-xl shadow-sm border-slate-200 dark:border-slate-700" title="Download Form">
+                          <Download className="h-4 w-4 text-slate-700 dark:text-slate-300" />
+                        </Button>
+                      </Link>
+                    )}
                   </div>
                 </div>
 
-                {/* Grid Layout for details */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Horizontal Documents Status & Admission Date */}
+                <div className="flex flex-wrap items-center justify-between gap-4 bg-white dark:bg-slate-900 p-2.5 pl-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                  <div className="flex flex-wrap items-center gap-2 flex-1">
+                    {[
+                      { label: "ID Card", val: selectedStudentForView.registrationCardApproved },
+                      { label: "Admit Card", val: selectedStudentForView.admitCardApproved },
+                      { label: "Marksheet", val: selectedStudentForView.marksheetApproved },
+                      { label: "Certificate", val: selectedStudentForView.certificateApproved },
+                    ].map((doc, idx) => (
+                      <div key={idx} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-semibold shadow-sm transition-colors ${doc.val ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20' : 'bg-slate-50 text-slate-500 border-slate-200 dark:bg-slate-800/50 dark:border-slate-700'}`}>
+                        {doc.val ? (
+                          <CheckCircle className="h-3.5 w-3.5" />
+                        ) : (
+                          <div className="h-1.5 w-1.5 rounded-full bg-amber-400 mx-1" />
+                        )}
+                        <span>{doc.label}</span>
+                      </div>
+                    ))}
+                  </div>
+                  
+                  <div className="flex items-center gap-3 px-6 py-2 rounded-xl bg-primary/5 border border-primary/10 min-w-[180px] justify-center">
+                    <Calendar className="h-5 w-5 text-primary" />
+                    <div className="flex flex-col">
+                       <span className="text-[10px] font-black text-primary/70 uppercase tracking-widest leading-none mb-1">Admission Date</span>
+                       <span className="text-sm font-bold text-primary leading-none">{new Date(selectedStudentForView.admissionDate).toLocaleDateString('en-GB')}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Stacked Layout for details */}
+                <div className="flex flex-col gap-4">
                   {/* Academic Stats */}
                   <Card className="rounded-[2rem] border-slate-200 dark:border-slate-800 shadow-sm bg-white dark:bg-slate-900 overflow-hidden flex flex-col">
                     <CardHeader className="bg-slate-50/50 dark:bg-slate-800/20 border-b border-slate-100 dark:border-slate-800 pb-4">
@@ -1227,12 +1322,12 @@ export default function StudentsClient({ initialStudents, initialWorkspaces, ini
                         <GraduationCap className="h-5 w-5 text-primary" /> Academic Profile
                       </h3>
                     </CardHeader>
-                    <CardContent className="p-6 space-y-4 flex-1">
-                      <div>
-                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Course</p>
-                        <p className="font-semibold text-slate-900 dark:text-white">{selectedStudentForView.course?.title || "Not Assigned"}</p>
-                      </div>
-                      <div className="grid grid-cols-2 gap-4">
+                    <CardContent className="p-6">
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                        <div className="md:col-span-2">
+                          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Course</p>
+                          <p className="font-semibold text-slate-900 dark:text-white">{selectedStudentForView.course?.title || "Not Assigned"}</p>
+                        </div>
                         <div>
                           <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Batch</p>
                           <p className="font-semibold text-slate-900 dark:text-white">{selectedStudentForView.batch?.name || "Not Assigned"}</p>
@@ -1266,53 +1361,46 @@ export default function StudentsClient({ initialStudents, initialWorkspaces, ini
                         </div>
                         <div>
                           <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Fees Remaining</p>
-                          <p className="font-semibold text-amber-600 dark:text-amber-500">N/A (Pending API)</p>
+                          <p className="font-semibold text-amber-600 dark:text-amber-500">
+                            {(() => {
+                              if (!selectedStudentForView.invoices || selectedStudentForView.invoices.length === 0) return "₹0.00";
+                              const due = selectedStudentForView.invoices.filter((i: any) => i.status !== "PAID").reduce((sum: number, val: any) => sum + (val.amount || 0), 0);
+                              return due > 0 ? `₹${due.toFixed(2)}` : "₹0.00";
+                            })()}
+                          </p>
                         </div>
-                      </div>
-                      {(() => {
-                        let qual: any = null;
-                        try {
-                          qual = typeof selectedStudentForView.qualification === 'string' ? JSON.parse(selectedStudentForView.qualification) : selectedStudentForView.qualification;
-                        } catch(e){}
-                        if(qual && qual.name) {
-                          return (
-                            <div className="pt-4 mt-2 border-t border-slate-100 dark:border-slate-800">
-                              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Highest Qualification</p>
-                              <p className="font-semibold text-slate-900 dark:text-white">{qual.name} ({qual.year}) - {qual.percentage}%</p>
-                            </div>
-                          );
-                        }
-                        return null;
-                      })()}
-                    </CardContent>
-                  </Card>
-
-                  {/* Documents & Approvals */}
-                  <Card className="rounded-[2rem] border-slate-200 dark:border-slate-800 shadow-sm bg-white dark:bg-slate-900 overflow-hidden flex flex-col">
-                    <CardHeader className="bg-slate-50/50 dark:bg-slate-800/20 border-b border-slate-100 dark:border-slate-800 pb-4">
-                      <h3 className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2">
-                        <ShieldCheck className="h-5 w-5 text-emerald-500" /> Documents Status
-                      </h3>
-                    </CardHeader>
-                    <CardContent className="p-6 flex-1">
-                      <div className="grid grid-cols-2 gap-4 h-full">
-                        {[
-                          { label: "ID Card", val: selectedStudentForView.registrationCardApproved },
-                          { label: "Admit Card", val: selectedStudentForView.admitCardApproved },
-                          { label: "Marksheet", val: selectedStudentForView.marksheetApproved },
-                          { label: "Certificate", val: selectedStudentForView.certificateApproved },
-                        ].map((doc, idx) => (
-                          <div key={idx} className="flex flex-col p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 justify-center">
-                            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">{doc.label}</span>
-                            <div className="flex items-center gap-1.5 mt-1.5">
-                              {doc.val ? (
-                                <><CheckCircle className="h-4 w-4 text-emerald-500" /><span className="text-sm font-bold text-emerald-600 dark:text-emerald-400">Issued</span></>
-                              ) : (
-                                <><div className="h-2 w-2 rounded-full bg-amber-400 ml-1 mr-0.5" /><span className="text-sm font-bold text-amber-600 dark:text-amber-400">Pending</span></>
-                              )}
-                            </div>
-                          </div>
-                        ))}
+                        <div>
+                          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Attendance</p>
+                          <p className="font-semibold text-slate-900 dark:text-white">
+                            {(() => {
+                              if (!selectedStudentForView.attendances || selectedStudentForView.attendances.length === 0) return "No Data";
+                              const present = selectedStudentForView.attendances.filter((a: any) => a.status === "PRESENT").length;
+                              return `${Math.round((present / selectedStudentForView.attendances.length) * 100)}%`;
+                            })()}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Status</p>
+                          <p className={`font-semibold ${selectedStudentForView.status === "PASS_OUT" ? "text-emerald-600 dark:text-emerald-500" : "text-blue-600 dark:text-blue-400"}`}>
+                            {selectedStudentForView.status === "PASS_OUT" ? "Completed" : "In Progress"}
+                          </p>
+                        </div>
+                        
+                        {(() => {
+                          let qual: any = null;
+                          try {
+                            qual = typeof selectedStudentForView.qualification === 'string' ? JSON.parse(selectedStudentForView.qualification) : selectedStudentForView.qualification;
+                          } catch(e){}
+                          if(qual && qual.name) {
+                            return (
+                              <div className="md:col-span-4 pt-4 mt-2 border-t border-slate-100 dark:border-slate-800">
+                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Highest Qualification</p>
+                                <p className="font-semibold text-slate-900 dark:text-white">{qual.name} ({qual.year}) - {qual.percentage}%</p>
+                              </div>
+                            );
+                          }
+                          return null;
+                        })()}
                       </div>
                     </CardContent>
                   </Card>
@@ -1939,6 +2027,54 @@ export default function StudentsClient({ initialStudents, initialWorkspaces, ini
         selectedStudentIds={selectedStudentIds}
         students={initialStudents}
       />
+
+      {/* Password Reset Modal */}
+      <Dialog open={passwordModalOpen} onOpenChange={setPasswordModalOpen}>
+        <DialogContent className="sm:max-w-[400px] rounded-[2rem] p-0 overflow-hidden border-0 shadow-2xl">
+          <div className="bg-white dark:bg-slate-900 p-6 sm:p-8">
+            <div className="flex flex-col items-center text-center space-y-2 mb-6">
+              <div className="h-12 w-12 rounded-full bg-amber-500/10 flex items-center justify-center mb-2">
+                <ShieldCheck className="h-6 w-6 text-amber-500" />
+              </div>
+              <h3 className="text-xl font-bold text-slate-900 dark:text-white">Change Password</h3>
+              <p className="text-sm font-medium text-slate-500">Set a new login password for {selectedStudentForView?.fullName}</p>
+            </div>
+            
+            <form onSubmit={handlePasswordUpdate} className="space-y-4">
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">New Password</label>
+                <Input 
+                  type="text" 
+                  required
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  placeholder="Enter new password"
+                  className="h-11 rounded-xl bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700"
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Confirm Password</label>
+                <Input 
+                  type="text" 
+                  required
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="Confirm new password"
+                  className="h-11 rounded-xl bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700"
+                />
+              </div>
+              <div className="pt-2 flex gap-3">
+                <Button type="button" variant="outline" className="flex-1 rounded-xl h-11 font-semibold" onClick={() => setPasswordModalOpen(false)}>
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={isSubmitting} className="flex-1 rounded-xl h-11 bg-amber-500 hover:bg-amber-600 text-white font-bold shadow-md shadow-amber-500/20">
+                  {isSubmitting ? "Updating..." : "Update"}
+                </Button>
+              </div>
+            </form>
+          </div>
+        </DialogContent>
+      </Dialog>
       </div>
     </TooltipProvider>
   );

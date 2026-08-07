@@ -9,6 +9,8 @@ import { db } from "@/lib/prisma";
 import { CustomThemeStyle } from "@/components/providers/CustomThemeStyle";
 import { getServerTenantLink, getServerWorkspaceBase } from "@/lib/routing-server";
 
+import { cookies } from "next/headers";
+
 export default async function StudentLayout({
   children,
   params
@@ -35,11 +37,21 @@ export default async function StudentLayout({
     redirect(target);
   }
 
+  const studentProfile = await db.studentProfile.findFirst({
+    where: { userId: session.user.id, workspaceId: workspace.id },
+    include: { course: true, batch: { include: { course: true } } }
+  });
+  
+  const currentCourseName = studentProfile?.course?.title || studentProfile?.batch?.course?.title || "Enrolled Learner";
+
   const homeHref = await getServerTenantLink("/", tenant);
   const workspaceBase = await getServerWorkspaceBase(tenant);
+  const impersonatedUserName = (await cookies()).get("impersonated_user_name")?.value;
+  const userName = impersonatedUserName || session.user.name || "Student";
 
   return (
-    <div className="flex min-h-screen bg-background text-foreground transition-colors duration-300">
+    <>
+    <div className="flex h-screen overflow-hidden bg-background text-foreground transition-colors duration-300">
       <CustomThemeStyle 
         primaryColor={workspace.siteSettings?.primaryColor || undefined} 
         accentColor={workspace.siteSettings?.accentColor || undefined} 
@@ -50,22 +62,53 @@ export default async function StudentLayout({
       <MobileBottomNav tenant={tenant} />
       
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden pb-24 lg:pb-0">
-        <header className="h-20 border-b border-border/40 bg-background/50 backdrop-blur-md flex items-center px-4 lg:px-8 sticky top-0 z-40">
-          <div className="lg:hidden ml-4 font-bold tracking-tight text-lg text-foreground truncate max-w-[200px]">
-            {workspace.name}
+        <header className="h-16 border-b border-border/40 bg-background/80 backdrop-blur-md flex items-center px-4 lg:px-8 sticky top-0 z-40 transition-all duration-300">
+          {/* Left side: Navigation / Breadcrumbs */}
+          <div className="flex-1 flex items-center gap-2">
+            <div className="lg:hidden ml-12" /> {/* Spacer for mobile sidebar toggle */}
+            <div className="flex items-center text-sm font-medium">
+              <span className="text-muted-foreground capitalize hidden sm:inline-block">
+                {workspace.name}
+              </span>
+              <span className="text-muted-foreground mx-2 hidden sm:inline-block">/</span>
+              <span className="text-foreground tracking-tight font-semibold capitalize">
+                Student Portal
+              </span>
+            </div>
           </div>
-          <StudentBreadcrumbs tenant={tenant} />
           
-          <div className="ml-auto flex items-center gap-6">
-            <ThemeToggle />
-            <div className="flex items-center gap-3 pl-6 border-l border-border">
-               <div className="text-right hidden sm:block">
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-foreground">{session.user.name}</p>
-                  <p className="text-[8px] font-bold text-primary uppercase tracking-wider opacity-70">Enrolled Learner</p>
-               </div>
-               <div className="h-10 w-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-xs font-bold text-primary shadow-inner">
-                  {session.user.name?.charAt(0)}
-               </div>
+          {/* Right side: Course, Profile, Theme */}
+          <div className="flex items-center gap-4 sm:gap-6 ml-auto">
+            
+            {/* Course Display */}
+            <div className="hidden sm:flex flex-col items-end border-r border-border/50 pr-4 sm:pr-6">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground leading-none mb-1">
+                Current Course
+              </span>
+              <span className="text-xs font-semibold text-primary leading-none">
+                {currentCourseName}
+              </span>
+            </div>
+
+            {/* Profile Section */}
+            <div className="flex items-center gap-3 group cursor-pointer hover:opacity-80 transition-opacity pl-2 sm:pl-0 border-r border-border/50 pr-4 sm:pr-6">
+              <div className="hidden md:flex flex-col items-end">
+                <span className="text-sm font-bold text-foreground leading-none mb-1 uppercase">
+                  {userName}
+                </span>
+                <span className="text-xs font-medium uppercase text-muted-foreground leading-none">
+                  {studentProfile?.enrollmentNo || "Student"}
+                </span>
+              </div>
+              
+              <div className="h-9 w-9 rounded-full bg-primary/10 border-2 border-background shadow-sm group-hover:ring-2 group-hover:ring-primary/20 transition-all flex items-center justify-center text-xs font-bold text-primary">
+                {userName.substring(0, 2).toUpperCase()}
+              </div>
+            </div>
+
+            {/* Theme Toggle */}
+            <div className="flex items-center">
+              <ThemeToggle />
             </div>
           </div>
         </header>
@@ -75,5 +118,6 @@ export default async function StudentLayout({
         </main>
       </div>
     </div>
+    </>
   );
 }

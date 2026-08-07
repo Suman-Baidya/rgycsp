@@ -117,20 +117,7 @@ export default function SuperAdminOverviewClient({
   apiThroughput,
   threatCheckCount
 }: SuperAdminOverviewClientProps) {
-  const [mounted, setMounted] = React.useState(false);
   const [searchQuery, setSearchQuery] = React.useState("");
-
-  React.useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  if (!mounted) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <Activity className="h-8 w-8 animate-spin text-primary/20" />
-      </div>
-    );
-  }
 
   const filteredActivity = recentActivity.filter(act => 
     act.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
