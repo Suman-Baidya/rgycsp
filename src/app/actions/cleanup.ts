@@ -1,5 +1,8 @@
 "use server";
 
+import { revalidateWorkspacePath } from "@/lib/revalidate";
+
+
 import { db } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 
@@ -18,7 +21,7 @@ export async function cleanupRejectedApplications(workspaceId: string) {
       }
     });
 
-    revalidatePath(`/app/[tenant]/admin`, "layout");
+    await revalidateWorkspacePath(typeof workspaceId !== 'undefined' ? workspaceId : (typeof data !== 'undefined' ? data.workspaceId : null), "/admin", "layout");
     
     return { success: true, count: result.count };
   } catch (error: any) {

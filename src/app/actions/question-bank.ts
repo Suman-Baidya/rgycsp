@@ -1,5 +1,8 @@
 "use server";
 
+import { revalidateWorkspacePath } from "@/lib/revalidate";
+
+
 import { db } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 
@@ -13,7 +16,7 @@ export async function createChapter(workspaceId: string, courseId: string, name:
         description
       }
     });
-    revalidatePath(`/app/[tenant]/admin/exam-generator`, "page");
+    await revalidateWorkspacePath(typeof workspaceId !== 'undefined' ? workspaceId : (typeof data !== 'undefined' ? data.workspaceId : null), "/admin/exam-generator", "page");
     return { success: true, data: chapter };
   } catch (error: any) {
     console.error("Failed to create chapter", error);
@@ -41,7 +44,7 @@ export async function addManualQuestion(
         ...data
       }
     });
-    revalidatePath(`/app/[tenant]/admin/exam-generator`, "page");
+    await revalidateWorkspacePath(typeof workspaceId !== 'undefined' ? workspaceId : (typeof data !== 'undefined' ? data.workspaceId : null), "/admin/exam-generator", "page");
     return { success: true, data: question };
   } catch (error: any) {
     return { success: false, error: error.message };
@@ -72,7 +75,7 @@ export async function bulkImportQuestions(
       skipDuplicates: true
     });
     
-    revalidatePath(`/app/[tenant]/admin/exam-generator`, "page");
+    await revalidateWorkspacePath(typeof workspaceId !== 'undefined' ? workspaceId : (typeof data !== 'undefined' ? data.workspaceId : null), "/admin/exam-generator", "page");
     return { success: true, count: data.length };
   } catch (error: any) {
     return { success: false, error: error.message };
@@ -82,7 +85,7 @@ export async function bulkImportQuestions(
 export async function updateQuestion(id: string, data: { questionText: string; optionA: string; optionB: string; optionC: string; optionD: string; correctOption: string; }) {
   try {
     const question = await db.questionBank.update({ where: { id }, data });
-    revalidatePath('/app/[tenant]/admin/exam-generator', 'page');
+    await revalidateWorkspacePath(typeof workspaceId !== 'undefined' ? workspaceId : (typeof data !== 'undefined' ? data.workspaceId : null), "/admin/exam-generator", "page");
     return { success: true, data: question };
   } catch (error: any) { return { success: false, error: error.message }; }
 }
@@ -90,7 +93,7 @@ export async function updateQuestion(id: string, data: { questionText: string; o
 export async function deleteQuestion(id: string) {
   try {
     await db.questionBank.delete({ where: { id } });
-    revalidatePath('/app/[tenant]/admin/exam-generator', 'page');
+    await revalidateWorkspacePath(typeof workspaceId !== 'undefined' ? workspaceId : (typeof data !== 'undefined' ? data.workspaceId : null), "/admin/exam-generator", "page");
     return { success: true };
   } catch (error: any) { return { success: false, error: error.message }; }
 }

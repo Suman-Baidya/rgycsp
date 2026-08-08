@@ -1,5 +1,8 @@
 "use server";
 
+import { revalidateWorkspacePath } from "@/lib/revalidate";
+
+
 import { db } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 
@@ -63,7 +66,7 @@ export async function toggleCourseActivation(workspaceId: string, globalCourseId
       });
     }
 
-    revalidatePath(`/app/[tenant]/admin/courses`, "page");
+    await revalidateWorkspacePath(typeof workspaceId !== 'undefined' ? workspaceId : (typeof data !== 'undefined' ? data.workspaceId : null), "/admin/courses", "page");
     return { success: true, data: course };
   } catch (error: any) {
     console.error("Failed to toggle course activation:", error);
@@ -95,7 +98,7 @@ export async function updateFranchiseCoursePricing(courseId: string, data: {
       }
     });
 
-    revalidatePath(`/app/[tenant]/admin/courses`, "page");
+    await revalidateWorkspacePath(typeof workspaceId !== 'undefined' ? workspaceId : (typeof data !== 'undefined' ? data.workspaceId : null), "/admin/courses", "page");
     return { success: true, data: course };
   } catch (error: any) {
     console.error("Failed to update franchise course pricing:", error);
@@ -144,7 +147,7 @@ export async function createCourse(workspaceId: string, data: any) {
       }
     });
 
-    revalidatePath(`/app/[tenant]/admin/courses`, "page");
+    await revalidateWorkspacePath(typeof workspaceId !== 'undefined' ? workspaceId : (typeof data !== 'undefined' ? data.workspaceId : null), "/admin/courses", "page");
     return { success: true, data: course };
   } catch (error: any) {
     console.error("Failed to create course:", error);
@@ -175,7 +178,7 @@ export async function updateCourse(courseId: string, data: any) {
       }
     });
 
-    revalidatePath(`/app/[tenant]/admin/courses`, "page");
+    await revalidateWorkspacePath(typeof workspaceId !== 'undefined' ? workspaceId : (typeof data !== 'undefined' ? data.workspaceId : null), "/admin/courses", "page");
     return { success: true, data: course };
   } catch (error: any) {
     console.error("Failed to update course:", error);
@@ -189,7 +192,7 @@ export async function deleteCourse(courseId: string) {
       where: { id: courseId }
     });
 
-    revalidatePath(`/app/[tenant]/admin/courses`, "page");
+    await revalidateWorkspacePath(typeof workspaceId !== 'undefined' ? workspaceId : (typeof data !== 'undefined' ? data.workspaceId : null), "/admin/courses", "page");
     return { success: true };
   } catch (error: any) {
     console.error("Failed to delete course:", error);
@@ -203,7 +206,7 @@ export async function deleteMultipleCourses(courseIds: string[]) {
       where: { id: { in: courseIds } }
     });
 
-    revalidatePath(`/app/[tenant]/admin/courses`, "page");
+    await revalidateWorkspacePath(typeof workspaceId !== 'undefined' ? workspaceId : (typeof data !== 'undefined' ? data.workspaceId : null), "/admin/courses", "page");
     return { success: true };
   } catch (error: any) {
     console.error("Failed to delete multiple courses:", error);
@@ -221,7 +224,7 @@ export async function createBatch(workspaceId: string, courseId: string, name: s
       }
     });
 
-    revalidatePath(`/app/[tenant]/admin/courses`, "page");
+    await revalidateWorkspacePath(typeof workspaceId !== 'undefined' ? workspaceId : (typeof data !== 'undefined' ? data.workspaceId : null), "/admin/courses", "page");
     return { success: true, data: batch };
   } catch (error: any) {
     console.error("Failed to create batch:", error);

@@ -1,5 +1,8 @@
 "use server";
 
+import { revalidateWorkspacePath } from "@/lib/revalidate";
+
+
 import { db } from "@/lib/prisma";
 import { auth } from "@/auth";
 import { revalidatePath } from "next/cache";
@@ -169,7 +172,7 @@ export async function placeOrder(workspaceId: string, cartItems: { variantId: st
       }
     });
 
-    revalidatePath(`/app/[tenant]/admin/products`);
+    await revalidateWorkspacePath(typeof workspaceId !== 'undefined' ? workspaceId : (typeof data !== 'undefined' ? data.workspaceId : null), "/admin/products");
     revalidatePath(`/super-admin/products`);
     
     return { success: true, data: order };

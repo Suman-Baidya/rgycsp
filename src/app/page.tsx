@@ -20,16 +20,11 @@ import { GlobalPremiumBackground } from "@/components/layout/GlobalPremiumBackgr
 
 import { auth } from "@/auth";
 
+import { getCachedGlobalSettings } from "@/lib/settings";
+
 export default async function RootLandingPage() {
   const session = await auth();
-  const settings = await db.siteSettings.findFirst({
-    where: { workspaceId: null },
-    include: {
-      sections: {
-        orderBy: { order: "asc" }
-      }
-    }
-  });
+  const settings = await getCachedGlobalSettings(true);
 
   if (!settings) {
     return <div>Site configuration missing. Please check the dashboard.</div>;

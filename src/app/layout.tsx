@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Plus_Jakarta_Sans, Inter } from "next/font/google";
 import "./globals.css";
+import { db } from "@/lib/prisma";
 
 const plusJakartaSans = Plus_Jakarta_Sans({
   variable: "--font-heading",
@@ -12,24 +13,38 @@ const inter = Inter({
   subsets: ["latin"],
 });
 
-export const metadata: Metadata = {
-  title: {
-    template: "%s | RGYCSP",
-    default: "RGYCSP - Empowering Education and Technology",
-  },
-  description: "RGYCSP (ABCD Edu Hub) provides top-tier educational management and skill development centers across the globe.",
-  keywords: ["education", "management", "RGYCSP", "learning", "dashboard", "hub"],
-  openGraph: {
-    title: "RGYCSP - Education Hub",
-    description: "Empowering Education and Technology across modern learning centers.",
-    type: "website",
-    locale: "en_US",
-    siteName: "RGYCSP",
-  },
-  icons: {
-    icon: "https://res.cloudinary.com/dmhipemqk/image/upload/v1780409947/RGYCSP/SuperAdmin/branding/mjwcqjcyprkxpyleggms.webp"
+export async function generateMetadata(): Promise<Metadata> {
+  let globalSettings = null;
+  try {
+    globalSettings = await db.siteSettings.findFirst({
+      where: { workspaceId: null },
+    });
+  } catch (error) {
+    console.error("Error fetching global site settings for metadata:", error);
   }
-};
+
+  const siteName = globalSettings?.siteName || "RGYCSP";
+  const desc = globalSettings?.brandDescription || "RGYCSP (ABCD Edu Hub) provides top-tier educational management and skill development centers across the globe.";
+
+  return {
+    title: {
+      template: `%s | ${siteName}`,
+      default: `${siteName} - Empowering Education and Technology`,
+    },
+    description: desc,
+    keywords: ["education", "management", "RGYCSP", "learning", "dashboard", "hub"],
+    openGraph: {
+      title: `${siteName} - Education Hub`,
+      description: desc,
+      type: "website",
+      locale: "en_US",
+      siteName: siteName,
+    },
+    icons: {
+      icon: globalSettings?.faviconUrl || globalSettings?.logoUrl || "https://res.cloudinary.com/dmhipemqk/image/upload/v1780409947/RGYCSP/SuperAdmin/branding/mjwcqjcyprkxpyleggms.webp"
+    }
+  };
+}
 
 import { SessionProvider } from "@/components/providers/SessionProvider";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";

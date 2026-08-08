@@ -1,7 +1,10 @@
 "use server";
 
+import { revalidateWorkspacePath } from "@/lib/revalidate";
+
+
 import { db } from "@/lib/prisma";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 
 export async function updateSiteSettings(data: any) {
   try {
@@ -16,6 +19,7 @@ export async function updateSiteSettings(data: any) {
         data: {
           siteName: data.siteName,
           logoUrl: data.logoUrl,
+          faviconUrl: data.faviconUrl,
           primaryColor: data.primaryColor,
           accentColor: data.accentColor,
           contactEmail: data.contactEmail,
@@ -40,6 +44,7 @@ export async function updateSiteSettings(data: any) {
           workspaceId,
           siteName: data.siteName,
           logoUrl: data.logoUrl,
+          faviconUrl: data.faviconUrl,
           primaryColor: data.primaryColor,
           accentColor: data.accentColor,
           contactEmail: data.contactEmail,
@@ -60,11 +65,12 @@ export async function updateSiteSettings(data: any) {
       });
     }
 
+    revalidateTag("site-settings");
     revalidatePath("/", "layout");
     revalidatePath("/");
     revalidatePath("/(admin)/super-admin/settings");
-    revalidatePath("/app/[tenant]/admin/settings");
-    revalidatePath("/app/[tenant]", "layout");
+    await revalidateWorkspacePath(typeof workspaceId !== 'undefined' ? workspaceId : (typeof data !== 'undefined' ? data.workspaceId : null), "/admin/settings");
+    await revalidateWorkspacePath(typeof workspaceId !== 'undefined' ? workspaceId : (typeof data !== 'undefined' ? data.workspaceId : null), "/", "layout");
     
     return { success: true };
   } catch (error: any) {
@@ -89,10 +95,11 @@ export async function updateLandingSection(sectionId: string, data: any) {
       },
     });
 
+    revalidateTag("site-settings");
     revalidatePath("/");
     revalidatePath("/(admin)/super-admin/settings");
-    revalidatePath("/app/[tenant]/admin/settings");
-    revalidatePath("/app/[tenant]", "layout");
+    await revalidateWorkspacePath(typeof workspaceId !== 'undefined' ? workspaceId : (typeof data !== 'undefined' ? data.workspaceId : null), "/admin/settings");
+    await revalidateWorkspacePath(typeof workspaceId !== 'undefined' ? workspaceId : (typeof data !== 'undefined' ? data.workspaceId : null), "/", "layout");
     return { success: true };
   } catch (error) {
     console.error("Failed to update landing section:", error);

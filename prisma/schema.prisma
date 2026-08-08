@@ -126,6 +126,7 @@ model SiteSettings {
   workspaceId  String? @unique // null means global site settings
   siteName     String?
   logoUrl      String?
+  faviconUrl   String?
   primaryColor String?
   accentColor  String?
   fontFamily   String?

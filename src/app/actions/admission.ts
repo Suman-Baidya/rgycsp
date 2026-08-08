@@ -1,5 +1,8 @@
 "use server";
 
+import { revalidateWorkspacePath } from "@/lib/revalidate";
+
+
 import { db } from "@/lib/prisma";
 import { sendOTPEmail } from "@/lib/mail";
 import bcrypt from "bcryptjs";
@@ -158,8 +161,8 @@ export async function submitAdmissionApplication(workspaceId: string, data: any,
       });
     }
 
-    revalidatePath(`/app/[tenant]/admin`, "layout");
-    revalidatePath(`/app/[tenant]/admin/admissions`);
+    await revalidateWorkspacePath(typeof workspaceId !== 'undefined' ? workspaceId : (typeof data !== 'undefined' ? data.workspaceId : null), "/admin", "layout");
+    await revalidateWorkspacePath(typeof workspaceId !== 'undefined' ? workspaceId : (typeof data !== 'undefined' ? data.workspaceId : null), "/admin/admissions");
 
     return { 
       success: true, 
@@ -308,9 +311,9 @@ export async function updateApplicationStatus(id: string, status: string, reject
       });
     }
 
-    revalidatePath(`/app/[tenant]/admin`, "layout");
-    revalidatePath(`/app/[tenant]/admin/admissions`);
-    revalidatePath(`/app/[tenant]/admin/students`);
+    await revalidateWorkspacePath(typeof workspaceId !== 'undefined' ? workspaceId : (typeof data !== 'undefined' ? data.workspaceId : null), "/admin", "layout");
+    await revalidateWorkspacePath(typeof workspaceId !== 'undefined' ? workspaceId : (typeof data !== 'undefined' ? data.workspaceId : null), "/admin/admissions");
+    await revalidateWorkspacePath(typeof workspaceId !== 'undefined' ? workspaceId : (typeof data !== 'undefined' ? data.workspaceId : null), "/admin/students");
 
     return { success: true };
   } catch (error: any) {

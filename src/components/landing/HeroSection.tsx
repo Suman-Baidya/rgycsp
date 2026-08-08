@@ -201,7 +201,7 @@ export function HeroSection({ data }: { data?: any }) {
                           className="hidden lg:flex justify-center relative"
                         >
                           <div className="absolute inset-0 bg-primary/20 blur-[150px] rounded-full animate-pulse" />
-                          <img
+                          <Image width={800} height={800}
                             src={slide.offerImage}
                             alt="Promotion"
                             fetchPriority={index === 0 ? "high" : "auto"}

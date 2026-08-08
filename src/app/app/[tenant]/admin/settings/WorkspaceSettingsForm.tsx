@@ -37,6 +37,7 @@ const THEME_PRESETS = [
 export function WorkspaceSettingsForm({ settings }: { settings: any }) {
   const [siteName, setSiteName] = useState(settings.siteName);
   const [logoUrl, setLogoUrl] = useState(settings.logoUrl);
+  const [faviconUrl, setFaviconUrl] = useState(settings.faviconUrl);
   const [primaryColor, setPrimaryColor] = useState(settings.primaryColor);
   const [accentColor, setAccentColor] = useState(settings.accentColor);
   const [fontFamily, setFontFamily] = useState(settings.fontFamily || "Inter");
@@ -86,6 +87,7 @@ export function WorkspaceSettingsForm({ settings }: { settings: any }) {
   useEffect(() => {
     setSiteName(settings.siteName);
     setLogoUrl(settings.logoUrl);
+    setFaviconUrl(settings.faviconUrl);
     setPrimaryColor(settings.primaryColor);
     setAccentColor(settings.accentColor);
     setFontFamily(settings.fontFamily || "Inter");
@@ -280,6 +282,7 @@ export function WorkspaceSettingsForm({ settings }: { settings: any }) {
                        <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">Logo Placement</Label>
                        <div className="flex items-center gap-4 p-2 bg-background rounded-2xl border border-border/40 h-20">
                           <ImageUpload value={logoUrl} onChange={setLogoUrl} folder={`${mediaFolderBase}/branding`} />
+                    <ImageUpload value={faviconUrl || ""} onChange={setFaviconUrl} label="Favicon (Optional, defaults to Logo)" folder={`${mediaFolderBase}/branding`} />
                        </div>
                     </div>
                   </div>

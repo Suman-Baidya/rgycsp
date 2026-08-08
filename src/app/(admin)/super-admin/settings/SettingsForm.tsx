@@ -27,6 +27,7 @@ const THEME_PRESETS = [
 export function SettingsForm({ settings, isSuperAdmin = true }: { settings: any, isSuperAdmin?: boolean }) {
   const [siteName, setSiteName] = useState(settings.siteName);
   const [logoUrl, setLogoUrl] = useState(settings.logoUrl);
+  const [faviconUrl, setFaviconUrl] = useState(settings.faviconUrl);
   const [primaryColor, setPrimaryColor] = useState(settings.primaryColor);
   const [accentColor, setAccentColor] = useState(settings.accentColor);
   const [fontFamily, setFontFamily] = useState(settings.fontFamily || "Inter");
@@ -74,6 +75,7 @@ export function SettingsForm({ settings, isSuperAdmin = true }: { settings: any,
   useEffect(() => {
     setSiteName(settings.siteName);
     setLogoUrl(settings.logoUrl);
+    setFaviconUrl(settings.faviconUrl);
     setPrimaryColor(settings.primaryColor);
     setAccentColor(settings.accentColor);
     setFontFamily(settings.fontFamily || "Inter");
@@ -144,6 +146,7 @@ export function SettingsForm({ settings, isSuperAdmin = true }: { settings: any,
         workspaceId: settings.workspaceId,
         siteName,
         logoUrl,
+        faviconUrl,
         primaryColor,
         accentColor,
         fontFamily,
@@ -398,8 +401,9 @@ export function SettingsForm({ settings, isSuperAdmin = true }: { settings: any,
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                     <ImageUpload value={logoUrl} onChange={setLogoUrl} label="Main Logo" folder={`${mediaFolderBase}/branding`} />
+                    <ImageUpload value={faviconUrl || ""} onChange={setFaviconUrl} label="Favicon (Optional, defaults to Logo)" folder={`${mediaFolderBase}/branding`} />
                     <ImageUpload value={navbarConfig.secondaryLogoUrl || ""} onChange={(url) => setNavbarConfig({...navbarConfig, secondaryLogoUrl: url})} label="Secondary Logo (Optional)" folder={`${mediaFolderBase}/branding`} />
                   </div>
                   

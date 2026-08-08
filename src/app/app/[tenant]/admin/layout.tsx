@@ -1,6 +1,7 @@
 import { auth } from "@/auth";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
+import { headers } from "next/headers";
 import { WorkspaceSidebar } from "@/components/layout/WorkspaceSidebar";
 import { WorkspaceAdminHeader } from "@/components/layout/WorkspaceAdminHeader";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
@@ -8,7 +9,6 @@ import { getServerTenantLink, getServerWorkspaceBase } from "@/lib/routing-serve
 import { db } from "@/lib/prisma";
 import { getPendingApplicationsCount } from "@/app/actions/admin-applications";
 import { getPendingFeePaymentsCount } from "@/app/actions/payments";
-import { AdminRouteGuard } from "@/components/layout/AdminRouteGuard";
 
 export default async function WorkspaceAdminLayout({
   children,
@@ -66,16 +66,41 @@ export default async function WorkspaceAdminLayout({
     }
   }
 
+  const headersList = await headers();
+  const currentPath = headersList.get("x-pathname") || "";
+
+  if (userRole === "UNAUTHORIZED") {
+    redirect(await getServerTenantLink("/login", tenant));
+  } else if (userRole !== "ADMIN") {
+    const parts = currentPath.split('/');
+    const adminIndex = parts.indexOf("admin");
+    
+    if (adminIndex !== -1 && parts.length > adminIndex + 1) {
+      const section = parts[adminIndex + 1];
+      let requiredPermission = section;
+      if (section === "staff") requiredPermission = "staff";
+      if (section === "wallet") requiredPermission = "wallet";
+      if (section === "admissions") requiredPermission = "admissions";
+      if (section === "attendance") requiredPermission = "attendance";
+      if (section === "courses") requiredPermission = "courses";
+      if (section === "exam-generator") requiredPermission = "exam-gen";
+      if (section === "settings") requiredPermission = "settings";
+
+      if (requiredPermission !== "profile") {
+        if (requiredPermission === "staff" && userRole !== "ADMIN") {
+          redirect(await getServerTenantLink("/admin", tenant));
+        } else if (!userPermissions.includes(requiredPermission)) {
+          redirect(await getServerTenantLink("/admin", tenant));
+        }
+      }
+    }
+  }
+
   const homeHref = await getServerTenantLink("/", tenant);
   const workspaceBase = await getServerWorkspaceBase(tenant);
 
   return (
     <div className="flex h-screen overflow-hidden bg-background text-foreground transition-colors duration-300">
-      <AdminRouteGuard 
-        tenant={tenant} 
-        userRole={userRole} 
-        userPermissions={userPermissions} 
-      />
       <WorkspaceSidebar 
         tenant={tenant} 
         workspaceBase={workspaceBase} 

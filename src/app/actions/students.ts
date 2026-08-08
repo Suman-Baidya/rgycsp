@@ -1,5 +1,8 @@
 "use server";
 
+import { revalidateWorkspacePath } from "@/lib/revalidate";
+
+
 import { db } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { auth } from "@/auth";
@@ -145,7 +148,7 @@ export async function createStudent(workspaceId: string, data: any) {
       }
     });
 
-    revalidatePath(`/app/[tenant]/admin/students`, "page");
+    await revalidateWorkspacePath(typeof workspaceId !== 'undefined' ? workspaceId : (typeof data !== 'undefined' ? data.workspaceId : null), "/admin/students", "page");
     return { success: true, data: student };
   } catch (error: any) {
     console.error("Failed to create student:", error);
@@ -315,7 +318,7 @@ export async function updateStudent(id: string, data: any) {
       return updatedProfile;
     });
 
-    revalidatePath(`/app/[tenant]/admin/students`, "page");
+    await revalidateWorkspacePath(typeof workspaceId !== 'undefined' ? workspaceId : (typeof data !== 'undefined' ? data.workspaceId : null), "/admin/students", "page");
     return { success: true, data: student };
   } catch (error: any) {
     console.error("Failed to update student:", error);
@@ -371,7 +374,7 @@ export async function adminUpdateStudentPassword(studentId: string, newPassword:
         });
       }
     });
-    revalidatePath('/app/[tenant]/admin/students');
+    await revalidateWorkspacePath(typeof workspaceId !== 'undefined' ? workspaceId : (typeof data !== 'undefined' ? data.workspaceId : null), "/admin/students");
     return { success: true };
   } catch (error: any) {
     return { success: false, error: error.message };

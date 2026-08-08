@@ -966,7 +966,7 @@ export default function DocumentDesigner() {
                           <textarea 
                             value={selectedVar.qrContentTemplate || ""}
                             onChange={(e) => updateVariable(selectedVar.id, { qrContentTemplate: e.target.value })}
-                            className="w-full h-24 p-3 rounded-xl border-2 border-slate-200 bg-white font-mono text-sm resize-none focus:outline-none focus:border-primary/50"
+                            className="w-full h-24 p-3 rounded-xl border-2 border-input bg-background font-mono text-sm resize-none focus:outline-none focus:border-primary/50"
                             placeholder="e.g. Name: {studentName}&#10;Reg: {registrationNo}"
                           />
                           <p className="text-[10px] text-slate-400 font-bold">Use {'{variableName}'} to insert dynamic data.</p>
@@ -978,7 +978,7 @@ export default function DocumentDesigner() {
                             <textarea 
                               value={selectedVar.textContent !== undefined ? selectedVar.textContent : `{${selectedVar.name}}`}
                               onChange={(e) => updateVariable(selectedVar.id, { textContent: e.target.value })}
-                              className="w-full h-24 p-3 rounded-xl border-2 border-slate-200 bg-white font-mono text-sm resize-none focus:outline-none focus:border-primary/50"
+                              className="w-full h-24 p-3 rounded-xl border-2 border-input bg-background font-mono text-sm resize-none focus:outline-none focus:border-primary/50"
                               placeholder="e.g. <i>C/o</i> <b>{fatherName}</b>"
                             />
                             <p className="text-[10px] text-slate-400 font-bold">Use {'{variableName}'} for data. You can use HTML like &lt;b&gt;, &lt;i&gt;, &lt;span style=&quot;color:red&quot;&gt; for rich styling!</p>
@@ -995,7 +995,7 @@ export default function DocumentDesigner() {
                                 setQuickInsertKey(prev => prev + 1);
                               }}
                             >
-                              <SelectTrigger className="w-full h-11 bg-white border-2 border-slate-200 rounded-xl font-bold px-3 focus:ring-0 focus:ring-offset-0">
+                              <SelectTrigger className="w-full h-11 bg-background border-2 border-input rounded-xl font-bold px-3 focus:ring-0 focus:ring-offset-0">
                                 <SelectValue placeholder="Select to insert..." />
                               </SelectTrigger>
                               <SelectContent className="max-h-[300px]">
@@ -1024,7 +1024,7 @@ export default function DocumentDesigner() {
                             value={selectedVar.name}
                             onValueChange={(value: any) => updateVariable(selectedVar.id, { name: value })}
                           >
-                            <SelectTrigger className="w-full h-11 bg-white border-2 border-slate-200 rounded-xl font-bold px-3 focus:ring-0 focus:ring-offset-0">
+                            <SelectTrigger className="w-full h-11 bg-background border-2 border-input rounded-xl font-bold px-3 focus:ring-0 focus:ring-offset-0">
                               <SelectValue placeholder="Select variable..." />
                             </SelectTrigger>
                             <SelectContent className="max-h-[300px]">
@@ -1080,7 +1080,7 @@ export default function DocumentDesigner() {
                                 value={selectedVar.textAlign || "left"}
                                 onValueChange={(value: any) => updateVariable(selectedVar.id, { textAlign: value })}
                               >
-                                <SelectTrigger className="w-full h-10 bg-white border-2 border-slate-200 rounded-xl font-bold px-3">
+                                <SelectTrigger className="w-full h-10 bg-background border-2 border-input rounded-xl font-bold px-3">
                                   <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -1097,7 +1097,7 @@ export default function DocumentDesigner() {
                                 value={selectedVar.fontFamily || "Inter"}
                                 onValueChange={(value: any) => updateVariable(selectedVar.id, { fontFamily: value })}
                               >
-                                <SelectTrigger className="w-full h-10 bg-white border-2 border-slate-200 rounded-xl font-bold px-3">
+                                <SelectTrigger className="w-full h-10 bg-background border-2 border-input rounded-xl font-bold px-3">
                                   <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -1118,7 +1118,7 @@ export default function DocumentDesigner() {
                                 value={selectedVar.fontWeight || "normal"}
                                 onValueChange={(value: any) => updateVariable(selectedVar.id, { fontWeight: value })}
                               >
-                                <SelectTrigger className="w-full h-10 bg-white border-2 border-slate-200 rounded-xl font-bold px-3">
+                                <SelectTrigger className="w-full h-10 bg-background border-2 border-input rounded-xl font-bold px-3">
                                   <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -1136,7 +1136,7 @@ export default function DocumentDesigner() {
                                 type="number" 
                                 value={selectedVar.fontSize} 
                                 onChange={(e) => updateVariable(selectedVar.id, { fontSize: Number(e.target.value) })}
-                                className="h-10 bg-white border-2 border-slate-200 rounded-xl font-bold" 
+                                className="h-10 bg-background border-2 border-input rounded-xl font-bold" 
                               />
                             </div>
                             <div className="space-y-2">
@@ -1146,13 +1146,13 @@ export default function DocumentDesigner() {
                                   type="color" 
                                   value={selectedVar.color || "#000000"} 
                                   onChange={(e) => updateVariable(selectedVar.id, { color: e.target.value })}
-                                  className="h-10 w-10 p-1 bg-white border-2 border-slate-200 rounded-xl cursor-pointer shrink-0" 
+                                  className="h-10 w-10 p-1 bg-background border-2 border-input rounded-xl cursor-pointer shrink-0" 
                                 />
                                 <Input 
                                   type="text" 
                                   value={selectedVar.color || "#000000"} 
                                   onChange={(e) => updateVariable(selectedVar.id, { color: e.target.value })}
-                                  className="h-10 bg-white border-2 border-slate-200 rounded-xl font-bold font-mono px-2" 
+                                  className="h-10 bg-background border-2 border-input rounded-xl font-bold font-mono px-2" 
                                 />
                               </div>
                             </div>
@@ -1164,7 +1164,7 @@ export default function DocumentDesigner() {
                         <div className="space-y-4">
                           <div className="space-y-2">
                             <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Object Fit</Label>
-                            <div className="flex bg-white border-2 border-slate-200 p-1 rounded-xl">
+                            <div className="flex bg-background border-2 border-input p-1 rounded-xl">
                               {(["cover", "contain", "fill"] as const).map((fit) => (
                                 <button
                                   key={fit}
@@ -1196,7 +1196,7 @@ export default function DocumentDesigner() {
                                 type="number" 
                                 value={selectedVar.borderRadius || 0} 
                                 onChange={(e) => updateVariable(selectedVar.id, { borderRadius: Number(e.target.value) })}
-                                className="h-9 w-16 bg-white border-2 border-slate-200 rounded-lg font-bold text-center p-0" 
+                                className="h-9 w-16 bg-background border-2 border-input rounded-lg font-bold text-center p-0" 
                               />
                             </div>
                           </div>
@@ -1218,7 +1218,7 @@ export default function DocumentDesigner() {
                           step="0.01"
                           value={Number(fromPx(selectedVar.x, unit)).toFixed(unit === "px" ? 0 : 2)} 
                           onChange={(e) => updateVariable(selectedVar.id, { x: toPx(parseFloat(e.target.value) || 0, unit) })} 
-                          className="h-9 w-24 bg-white border-2 border-slate-200 rounded-lg font-bold px-3 text-right" 
+                          className="h-9 w-24 bg-background border-2 border-input rounded-lg font-bold px-3 text-right" 
                         />
                       </div>
                       <div className="flex items-center justify-between">
@@ -1228,7 +1228,7 @@ export default function DocumentDesigner() {
                           step="0.01"
                           value={Number(fromPx(selectedVar.y, unit)).toFixed(unit === "px" ? 0 : 2)} 
                           onChange={(e) => updateVariable(selectedVar.id, { y: toPx(parseFloat(e.target.value) || 0, unit) })} 
-                          className="h-9 w-24 bg-white border-2 border-slate-200 rounded-lg font-bold px-3 text-right" 
+                          className="h-9 w-24 bg-background border-2 border-input rounded-lg font-bold px-3 text-right" 
                         />
                       </div>
                       <div className="flex items-center justify-between">
@@ -1239,7 +1239,7 @@ export default function DocumentDesigner() {
                           value={selectedVar.width ? Number(fromPx(selectedVar.width, unit)).toFixed(unit === "px" ? 0 : 2) : ""} 
                           placeholder="Auto"
                           onChange={(e) => updateVariable(selectedVar.id, { width: e.target.value ? toPx(parseFloat(e.target.value), unit) : undefined })} 
-                          className="h-9 w-24 bg-white border-2 border-slate-200 rounded-lg font-bold px-3 text-right" 
+                          className="h-9 w-24 bg-background border-2 border-input rounded-lg font-bold px-3 text-right" 
                         />
                       </div>
                       {(selectedVar.type === 'image' || selectedVar.type === 'signature' || selectedVar.type === 'qrcode') && (
@@ -1250,7 +1250,7 @@ export default function DocumentDesigner() {
                             step="0.01"
                             value={Number(fromPx(selectedVar.height || 0, unit)).toFixed(unit === "px" ? 0 : 2)} 
                             onChange={(e) => updateVariable(selectedVar.id, { height: toPx(parseFloat(e.target.value) || 0, unit) })} 
-                            className="h-9 w-24 bg-white border-2 border-slate-200 rounded-lg font-bold px-3 text-right" 
+                            className="h-9 w-24 bg-background border-2 border-input rounded-lg font-bold px-3 text-right" 
                           />
                         </div>
                       )}

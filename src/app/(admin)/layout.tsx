@@ -2,7 +2,7 @@ import { AdminSidebar } from "@/components/layout/AdminSidebar";
 import { SuperAdminHeader } from "@/components/layout/SuperAdminHeader";
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
-import { SuperAdminRouteGuard } from "@/components/layout/SuperAdminRouteGuard";
+import { headers } from "next/headers";
 import { db } from "@/lib/prisma";
 
 export default async function AdminLayout({
@@ -27,9 +27,43 @@ export default async function AdminLayout({
 
   const permissions = (dbUser.systemPermissions as string[]) || [];
 
+  const headersList = await headers();
+  const currentPath = headersList.get("x-pathname") || "";
+
+  if (dbUser.role === "SUPER_ADMIN_MANAGER") {
+    const parts = currentPath.split('/');
+    const adminIndex = parts.indexOf("super-admin");
+    
+    if (adminIndex !== -1 && parts.length > adminIndex + 1) {
+      const section = parts[adminIndex + 1];
+      if (section) {
+        const routeMap: Record<string, string> = {
+          "wallet": "Wallet Economy",
+          "franchises": "Franchises",
+          "state-managers": "State Managers",
+          "students": "Students",
+          "users": "Users",
+          "courses": "Courses",
+          "products": "Products",
+          "documents": "Documents",
+          "settings": "Settings",
+          "profile": "Overview"
+        };
+        const requiredPermission = routeMap[section];
+        
+        if (!requiredPermission) {
+          if (section === "logs") {
+            redirect("/super-admin");
+          }
+        } else if (requiredPermission !== "Overview" && !permissions.includes(requiredPermission)) {
+          redirect("/super-admin");
+        }
+      }
+    }
+  }
+
   return (
     <div className="flex h-screen overflow-hidden bg-background text-foreground transition-colors duration-300">
-      <SuperAdminRouteGuard userRole={dbUser.role} userPermissions={permissions} />
       <AdminSidebar 
         serverRole={dbUser.role} 
         serverPermissions={permissions} 

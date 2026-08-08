@@ -1,5 +1,8 @@
 "use server";
 
+import { revalidateWorkspacePath } from "@/lib/revalidate";
+
+
 import { db } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { auth } from "@/auth";
@@ -84,7 +87,7 @@ export async function addStaff(
       }
     });
 
-    revalidatePath(`/app/[tenant]/admin/staff`, "page");
+    await revalidateWorkspacePath(typeof workspaceId !== 'undefined' ? workspaceId : (typeof data !== 'undefined' ? data.workspaceId : null), "/admin/staff", "page");
     return { success: true, data: newRole };
   } catch (error: any) {
     console.error("Failed to add staff:", error);
@@ -114,7 +117,7 @@ export async function updateStaffRole(
         ...(data.permissions && { permissions: data.permissions })
       }
     });
-    revalidatePath(`/app/[tenant]/admin/staff`, "page");
+    await revalidateWorkspacePath(typeof workspaceId !== 'undefined' ? workspaceId : (typeof data !== 'undefined' ? data.workspaceId : null), "/admin/staff", "page");
     return { success: true, data: updatedRole };
   } catch (error: any) {
     console.error("Failed to update staff:", error);
@@ -127,7 +130,7 @@ export async function removeStaff(roleId: string) {
     await db.workspaceRole.delete({
       where: { id: roleId }
     });
-    revalidatePath(`/app/[tenant]/admin/staff`, "page");
+    await revalidateWorkspacePath(typeof workspaceId !== 'undefined' ? workspaceId : (typeof data !== 'undefined' ? data.workspaceId : null), "/admin/staff", "page");
     return { success: true };
   } catch (error: any) {
     console.error("Failed to remove staff:", error);

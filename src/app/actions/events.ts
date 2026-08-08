@@ -1,5 +1,8 @@
 "use server";
 
+import { revalidateWorkspacePath } from "@/lib/revalidate";
+
+
 import { db } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 
@@ -35,7 +38,7 @@ export async function createEvent(data: any) {
   try {
     const event = await db.event.create({
       data: {
-        workspaceId: null, // Super admin events are always global
+        workspaceId: data.workspaceId || null, // Global if not specified
         hostName: data.hostName,
         title: data.title,
         description: data.description,
@@ -53,8 +56,8 @@ export async function createEvent(data: any) {
       },
     });
 
-    revalidatePath("/app/[tenant]", "layout");
-    revalidatePath("/app/[tenant]/events");
+    await revalidateWorkspacePath(typeof workspaceId !== 'undefined' ? workspaceId : (typeof data !== 'undefined' ? data.workspaceId : null), "/", "layout");
+    await revalidateWorkspacePath(typeof workspaceId !== 'undefined' ? workspaceId : (typeof data !== 'undefined' ? data.workspaceId : null), "/events");
     revalidatePath("/events");
     return { success: true, event };
   } catch (error: any) {
@@ -68,7 +71,7 @@ export async function updateEvent(eventId: string, data: any) {
     await db.event.update({
       where: { id: eventId },
       data: {
-        workspaceId: null,
+        workspaceId: data.workspaceId || null,
         hostName: data.hostName,
         title: data.title,
         description: data.description,
@@ -86,8 +89,8 @@ export async function updateEvent(eventId: string, data: any) {
       },
     });
 
-    revalidatePath("/app/[tenant]", "layout");
-    revalidatePath("/app/[tenant]/events");
+    await revalidateWorkspacePath(typeof workspaceId !== 'undefined' ? workspaceId : (typeof data !== 'undefined' ? data.workspaceId : null), "/", "layout");
+    await revalidateWorkspacePath(typeof workspaceId !== 'undefined' ? workspaceId : (typeof data !== 'undefined' ? data.workspaceId : null), "/events");
     revalidatePath("/events");
     return { success: true };
   } catch (error: any) {
@@ -102,8 +105,8 @@ export async function deleteEvent(eventId: string) {
       where: { id: eventId },
     });
 
-    revalidatePath("/app/[tenant]", "layout");
-    revalidatePath("/app/[tenant]/events");
+    await revalidateWorkspacePath(typeof workspaceId !== 'undefined' ? workspaceId : (typeof data !== 'undefined' ? data.workspaceId : null), "/", "layout");
+    await revalidateWorkspacePath(typeof workspaceId !== 'undefined' ? workspaceId : (typeof data !== 'undefined' ? data.workspaceId : null), "/events");
     revalidatePath("/events");
     return { success: true };
   } catch (error) {

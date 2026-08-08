@@ -1,3 +1,4 @@
+import Image from "next/image";
 import {
   Accordion,
   AccordionContent,
@@ -68,7 +69,7 @@ export function FaqSection({ data }: { data?: any }) {
 
           {/* Left Column: Image */}
           <div className="relative h-[500px] lg:h-[700px] w-full rounded-3xl overflow-hidden shadow-2xl border border-zinc-200 dark:border-zinc-800">
-            <img
+            <Image width={800} height={800}
               src={image}
               alt="Call Centre Support"
               className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 "

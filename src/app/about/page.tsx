@@ -11,16 +11,11 @@ const OurMessage = dynamic(() => import("@/components/landing/OurMessage").then(
 import { db } from "@/lib/prisma";
 import { auth } from "@/auth";
 
+import { getCachedGlobalSettings } from "@/lib/settings";
+
 export default async function AboutPage() {
   const session = await auth();
-  const settings = await db.siteSettings.findFirst({
-    where: { workspaceId: null },
-    include: {
-      sections: {
-        orderBy: { order: "asc" }
-      }
-    }
-  });
+  const settings = await getCachedGlobalSettings(true);
 
   if (!settings) {
     return <div>Site configuration missing. Please check the dashboard.</div>;

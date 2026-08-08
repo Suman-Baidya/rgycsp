@@ -1,5 +1,8 @@
 "use server";
 
+import { revalidateWorkspacePath } from "@/lib/revalidate";
+
+
 import { db } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import bcrypt from "bcryptjs";
@@ -30,7 +33,7 @@ export async function deleteApplication(applicationId: string) {
     await db.admissionApplication.delete({
       where: { id: applicationId }
     });
-    revalidatePath(`/app/[tenant]/admin/students/applications`);
+    await revalidateWorkspacePath(typeof workspaceId !== 'undefined' ? workspaceId : (typeof data !== 'undefined' ? data.workspaceId : null), "/admin/students/applications");
     return { success: true };
   } catch (error: any) {
     console.error("Error deleting application:", error);
@@ -233,10 +236,10 @@ export async function approveApplication(applicationId: string, batchId: string)
       return { student, updatedApp };
     });
 
-    revalidatePath(`/app/[tenant]/admin/students`);
-    revalidatePath(`/app/[tenant]/admin/students/applications`);
-    revalidatePath(`/app/[tenant]/admin/admissions`);
-    revalidatePath(`/app/[tenant]/admin`, "layout");
+    await revalidateWorkspacePath(typeof workspaceId !== 'undefined' ? workspaceId : (typeof data !== 'undefined' ? data.workspaceId : null), "/admin/students");
+    await revalidateWorkspacePath(typeof workspaceId !== 'undefined' ? workspaceId : (typeof data !== 'undefined' ? data.workspaceId : null), "/admin/students/applications");
+    await revalidateWorkspacePath(typeof workspaceId !== 'undefined' ? workspaceId : (typeof data !== 'undefined' ? data.workspaceId : null), "/admin/admissions");
+    await revalidateWorkspacePath(typeof workspaceId !== 'undefined' ? workspaceId : (typeof data !== 'undefined' ? data.workspaceId : null), "/admin", "layout");
     
     return { success: true, data: result.student };
   } catch (error: any) {
@@ -254,9 +257,9 @@ export async function rejectApplication(applicationId: string, reason: string) {
       data: { status: "REJECTED", rejectionReason: reason }
     });
     
-    revalidatePath(`/app/[tenant]/admin/students/applications`);
-    revalidatePath(`/app/[tenant]/admin/admissions`);
-    revalidatePath(`/app/[tenant]/admin`, "layout");
+    await revalidateWorkspacePath(typeof workspaceId !== 'undefined' ? workspaceId : (typeof data !== 'undefined' ? data.workspaceId : null), "/admin/students/applications");
+    await revalidateWorkspacePath(typeof workspaceId !== 'undefined' ? workspaceId : (typeof data !== 'undefined' ? data.workspaceId : null), "/admin/admissions");
+    await revalidateWorkspacePath(typeof workspaceId !== 'undefined' ? workspaceId : (typeof data !== 'undefined' ? data.workspaceId : null), "/admin", "layout");
     return { success: true };
   } catch (error: any) {
     console.error("Error rejecting application:", error);

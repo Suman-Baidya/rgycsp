@@ -1,5 +1,8 @@
 "use server";
 
+import { revalidateWorkspacePath } from "@/lib/revalidate";
+
+
 import { db } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 
@@ -44,8 +47,8 @@ export async function updateFranchisePaymentConfig(workspaceId: string, data: an
       }
     });
 
-    revalidatePath(`/app/[tenant]/admin/students`);
-    revalidatePath(`/app/[tenant]/student/dashboard/fees`);
+    await revalidateWorkspacePath(typeof workspaceId !== 'undefined' ? workspaceId : (typeof data !== 'undefined' ? data.workspaceId : null), "/admin/students");
+    await revalidateWorkspacePath(typeof workspaceId !== 'undefined' ? workspaceId : (typeof data !== 'undefined' ? data.workspaceId : null), "/student/dashboard/fees");
     
     return { success: true, data: config };
   } catch (error: any) {
@@ -157,7 +160,7 @@ export async function generateStudentPaymentStructure(studentProfileId: string, 
       newInvoices.map(inv => db.invoice.create({ data: inv as any }))
     );
 
-    revalidatePath(`/app/[tenant]/admin/students`);
+    await revalidateWorkspacePath(typeof workspaceId !== 'undefined' ? workspaceId : (typeof data !== 'undefined' ? data.workspaceId : null), "/admin/students");
     return { success: true, message: "Payment structure generated successfully" };
   } catch (error: any) {
     console.error("Failed to generate payment structure:", error);
@@ -177,7 +180,7 @@ export async function recordManualOfflinePayment(invoiceId: string, paymentMetho
       }
     });
 
-    revalidatePath(`/app/[tenant]/admin/students`);
+    await revalidateWorkspacePath(typeof workspaceId !== 'undefined' ? workspaceId : (typeof data !== 'undefined' ? data.workspaceId : null), "/admin/students");
     return { success: true, data: invoice };
   } catch (error: any) {
     console.error("Failed to record payment:", error);
@@ -228,8 +231,8 @@ export async function updateInvoiceProof(invoiceId: string, paymentProofUrl: str
       }
     });
 
-    revalidatePath(`/app/[tenant]/student/dashboard/fees`);
-    revalidatePath(`/app/[tenant]/admin/students`);
+    await revalidateWorkspacePath(typeof workspaceId !== 'undefined' ? workspaceId : (typeof data !== 'undefined' ? data.workspaceId : null), "/student/dashboard/fees");
+    await revalidateWorkspacePath(typeof workspaceId !== 'undefined' ? workspaceId : (typeof data !== 'undefined' ? data.workspaceId : null), "/admin/students");
     
     return { success: true, data: invoice };
   } catch (error: any) {
@@ -287,8 +290,8 @@ export async function rejectInvoiceProof(invoiceId: string, reason: string) {
       }
     });
 
-    revalidatePath(`/app/[tenant]/student/dashboard/fees`);
-    revalidatePath(`/app/[tenant]/admin/students`);
+    await revalidateWorkspacePath(typeof workspaceId !== 'undefined' ? workspaceId : (typeof data !== 'undefined' ? data.workspaceId : null), "/student/dashboard/fees");
+    await revalidateWorkspacePath(typeof workspaceId !== 'undefined' ? workspaceId : (typeof data !== 'undefined' ? data.workspaceId : null), "/admin/students");
     
     return { success: true, data: invoice };
   } catch (error: any) {

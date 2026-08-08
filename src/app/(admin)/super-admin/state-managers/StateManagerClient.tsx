@@ -325,7 +325,7 @@ export function StateManagerClient({ initialManagers, franchises, allWithdrawals
             className={cn(
               "px-5 py-2 rounded-lg text-sm font-bold transition-all",
               activeTab === "managers"
-                ? "bg-white dark:bg-slate-700 text-primary shadow-sm"
+                ? "bg-white dark:bg-slate-700 text-primary dark:text-white shadow-sm"
                 : "text-slate-500 hover:text-slate-900 dark:hover:text-white"
             )}
           >
@@ -336,7 +336,7 @@ export function StateManagerClient({ initialManagers, franchises, allWithdrawals
             className={cn(
               "px-5 py-2 rounded-lg text-sm font-bold transition-all",
               activeTab === "hierarchy"
-                ? "bg-white dark:bg-slate-700 text-primary shadow-sm"
+                ? "bg-white dark:bg-slate-700 text-primary dark:text-white shadow-sm"
                 : "text-slate-500 hover:text-slate-900 dark:hover:text-white"
             )}
           >
@@ -347,7 +347,7 @@ export function StateManagerClient({ initialManagers, franchises, allWithdrawals
             className={cn(
               "px-5 py-2 rounded-lg text-sm font-bold transition-all relative",
               activeTab === "withdrawals"
-                ? "bg-white dark:bg-slate-700 text-primary shadow-sm"
+                ? "bg-white dark:bg-slate-700 text-primary dark:text-white shadow-sm"
                 : "text-slate-500 hover:text-slate-900 dark:hover:text-white"
             )}
           >

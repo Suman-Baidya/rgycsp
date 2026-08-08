@@ -38,6 +38,60 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { LayoutDashboard, LogOut, Settings, User as UserIcon, LogIn } from "lucide-react";
 
+function UserMenu({ user, dashboardHref, dashboardLabel }: { user: any, dashboardHref: string, dashboardLabel: string }) {
+  if (!user) return null;
+  return (
+    <div className="flex items-center gap-4 relative z-[1000]">
+      <DropdownMenu>
+        <DropdownMenuTrigger className="outline-none" suppressHydrationWarning>
+          <div className="flex items-center gap-3 cursor-pointer group">
+            <Avatar className="h-11 w-11 ring-2 ring-primary/10 group-hover:ring-primary transition-all duration-300 shadow-lg">
+              <AvatarImage src={user.image} />
+              <AvatarFallback className="bg-primary text-primary-foreground font-bold">{user.name?.charAt(0)}</AvatarFallback>
+            </Avatar>
+          </div>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="z-[99999] w-64 rounded-[1.5rem] p-3 border-slate-100 dark:border-zinc-800 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+          <div className="flex items-center gap-3 px-2 py-3">
+            <Avatar className="h-10 w-10">
+              <AvatarImage src={user.image} />
+              <AvatarFallback className="bg-primary text-primary-foreground font-bold">{user.name?.charAt(0)}</AvatarFallback>
+            </Avatar>
+            <div className="flex flex-col">
+              <p className="text-sm font-bold text-foreground leading-none mb-1">{user.name}</p>
+              <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{user.role?.replace('_', ' ')}</p>
+            </div>
+          </div>
+          <DropdownMenuSeparator className="my-2 bg-slate-50 dark:bg-zinc-900" />
+          <DropdownMenuLabel className="px-3 py-2 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">Management</DropdownMenuLabel>
+          <Link href={dashboardHref}>
+            <DropdownMenuItem className="rounded-xl h-11 gap-3 font-bold text-xs uppercase tracking-widest cursor-pointer mt-1">
+              <LayoutDashboard className="h-4 w-4" /> {dashboardLabel}
+            </DropdownMenuItem>
+          </Link>
+          <Link href={(user?.role === "SUPER_ADMIN" || user?.role === "SUPER_ADMIN_MANAGER") ? "/super-admin/profile" : "/profile"}>
+            <DropdownMenuItem className="rounded-xl h-11 gap-3 font-bold text-xs uppercase tracking-widest cursor-pointer">
+              <UserIcon className="h-4 w-4" /> My Profile
+            </DropdownMenuItem>
+          </Link>
+          <DropdownMenuSeparator className="my-2 bg-slate-50 dark:bg-zinc-900" />
+          <DropdownMenuItem
+            onClick={async () => {
+              const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "localhost:3000";
+              const protocol = typeof window !== 'undefined' && window.location.hostname.includes("localhost") ? "http" : "https";
+              await signOut({ redirect: false });
+              window.location.href = `${protocol}://${rootDomain}/`;
+            }}
+            className="rounded-xl h-11 gap-3 font-bold text-xs uppercase tracking-widest cursor-pointer text-red-500 focus:bg-red-500 focus:text-white"
+          >
+            <LogOut className="h-4 w-4" /> Sign Out
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
+  );
+}
+
 export function LandingNavbar({ settings, user, isHome }: { settings?: any, user?: any, isHome?: boolean }) {
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
@@ -153,58 +207,7 @@ export function LandingNavbar({ settings, user, isHome }: { settings?: any, user
     </div>
   );
 
-  const UserMenu = () => {
-    return (
-      <div className="flex items-center gap-4">
-        <DropdownMenu>
-          <DropdownMenuTrigger className="outline-none" suppressHydrationWarning>
-            <div className="flex items-center gap-3 cursor-pointer group">
-              <Avatar className="h-11 w-11 ring-2 ring-primary/10 group-hover:ring-primary transition-all duration-300 shadow-lg">
-                <AvatarImage src={user.image} />
-                <AvatarFallback className="bg-primary text-primary-foreground font-bold">{user.name?.charAt(0)}</AvatarFallback>
-              </Avatar>
-            </div>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-64 rounded-[1.5rem] p-3 border-slate-100 dark:border-zinc-800 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
-            <div className="flex items-center gap-3 px-2 py-3">
-              <Avatar className="h-10 w-10">
-                <AvatarImage src={user.image} />
-                <AvatarFallback className="bg-primary text-primary-foreground font-bold">{user.name?.charAt(0)}</AvatarFallback>
-              </Avatar>
-              <div className="flex flex-col">
-                <p className="text-sm font-bold text-foreground leading-none mb-1">{user.name}</p>
-                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{user.role?.replace('_', ' ')}</p>
-              </div>
-            </div>
-            <DropdownMenuSeparator className="my-2 bg-slate-50 dark:bg-zinc-900" />
-            <DropdownMenuLabel className="px-3 py-2 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">Management</DropdownMenuLabel>
-            <Link href={dashboardHref}>
-              <DropdownMenuItem className="rounded-xl h-11 gap-3 font-bold text-xs uppercase tracking-widest cursor-pointer mt-1">
-                <LayoutDashboard className="h-4 w-4" /> {dashboardLabel}
-              </DropdownMenuItem>
-            </Link>
-            <Link href={(user?.role === "SUPER_ADMIN" || user?.role === "SUPER_ADMIN_MANAGER") ? "/super-admin/profile" : "/profile"}>
-              <DropdownMenuItem className="rounded-xl h-11 gap-3 font-bold text-xs uppercase tracking-widest cursor-pointer">
-                <UserIcon className="h-4 w-4" /> My Profile
-              </DropdownMenuItem>
-            </Link>
-            <DropdownMenuSeparator className="my-2 bg-slate-50 dark:bg-zinc-900" />
-            <DropdownMenuItem
-              onClick={async () => {
-                const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "localhost:3000";
-                const protocol = typeof window !== 'undefined' && window.location.hostname.includes("localhost") ? "http" : "https";
-                await signOut({ redirect: false });
-                window.location.href = `${protocol}://${rootDomain}/`;
-              }}
-              className="rounded-xl h-11 gap-3 font-bold text-xs uppercase tracking-widest cursor-pointer text-red-500 focus:bg-red-500 focus:text-white"
-            >
-              <LogOut className="h-4 w-4" /> Sign Out
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
-    );
-  };
+
 
   if (config.showNavbar === false) return null;
 
@@ -248,7 +251,7 @@ export function LandingNavbar({ settings, user, isHome }: { settings?: any, user
 
       {/* TIER 2: Branding Bar */}
       <div className={cn(
-        "w-full bg-background/95 backdrop-blur-sm border-b border-border/50 py-1 overflow-hidden transition-all duration-500 mb-2",
+        "w-full bg-background/95 backdrop-blur-sm border-b border-border/50 py-1 transition-all duration-500 mb-2",
         isScrolled ? "lg:hidden fixed left-0 top-0 shadow-md z-[150]" : "relative"
       )}>
         <div className="max-w-7xl mx-auto px-4 lg:px-6 flex items-center justify-between gap-2 lg:gap-4">
@@ -273,7 +276,7 @@ export function LandingNavbar({ settings, user, isHome }: { settings?: any, user
                       Dashboard
                     </Button>
                   </Link>
-                  <UserMenu />
+                  <UserMenu user={user} dashboardHref={dashboardHref} dashboardLabel={dashboardLabel} />
                 </div>
               ) : (
                 <div className="hidden lg:flex items-center gap-3">
@@ -334,6 +337,7 @@ export function LandingNavbar({ settings, user, isHome }: { settings?: any, user
                     <Link
                       key={link.id}
                       href={link.href}
+                      prefetch={true}
                       className={cn(
                         "text-[14px] font-bold transition-all relative group uppercase",
                         isActive ? (isScrolled ? "text-foreground" : "text-white") : (isScrolled ? "text-foreground/70 hover:text-foreground" : "text-white/80 hover:text-white")
@@ -362,7 +366,7 @@ export function LandingNavbar({ settings, user, isHome }: { settings?: any, user
                           <LayoutDashboard className="w-4 h-4 group-hover/dash-scroll:rotate-12 transition-transform" />
                         </Button>
                       </Link>
-                      <UserMenu />
+                      <UserMenu user={user} dashboardHref={dashboardHref} dashboardLabel={dashboardLabel} />
                     </div>
                   ) : (
                     <Link href={config.ctaPrimary.link}>
@@ -398,6 +402,7 @@ export function LandingNavbar({ settings, user, isHome }: { settings?: any, user
                     key={link.id}
                     href={link.href}
                     onClick={() => setIsOpen(false)}
+                    prefetch={true}
                     className={cn(
                       "transition-colors py-1.5 relative w-fit",
                       isActive ? 'text-foreground font-black' : 'text-foreground/70 hover:text-foreground'

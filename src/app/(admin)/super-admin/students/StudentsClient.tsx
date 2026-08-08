@@ -536,13 +536,12 @@ export default function StudentsClient({ initialStudents, initialWorkspaces, ini
         description="Global directory of all students registered across all franchise workspaces."
       />
 
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         {[
           { label: "Total Students", value: stats.total, icon: Users, color: "text-blue-500", bg: "bg-blue-500/10" },
           { label: "Registered", value: stats.registered, icon: CheckCircle, color: "text-emerald-500", bg: "bg-emerald-500/10" },
           { label: "Unregistered", value: stats.unregistered, icon: FileText, color: "text-amber-500", bg: "bg-amber-500/10" },
           { label: "Pass Out", value: stats.passout, icon: GraduationCap, color: "text-purple-500", bg: "bg-purple-500/10" },
-          { label: "Paused", value: stats.paused, icon: ShieldCheck, color: "text-rose-500", bg: "bg-rose-500/10" },
         ].map((stat, i) => (
           <Card key={i} className="border-none shadow-sm rounded-[2rem] overflow-hidden bg-white dark:bg-slate-900">
             <CardContent className="p-6">
@@ -568,7 +567,7 @@ export default function StudentsClient({ initialStudents, initialWorkspaces, ini
             className={cn(
               "flex items-center gap-2 px-5 py-2 rounded-lg text-sm font-bold transition-all whitespace-nowrap shrink-0",
               statusFilter === tab.id
-                ? "bg-white dark:bg-slate-700 text-primary shadow-sm border border-slate-200/50 dark:border-slate-700/50"
+                ? "bg-white dark:bg-slate-700 text-primary dark:text-white shadow-sm border border-slate-200/50 dark:border-slate-700/50"
                 : "text-slate-500 hover:text-slate-900 dark:hover:text-white"
             )}
           >

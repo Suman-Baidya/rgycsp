@@ -1,5 +1,8 @@
 "use server";
 
+import { revalidateWorkspacePath } from "@/lib/revalidate";
+
+
 import { db } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 
@@ -31,7 +34,7 @@ export async function createBatch(data: {
       },
     });
 
-    revalidatePath(`/app/[tenant]/admin`, "layout");
+    await revalidateWorkspacePath(typeof workspaceId !== 'undefined' ? workspaceId : (typeof data !== 'undefined' ? data.workspaceId : null), "/admin", "layout");
     return { success: true, data: batch };
   } catch (error: any) {
     console.error("Failed to create batch:", error);
@@ -56,7 +59,7 @@ export async function updateBatch(id: string, data: {
       data,
     });
 
-    revalidatePath(`/app/[tenant]/admin`, "layout");
+    await revalidateWorkspacePath(typeof workspaceId !== 'undefined' ? workspaceId : (typeof data !== 'undefined' ? data.workspaceId : null), "/admin", "layout");
     return { success: true, data: batch };
   } catch (error: any) {
     console.error("Failed to update batch:", error);
@@ -82,7 +85,7 @@ export async function deleteBatch(id: string) {
       where: { id },
     });
 
-    revalidatePath(`/app/[tenant]/admin`, "layout");
+    await revalidateWorkspacePath(typeof workspaceId !== 'undefined' ? workspaceId : (typeof data !== 'undefined' ? data.workspaceId : null), "/admin", "layout");
     return { success: true };
   } catch (error: any) {
     console.error("Failed to delete batch:", error);

@@ -1,3 +1,4 @@
+import Image from "next/image";
 "use client";
 
 import React from "react";
@@ -76,7 +77,7 @@ export function WorkspaceEvents({ data }: { data: any }) {
             >
               <Card className="group overflow-hidden border-border/40 hover:border-primary/30 transition-all hover:shadow-2xl hover:shadow-primary/5 rounded-[2rem] bg-white dark:bg-zinc-900 h-full">
                 <div className="relative aspect-[16/10] overflow-hidden">
-                  <img
+                  <Image width={800} height={800}
                     src={event.image || "https://images.unsplash.com/photo-1514525253361-bee8718a74a2?q=80&w=2070"}
                     alt={event.title}
                     className="w-full h-full object-cover transition-transform duration-700 group-hover:brightness-110"

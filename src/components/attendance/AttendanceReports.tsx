@@ -180,7 +180,7 @@ export default function AttendanceReports({ batches, workspaceId }: { batches: a
               className={cn(
                 "flex-1 md:flex-none px-8 py-3 rounded-xl text-sm font-black transition-all",
                 attendanceType === "THEORY"
-                  ? "bg-white dark:bg-slate-700 text-primary shadow-md"
+                  ? "bg-white dark:bg-slate-700 text-primary dark:text-white shadow-md"
                   : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
               )}
             >
@@ -191,7 +191,7 @@ export default function AttendanceReports({ batches, workspaceId }: { batches: a
               className={cn(
                 "flex-1 md:flex-none px-8 py-3 rounded-xl text-sm font-black transition-all",
                 attendanceType === "PRACTICAL"
-                  ? "bg-white dark:bg-slate-700 text-primary shadow-md"
+                  ? "bg-white dark:bg-slate-700 text-primary dark:text-white shadow-md"
                   : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
               )}
             >

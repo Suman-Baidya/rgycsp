@@ -1,5 +1,8 @@
 "use server";
 
+import { revalidateWorkspacePath } from "@/lib/revalidate";
+
+
 import { db } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { AttendanceStatus, AttendanceType } from "@prisma/client";
@@ -165,7 +168,7 @@ export async function saveAttendance(
     }
     // ----------------------------------------
 
-    revalidatePath("/app/[tenant]/admin/attendance");
+    await revalidateWorkspacePath(typeof workspaceId !== 'undefined' ? workspaceId : (typeof data !== 'undefined' ? data.workspaceId : null), "/admin/attendance");
     return { success: true };
   } catch (error: any) {
     console.error("Error saving attendance:", error);
@@ -334,7 +337,7 @@ export async function markAttendanceByQR(
       }
     });
 
-    revalidatePath("/app/[tenant]/admin/attendance");
+    await revalidateWorkspacePath(typeof workspaceId !== 'undefined' ? workspaceId : (typeof data !== 'undefined' ? data.workspaceId : null), "/admin/attendance");
     
     return { 
       success: true, 

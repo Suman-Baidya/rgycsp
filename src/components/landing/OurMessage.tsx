@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { Quote, MessageSquareQuote } from "lucide-react";
 
 export function OurMessage({ data }: { data?: any }) {
@@ -68,7 +69,7 @@ export function OurMessage({ data }: { data?: any }) {
 
           <div className="flex items-center gap-6 pt-10 border-t border-white/80">
             <div className="w-20 h-20 rounded-full overflow-hidden border-2 border-white shadow-[0_0_20px_rgba(255,255,255,0.3)] shrink-0">
-              <img
+              <Image width={800} height={800}
                 src={authorAvatar}
                 alt={authorName}
                 className="w-full h-full object-cover"
@@ -85,7 +86,7 @@ export function OurMessage({ data }: { data?: any }) {
         <div className="flex-1 order-1 lg:order-2 w-full max-w-[550px] hidden lg:block">
           <div className="relative group">
             <div className="relative rounded-[2.5rem] overflow-hidden aspect-[4/5] shadow-2xl z-10 border border-white/10 scale-95 group-hover:scale-100 transition-transform duration-700">
-              <img
+              <Image width={800} height={800}
                 src={sideImage}
                 alt="Office and Strategy"
                 className="w-full h-full object-cover"

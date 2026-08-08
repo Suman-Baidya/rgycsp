@@ -1,5 +1,8 @@
 "use server";
 
+import { revalidateWorkspacePath } from "@/lib/revalidate";
+
+
 import { db } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import { revalidatePath } from "next/cache";
@@ -156,7 +159,7 @@ export async function importStudentsCSV(workspaceId: string, students: any[]) {
       }
     }
 
-    revalidatePath(`/app/[tenant]/admin/students`, "page");
+    await revalidateWorkspacePath(typeof workspaceId !== 'undefined' ? workspaceId : (typeof data !== 'undefined' ? data.workspaceId : null), "/admin/students", "page");
 
     return {
       success: successCount > 0,

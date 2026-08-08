@@ -1,5 +1,8 @@
 "use server";
 
+import { revalidateWorkspacePath } from "@/lib/revalidate";
+
+
 import { db } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 
@@ -16,7 +19,7 @@ export async function createExam(workspaceId: string, data: { title: string, typ
         courseId: data.courseId,
       }
     });
-    revalidatePath(`/app/[tenant]/admin/exam-generator`, "page");
+    await revalidateWorkspacePath(typeof workspaceId !== 'undefined' ? workspaceId : (typeof data !== 'undefined' ? data.workspaceId : null), "/admin/exam-generator", "page");
     return { success: true, data: exam };
   } catch (error: any) {
     console.error("Failed to create exam", error);
@@ -41,7 +44,7 @@ export async function createOnlineExam(workspaceId: string, data: { title: strin
         }
       }
     });
-    revalidatePath(`/app/[tenant]/admin/exam-generator`, "page");
+    await revalidateWorkspacePath(typeof workspaceId !== 'undefined' ? workspaceId : (typeof data !== 'undefined' ? data.workspaceId : null), "/admin/exam-generator", "page");
     return { success: true, data: exam };
   } catch (error: any) {
     console.error("Failed to create online exam", error);
@@ -77,7 +80,7 @@ export async function updateExam(id: string, data: { title: string, type: string
       });
     }
 
-    revalidatePath(`/app/[tenant]/admin/exam-generator`, "page");
+    await revalidateWorkspacePath(typeof workspaceId !== 'undefined' ? workspaceId : (typeof data !== 'undefined' ? data.workspaceId : null), "/admin/exam-generator", "page");
     return { success: true, data: exam };
   } catch (error: any) {
     return { success: false, error: error.message };
@@ -95,7 +98,7 @@ export async function createExamShift(examId: string, data: { name: string, star
         capacity: data.capacity,
       }
     });
-    revalidatePath(`/app/[tenant]/admin/exam-generator`, "page");
+    await revalidateWorkspacePath(typeof workspaceId !== 'undefined' ? workspaceId : (typeof data !== 'undefined' ? data.workspaceId : null), "/admin/exam-generator", "page");
     return { success: true, data: shift };
   } catch (error: any) {
     return { success: false, error: error.message };
@@ -105,7 +108,7 @@ export async function createExamShift(examId: string, data: { name: string, star
 export async function deleteExam(id: string) {
   try {
     await db.exam.delete({ where: { id } });
-    revalidatePath(`/app/[tenant]/admin/exam-generator`, "page");
+    await revalidateWorkspacePath(typeof workspaceId !== 'undefined' ? workspaceId : (typeof data !== 'undefined' ? data.workspaceId : null), "/admin/exam-generator", "page");
     return { success: true };
   } catch (error: any) {
     return { success: false, error: error.message };
@@ -115,7 +118,7 @@ export async function deleteExam(id: string) {
 export async function deleteExamShift(id: string) {
   try {
     await db.examShift.delete({ where: { id } });
-    revalidatePath(`/app/[tenant]/admin/exam-generator`, "page");
+    await revalidateWorkspacePath(typeof workspaceId !== 'undefined' ? workspaceId : (typeof data !== 'undefined' ? data.workspaceId : null), "/admin/exam-generator", "page");
     return { success: true };
   } catch (error: any) {
     return { success: false, error: error.message };
@@ -220,7 +223,7 @@ export async function enrollStudentsToExam(examId: string, studentIds: string[],
       return { success: false, error: `Not enough capacity in shifts. ${unassignedStudents.length} students were not assigned.` };
     }
 
-    revalidatePath(`/app/[tenant]/admin/exam-generator`, "page");
+    await revalidateWorkspacePath(typeof workspaceId !== 'undefined' ? workspaceId : (typeof data !== 'undefined' ? data.workspaceId : null), "/admin/exam-generator", "page");
     return { 
       success: true, 
       message: `Successfully enrolled ${enrollmentsToCreate.length} students.${skippedCount > 0 ? ` (${skippedCount} already assigned)` : ''}` 
@@ -255,7 +258,7 @@ export async function saveStudentMarks(studentSemesterId: string, unitName: stri
       });
     }
     
-    revalidatePath(`/app/[tenant]/admin/exam-generator`, "page");
+    await revalidateWorkspacePath(typeof workspaceId !== 'undefined' ? workspaceId : (typeof data !== 'undefined' ? data.workspaceId : null), "/admin/exam-generator", "page");
     return { success: true };
   } catch (error: any) {
     return { success: false, error: error.message };
@@ -307,7 +310,7 @@ export async function saveStudentMarksBatch(
         });
       }
     }
-    revalidatePath(`/app/[tenant]/admin/exam-generator`, "page");
+    await revalidateWorkspacePath(typeof workspaceId !== 'undefined' ? workspaceId : (typeof data !== 'undefined' ? data.workspaceId : null), "/admin/exam-generator", "page");
     return { success: true };
   } catch (error: any) {
     return { success: false, error: error.message };
@@ -320,7 +323,7 @@ export async function toggleExamCompletion(id: string, isCompleted: boolean, for
       where: { id },
       data: { isCompleted, forceUncomplete }
     });
-    revalidatePath(`/app/[tenant]/admin/exam-generator`, "page");
+    await revalidateWorkspacePath(typeof workspaceId !== 'undefined' ? workspaceId : (typeof data !== 'undefined' ? data.workspaceId : null), "/admin/exam-generator", "page");
     return { success: true, data: exam };
   } catch (error: any) {
     return { success: false, error: error.message };
@@ -333,7 +336,7 @@ export async function toggleExamActiveStatus(id: string, isActive: boolean) {
       where: { id },
       data: { isActive }
     });
-    revalidatePath(`/app/[tenant]/admin/exam-generator`, "page");
+    await revalidateWorkspacePath(typeof workspaceId !== 'undefined' ? workspaceId : (typeof data !== 'undefined' ? data.workspaceId : null), "/admin/exam-generator", "page");
     return { success: true, data: exam };
   } catch (error: any) {
     return { success: false, error: error.message };
@@ -378,7 +381,7 @@ export async function bulkIssueAdmitCards(examId: string) {
       data: { admitCardIssuedToStudent: true }
     });
 
-    revalidatePath(`/app/[tenant]/admin/exam-generator`, "page");
+    await revalidateWorkspacePath(typeof workspaceId !== 'undefined' ? workspaceId : (typeof data !== 'undefined' ? data.workspaceId : null), "/admin/exam-generator", "page");
     return { success: true, count: studentIds.length };
   } catch (error: any) {
     return { success: false, error: error.message };

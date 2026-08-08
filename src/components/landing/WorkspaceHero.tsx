@@ -1,3 +1,4 @@
+import Image from "next/image";
 "use client";
 
 import React, { useState, useEffect } from "react";
@@ -129,7 +130,7 @@ export function WorkspaceHero({ data }: { data: any }) {
             className="hidden lg:flex justify-center relative"
           >
             <div className="absolute inset-0 bg-primary/20 blur-[150px] rounded-full animate-pulse" />
-            <img
+            <Image width={800} height={800}
               src={slide.offerImage}
               alt="Promotion"
               className="relative z-10 h-[450px] w-auto object-contain drop-shadow-[0_40px_80px_rgba(0,0,0,0.6)] animate-float"
