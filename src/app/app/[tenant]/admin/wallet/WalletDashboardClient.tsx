@@ -215,56 +215,65 @@ export default function WalletDashboardClient({
   ];
 
   return (
-    <div className="p-4 lg:p-10 max-w-7xl mx-auto space-y-8">
+    <div className="space-y-4 sm:space-y-5 pb-8 w-full mx-auto">
       <AdminPageHeader
         title="Wallet Dashboard"
         description="Manage your franchise wallet balance and recharge."
       />
 
       {/* Balance Card */}
-      <Card className="border-2 border-slate-100 dark:border-slate-800 bg-gradient-to-br from-indigo-600 to-violet-800 text-white rounded-[2.5rem] shadow-xl overflow-hidden relative">
-        <div className="absolute top-0 right-0 p-8 opacity-10">
-          <CreditCard className="h-32 w-32" />
+      <Card className="border border-slate-200/80 dark:border-slate-800 bg-gradient-to-br from-indigo-600 to-violet-800 text-white rounded-xl shadow-sm overflow-hidden relative">
+        <div className="absolute top-0 right-0 p-4 opacity-10 pointer-events-none">
+          <CreditCard className="h-24 w-24" />
         </div>
-        <CardContent className="p-10 relative z-10">
-          <p className="text-sm font-black uppercase tracking-widest text-indigo-200 mb-2">Available Balance</p>
-          <div className="flex items-baseline gap-2">
-            <IndianRupee className="h-8 w-8 text-indigo-100" />
-            <span className="text-6xl font-black tracking-tight">{balance.toFixed(2)}</span>
+        <CardContent className="p-3.5 sm:p-4 relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-indigo-200 mb-0.5">Available Balance</p>
+            <div className="flex items-baseline gap-1.5">
+              <IndianRupee className="h-5 w-5 text-indigo-100" />
+              <span className="text-2xl font-bold tracking-tight">{balance.toFixed(2)}</span>
+            </div>
+            <p className="text-xs font-medium text-indigo-200/90 mt-1 max-w-md">
+              This balance is used for student registrations. Make sure to maintain sufficient balance.
+            </p>
           </div>
-          <p className="text-sm font-medium text-indigo-200 mt-4 max-w-md">
-            This balance is used for student registrations. Make sure to maintain sufficient balance.
-          </p>
+          <Button
+            size="sm"
+            onClick={() => setActiveTab("recharge")}
+            className="h-8 sm:h-9 px-3 sm:px-4 rounded-lg text-xs font-semibold bg-white text-indigo-950 hover:bg-white/90 shadow-sm shrink-0 self-start sm:self-center gap-1.5"
+          >
+            <PlusCircle className="h-3.5 w-3.5" /> Recharge Now
+          </Button>
         </CardContent>
       </Card>
 
-      <div className="flex flex-nowrap overflow-x-auto no-scrollbar gap-2 p-2 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm max-w-full">
+      <div className="flex flex-nowrap overflow-x-auto no-scrollbar gap-1.5 p-1.5 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm max-w-full">
         {tabs.map((tab) => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
             className={cn(
-              "flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 whitespace-nowrap shrink-0",
+              "flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-medium shrink-0 whitespace-nowrap transition-all duration-150",
               activeTab === tab.id
-                ? "bg-slate-100 dark:bg-slate-800 text-primary shadow-inner"
+                ? "bg-slate-100 dark:bg-slate-800 text-primary dark:text-white font-semibold shadow-inner"
                 : "text-slate-500 hover:text-slate-900 hover:bg-slate-50 dark:hover:text-white dark:hover:bg-slate-800/50"
             )}
           >
-            <tab.icon className="w-4 h-4" />
-            {tab.label}
+            <tab.icon className="w-3.5 h-3.5" />
+            <span>{tab.label}</span>
           </button>
         ))}
       </div>
 
       <div className="transition-all duration-300">
         {activeTab === "transactions" && (
-          <Card className="border-2 border-slate-100 dark:border-slate-800 rounded-[2.5rem] shadow-sm overflow-hidden flex flex-col min-h-[500px]">
-            <CardHeader className="p-6 md:p-8 border-b border-slate-50 dark:border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-4">
-              <CardTitle className="text-xl font-bold tracking-tight">Recent Transactions</CardTitle>
-              <div className="flex flex-wrap items-center gap-3">
+          <Card className="border border-slate-200/80 dark:border-slate-800 rounded-xl shadow-sm overflow-hidden bg-white dark:bg-slate-900 flex flex-col min-h-[400px]">
+            <CardHeader className="p-3.5 sm:p-4 border-b border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <CardTitle className="text-sm sm:text-base font-bold tracking-tight text-slate-900 dark:text-white">Recent Transactions</CardTitle>
+              <div className="flex flex-wrap items-center gap-2">
                 <Select value={filterStatus} onValueChange={(val) => setFilterStatus(val as string)}>
-                  <SelectTrigger className="w-[140px] rounded-xl h-10 bg-slate-50 border-slate-200 dark:bg-slate-900 dark:border-slate-800">
-                    <Filter className="w-3.5 h-3.5 mr-2 text-slate-400" />
+                  <SelectTrigger className="w-[130px] h-8 sm:h-9 text-xs font-medium rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700/60">
+                    <Filter className="w-3.5 h-3.5 mr-1.5 text-slate-400" />
                     <SelectValue placeholder="Status" />
                   </SelectTrigger>
                   <SelectContent className="rounded-xl">
@@ -276,8 +285,8 @@ export default function WalletDashboardClient({
                 </Select>
 
                 <Select value={dateRange} onValueChange={(val) => setDateRange(val as string)}>
-                  <SelectTrigger className="w-[140px] rounded-xl h-10 bg-slate-50 border-slate-200 dark:bg-slate-900 dark:border-slate-800">
-                    <Filter className="w-3.5 h-3.5 mr-2 text-slate-400" />
+                  <SelectTrigger className="w-[130px] h-8 sm:h-9 text-xs font-medium rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700/60">
+                    <Filter className="w-3.5 h-3.5 mr-1.5 text-slate-400" />
                     <SelectValue placeholder="Date" />
                   </SelectTrigger>
                   <SelectContent className="rounded-xl max-h-[300px]">
@@ -295,107 +304,111 @@ export default function WalletDashboardClient({
               </div>
             </CardHeader>
             <CardContent className="p-0 flex-1 flex flex-col">
-              <div className="divide-y divide-slate-50 dark:divide-slate-800 flex-1">
+              <div className="divide-y divide-slate-50 dark:divide-slate-800/50 flex-1">
                 {paginatedTransactions.map(tx => {
                   const isRejected = tx.status === 'REJECTED';
                   const isCredit = tx.type === 'CREDIT';
 
                   return (
                     <div key={tx.id} className={cn(
-                      "flex flex-col md:flex-row md:items-center justify-between p-6 transition-all gap-4 md:gap-8",
-                      isRejected ? "bg-red-50/50 dark:bg-red-900/10 hover:bg-red-50 dark:hover:bg-red-900/20" : "hover:bg-slate-50 dark:hover:bg-slate-800/30"
+                      "flex flex-col sm:flex-row sm:items-center justify-between p-3 sm:p-3.5 transition-all gap-3 sm:gap-4 group border-l-[3px]",
+                      isRejected 
+                        ? "border-rose-500 bg-rose-50/20 dark:bg-rose-950/10 hover:bg-rose-50/40" 
+                        : isCredit 
+                          ? "border-emerald-500 bg-white dark:bg-slate-900 hover:bg-slate-50/80 dark:hover:bg-slate-800/40" 
+                          : "border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-slate-50/80 dark:hover:bg-slate-800/40"
                     )}>
                       {/* Left: Icon & Title */}
-                      <div className="flex items-center gap-4 shrink-0 md:w-1/3">
+                      <div className="flex items-center gap-3 shrink-0 sm:w-1/3">
                         <div className={cn(
-                          "h-12 w-12 rounded-2xl flex items-center justify-center shrink-0 shadow-sm",
-                          isRejected ? "bg-red-100 text-red-600 dark:bg-red-900/40 dark:text-red-400"
-                            : isCredit ? "bg-green-100 text-green-600 dark:bg-green-900/40 dark:text-green-400"
+                          "h-9 w-9 rounded-lg flex items-center justify-center shrink-0 shadow-sm",
+                          isRejected ? "bg-rose-100 text-rose-600 dark:bg-rose-900/40 dark:text-rose-400"
+                            : isCredit ? "bg-emerald-100 text-emerald-600 dark:bg-emerald-900/40 dark:text-emerald-400"
                               : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400"
                         )}>
-                          {isRejected ? <XCircle className="h-6 w-6" /> : isCredit ? <ArrowDownLeft className="h-6 w-6" /> : <ArrowUpRight className="h-6 w-6" />}
+                          {isRejected ? <XCircle className="h-4 w-4" /> : isCredit ? <ArrowDownLeft className="h-4 w-4" /> : <ArrowUpRight className="h-4 w-4" />}
                         </div>
-                        <div>
-                          <p className="font-bold text-sm text-slate-900 dark:text-white flex items-center gap-2">
-                            {tx.description || (isCredit ? 'Wallet Recharge' : 'Student Registration')}
+                        <div className="min-w-0">
+                          <p className="font-semibold text-xs sm:text-sm text-slate-900 dark:text-white flex items-center gap-1.5 truncate">
+                            <span className="truncate">{tx.description || (isCredit ? 'Wallet Recharge' : 'Student Registration')}</span>
                             {tx.status === 'PENDING' && <Badge className="bg-amber-500/10 text-amber-600 border-none text-[9px] px-1.5 py-0">PENDING</Badge>}
                           </p>
-                          <p className="text-xs text-slate-500 font-medium flex items-center gap-1 mt-1">
+                          <p className="text-[10px] text-slate-500 font-medium flex items-center gap-1 mt-0.5">
                             <Clock className="h-3 w-3" /> {mounted ? new Date(tx.createdAt).toLocaleDateString() : new Date(tx.createdAt).toISOString().split('T')[0]}
                           </p>
                         </div>
                       </div>
 
                       {/* Middle: Rejection Reason / Context */}
-                      <div className="flex-1 flex items-center justify-start md:justify-center">
+                      <div className="flex-1 flex items-center justify-start sm:justify-center">
                         {isRejected ? (
-                          <div className="flex flex-col items-start md:items-center text-left md:text-center max-w-sm">
-                            <Badge className="bg-red-500 text-white hover:bg-red-600 border-none text-[10px] mb-1">REJECTED</Badge>
-                            <span className="text-sm font-semibold text-red-600 dark:text-red-400">
+                          <div className="flex flex-col items-start sm:items-center text-left sm:text-center max-w-sm">
+                            <Badge className="bg-rose-500 text-white hover:bg-rose-600 border-none text-[9px] px-1.5 py-0 mb-0.5">REJECTED</Badge>
+                            <span className="text-xs font-semibold text-rose-600 dark:text-rose-400">
                               {tx.rejectionReason || "No specific reason provided"}
                             </span>
                           </div>
                         ) : (
-                          <div className="text-slate-400 text-sm hidden md:block">
+                          <div className="text-slate-400 text-xs font-mono hidden sm:block">
                             {tx.referenceId ? `Ref: ${tx.referenceId}` : ''}
                           </div>
                         )}
                       </div>
 
                       {/* Right: Amount */}
-                      <div className="flex items-center gap-4 justify-end shrink-0 md:w-1/4">
+                      <div className="flex items-center gap-3 justify-between sm:justify-end shrink-0 sm:w-1/4">
                         {tx.status === 'APPROVED' && (
                           <Button
                             variant="outline"
                             size="sm"
-                            className="hidden md:flex rounded-lg h-8 text-[10px] font-bold uppercase tracking-wider"
+                            className="h-7 sm:h-8 px-2.5 rounded-lg text-xs font-semibold"
                             onClick={() => {
                               setSelectedReceiptTx(tx);
                               setReceiptModalOpen(true);
                             }}
                           >
-                            <FileText className="h-3 w-3 mr-1.5" />
+                            <FileText className="h-3.5 w-3.5 mr-1" />
                             Receipt
                           </Button>
                         )}
                         <div className={cn(
-                          "text-right font-black text-lg flex items-center gap-1",
-                          isRejected ? "text-red-600 dark:text-red-400 line-through opacity-70"
-                            : isCredit ? "text-green-600 dark:text-green-400"
+                          "text-right font-bold text-xs sm:text-sm flex items-center gap-0.5",
+                          isRejected ? "text-rose-600 dark:text-rose-400 line-through opacity-70"
+                            : isCredit ? "text-emerald-600 dark:text-emerald-400"
                               : "text-slate-900 dark:text-white"
                         )}>
-                          {isCredit ? '+' : '-'} <IndianRupee className="h-4 w-4" /> {tx.amount.toFixed(2)}
+                          {isCredit ? '+' : '-'} <IndianRupee className="h-3.5 w-3.5" /> {tx.amount.toFixed(2)}
                         </div>
                       </div>
                     </div>
                   );
                 })}
                 {paginatedTransactions.length === 0 && (
-                  <div className="p-16 flex flex-col items-center justify-center text-slate-400">
-                    <List className="h-12 w-12 mb-4 opacity-20" />
-                    <p className="font-bold text-lg">No transactions found</p>
-                    <p className="text-sm font-medium opacity-70">Try adjusting your filters.</p>
+                  <div className="p-12 flex flex-col items-center justify-center text-slate-400">
+                    <List className="h-10 w-10 mb-3 opacity-20" />
+                    <p className="font-semibold text-sm">No transactions found</p>
+                    <p className="text-xs font-medium opacity-70">Try adjusting your filters.</p>
                   </div>
                 )}
               </div>
 
-              {/* Pagination Controls */}
+              {/* Standardized Pagination System (Rule 7.6) */}
               {filteredTransactions.length > 0 && (
-                <div className="p-4 border-t border-slate-50 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/20 flex items-center justify-between">
-                  <p className="text-xs font-semibold text-slate-500">
-                    Showing <span className="text-slate-900 dark:text-white">{(currentPage - 1) * ITEMS_PER_PAGE + 1}</span> to <span className="text-slate-900 dark:text-white">{Math.min(currentPage * ITEMS_PER_PAGE, filteredTransactions.length)}</span> of <span className="text-slate-900 dark:text-white">{filteredTransactions.length}</span>
+                <div className="flex items-center justify-between px-4 py-2.5 border-t border-slate-100 dark:border-slate-800/50 bg-slate-50/50 dark:bg-slate-800/20">
+                  <p className="text-xs font-medium text-slate-500">
+                    Showing <span className="text-slate-900 dark:text-white font-semibold">{(currentPage - 1) * ITEMS_PER_PAGE + 1}</span> to <span className="text-slate-900 dark:text-white font-semibold">{Math.min(currentPage * ITEMS_PER_PAGE, filteredTransactions.length)}</span> of <span className="text-slate-900 dark:text-white font-semibold">{filteredTransactions.length}</span>
                   </p>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1.5">
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                       disabled={currentPage === 1}
-                      className="rounded-xl h-8 px-2"
+                      className="h-7 px-2 rounded-md border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-sm"
                     >
-                      <ChevronLeft className="h-4 w-4" />
+                      <ChevronLeft className="h-3.5 w-3.5" />
                     </Button>
-                    <div className="text-sm font-bold px-3 py-1 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg shadow-sm">
+                    <div className="text-xs font-semibold px-2.5 py-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-md shadow-sm">
                       {currentPage} / {totalPages}
                     </div>
                     <Button
@@ -403,9 +416,9 @@ export default function WalletDashboardClient({
                       size="sm"
                       onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                       disabled={currentPage === totalPages}
-                      className="rounded-xl h-8 px-2"
+                      className="h-7 px-2 rounded-md border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-sm"
                     >
-                      <ChevronRight className="h-4 w-4" />
+                      <ChevronRight className="h-3.5 w-3.5" />
                     </Button>
                   </div>
                 </div>
@@ -415,19 +428,19 @@ export default function WalletDashboardClient({
         )}
 
         {activeTab === "recharge" && (
-          <div className="w-full grid grid-cols-1 lg:grid-cols-12 gap-8 relative">
+          <div className="w-full grid grid-cols-1 lg:grid-cols-12 gap-4 relative">
 
             {/* Left Sidebar - Vertical Stepper */}
             <div className="lg:col-span-4 sticky top-6 self-start">
-              <div className="bg-white/70 dark:bg-slate-900/70 backdrop-blur-2xl rounded-[2.5rem] p-8 border border-white/40 dark:border-white/10 shadow-[0_8px_40px_-12px_rgba(0,0,0,0.1)] dark:shadow-[0_8px_40px_-12px_rgba(0,0,0,0.5)]">
-                <h3 className="text-xl font-bold tracking-tight mb-8 bg-gradient-to-br from-slate-900 to-slate-600 dark:from-white dark:to-slate-400 bg-clip-text text-transparent">Recharge Process</h3>
-                <div className="space-y-8 relative">
-                  <div className="absolute left-[1.35rem] top-6 bottom-6 w-1 bg-slate-100 dark:bg-slate-800 rounded-full z-0 translate-x-[-50%]"></div>
+              <div className="bg-white dark:bg-slate-900 rounded-xl p-4 sm:p-5 border border-slate-200/80 dark:border-slate-800 shadow-sm">
+                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-4">Recharge Steps</h3>
+                <div className="space-y-4 relative">
+                  <div className="absolute left-[1.1rem] top-4 bottom-4 w-0.5 bg-slate-100 dark:bg-slate-800 rounded-full z-0 translate-x-[-50%]"></div>
                   <motion.div
                     initial={{ height: 0 }}
                     animate={{ height: `${((step - 1) / 3) * 100}%` }}
                     transition={{ type: "spring", stiffness: 100, damping: 20 }}
-                    className="absolute left-[1.35rem] top-6 w-1 bg-primary rounded-full z-0 translate-x-[-50%] shadow-[0_0_15px_rgba(var(--primary),0.5)]"
+                    className="absolute left-[1.1rem] top-4 w-0.5 bg-primary rounded-full z-0 translate-x-[-50%]"
                   />
 
                   {[
@@ -436,13 +449,13 @@ export default function WalletDashboardClient({
                     { s: 3, title: "Make Payment", desc: "Scan QR & Transfer", icon: QrCode },
                     { s: 4, title: "Verify Payment", desc: "Upload receipt", icon: ShieldCheck }
                   ].map((item) => (
-                    <div key={item.s} className={cn("relative z-10 flex gap-5 items-start transition-all duration-500", step === item.s ? "opacity-100 scale-105 origin-left" : (step > item.s ? "opacity-100" : "opacity-40"))}>
-                      <div className={cn("w-[2.7rem] h-[2.7rem] rounded-2xl flex items-center justify-center shrink-0 border-2 font-bold transition-all duration-500", step > item.s ? "border-primary bg-primary text-white shadow-[0_0_20px_-5px_rgba(var(--primary),0.5)]" : step === item.s ? "border-primary bg-white dark:bg-slate-950 text-primary shadow-[0_0_25px_-5px_rgba(var(--primary),0.5)]" : "border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-400")}>
-                        {step > item.s ? <Check className="h-5 w-5 stroke-[3]" /> : <item.icon className="h-5 w-5" />}
+                    <div key={item.s} className={cn("relative z-10 flex gap-3 items-start transition-all duration-300", step === item.s ? "opacity-100" : (step > item.s ? "opacity-100" : "opacity-40"))}>
+                      <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center shrink-0 border font-bold text-xs transition-all duration-300", step > item.s ? "border-primary bg-primary text-white" : step === item.s ? "border-primary bg-white dark:bg-slate-950 text-primary" : "border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-400")}>
+                        {step > item.s ? <Check className="h-4 w-4 stroke-[3]" /> : <item.icon className="h-4 w-4" />}
                       </div>
-                      <div className="pt-1.5">
-                        <h4 className={cn("font-bold text-base leading-none mb-1.5 transition-colors duration-500", step === item.s ? "text-primary" : "text-slate-900 dark:text-white")}>{item.title}</h4>
-                        <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">{item.desc}</p>
+                      <div className="pt-0.5 min-w-0">
+                        <h4 className={cn("font-semibold text-xs leading-tight mb-0.5 transition-colors duration-300", step === item.s ? "text-primary dark:text-white" : "text-slate-900 dark:text-white")}>{item.title}</h4>
+                        <p className="text-[10px] text-slate-500 truncate">{item.desc}</p>
                       </div>
                     </div>
                   ))}
@@ -452,49 +465,49 @@ export default function WalletDashboardClient({
 
             {/* Right Side - Form Content */}
             <div className="lg:col-span-8">
-              <Card className="border-2 border-slate-100 dark:border-slate-800 rounded-[2.5rem] shadow-sm overflow-hidden h-full">
+              <Card className="border border-slate-200/80 dark:border-slate-800 rounded-xl shadow-sm overflow-hidden bg-white dark:bg-slate-900 h-full">
 
                 {/* Step 1: Instructions & Agreement */}
                 {step === 1 && (
-                  <div className="animate-in slide-in-from-right-4 duration-500 flex flex-col h-full min-h-[400px]">
-                    <CardHeader className="p-8 border-b border-slate-50 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/20">
-                      <CardTitle className="text-xl font-bold tracking-tight">Step 1: Terms & Conditions</CardTitle>
+                  <div className="animate-in slide-in-from-right-4 duration-300 flex flex-col h-full min-h-[350px]">
+                    <CardHeader className="p-3.5 sm:p-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/20">
+                      <CardTitle className="text-sm sm:text-base font-bold tracking-tight text-slate-900 dark:text-white">Step 1: Terms & Conditions</CardTitle>
                       <CardDescription className="text-xs font-medium text-slate-500">Please read the terms carefully before proceeding.</CardDescription>
                     </CardHeader>
-                    <CardContent className="p-8 flex-1 flex flex-col">
-                      <div className="flex-1 overflow-y-auto pr-4 mb-6 custom-scrollbar text-slate-700 dark:text-slate-300">
+                    <CardContent className="p-4 sm:p-5 flex-1 flex flex-col">
+                      <div className="flex-1 overflow-y-auto pr-2 mb-4 custom-scrollbar text-slate-700 dark:text-slate-300 text-xs leading-relaxed">
                         {paymentConfig?.agreementTerms ? (
                           <>
-                            <h4 className="text-xs font-black uppercase tracking-widest text-slate-500 mb-4">Terms of Payment</h4>
-                            <p className="text-sm font-medium whitespace-pre-wrap leading-relaxed">
+                            <h4 className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">Terms of Payment</h4>
+                            <p className="whitespace-pre-wrap">
                               {paymentConfig.agreementTerms}
                             </p>
                           </>
                         ) : (
-                          <div className="text-center text-slate-500 text-sm font-medium h-full flex flex-col items-center justify-center">
-                            <FileText className="h-10 w-10 text-slate-300 mb-4" />
+                          <div className="text-center text-slate-500 text-xs font-medium h-full flex flex-col items-center justify-center p-8">
+                            <FileText className="h-8 w-8 text-slate-300 mb-2" />
                             No specific terms provided.
                           </div>
                         )}
                       </div>
                     </CardContent>
-                    <CardFooter className="p-6 px-8 flex flex-col md:flex-row md:items-center justify-between gap-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/20 mt-auto">
+                    <CardFooter className="p-3.5 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/20 mt-auto">
                       <div
-                        className="flex items-center space-x-3 cursor-pointer group"
+                        className="flex items-center space-x-2.5 cursor-pointer group"
                         onClick={() => setAgreed(!agreed)}
                       >
                         <Checkbox
                           id="terms"
                           checked={agreed}
                           onCheckedChange={(c) => setAgreed(c as boolean)}
-                          className="h-6 w-6 rounded-md border-2 transition-colors data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                          className="h-4 w-4 rounded border-slate-300 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
                         />
-                        <label htmlFor="terms" className="text-sm font-bold cursor-pointer group-hover:text-primary transition-colors pointer-events-none">
+                        <label htmlFor="terms" className="text-xs font-medium cursor-pointer group-hover:text-primary transition-colors pointer-events-none">
                           I have read and agree to the payment terms.
                         </label>
                       </div>
-                      <Button onClick={() => setStep(2)} disabled={!agreed} className="rounded-xl px-8 h-12 text-base font-bold shadow-md shadow-primary/10 gap-2 outline-none focus:outline-none focus-visible:ring-0 shrink-0 w-full md:w-auto">
-                        Continue to Amount <ArrowRight className="h-4 w-4" />
+                      <Button onClick={() => setStep(2)} disabled={!agreed} className="h-8 sm:h-9 px-4 rounded-lg text-xs font-semibold shadow-sm gap-1.5 shrink-0 w-full sm:w-auto">
+                        Continue <ArrowRight className="h-3.5 w-3.5" />
                       </Button>
                     </CardFooter>
                   </div>
@@ -502,34 +515,34 @@ export default function WalletDashboardClient({
 
                 {/* Step 2: Enter Amount */}
                 {step === 2 && (
-                  <div className="animate-in slide-in-from-right-4 duration-500 flex flex-col h-full min-h-[400px]">
-                    <CardHeader className="p-8 border-b border-slate-50 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/20">
-                      <CardTitle className="text-xl font-bold tracking-tight">Step 2: Recharge Amount</CardTitle>
+                  <div className="animate-in slide-in-from-right-4 duration-300 flex flex-col h-full min-h-[350px]">
+                    <CardHeader className="p-3.5 sm:p-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/20">
+                      <CardTitle className="text-sm sm:text-base font-bold tracking-tight text-slate-900 dark:text-white">Step 2: Recharge Amount</CardTitle>
                       <CardDescription className="text-xs font-medium text-slate-500">How much would you like to recharge into your wallet?</CardDescription>
                     </CardHeader>
-                    <CardContent className="p-8 flex-1 flex flex-col justify-center">
-                      <div className="space-y-6 max-w-sm mx-auto text-center w-full">
-                        <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Amount to Recharge (₹)</label>
-                        <div className="relative group mx-auto w-full max-w-[280px]">
-                          <div className="absolute left-4 top-1/2 -translate-y-1/2 w-8 flex justify-center">
-                            <IndianRupee className="h-6 w-6 text-slate-400 group-focus-within:text-primary transition-colors" />
+                    <CardContent className="p-4 sm:p-6 flex-1 flex flex-col justify-center">
+                      <div className="space-y-4 max-w-xs mx-auto text-center w-full">
+                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Amount to Recharge (₹)</label>
+                        <div className="relative group mx-auto w-full">
+                          <div className="absolute left-3 top-1/2 -translate-y-1/2 w-6 flex justify-center">
+                            <IndianRupee className="h-4 w-4 text-slate-400 group-focus-within:text-primary transition-colors" />
                           </div>
                           <Input
                             type="number"
                             value={rechargeAmount}
                             onChange={e => setRechargeAmount(e.target.value)}
                             placeholder="0.00"
-                            className="rounded-2xl text-2xl md:text-3xl font-black h-16 pl-14 pr-6 bg-white dark:bg-slate-950 border-2 border-slate-200 dark:border-slate-800 focus-visible:ring-4 focus-visible:ring-primary/10 focus-visible:border-primary transition-all text-center shadow-sm hover:border-slate-300 dark:hover:border-slate-700"
+                            className="rounded-lg text-xl font-bold h-11 pl-9 pr-4 bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 text-center shadow-sm"
                           />
                         </div>
                       </div>
                     </CardContent>
-                    <CardFooter className="p-6 px-8 flex justify-between border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/20 mt-auto">
-                      <Button variant="ghost" onClick={() => setStep(1)} className="rounded-xl px-6 h-12 font-bold gap-2 hover:bg-slate-100 outline-none focus:outline-none focus-visible:ring-0">
-                        <ArrowLeft className="h-4 w-4" /> Back to Terms
+                    <CardFooter className="p-3.5 sm:p-4 flex justify-between border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/20 mt-auto">
+                      <Button variant="ghost" onClick={() => setStep(1)} className="h-8 sm:h-9 px-3 rounded-lg text-xs font-semibold gap-1.5">
+                        <ArrowLeft className="h-3.5 w-3.5" /> Back
                       </Button>
-                      <Button onClick={() => setStep(3)} disabled={!rechargeAmount || Number(rechargeAmount) <= 0} className="rounded-xl px-8 h-12 text-base font-bold shadow-md shadow-primary/10 gap-2 outline-none focus:outline-none focus-visible:ring-0">
-                        View Payment Details <ArrowRight className="h-4 w-4" />
+                      <Button onClick={() => setStep(3)} disabled={!rechargeAmount || Number(rechargeAmount) <= 0} className="h-8 sm:h-9 px-4 rounded-lg text-xs font-semibold shadow-sm gap-1.5">
+                        Payment Details <ArrowRight className="h-3.5 w-3.5" />
                       </Button>
                     </CardFooter>
                   </div>
@@ -537,61 +550,61 @@ export default function WalletDashboardClient({
 
                 {/* Step 3: Scan & Pay */}
                 {step === 3 && (
-                  <div className="animate-in slide-in-from-right-4 duration-500 flex flex-col h-full min-h-[400px]">
-                    <CardHeader className="p-8 border-b border-slate-50 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/20">
-                      <CardTitle className="text-xl font-bold tracking-tight">Step 3: Make Payment</CardTitle>
+                  <div className="animate-in slide-in-from-right-4 duration-300 flex flex-col h-full min-h-[350px]">
+                    <CardHeader className="p-3.5 sm:p-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/20">
+                      <CardTitle className="text-sm sm:text-base font-bold tracking-tight text-slate-900 dark:text-white">Step 3: Make Payment</CardTitle>
                       <CardDescription className="text-xs font-medium text-slate-500">Please pay exactly ₹{rechargeAmount} using the details below.</CardDescription>
                     </CardHeader>
-                    <CardContent className="p-8 grid grid-cols-1 md:grid-cols-2 gap-10 flex-1">
+                    <CardContent className="p-4 sm:p-5 grid grid-cols-1 md:grid-cols-2 gap-5 flex-1">
 
                       {/* QR Section */}
                       {paymentConfig?.qrCodeUrl && (
-                        <div className="flex flex-col items-center justify-center p-10 bg-slate-50 dark:bg-slate-900 border-2 border-slate-100 dark:border-slate-800 rounded-3xl h-full shadow-inner">
-                          <div className="bg-white p-4 rounded-3xl shadow-sm border border-slate-100">
-                            <Image src={paymentConfig.qrCodeUrl} alt="QR Code" width={220} height={220} className="object-contain" />
+                        <div className="flex flex-col items-center justify-center p-4 bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 rounded-xl h-full">
+                          <div className="bg-white p-2.5 rounded-lg shadow-sm border border-slate-100">
+                            <Image src={paymentConfig.qrCodeUrl} alt="QR Code" width={160} height={160} className="object-contain" />
                           </div>
-                          <p className="text-xs font-black text-slate-500 mt-8 tracking-widest uppercase">Scan via any UPI App</p>
+                          <p className="text-[10px] font-bold text-slate-500 mt-3 tracking-wider uppercase">Scan via any UPI App</p>
                         </div>
                       )}
 
                       {/* Bank Details Section */}
-                      <div className="space-y-6 flex flex-col justify-center">
+                      <div className="space-y-3 flex flex-col justify-center text-xs">
                         {paymentConfig?.upiId && (
-                          <div className="p-6 bg-slate-50 dark:bg-slate-900 rounded-3xl border-2 border-slate-100 dark:border-slate-800 flex items-center justify-between shadow-inner">
+                          <div className="p-3 bg-slate-50 dark:bg-slate-800/40 rounded-lg border border-slate-200 dark:border-slate-800 flex items-center justify-between">
                             <div>
-                              <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Direct UPI ID</p>
-                              <p className="font-bold text-slate-900 dark:text-white text-lg font-mono">{paymentConfig.upiId}</p>
+                              <p className="text-[9px] font-bold uppercase tracking-wider text-slate-400 mb-0.5">Direct UPI ID</p>
+                              <p className="font-bold text-slate-900 dark:text-white text-xs font-mono">{paymentConfig.upiId}</p>
                             </div>
-                            <Button variant="outline" size="sm" onClick={() => navigator.clipboard.writeText(paymentConfig.upiId)} className="rounded-xl h-10 px-6 font-bold">Copy</Button>
+                            <Button variant="outline" size="sm" onClick={() => navigator.clipboard.writeText(paymentConfig.upiId)} className="h-7 px-2.5 rounded-md text-xs font-semibold">Copy</Button>
                           </div>
                         )}
 
                         {(paymentConfig?.bankName || paymentConfig?.accountNumber) && (
-                          <div className="p-8 bg-slate-50 dark:bg-slate-900 rounded-3xl border-2 border-slate-100 dark:border-slate-800 space-y-4 shadow-inner">
-                            <p className="text-xs font-black uppercase tracking-widest text-slate-400 mb-4 border-b border-slate-200 dark:border-slate-800 pb-4">Manual Bank Transfer</p>
+                          <div className="p-3.5 bg-slate-50 dark:bg-slate-800/40 rounded-lg border border-slate-200 dark:border-slate-800 space-y-2">
+                            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2 border-b border-slate-200 dark:border-slate-800 pb-1.5">Manual Bank Transfer</p>
 
                             {paymentConfig.bankName && (
-                              <div className="flex justify-between items-center">
-                                <span className="text-xs text-slate-500 font-bold uppercase tracking-wide">Bank Name</span>
-                                <span className="text-sm font-bold text-slate-900 dark:text-white">{paymentConfig.bankName}</span>
+                              <div className="flex justify-between items-center text-xs">
+                                <span className="text-slate-500 font-medium">Bank Name</span>
+                                <span className="font-semibold text-slate-900 dark:text-white">{paymentConfig.bankName}</span>
                               </div>
                             )}
                             {paymentConfig.accountHolderName && (
-                              <div className="flex justify-between items-center">
-                                <span className="text-xs text-slate-500 font-bold uppercase tracking-wide">Account Name</span>
-                                <span className="text-sm font-bold text-slate-900 dark:text-white">{paymentConfig.accountHolderName}</span>
+                              <div className="flex justify-between items-center text-xs">
+                                <span className="text-slate-500 font-medium">Account Name</span>
+                                <span className="font-semibold text-slate-900 dark:text-white">{paymentConfig.accountHolderName}</span>
                               </div>
                             )}
                             {paymentConfig.accountNumber && (
-                              <div className="flex justify-between items-center">
-                                <span className="text-xs text-slate-500 font-bold uppercase tracking-wide">Account No.</span>
-                                <span className="text-base font-black text-slate-900 dark:text-white font-mono">{paymentConfig.accountNumber}</span>
+                              <div className="flex justify-between items-center text-xs">
+                                <span className="text-slate-500 font-medium">Account No.</span>
+                                <span className="font-bold text-slate-900 dark:text-white font-mono">{paymentConfig.accountNumber}</span>
                               </div>
                             )}
                             {paymentConfig.ifscCode && (
-                              <div className="flex justify-between items-center">
-                                <span className="text-xs text-slate-500 font-bold uppercase tracking-wide">IFSC Code</span>
-                                <span className="text-sm font-bold text-slate-900 dark:text-white font-mono">{paymentConfig.ifscCode}</span>
+                              <div className="flex justify-between items-center text-xs">
+                                <span className="text-slate-500 font-medium">IFSC Code</span>
+                                <span className="font-semibold text-slate-900 dark:text-white font-mono">{paymentConfig.ifscCode}</span>
                               </div>
                             )}
                           </div>
@@ -599,12 +612,12 @@ export default function WalletDashboardClient({
                       </div>
 
                     </CardContent>
-                    <CardFooter className="p-6 px-8 flex justify-between border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/20 mt-auto">
-                      <Button variant="ghost" onClick={() => setStep(2)} className="rounded-xl px-6 h-12 font-bold gap-2 hover:bg-slate-100 outline-none focus:outline-none focus-visible:ring-0">
-                        <ArrowLeft className="h-4 w-4" /> Back to Amount
+                    <CardFooter className="p-3.5 sm:p-4 flex justify-between border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/20 mt-auto">
+                      <Button variant="ghost" onClick={() => setStep(2)} className="h-8 sm:h-9 px-3 rounded-lg text-xs font-semibold gap-1.5">
+                        <ArrowLeft className="h-3.5 w-3.5" /> Back
                       </Button>
-                      <Button onClick={() => setStep(4)} className="rounded-xl px-8 h-12 text-base font-bold shadow-md shadow-primary/10 gap-2 outline-none focus:outline-none focus-visible:ring-0">
-                        Upload Payment Receipt <ArrowRight className="h-4 w-4" />
+                      <Button onClick={() => setStep(4)} className="h-8 sm:h-9 px-4 rounded-lg text-xs font-semibold shadow-sm gap-1.5">
+                        Upload Receipt <ArrowRight className="h-3.5 w-3.5" />
                       </Button>
                     </CardFooter>
                   </div>
@@ -612,14 +625,14 @@ export default function WalletDashboardClient({
 
                 {/* Step 4: Upload Receipt */}
                 {step === 4 && (
-                  <div className="animate-in slide-in-from-right-4 duration-500 flex flex-col h-full min-h-[400px]">
-                    <CardHeader className="p-8 border-b border-slate-50 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/20">
-                      <CardTitle className="text-xl font-bold tracking-tight">Step 4: Verify Payment</CardTitle>
+                  <div className="animate-in slide-in-from-right-4 duration-300 flex flex-col h-full min-h-[350px]">
+                    <CardHeader className="p-3.5 sm:p-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/20">
+                      <CardTitle className="text-sm sm:text-base font-bold tracking-tight text-slate-900 dark:text-white">Step 4: Verify Payment</CardTitle>
                       <CardDescription className="text-xs font-medium text-slate-500">Upload your successful transaction screenshot and reference number.</CardDescription>
                     </CardHeader>
-                    <CardContent className="p-8 space-y-8 flex-1 flex flex-col justify-center max-w-2xl mx-auto w-full">
-                      <div className="space-y-3">
-                        <label className="text-xs font-black uppercase tracking-widest text-slate-500">Payment Screenshot</label>
+                    <CardContent className="p-4 sm:p-5 space-y-4 flex-1 flex flex-col justify-center max-w-md mx-auto w-full">
+                      <div className="space-y-1.5">
+                        <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Payment Screenshot</label>
                         <ImageUpload
                           value={receiptUrl}
                           onChange={(url) => setReceiptUrl(url)}
@@ -627,23 +640,23 @@ export default function WalletDashboardClient({
                         />
                       </div>
 
-                      <div className="space-y-3">
-                        <label className="text-xs font-black uppercase tracking-widest text-slate-500">Transaction Reference ID (UTR / UPI Ref)</label>
+                      <div className="space-y-1.5">
+                        <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Transaction Reference ID (UTR / UPI Ref)</label>
                         <Input
                           required
                           value={referenceId}
                           onChange={e => setReferenceId(e.target.value)}
                           placeholder="e.g. 312345678901"
-                          className="rounded-2xl font-medium bg-slate-50 dark:bg-slate-900 border-2 h-16 text-xl pl-6"
+                          className="rounded-lg font-mono bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 h-9 text-xs pl-3"
                         />
                       </div>
                     </CardContent>
-                    <CardFooter className="p-6 px-8 flex justify-between border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/20 mt-auto">
-                      <Button variant="ghost" onClick={() => setStep(3)} className="rounded-xl px-6 h-12 font-bold gap-2 hover:bg-slate-100 outline-none focus:outline-none focus-visible:ring-0">
-                        <ArrowLeft className="h-4 w-4" /> Back to Payment
+                    <CardFooter className="p-3.5 sm:p-4 flex justify-between border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/20 mt-auto">
+                      <Button variant="ghost" onClick={() => setStep(3)} className="h-8 sm:h-9 px-3 rounded-lg text-xs font-semibold gap-1.5">
+                        <ArrowLeft className="h-3.5 w-3.5" /> Back
                       </Button>
-                      <Button onClick={handleSubmitRecharge} disabled={isSubmitting || !receiptUrl || !referenceId} className="rounded-xl px-8 h-12 text-base font-bold shadow-md shadow-primary/10 gap-2 outline-none focus:outline-none focus-visible:ring-0">
-                        {isSubmitting ? "Submitting..." : "Submit Recharge Request"} <CheckCircle2 className="h-4 w-4" />
+                      <Button onClick={handleSubmitRecharge} disabled={isSubmitting || !receiptUrl || !referenceId} className="h-8 sm:h-9 px-4 rounded-lg text-xs font-semibold shadow-sm gap-1.5">
+                        {isSubmitting ? "Submitting..." : "Submit Request"} <CheckCircle2 className="h-3.5 w-3.5" />
                       </Button>
                     </CardFooter>
                   </div>
@@ -656,19 +669,19 @@ export default function WalletDashboardClient({
 
         {activeTab === "guide" && (
           <div className="w-full">
-            <Card className="border-2 border-slate-100 dark:border-slate-800 rounded-[2.5rem] shadow-sm overflow-hidden">
-              <CardHeader className="p-8 border-b border-slate-50 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/20">
-                <CardTitle className="text-xl font-bold tracking-tight">
+            <Card className="border border-slate-200/80 dark:border-slate-800 rounded-xl shadow-sm overflow-hidden bg-white dark:bg-slate-900">
+              <CardHeader className="p-3.5 sm:p-4 border-b border-slate-100 dark:border-slate-800">
+                <CardTitle className="text-sm sm:text-base font-bold tracking-tight text-slate-900 dark:text-white">
                   {paymentConfig?.guideTitle || "Wallet Recharge Guide"}
                 </CardTitle>
                 <CardDescription className="text-xs font-medium text-slate-500">
                   Follow this guide to easily recharge your wallet.
                 </CardDescription>
               </CardHeader>
-              <CardContent className="p-8 space-y-8">
+              <CardContent className="p-4 sm:p-5 space-y-4">
 
                 {paymentConfig?.guideYoutubeLink && (
-                  <div className="w-full bg-slate-100 dark:bg-slate-900 rounded-3xl overflow-hidden border-4 border-slate-50 dark:border-slate-800">
+                  <div className="w-full bg-slate-100 dark:bg-slate-900 rounded-xl overflow-hidden border border-slate-200 dark:border-slate-800 max-w-2xl mx-auto">
                     <div className="aspect-video w-full">
                       {(() => {
                         try {
@@ -697,22 +710,20 @@ export default function WalletDashboardClient({
                 )}
 
                 {paymentConfig?.guideDescription ? (
-                  <div className="prose prose-slate dark:prose-invert max-w-none">
-                    <div className="p-6 bg-slate-50 dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800">
-                      <p className="whitespace-pre-wrap leading-loose text-slate-700 dark:text-slate-300">
-                        {paymentConfig.guideDescription}
-                      </p>
-                    </div>
+                  <div className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed max-w-2xl mx-auto p-4 bg-slate-50 dark:bg-slate-800/40 rounded-xl border border-slate-200 dark:border-slate-800">
+                    <p className="whitespace-pre-wrap">
+                      {paymentConfig.guideDescription}
+                    </p>
                   </div>
                 ) : (
-                  <div className="text-center p-12 text-slate-400 font-medium border-2 border-dashed border-slate-100 dark:border-slate-800 rounded-3xl">
+                  <div className="text-center p-8 text-slate-400 font-medium border border-dashed border-slate-200 dark:border-slate-800 rounded-xl text-xs">
                     No specific guide provided yet. Please navigate to the "Recharge Wallet" tab to proceed.
                   </div>
                 )}
 
-                <div className="flex justify-end pt-4">
-                  <Button onClick={() => setActiveTab("recharge")} className="rounded-xl px-8 h-12 gap-2 shadow-lg shadow-primary/20">
-                    Go to Recharge <ArrowRight className="h-4 w-4" />
+                <div className="flex justify-end pt-2">
+                  <Button onClick={() => setActiveTab("recharge")} className="h-8 sm:h-9 px-4 rounded-lg text-xs font-semibold gap-1.5 shadow-sm">
+                    Go to Recharge <ArrowRight className="h-3.5 w-3.5" />
                   </Button>
                 </div>
 
@@ -727,12 +738,12 @@ export default function WalletDashboardClient({
       </div>
 
       <Dialog open={receiptModalOpen} onOpenChange={setReceiptModalOpen}>
-        <DialogContent className="max-w-3xl w-[90vw] max-h-[85vh] overflow-hidden bg-white rounded-[2rem] flex flex-col my-auto shadow-2xl">
+        <DialogContent className="max-w-2xl w-[90vw] max-h-[85vh] overflow-hidden bg-white rounded-2xl flex flex-col my-auto shadow-2xl p-0">
           {/* Header / Actions */}
-          <div className="flex items-center justify-between p-4 md:p-6 border-b border-slate-100 shrink-0 bg-slate-50">
-            <h2 className="text-lg md:text-xl font-bold text-slate-800">Payment Receipt</h2>
-            <Button onClick={handleDownloadReceipt} className="rounded-xl shadow-md gap-2" id="download-btn">
-              <Download className="h-4 w-4" /> <span className="hidden sm:inline">Download PDF</span>
+          <div className="flex items-center justify-between p-3.5 sm:p-4 border-b border-slate-100 shrink-0 bg-slate-50">
+            <h2 className="text-sm sm:text-base font-bold text-slate-800">Payment Receipt</h2>
+            <Button onClick={handleDownloadReceipt} size="sm" className="h-8 px-3 rounded-lg text-xs font-semibold shadow-sm gap-1.5" id="download-btn">
+              <Download className="h-3.5 w-3.5" /> <span className="hidden sm:inline">Download PDF</span>
             </Button>
           </div>
 

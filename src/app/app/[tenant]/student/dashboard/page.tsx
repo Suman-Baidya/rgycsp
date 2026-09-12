@@ -28,17 +28,17 @@ export default async function StudentDashboardPage({
   if (!result.success) {
     return (
       <div className="flex-1 flex items-center justify-center p-6 min-h-[calc(100vh-80px)]">
-        <div className="max-w-md w-full bg-white dark:bg-zinc-900 p-10 rounded-[2.5rem] shadow-xl text-center space-y-6 border border-border/40">
-           <div className="w-20 h-20 bg-red-50 dark:bg-red-950/20 text-red-500 rounded-3xl flex items-center justify-center mx-auto">
-              <LogOut className="w-10 h-10" />
+        <div className="max-w-md w-full bg-white dark:bg-slate-900 p-8 rounded-xl shadow-sm text-center space-y-5 border border-slate-200/80 dark:border-slate-800">
+           <div className="w-14 h-14 bg-red-50 dark:bg-red-950/20 text-red-500 rounded-xl flex items-center justify-center mx-auto">
+              <LogOut className="w-7 h-7" />
            </div>
-           <div className="space-y-2">
-              <h2 className="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-tight">Access Restricted</h2>
-              <p className="text-slate-500 dark:text-slate-400 font-medium leading-relaxed">We couldn't find an active student profile for your account in this workspace.</p>
+           <div className="space-y-1.5">
+              <h2 className="text-xl font-bold text-slate-900 dark:text-white uppercase tracking-tight">Access Restricted</h2>
+              <p className="text-slate-500 dark:text-slate-400 text-xs font-medium leading-relaxed">We couldn't find an active student profile for your account in this workspace.</p>
            </div>
-           <div className="pt-4 flex flex-col gap-3">
+           <div className="pt-2 flex flex-col gap-2">
               <Link href={homeHref} className="w-full">
-                 <Button variant="outline" className="w-full h-12 rounded-xl font-bold">Return to Website</Button>
+                 <Button variant="outline" className="w-full h-9 rounded-lg text-xs font-semibold">Return to Website</Button>
               </Link>
            </div>
         </div>
@@ -51,7 +51,7 @@ export default async function StudentDashboardPage({
   const notices = (aboutSection?.content as any)?.notices || [];
 
   const studentProfileId = result.data?.studentProfile?.id;
-  const courseId = result.data?.studentProfile?.courseId;
+  const courseId = result.data?.studentProfile?.courseId || result.data?.studentProfile?.batch?.courseId || result.data?.studentProfile?.batch?.course?.id;
   let dashboardData = null;
   if (studentProfileId) {
     const dashResult = await getStudentDashboardData(workspace.id, studentProfileId, courseId);
@@ -67,6 +67,7 @@ export default async function StudentDashboardPage({
       settings={workspaceSettings} 
       notices={notices}
       dashboardData={dashboardData}
+      workspace={workspace}
     />
   );
 }

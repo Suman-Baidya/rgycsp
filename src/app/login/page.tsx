@@ -61,7 +61,7 @@ export default async function LoginPage() {
   }
 
   return (
-    <div className="h-screen w-full flex flex-col items-center justify-center bg-white dark:bg-zinc-950 p-4 relative overflow-hidden font-sans">
+    <div className="min-h-[100dvh] w-full flex flex-col items-center justify-center bg-white dark:bg-zinc-950 p-2 sm:p-4 md:p-6 relative overflow-y-auto font-sans">
       {/* Premium Background Layer */}
       <div className="fixed inset-0 z-0 pointer-events-none">
         <div className="absolute top-[-20%] left-[-10%] w-[70%] h-[70%] bg-primary/10 rounded-full blur-[120px] animate-pulse" />
@@ -70,7 +70,7 @@ export default async function LoginPage() {
         <div className="absolute inset-0 opacity-[0.02] bg-[url('https://grainy-gradients.vercel.app/noise.svg')]" />
       </div>
 
-      <div className="relative z-10 w-full flex flex-col items-center justify-center">
+      <div className="relative z-10 w-full my-auto flex flex-col items-center justify-center py-1 sm:py-0">
         <CustomThemeStyle 
           primaryColor={branding.settings?.primaryColor || undefined}
           accentColor={branding.settings?.accentColor || undefined}

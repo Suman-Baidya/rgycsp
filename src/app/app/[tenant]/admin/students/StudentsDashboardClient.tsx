@@ -26,7 +26,7 @@ export default function StudentsDashboardClient({
   const [activeTab, setActiveTab] = useState("all-students");
 
   return (
-    <div className="p-4 lg:px-6 xl:px-10 lg:py-10 space-y-10 w-full mx-auto">
+    <div className="p-4 sm:p-6 lg:p-6 space-y-6 max-w-7xl w-full mx-auto">
       <StudentAdminHeader 
         pendingCount={pendingCount} 
         activeTab={activeTab} 

@@ -81,24 +81,24 @@ export default function CsvBulkImport({ workspaceId }: { workspaceId: string }) 
   };
 
   return (
-    <div className="space-y-8">
-      <div className="bg-primary/5 p-6 rounded-2xl border border-primary/20 flex flex-col sm:flex-row justify-between items-center gap-4">
+    <div className="space-y-4">
+      <div className="bg-primary/5 p-3.5 sm:p-4 rounded-xl border border-primary/20 flex flex-col sm:flex-row justify-between items-center gap-3">
         <div>
-          <h3 className="font-bold text-lg text-primary">Need a Template?</h3>
-          <p className="text-sm text-slate-500">Download the standard CSV template to ensure correct column names.</p>
+          <h3 className="font-semibold text-xs sm:text-sm text-primary">Need a Template?</h3>
+          <p className="text-xs text-slate-500">Download the standard CSV template to ensure correct column names.</p>
         </div>
-        <Button onClick={handleDownloadTemplate} variant="outline" className="rounded-xl border-primary text-primary hover:bg-primary/10">
-          <FileDown className="w-4 h-4 mr-2" /> Download Template
+        <Button onClick={handleDownloadTemplate} variant="outline" className="h-8 sm:h-9 px-3 rounded-lg text-xs font-semibold border-primary/30 text-primary hover:bg-primary/10 shrink-0">
+          <FileDown className="w-3.5 h-3.5 mr-1.5" /> Download Template
         </Button>
       </div>
 
-      <div className="border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-[2rem] p-12 text-center hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-        <Upload className="w-12 h-12 text-slate-300 mx-auto mb-4" />
-        <h3 className="text-xl font-bold mb-2">Upload CSV File</h3>
-        <p className="text-slate-500 mb-6 max-w-md mx-auto">Drop your filled CSV template here or browse from your computer.</p>
+      <div className="border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-xl p-6 sm:p-8 text-center hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
+        <Upload className="w-8 h-8 text-slate-300 mx-auto mb-2" />
+        <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white mb-1">Upload CSV File</h3>
+        <p className="text-xs text-slate-500 mb-4 max-w-sm mx-auto">Drop your filled CSV template here or browse from your computer.</p>
         
         <label className="cursor-pointer">
-          <div className="bg-primary text-primary-foreground h-12 px-8 rounded-xl font-bold inline-flex items-center justify-center hover:scale-105 active:scale-95 transition-all shadow-lg shadow-primary/20">
+          <div className="bg-primary text-primary-foreground h-8 sm:h-9 px-4 rounded-lg text-xs font-semibold inline-flex items-center justify-center hover:opacity-90 transition-all shadow-xs">
             Browse File
           </div>
           <input 
@@ -111,36 +111,36 @@ export default function CsvBulkImport({ workspaceId }: { workspaceId: string }) 
       </div>
 
       {parsedData.length > 0 && (
-        <div className="bg-white dark:bg-slate-900 border rounded-2xl overflow-hidden shadow-sm">
-          <div className="p-4 border-b bg-slate-50 dark:bg-slate-800 flex justify-between items-center">
-            <h3 className="font-bold">Preview ({parsedData.length} students)</h3>
-            <Button onClick={handleConfirmImport} disabled={isUploading} className="rounded-xl">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-xl overflow-hidden shadow-sm">
+          <div className="p-3 sm:p-3.5 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/20 flex justify-between items-center">
+            <h3 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">Preview ({parsedData.length} students)</h3>
+            <Button onClick={handleConfirmImport} disabled={isUploading} size="sm" className="h-8 px-3 rounded-lg text-xs font-semibold">
               {isUploading ? "Importing..." : `Confirm Import`}
             </Button>
           </div>
           <div className="overflow-x-auto">
-            <table className="w-full text-sm text-left">
-              <thead className="text-xs text-slate-500 uppercase bg-slate-50 dark:bg-slate-800">
+            <table className="w-full text-xs text-left">
+              <thead className="text-[10px] font-bold uppercase tracking-wider text-slate-400 bg-slate-50/50 dark:bg-slate-800/40 border-b border-slate-100 dark:border-slate-800">
                 <tr>
-                  <th className="px-6 py-3">Name</th>
-                  <th className="px-6 py-3">Mobile</th>
-                  <th className="px-6 py-3">Email</th>
-                  <th className="px-6 py-3">Course ID</th>
+                  <th className="px-3.5 py-2.5">Name</th>
+                  <th className="px-3.5 py-2.5">Mobile</th>
+                  <th className="px-3.5 py-2.5">Email</th>
+                  <th className="px-3.5 py-2.5">Course ID</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="divide-y divide-slate-50 dark:divide-slate-800/50">
                 {parsedData.slice(0, 5).map((row, i) => (
-                  <tr key={i} className="border-b dark:border-slate-800">
-                    <td className="px-6 py-4 font-medium">{row.fullName || "-"}</td>
-                    <td className="px-6 py-4">{row.mobile || "-"}</td>
-                    <td className="px-6 py-4">{row.email || "-"}</td>
-                    <td className="px-6 py-4 font-mono text-xs">{row.courseId || "-"}</td>
+                  <tr key={i} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/20">
+                    <td className="px-3.5 py-2.5 font-medium text-slate-900 dark:text-white">{row.fullName || "-"}</td>
+                    <td className="px-3.5 py-2.5 text-slate-600 dark:text-slate-300">{row.mobile || "-"}</td>
+                    <td className="px-3.5 py-2.5 text-slate-600 dark:text-slate-300">{row.email || "-"}</td>
+                    <td className="px-3.5 py-2.5 font-mono text-[11px] text-slate-500">{row.courseId || "-"}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
             {parsedData.length > 5 && (
-              <div className="p-3 text-center text-xs text-slate-500 bg-slate-50 dark:bg-slate-800/50">
+              <div className="p-2.5 text-center text-[11px] text-slate-500 bg-slate-50/50 dark:bg-slate-800/30 border-t border-slate-100 dark:border-slate-800">
                 And {parsedData.length - 5} more rows...
               </div>
             )}

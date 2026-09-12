@@ -175,15 +175,15 @@ export function WorkspaceSettingsForm({ settings }: { settings: any }) {
   };
 
   return (
-    <div className="w-full pb-24">
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full flex flex-col gap-12">
-        <div className="sticky top-0 z-30 w-full bg-background/80 backdrop-blur-xl border-b border-border/40 py-4">
+    <div className="w-full pb-12">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full flex flex-col gap-4 sm:gap-5">
+        <div className="sticky top-0 z-30 w-full bg-background/90 backdrop-blur-md border-b border-border/40 py-2">
           <div className="w-full">
-            <TabsList className="flex flex-nowrap overflow-x-auto no-scrollbar gap-2 p-2 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm max-w-full w-full justify-start">
+            <TabsList className="flex flex-nowrap overflow-x-auto no-scrollbar gap-1.5 p-1.5 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs max-w-full w-full justify-start">
               {[
                 { value: "branding", label: "Branding", icon: Palette },
                 { value: "navigation", label: "Menu", icon: Globe },
-                { value: "sections", label: "Landing Page", icon: Layout },
+                { value: "sections", label: "Page Sections", icon: Layout },
                 { value: "events", label: "Events", icon: Calendar },
                 { value: "notices", label: "Notice Board", icon: Bell },
                 { value: "attendance", label: "Attendance Config", icon: UserCheck },
@@ -193,9 +193,9 @@ export function WorkspaceSettingsForm({ settings }: { settings: any }) {
                 <TabsTrigger
                   key={tab.value}
                   value={tab.value}
-                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 whitespace-nowrap shrink-0 data-[state=active]:bg-slate-100 dark:data-[state=active]:bg-slate-800 data-[state=active]:text-primary data-[state=active]:shadow-inner text-slate-500 hover:text-slate-900 hover:bg-slate-50 dark:hover:text-white dark:hover:bg-slate-800/50 data-[state=inactive]:bg-transparent"
+                  className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-medium shrink-0 whitespace-nowrap transition-all data-[state=active]:bg-slate-100 dark:data-[state=active]:bg-slate-800 data-[state=active]:text-primary dark:data-[state=active]:text-white data-[state=active]:font-semibold data-[state=active]:shadow-inner text-slate-500 hover:text-slate-900 hover:bg-slate-50 dark:hover:text-white dark:hover:bg-slate-800/50 data-[state=inactive]:bg-transparent"
                 >
-                  <tab.icon className="h-4 w-4 transition-transform group-hover:scale-110" />
+                  <tab.icon className="h-3.5 w-3.5 transition-transform" />
                   {tab.label}
                 </TabsTrigger>
               ))}
@@ -204,24 +204,24 @@ export function WorkspaceSettingsForm({ settings }: { settings: any }) {
         </div>
 
         <div className="w-full">
-          <TabsContent value="branding" className="mt-0 w-full space-y-10 focus-visible:outline-none">
-            <Accordion className="space-y-6">
-              <AccordionItem value="identity" className="border border-border/50 bg-card/50 rounded-3xl overflow-hidden shadow-md">
-                <AccordionTrigger className="hover:no-underline py-8 px-8">
-                  <div className="flex items-center gap-4 text-left">
-                    <div className="w-12 h-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center">
-                      <Palette className="w-6 h-6" />
+          <TabsContent value="branding" className="mt-0 w-full space-y-4 focus-visible:outline-none">
+            <Accordion className="space-y-4">
+              <AccordionItem value="identity" className="border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 rounded-xl overflow-hidden shadow-xs">
+                <AccordionTrigger className="hover:no-underline py-3 px-3.5 sm:px-4">
+                  <div className="flex items-center gap-3 text-left">
+                    <div className="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                      <Palette className="w-4 h-4" />
                     </div>
                     <div>
-                      <h3 className="text-xl font-black tracking-tight">Institute Identity</h3>
-                      <p className="text-sm text-muted-foreground font-medium">Manage your institute's name, logo, and theme.</p>
+                      <h3 className="text-xs sm:text-sm font-bold tracking-tight text-slate-900 dark:text-white">Institute Identity</h3>
+                      <p className="text-[11px] text-slate-500 font-medium">Manage your institute's name, logo, typography, and color theme.</p>
                     </div>
                   </div>
                 </AccordionTrigger>
-                <AccordionContent className="pb-8 px-8 space-y-10 border-t border-border/20 pt-8">
-                  <div className="space-y-6">
-                    <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">Theme Presets</Label>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <AccordionContent className="pb-4 px-3.5 sm:px-4 space-y-4 border-t border-slate-100 dark:border-slate-800 pt-4">
+                  <div className="space-y-3">
+                    <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400 ml-0.5">Theme Presets</Label>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5">
                       {THEME_PRESETS.map((preset) => (
                         <button
                           key={preset.name}
@@ -231,23 +231,23 @@ export function WorkspaceSettingsForm({ settings }: { settings: any }) {
                             setAccentColor(preset.accent);
                           }}
                           className={cn(
-                            "group relative flex flex-col items-start p-4 rounded-2xl border-2 transition-all text-left h-32 justify-between",
+                            "group relative flex flex-col items-start p-2.5 sm:p-3 rounded-xl border transition-all text-left h-24 justify-between",
                             primaryColor === preset.primary && accentColor === preset.accent
-                              ? "border-primary bg-primary/5 shadow-lg shadow-primary/5 scale-[1.02]"
-                              : "border-border/40 hover:border-primary/20 hover:bg-muted/50"
+                              ? "border-primary bg-primary/5 shadow-xs"
+                              : "border-slate-200 dark:border-slate-800 hover:border-primary/30 hover:bg-slate-50 dark:hover:bg-slate-800/40"
                           )}
                         >
-                          <div className="flex items-center gap-2">
-                            <div className="w-5 h-5 rounded-full shadow-inner" style={{ backgroundColor: preset.primary }} />
-                            <div className="w-3 h-3 rounded-full shadow-inner opacity-60" style={{ backgroundColor: preset.accent }} />
+                          <div className="flex items-center gap-1.5">
+                            <div className="w-4 h-4 rounded-full shadow-inner shrink-0" style={{ backgroundColor: preset.primary }} />
+                            <div className="w-2.5 h-2.5 rounded-full shadow-inner opacity-60 shrink-0" style={{ backgroundColor: preset.accent }} />
                           </div>
                           <div>
-                             <span className="font-black text-xs block mb-1">{preset.name}</span>
-                             <p className="text-[9px] text-muted-foreground uppercase font-bold tracking-tighter">{preset.description}</p>
+                            <span className="font-bold text-xs block truncate w-full text-slate-900 dark:text-white">{preset.name}</span>
+                            <p className="text-[9px] text-slate-400 font-medium truncate">{preset.description}</p>
                           </div>
                           {primaryColor === preset.primary && accentColor === preset.accent && (
-                            <div className="absolute top-3 right-3 bg-primary text-white rounded-full p-1 shadow-lg">
-                              <Check className="w-3 h-3" />
+                            <div className="absolute top-2 right-2 bg-primary text-white rounded-full p-0.5 shadow-xs">
+                              <Check className="w-2.5 h-2.5" />
                             </div>
                           )}
                         </button>
@@ -257,39 +257,39 @@ export function WorkspaceSettingsForm({ settings }: { settings: any }) {
                       <button
                         type="button"
                         className={cn(
-                          "group relative flex flex-col items-center justify-center p-4 rounded-2xl border-2 border-dashed transition-all text-center gap-2 h-32",
+                          "group relative flex flex-col items-center justify-center p-2.5 sm:p-3 rounded-xl border border-dashed transition-all text-center gap-1.5 h-24",
                           !THEME_PRESETS.some(p => p.primary === primaryColor && p.accent === accentColor)
-                            ? "border-primary bg-primary/5 shadow-lg shadow-primary/5"
-                            : "border-border/40 hover:border-primary/20"
+                            ? "border-primary bg-primary/5 shadow-xs"
+                            : "border-slate-200 dark:border-slate-800 hover:border-primary/30"
                         )}
                       >
-                        <Zap className={cn("w-5 h-5 transition-transform group-hover:rotate-12", 
-                          !THEME_PRESETS.some(p => p.primary === primaryColor && p.accent === accentColor) ? "text-primary" : "text-muted-foreground")} />
+                        <Zap className={cn("w-4 h-4 transition-transform group-hover:rotate-12", 
+                          !THEME_PRESETS.some(p => p.primary === primaryColor && p.accent === accentColor) ? "text-primary" : "text-slate-400")} />
                         <div className="flex flex-col">
-                           <span className="font-black text-xs uppercase tracking-widest">Custom</span>
-                           <p className="text-[9px] text-muted-foreground font-bold">Manual Colors</p>
+                          <span className="font-bold text-xs text-slate-900 dark:text-white">Custom</span>
+                          <p className="text-[9px] text-slate-400 font-medium">Manual Colors</p>
                         </div>
                       </button>
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-4">
-                    <div className="space-y-3">
-                      <Label htmlFor="siteName" className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">Institute Name</Label>
-                      <Input id="siteName" value={siteName || ""} onChange={(e) => setSiteName(e.target.value)} className="h-14 bg-background border-border/40 rounded-2xl px-6 font-bold text-lg" />
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1">
+                    <div className="space-y-1.5">
+                      <Label htmlFor="siteName" className="text-[10px] font-bold uppercase tracking-wider text-slate-400 ml-0.5">Institute Name</Label>
+                      <Input id="siteName" value={siteName || ""} onChange={(e) => setSiteName(e.target.value)} className="h-8 sm:h-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 font-semibold" />
                     </div>
-                    <div className="space-y-3">
-                       <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">Logo Placement</Label>
-                       <div className="flex items-center gap-4 p-2 bg-background rounded-2xl border border-border/40 h-20">
-                          <ImageUpload value={logoUrl} onChange={setLogoUrl} folder={`${mediaFolderBase}/branding`} />
-                    <ImageUpload value={faviconUrl || ""} onChange={setFaviconUrl} label="Favicon (Optional, defaults to Logo)" folder={`${mediaFolderBase}/branding`} />
-                       </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400 ml-0.5">Logo & Favicon</Label>
+                      <div className="flex items-center gap-3 p-2 bg-slate-50 dark:bg-slate-800/40 rounded-xl border border-slate-200/80 dark:border-slate-800">
+                        <ImageUpload value={logoUrl} onChange={setLogoUrl} folder={`${mediaFolderBase}/branding`} />
+                        <ImageUpload value={faviconUrl || ""} onChange={setFaviconUrl} label="Favicon" folder={`${mediaFolderBase}/branding`} />
+                      </div>
                     </div>
                   </div>
 
-                  <div className="space-y-6 pt-4">
-                    <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">Typography (Font Family)</Label>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+                  <div className="space-y-2 pt-1">
+                    <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400 ml-0.5">Typography (Font Family)</Label>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
                       {[
                         { name: "Inter", font: "Inter", description: "Modern Sans" },
                         { name: "Plus Jakarta", font: "Plus Jakarta Sans", description: "Neo-Grotesque" },
@@ -305,127 +305,127 @@ export function WorkspaceSettingsForm({ settings }: { settings: any }) {
                           type="button"
                           onClick={() => setFontFamily(f.font)}
                           className={cn(
-                            "flex flex-col items-center justify-center p-6 rounded-2xl border-2 transition-all text-center gap-2 h-32",
+                            "flex flex-col items-center justify-center p-2.5 rounded-xl border transition-all text-center gap-1 h-20",
                             fontFamily === f.font
-                              ? "border-primary bg-primary/5 shadow-lg shadow-primary/5 scale-[1.02]"
-                              : "border-border/40 hover:border-primary/20 hover:bg-muted/50"
+                              ? "border-primary bg-primary/5 shadow-xs"
+                              : "border-slate-200 dark:border-slate-800 hover:border-primary/30 hover:bg-slate-50 dark:hover:bg-slate-800/40"
                           )}
                         >
-                          <span className="text-3xl font-black" style={{ fontFamily: f.font }}>Aa</span>
+                          <span className="text-xl font-bold" style={{ fontFamily: f.font }}>Aa</span>
                           <div className="flex flex-col">
-                            <span className="text-[10px] font-black uppercase">{f.name}</span>
-                            <span className="text-[8px] text-muted-foreground uppercase font-bold tracking-tighter">{f.description}</span>
+                            <span className="text-[11px] font-bold text-slate-900 dark:text-white leading-tight">{f.name}</span>
+                            <span className="text-[8px] text-slate-400 font-medium">{f.description}</span>
                           </div>
                         </button>
                       ))}
                     </div>
                   </div>
                   
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-4">
-                    <div className="space-y-3">
-                      <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">Primary Color</Label>
-                      <div className="flex items-center gap-6 p-4 bg-background rounded-2xl border border-border/40 h-20 w-full">
-                        <Input type="color" value={primaryColor || "#4f46e5"} onChange={(e) => setPrimaryColor(e.target.value)} className="w-12 h-12 p-0.5 border-none bg-transparent cursor-pointer shrink-0" />
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1">
+                    <div className="space-y-1.5">
+                      <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400 ml-0.5">Primary Color</Label>
+                      <div className="flex items-center gap-3 p-2 bg-slate-50 dark:bg-slate-800/40 rounded-xl border border-slate-200/80 dark:border-slate-800 h-11 w-full">
+                        <Input type="color" value={primaryColor || "#4f46e5"} onChange={(e) => setPrimaryColor(e.target.value)} className="w-8 h-8 p-0 border-none bg-transparent cursor-pointer shrink-0 rounded-md" />
                         <div className="flex flex-col">
-                          <span className="font-mono text-sm font-black uppercase tracking-widest">{primaryColor}</span>
-                          <span className="text-[10px] text-muted-foreground uppercase font-black">Main Identity</span>
+                          <span className="font-mono text-xs font-bold uppercase text-slate-900 dark:text-white">{primaryColor}</span>
+                          <span className="text-[9px] text-slate-400 font-medium">Main Brand Color</span>
                         </div>
                       </div>
                     </div>
-                    <div className="space-y-3">
-                      <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">Accent Color</Label>
-                      <div className="flex items-center gap-6 p-4 bg-background rounded-2xl border border-border/40 h-20 w-full">
-                        <Input type="color" value={accentColor || "#4338ca"} onChange={(e) => setAccentColor(e.target.value)} className="w-12 h-12 p-0.5 border-none bg-transparent cursor-pointer shrink-0" />
+                    <div className="space-y-1.5">
+                      <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400 ml-0.5">Accent Color</Label>
+                      <div className="flex items-center gap-3 p-2 bg-slate-50 dark:bg-slate-800/40 rounded-xl border border-slate-200/80 dark:border-slate-800 h-11 w-full">
+                        <Input type="color" value={accentColor || "#4338ca"} onChange={(e) => setAccentColor(e.target.value)} className="w-8 h-8 p-0 border-none bg-transparent cursor-pointer shrink-0 rounded-md" />
                         <div className="flex flex-col">
-                          <span className="font-mono text-sm font-black uppercase tracking-widest">{accentColor}</span>
-                          <span className="text-[10px] text-muted-foreground uppercase font-black">Interaction Highlight</span>
+                          <span className="font-mono text-xs font-bold uppercase text-slate-900 dark:text-white">{accentColor}</span>
+                          <span className="text-[9px] text-slate-400 font-medium">Interactive Highlight</span>
                         </div>
                       </div>
                     </div>
                   </div>
                   
-                  <div className="space-y-3 pt-4">
-                    <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">Default Page Header Banner</Label>
+                  <div className="space-y-1.5 pt-1">
+                    <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400 ml-0.5">Default Page Header Banner</Label>
                     <ImageUpload value={pageHeaderBanner} onChange={setPageHeaderBanner} label="Page Banner" folder={`${mediaFolderBase}/branding`} />
-                    <p className="text-[10px] text-muted-foreground font-medium ml-1">This image will appear at the top of informational pages like Events, Notice, and About Us.</p>
+                    <p className="text-[10px] text-slate-400 font-medium">This banner appears at the top of informational sub-pages like Events, Notice, and About Us.</p>
                   </div>
                   
-                  <div className="pt-4 flex justify-end">
-                    <Button onClick={handleSaveGeneral} disabled={isSaving} className="h-14 px-10 gap-3 rounded-2xl font-black text-lg bg-primary text-primary-foreground shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all border-none">
-                      <Save className="h-5 w-5" /> {isSaving ? "Saving..." : "Save Identity"}
+                  <div className="pt-2 flex justify-end">
+                    <Button onClick={handleSaveGeneral} disabled={isSaving} className="h-8 sm:h-9 px-4 gap-1.5 rounded-lg font-semibold text-xs sm:text-sm bg-primary text-primary-foreground shadow-xs">
+                      <Save className="h-3.5 w-3.5" /> {isSaving ? "Saving..." : "Save Identity"}
                     </Button>
                   </div>
                 </AccordionContent>
               </AccordionItem>
 
-              <AccordionItem value="contact" className="border border-border/50 bg-card/50 rounded-3xl overflow-hidden shadow-md">
-                <AccordionTrigger className="hover:no-underline py-8 px-8">
-                  <div className="flex items-center gap-4 text-left">
-                    <div className="w-12 h-12 rounded-2xl bg-blue-500/10 text-blue-600 flex items-center justify-center">
-                      <Phone className="w-6 h-6" />
+              <AccordionItem value="contact" className="border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 rounded-xl overflow-hidden shadow-xs">
+                <AccordionTrigger className="hover:no-underline py-3 px-3.5 sm:px-4">
+                  <div className="flex items-center gap-3 text-left">
+                    <div className="w-8 h-8 rounded-lg bg-blue-500/10 text-blue-600 flex items-center justify-center shrink-0">
+                      <Phone className="w-4 h-4" />
                     </div>
                     <div>
-                      <h3 className="text-xl font-black tracking-tight">Contact Information</h3>
-                      <p className="text-sm text-muted-foreground font-medium">Public contact details for students.</p>
+                      <h3 className="text-xs sm:text-sm font-bold tracking-tight text-slate-900 dark:text-white">Contact Information</h3>
+                      <p className="text-[11px] text-slate-500 font-medium">Public contact details displayed on your landing page and footer.</p>
                     </div>
                   </div>
                 </AccordionTrigger>
-                <AccordionContent className="pb-8 px-8 space-y-8 border-t border-border/20 pt-8">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <div className="space-y-3">
-                      <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">Support Email</Label>
-                      <Input value={contactEmail || ""} onChange={(e) => setContactEmail(e.target.value)} className="h-14 bg-background border-border/40 rounded-2xl px-6 font-bold" />
+                <AccordionContent className="pb-4 px-3.5 sm:px-4 space-y-4 border-t border-slate-100 dark:border-slate-800 pt-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400 ml-0.5">Support Email</Label>
+                      <Input value={contactEmail || ""} onChange={(e) => setContactEmail(e.target.value)} className="h-8 sm:h-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700" />
                     </div>
-                    <div className="space-y-3">
-                      <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">Phone Number</Label>
-                      <Input value={contactPhone || ""} onChange={(e) => setContactPhone(e.target.value)} className="h-14 bg-background border-border/40 rounded-2xl px-6 font-bold" />
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <div className="space-y-3">
-                      <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">WhatsApp</Label>
-                      <Input value={whatsapp || ""} onChange={(e) => setWhatsapp(e.target.value)} className="h-14 bg-background border-border/40 rounded-2xl px-6 font-bold" />
-                    </div>
-                    <div className="space-y-3">
-                      <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">Campus Address</Label>
-                      <Input value={address || ""} onChange={(e) => setAddress(e.target.value)} className="h-14 bg-background border-border/40 rounded-2xl px-6 font-bold" />
+                    <div className="space-y-1">
+                      <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400 ml-0.5">Phone Number</Label>
+                      <Input value={contactPhone || ""} onChange={(e) => setContactPhone(e.target.value)} className="h-8 sm:h-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700" />
                     </div>
                   </div>
-                  <div className="space-y-3">
-                    <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">Google Maps Embed Link</Label>
-                    <Input value={googleMapLink || ""} onChange={(e) => setGoogleMapLink(e.target.value)} placeholder="https://www.google.com/maps/embed?pb=..." className="h-14 bg-background border-border/40 rounded-2xl px-6 font-bold" />
-                    <p className="text-[10px] text-muted-foreground font-medium ml-1">Paste the <span className="text-primary font-bold">src</span> attribute from the Google Maps "Embed a map" iframe.</p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400 ml-0.5">WhatsApp</Label>
+                      <Input value={whatsapp || ""} onChange={(e) => setWhatsapp(e.target.value)} className="h-8 sm:h-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700" />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400 ml-0.5">Campus Address</Label>
+                      <Input value={address || ""} onChange={(e) => setAddress(e.target.value)} className="h-8 sm:h-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700" />
+                    </div>
                   </div>
-                  <div className="pt-4 flex justify-end">
-                    <Button onClick={handleSaveGeneral} disabled={isSaving} className="h-14 px-10 gap-3 rounded-2xl font-black text-lg bg-primary text-primary-foreground shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all border-none">
-                      <Save className="h-5 w-5" /> {isSaving ? "Saving..." : "Update Contact"}
+                  <div className="space-y-1">
+                    <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400 ml-0.5">Google Maps Embed Link</Label>
+                    <Input value={googleMapLink || ""} onChange={(e) => setGoogleMapLink(e.target.value)} placeholder="https://www.google.com/maps/embed?pb=..." className="h-8 sm:h-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700" />
+                    <p className="text-[10px] text-slate-400 font-medium ml-0.5">Paste the <span className="text-primary font-semibold">src</span> attribute from the Google Maps "Embed a map" iframe.</p>
+                  </div>
+                  <div className="pt-2 flex justify-end">
+                    <Button onClick={handleSaveGeneral} disabled={isSaving} className="h-8 sm:h-9 px-4 gap-1.5 rounded-lg font-semibold text-xs sm:text-sm bg-primary text-primary-foreground shadow-xs">
+                      <Save className="h-3.5 w-3.5" /> {isSaving ? "Saving..." : "Update Contact"}
                     </Button>
                   </div>
                 </AccordionContent>
               </AccordionItem>
 
-              <AccordionItem value="social" className="border border-border/50 bg-card/50 rounded-3xl overflow-hidden shadow-md">
-                <AccordionTrigger className="hover:no-underline py-8 px-8">
-                  <div className="flex items-center gap-4 text-left">
-                    <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 text-indigo-600 flex items-center justify-center">
-                      <Globe className="w-6 h-6" />
+              <AccordionItem value="social" className="border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 rounded-xl overflow-hidden shadow-xs">
+                <AccordionTrigger className="hover:no-underline py-3 px-3.5 sm:px-4">
+                  <div className="flex items-center gap-3 text-left">
+                    <div className="w-8 h-8 rounded-lg bg-indigo-500/10 text-indigo-600 flex items-center justify-center shrink-0">
+                      <Globe className="w-4 h-4" />
                     </div>
                     <div>
-                      <h3 className="text-xl font-black tracking-tight">Social Media Links</h3>
-                      <p className="text-sm text-muted-foreground font-medium">Connect your community profiles.</p>
+                      <h3 className="text-xs sm:text-sm font-bold tracking-tight text-slate-900 dark:text-white">Social Media Links</h3>
+                      <p className="text-[11px] text-slate-500 font-medium">Connect your community social channels.</p>
                     </div>
                   </div>
                 </AccordionTrigger>
-                <AccordionContent className="pb-8 px-8 grid grid-cols-1 md:grid-cols-2 gap-8 border-t border-border/20 pt-8">
+                <AccordionContent className="pb-4 px-3.5 sm:px-4 grid grid-cols-1 md:grid-cols-2 gap-3 border-t border-slate-100 dark:border-slate-800 pt-4">
                   {['facebook', 'twitter', 'instagram', 'linkedin', 'youtube'].map((platform) => (
-                    <div key={platform} className="space-y-3">
-                      <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">{platform}</Label>
-                      <Input value={socialLinks[platform] || ""} onChange={(e) => setSocialLinks({ ...socialLinks, [platform]: e.target.value })} placeholder={`https://${platform}.com/...`} className="h-12 bg-background border-border/40 rounded-2xl px-4" />
+                    <div key={platform} className="space-y-1">
+                      <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400 ml-0.5 capitalize">{platform}</Label>
+                      <Input value={socialLinks[platform] || ""} onChange={(e) => setSocialLinks({ ...socialLinks, [platform]: e.target.value })} placeholder={`https://${platform}.com/...`} className="h-8 sm:h-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700" />
                     </div>
                   ))}
-                  <div className="md:col-span-2 pt-4 flex justify-end">
-                    <Button onClick={handleSaveGeneral} disabled={isSaving} className="h-14 px-10 gap-3 rounded-2xl font-black text-lg bg-primary text-primary-foreground shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all border-none">
-                      <Save className="h-5 w-5" /> {isSaving ? "Saving..." : "Save Links"}
+                  <div className="md:col-span-2 pt-2 flex justify-end">
+                    <Button onClick={handleSaveGeneral} disabled={isSaving} className="h-8 sm:h-9 px-4 gap-1.5 rounded-lg font-semibold text-xs sm:text-sm bg-primary text-primary-foreground shadow-xs">
+                      <Save className="h-3.5 w-3.5" /> {isSaving ? "Saving..." : "Save Links"}
                     </Button>
                   </div>
                 </AccordionContent>
@@ -433,21 +433,29 @@ export function WorkspaceSettingsForm({ settings }: { settings: any }) {
             </Accordion>
           </TabsContent>
 
-          <TabsContent value="navigation" className="mt-0 w-full space-y-10 focus-visible:outline-none">
-            <div className="flex flex-col gap-2">
-              <h2 className="text-2xl font-black tracking-tight">Navigation Ecosystem</h2>
-              <p className="text-muted-foreground text-sm">Control which pages are visible on your header.</p>
+          <TabsContent value="navigation" className="mt-0 w-full space-y-4 focus-visible:outline-none">
+            <div className="flex flex-col gap-0.5">
+              <h2 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white tracking-tight">Navigation Menu</h2>
+              <p className="text-xs text-slate-500 font-medium">Control which pages and links are displayed on your public website navbar.</p>
             </div>
 
-            <div className="grid grid-cols-1 gap-4">
+            <div className="grid grid-cols-1 gap-2.5">
               {navigation.map((nav: any, index: number) => (
-                <div key={nav.id || index} className={`group flex flex-col md:flex-row items-center justify-between p-6 rounded-[2rem] border transition-all duration-300 ${nav.isActive ? "bg-white dark:bg-zinc-900 border-border/60 shadow-sm" : "bg-muted/30 border-transparent opacity-60 grayscale"}`}>
-                  <div className="flex items-center gap-6 w-full md:w-auto">
-                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center font-black text-sm transition-colors ${nav.isActive ? "bg-primary text-primary-foreground" : "bg-zinc-200 dark:bg-zinc-800 text-muted-foreground"}`}>
+                <div key={nav.id || index} className={cn(
+                  "group flex flex-col sm:flex-row items-start sm:items-center justify-between p-2.5 sm:p-3 rounded-xl border transition-all shadow-xs gap-2.5",
+                  nav.isActive 
+                    ? "bg-white dark:bg-slate-900 border-slate-200/80 dark:border-slate-800" 
+                    : "bg-slate-50/60 dark:bg-slate-900/40 border-slate-100 dark:border-slate-800/60 opacity-60"
+                )}>
+                  <div className="flex items-center gap-3 w-full sm:w-auto">
+                    <div className={cn(
+                      "w-7 h-7 rounded-lg flex items-center justify-center font-bold text-xs shrink-0 transition-colors",
+                      nav.isActive ? "bg-primary/10 text-primary" : "bg-slate-100 dark:bg-slate-800 text-slate-400"
+                    )}>
                       {index + 1}
                     </div>
-                    <div className="flex flex-col gap-1 flex-1">
-                      <div className="flex items-center gap-2 group/edit h-8">
+                    <div className="flex flex-col gap-0.5 flex-1 min-w-0">
+                      <div className="flex items-center gap-1.5 group/edit h-6">
                         {editingNavIndex === index ? (
                           <Input 
                             autoFocus
@@ -459,25 +467,25 @@ export function WorkspaceSettingsForm({ settings }: { settings: any }) {
                             }} 
                             onBlur={() => setEditingNavIndex(null)}
                             onKeyDown={(e) => { if (e.key === 'Enter') setEditingNavIndex(null); }}
-                            className="h-8 font-black bg-white dark:bg-zinc-800 border border-border px-2 focus-visible:ring-1 text-xl tracking-tight rounded-md w-full max-w-[200px]" 
+                            className="h-6 font-semibold bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 px-2 text-xs rounded-md w-full max-w-[180px]" 
                           />
                         ) : (
                           <>
-                            <span className="font-black text-xl tracking-tight">{nav.name || "Unnamed"}</span>
+                            <span className="font-semibold text-xs sm:text-sm text-slate-900 dark:text-white truncate">{nav.name || "Unnamed"}</span>
                             <Button 
                               type="button"
                               variant="ghost" 
                               size="icon" 
                               onClick={() => setEditingNavIndex(index)} 
-                              className="h-6 w-6 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-full"
+                              className="h-5 w-5 text-slate-400 hover:text-primary hover:bg-primary/10 rounded-md"
                             >
                               <Pencil className="h-3 w-3" />
                             </Button>
                           </>
                         )}
                       </div>
-                      <div className="flex items-center gap-2 group/edit h-6">
-                        <ExternalLink className="w-3 h-3 text-primary shrink-0" />
+                      <div className="flex items-center gap-1.5 group/edit h-5">
+                        <ExternalLink className="w-2.5 h-2.5 text-primary shrink-0" />
                         {editingLinkIndex === index ? (
                           <Input 
                             autoFocus
@@ -489,19 +497,19 @@ export function WorkspaceSettingsForm({ settings }: { settings: any }) {
                             }} 
                             onBlur={() => setEditingLinkIndex(null)}
                             onKeyDown={(e) => { if (e.key === 'Enter') setEditingLinkIndex(null); }}
-                            className="h-6 font-mono bg-white dark:bg-zinc-800 border border-border px-1 focus-visible:ring-1 text-[10px] text-primary/60 rounded max-w-[200px]" 
+                            className="h-5 font-mono bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 px-1 text-[10px] text-primary rounded max-w-[180px]" 
                           />
                         ) : (
                           <>
-                            <span className="font-mono text-[10px] text-primary/60">{nav.href || "No link"}</span>
+                            <span className="font-mono text-[10px] text-slate-500 truncate">{nav.href || "No link"}</span>
                             <Button 
                               type="button"
                               variant="ghost" 
                               size="icon" 
                               onClick={() => setEditingLinkIndex(index)} 
-                              className="h-4 w-4 opacity-0 group-hover/edit:opacity-100 transition-opacity text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-full shrink-0"
+                              className="h-4 w-4 opacity-0 group-hover/edit:opacity-100 transition-opacity text-slate-400 hover:text-primary hover:bg-primary/10 rounded-md shrink-0"
                             >
-                              <Pencil className="h-2 w-2" />
+                              <Pencil className="h-2.5 w-2.5" />
                             </Button>
                           </>
                         )}
@@ -509,9 +517,9 @@ export function WorkspaceSettingsForm({ settings }: { settings: any }) {
                     </div>
                   </div>
                   
-                  <div className="flex items-center gap-4 mt-6 md:mt-0 w-full md:w-auto justify-end">
-                    <div className="flex items-center gap-3 px-5 py-2 rounded-2xl bg-zinc-100 dark:bg-zinc-800 border border-border/40">
-                      <span className="text-[10px] font-black uppercase tracking-widest">{nav.isActive ? "Active" : "Hidden"}</span>
+                  <div className="flex items-center gap-2 mt-1 sm:mt-0 w-full sm:w-auto justify-end">
+                    <div className="flex items-center gap-2 px-2.5 py-1 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700">
+                      <span className="text-[9px] font-bold uppercase tracking-wider text-slate-500">{nav.isActive ? "Active" : "Hidden"}</span>
                       <Switch 
                         checked={!!nav.isActive} 
                         disabled={nav.name === "Home"}
@@ -520,43 +528,44 @@ export function WorkspaceSettingsForm({ settings }: { settings: any }) {
                           newNav[index] = { ...newNav[index], isActive: val };
                           setNavigation(newNav);
                         }} 
+                        className="data-[state=checked]:bg-primary"
                       />
                     </div>
-                    <div className="flex items-center gap-1 mr-1">
+                    <div className="flex items-center gap-0.5">
                       <Button variant="ghost" size="icon" disabled={index === 0} onClick={() => {
                         const newNav = [...navigation];
                         [newNav[index - 1], newNav[index]] = [newNav[index], newNav[index - 1]];
                         setNavigation(newNav);
-                      }} className="h-12 w-12 rounded-2xl text-muted-foreground hover:bg-muted/50 hover:text-foreground transition-colors"><ChevronUp className="h-5 w-5" /></Button>
+                      }} className="h-7 w-7 rounded-md text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800"><ChevronUp className="h-3.5 w-3.5" /></Button>
                       <Button variant="ghost" size="icon" disabled={index === navigation.length - 1} onClick={() => {
                         const newNav = [...navigation];
                         [newNav[index + 1], newNav[index]] = [newNav[index], newNav[index + 1]];
                         setNavigation(newNav);
-                      }} className="h-12 w-12 rounded-2xl text-muted-foreground hover:bg-muted/50 hover:text-foreground transition-colors"><ChevronDown className="h-5 w-5" /></Button>
+                      }} className="h-7 w-7 rounded-md text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800"><ChevronDown className="h-3.5 w-3.5" /></Button>
+                      <Button variant="ghost" size="icon" onClick={() => {
+                        setNavigation(navigation.filter((_: any, i: number) => i !== index));
+                      }} className="h-7 w-7 rounded-md text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30"><Trash2 className="h-3.5 w-3.5" /></Button>
                     </div>
-                    <Button variant="ghost" size="icon" onClick={() => {
-                      setNavigation(navigation.filter((_: any, i: number) => i !== index));
-                    }} className="h-12 w-12 rounded-2xl text-red-500 hover:bg-red-500/10 hover:text-red-600 transition-colors"><Trash2 className="h-5 w-5" /></Button>
                   </div>
                 </div>
               ))}
 
               <Button variant="outline" onClick={() => {
                 setNavigation([...navigation, { name: "New Link", href: "#", id: Math.random().toString(), isActive: true }]);
-              }} className="h-28 border-dashed border-2 rounded-[2.5rem] flex flex-col gap-2 hover:bg-primary/5 hover:border-primary/30 transition-all w-full group">
-                <Plus className="h-8 w-8 text-muted-foreground group-hover:scale-125 transition-transform" />
-                <span className="font-black text-[10px] text-muted-foreground uppercase tracking-[0.2em]">Add Menu Link</span>
+              }} className="h-9 border-dashed border border-slate-300 dark:border-slate-700 rounded-xl flex items-center justify-center gap-1.5 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all w-full">
+                <Plus className="h-4 w-4" />
+                <span>Add Menu Link</span>
               </Button>
               
-              <div className="pt-10 flex justify-end">
-                <Button onClick={handleSaveGeneral} disabled={isSaving} className="h-16 px-12 gap-3 rounded-[1.5rem] font-black text-xl shadow-lg hover:shadow-primary/20 active:scale-95 transition-all bg-primary text-primary-foreground border-none">
-                  <Save className="h-6 w-6" /> {isSaving ? "Saving..." : "Update Menu"}
+              <div className="pt-2 flex justify-end">
+                <Button onClick={handleSaveGeneral} disabled={isSaving} className="h-8 sm:h-9 px-4 gap-1.5 rounded-lg font-semibold text-xs sm:text-sm bg-primary text-primary-foreground shadow-xs">
+                  <Save className="h-3.5 w-3.5" /> {isSaving ? "Saving..." : "Update Menu"}
                 </Button>
               </div>
             </div>
           </TabsContent>
 
-          <TabsContent value="events" className="mt-0 w-full space-y-10 focus-visible:outline-none">
+          <TabsContent value="events" className="mt-0 w-full space-y-4 focus-visible:outline-none">
              <EventsManagement 
                 workspaceId={settings.workspaceId} 
                 events={settings.workspace?.events || []} 
@@ -564,39 +573,40 @@ export function WorkspaceSettingsForm({ settings }: { settings: any }) {
              />
           </TabsContent>
 
-          <TabsContent value="notices" className="mt-0 w-full space-y-10 focus-visible:outline-none">
-            <div className="flex flex-col gap-2">
-              <h2 className="text-2xl font-black tracking-tight">Notice Board</h2>
-              <p className="text-muted-foreground text-sm">Publish important updates for your students.</p>
+          <TabsContent value="notices" className="mt-0 w-full space-y-4 focus-visible:outline-none">
+            <div className="flex flex-col gap-0.5">
+              <h2 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white tracking-tight">Notice Board</h2>
+              <p className="text-xs text-slate-500 font-medium">Publish important announcements and circulars on your website.</p>
             </div>
 
             {(() => {
               const aboutSection = settings.sections?.find((s: any) => s.type === 'about');
               if (!aboutSection) return (
-                <div className="p-16 border-2 border-dashed rounded-[3rem] text-center space-y-4 bg-muted/20">
-                  <Bell className="w-16 h-16 text-muted-foreground mx-auto opacity-20" />
-                  <p className="text-muted-foreground font-black uppercase tracking-widest text-xs">Section Not Found</p>
-                  <Button variant="outline" onClick={() => setActiveTab("sections")} className="rounded-2xl h-12 font-bold">Go to Sections</Button>
+                <div className="p-10 border border-dashed rounded-xl text-center space-y-2 bg-slate-50 dark:bg-slate-900/50">
+                  <Bell className="w-8 h-8 text-slate-400 mx-auto opacity-40" />
+                  <p className="text-slate-500 font-bold uppercase tracking-wider text-xs">Section Not Found</p>
+                  <Button variant="outline" size="sm" onClick={() => setActiveTab("sections")} className="rounded-lg h-8 text-xs font-semibold">Go to Sections</Button>
                 </div>
               );
 
               return (
-                <div className="p-10 bg-white dark:bg-zinc-900 border border-border/60 rounded-[3rem] shadow-md space-y-10">
-                  <div className="flex items-center justify-between pb-8 border-b border-border/40">
-                    <div className="flex items-center gap-5">
-                      <div className="w-14 h-14 rounded-2xl bg-orange-500/10 text-orange-600 flex items-center justify-center">
-                        <Bell className="w-7 h-7 animate-bounce" />
+                <div className="p-3.5 sm:p-4 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-xl shadow-xs space-y-4">
+                  <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-lg bg-amber-500/10 text-amber-600 flex items-center justify-center shrink-0">
+                        <Bell className="w-4 h-4" />
                       </div>
                       <div>
-                        <h3 className="text-xl font-black tracking-tight">Live Notice Board</h3>
-                        <p className="text-xs text-muted-foreground font-medium uppercase tracking-widest mt-1">Updates shown on landing page</p>
+                        <h3 className="text-xs sm:text-sm font-bold tracking-tight text-slate-900 dark:text-white">Live Notice Board</h3>
+                        <p className="text-[10px] text-slate-500 font-medium">Updates shown on your landing page notice ticker</p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-4 px-6 py-3 bg-muted/50 rounded-2xl border border-border/20">
-                       <span className="text-[10px] font-black uppercase tracking-[0.2em]">{aboutSection.isActive ? "Online" : "Offline"}</span>
+                    <div className="flex items-center gap-2 px-2.5 py-1 bg-slate-50 dark:bg-slate-800 rounded-lg border border-slate-200/80 dark:border-slate-700">
+                       <span className="text-[9px] font-bold uppercase tracking-wider text-slate-500">{aboutSection.isActive ? "Online" : "Offline"}</span>
                        <Switch 
                          checked={aboutSection.isActive} 
                          onCheckedChange={(val) => updateLandingSection(aboutSection.id, { ...aboutSection, isActive: val })} 
+                         className="data-[state=checked]:bg-primary"
                        />
                     </div>
                   </div>
@@ -606,7 +616,7 @@ export function WorkspaceSettingsForm({ settings }: { settings: any }) {
                     setContent={async (newContent: any) => {
                       await updateLandingSection(aboutSection.id, { ...aboutSection, content: newContent });
                       toast.success("Notice board updated");
-                    }}
+                    }} 
                     mediaFolderBase={mediaFolderBase}
                   />
                 </div>
@@ -614,7 +624,7 @@ export function WorkspaceSettingsForm({ settings }: { settings: any }) {
             })()}
           </TabsContent>
 
-          <TabsContent value="gallery" className="mt-0 w-full space-y-10 focus-visible:outline-none">
+          <TabsContent value="gallery" className="mt-0 w-full space-y-4 focus-visible:outline-none">
              <GalleryManagement 
                 workspaceId={settings.workspaceId} 
                 galleryItems={settings.workspace?.galleryItems || []} 
@@ -622,66 +632,77 @@ export function WorkspaceSettingsForm({ settings }: { settings: any }) {
              />
           </TabsContent>
 
-          <TabsContent value="legal" className="mt-0 w-full space-y-10 focus-visible:outline-none">
-             <div className="flex flex-col gap-2 mb-8">
-               <h2 className="text-2xl font-black tracking-tight">Legal & Help Management</h2>
-               <p className="text-muted-foreground text-sm font-medium flex items-center gap-2">
-                 <ShieldCheck className="w-4 h-4 text-primary" />
-                 Manage your official documentation and student support center.
+          <TabsContent value="legal" className="mt-0 w-full space-y-4 focus-visible:outline-none">
+             <div className="flex flex-col gap-0.5 mb-2">
+               <h2 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white tracking-tight">Legal & Help Management</h2>
+               <p className="text-xs text-slate-500 font-medium flex items-center gap-1.5">
+                 <ShieldCheck className="w-3.5 h-3.5 text-primary" />
+                 Manage your official policy documents and student support center.
                </p>
              </div>
              <LegalContentEditor settings={settings} />
           </TabsContent>
 
-          <TabsContent value="attendance" className="mt-0 w-full space-y-10 focus-visible:outline-none">
-            <div className="flex flex-col gap-2 mb-8">
-              <h2 className="text-2xl font-black tracking-tight">Attendance Configurations</h2>
-              <p className="text-muted-foreground text-sm font-medium">Configure automated low attendance alerts.</p>
+          <TabsContent value="attendance" className="mt-0 w-full space-y-4 focus-visible:outline-none">
+            <div className="flex flex-col gap-0.5">
+              <h2 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white tracking-tight">Attendance Configurations</h2>
+              <p className="text-xs text-slate-500 font-medium">Configure automated low attendance alerts and thresholds.</p>
             </div>
             
-            <div className="p-8 rounded-[3rem] border bg-white dark:bg-zinc-900 shadow-md space-y-8">
-              <div className="flex items-center justify-between p-6 bg-zinc-50 dark:bg-zinc-800/50 rounded-2xl border border-border">
-                <div className="flex flex-col gap-1">
-                  <h3 className="font-bold text-lg">Automated Low Attendance Alerts</h3>
-                  <p className="text-xs text-muted-foreground font-medium">Send automatic notifications to students when their attendance drops below the threshold.</p>
+            <div className="p-3.5 sm:p-4 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs space-y-4">
+              <div className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200/80 dark:border-slate-700">
+                <div className="flex flex-col gap-0.5">
+                  <h3 className="font-semibold text-xs sm:text-sm text-slate-900 dark:text-white">Automated Low Attendance Alerts</h3>
+                  <p className="text-[11px] text-slate-500 font-medium">Send notifications to students when their attendance drops below the threshold.</p>
                 </div>
                 <Switch 
                   checked={attendanceConfig.enableAlerts} 
                   onCheckedChange={(val) => setAttendanceConfig({ ...attendanceConfig, enableAlerts: val })} 
+                  className="data-[state=checked]:bg-primary"
                 />
               </div>
 
               {attendanceConfig.enableAlerts && (
-                <div className="space-y-4 p-6 bg-blue-50/50 dark:bg-blue-900/10 rounded-2xl border border-blue-100 dark:border-blue-900/30">
-                  <Label className="text-xs font-black uppercase tracking-widest text-blue-600 dark:text-blue-400">Alert Threshold (%)</Label>
-                  <div className="flex items-center gap-4">
+                <div className="space-y-2 p-3 bg-blue-50/50 dark:bg-blue-900/10 rounded-xl border border-blue-100 dark:border-blue-900/30">
+                  <Label className="text-[10px] font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400">Alert Threshold (%)</Label>
+                  <div className="flex items-center gap-3">
                     <Input 
                       type="number"
                       min="1"
                       max="99"
                       value={attendanceConfig.threshold || 75} 
                       onChange={(e) => setAttendanceConfig({ ...attendanceConfig, threshold: parseInt(e.target.value) || 75 })} 
-                      className="h-14 bg-white dark:bg-zinc-900 border-border/40 rounded-2xl px-6 font-bold w-32" 
+                      className="h-8 sm:h-9 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 rounded-lg px-3 font-bold text-xs w-24" 
                     />
-                    <span className="font-medium text-sm text-muted-foreground">Alert when attendance drops below this percentage.</span>
+                    <span className="font-medium text-xs text-slate-500">Alert triggers when student attendance drops below this percentage.</span>
                   </div>
                 </div>
               )}
 
-              <div className="pt-4 flex justify-end border-t border-border/40 mt-8">
-                <Button onClick={handleSaveGeneral} disabled={isSaving} className="h-14 px-10 gap-3 rounded-2xl font-black text-lg bg-primary text-primary-foreground shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all border-none">
-                  <Save className="h-5 w-5" /> {isSaving ? "Saving..." : "Save Configuration"}
+              <div className="pt-2 flex justify-end border-t border-slate-100 dark:border-slate-800">
+                <Button onClick={handleSaveGeneral} disabled={isSaving} className="h-8 sm:h-9 px-4 gap-1.5 rounded-lg font-semibold text-xs sm:text-sm bg-primary text-primary-foreground shadow-xs">
+                  <Save className="h-3.5 w-3.5" /> {isSaving ? "Saving..." : "Save Configuration"}
                 </Button>
               </div>
             </div>
           </TabsContent>
 
-          <TabsContent value="sections" className="mt-0 w-full space-y-10 focus-visible:outline-none">
-             <div className="flex flex-col gap-6">
-               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
-                 <div className="flex flex-col gap-1">
-                   <h2 className="text-2xl font-black tracking-tight">Page Sections</h2>
-                   <p className="text-muted-foreground text-sm">Toggle visibility of specific landing page areas.</p>
+          <TabsContent value="sections" className="mt-0 w-full space-y-4 focus-visible:outline-none">
+             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border border-slate-200/80 dark:border-slate-800 rounded-xl p-3 sm:p-3.5 bg-white dark:bg-slate-900 shadow-xs">
+               <div className="flex flex-col gap-0.5">
+                 <h2 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white tracking-tight">Landing Page Sections</h2>
+                 <p className="text-xs text-slate-500 font-medium">Toggle visibility and customize content of specific homepage sections.</p>
+               </div>
+               
+               <div className="flex flex-wrap sm:flex-nowrap gap-2 items-center">
+                 <div className="relative flex-1 sm:w-[220px] group">
+                   <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400 group-focus-within:text-primary transition-colors" />
+                   <Input 
+                     value={sectionSearch || ""} 
+                     onChange={(e) => setSectionSearch(e.target.value)} 
+                     placeholder="Filter sections..." 
+                     className="h-8 sm:h-9 pl-8 pr-3 rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 text-xs" 
+                   />
                  </div>
                  <Button 
                    variant="outline" 
@@ -694,36 +715,26 @@ export function WorkspaceSettingsForm({ settings }: { settings: any }) {
                        if (res.created) window.location.reload();
                      }
                    }}
-                   className="rounded-2xl h-12 px-6 gap-3 border-primary/20 text-primary hover:bg-primary/5 font-black shadow-md hover:shadow-primary/10 active:scale-95 transition-all"
+                   className="h-8 sm:h-9 px-3 gap-1.5 rounded-lg border-primary/20 text-primary hover:bg-primary/5 font-semibold text-xs shrink-0"
                  >
-                   <Plus className="h-5 w-5" /> Sync Content
+                   <Plus className="h-3.5 w-3.5" /> Sync Content
                  </Button>
-               </div>
-
-               {/* Search Bar */}
-               <div className="relative group">
-                  <Search className="absolute left-6 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
-                  <Input 
-                    value={sectionSearch || ""}
-                    onChange={(e) => setSectionSearch(e.target.value)}
-                    placeholder="Search sections (e.g. Hero, Courses, FAQ...)" 
-                    className="h-16 pl-14 pr-6 rounded-[2rem] bg-white dark:bg-zinc-900 border-border/60 shadow-sm focus:shadow-md transition-all text-lg font-medium"
-                  />
                </div>
              </div>
 
-            <div className="space-y-6">
-                {filteredSections.length > 0 ? (
-                  filteredSections.map((section: any) => (
-                    <SectionEditor key={section.id} section={section} settings={settings} mediaFolderBase={mediaFolderBase} />
-                  ))
-                ) : (
-                  <div className="p-20 border-2 border-dashed rounded-[3rem] text-center space-y-4 bg-muted/10 opacity-60">
-                     <Search className="w-12 h-12 text-muted-foreground mx-auto" />
-                     <p className="font-bold text-muted-foreground uppercase tracking-widest text-xs">No sections matching "{sectionSearch}"</p>
-                  </div>
-                )}
-            </div>
+             <div className="space-y-3">
+                 {filteredSections.length > 0 ? (
+                   filteredSections.map((section: any) => (
+                     <SectionEditor key={section.id} section={section} settings={settings} mediaFolderBase={mediaFolderBase} />
+                   ))
+                 ) : (
+                   <div className="p-12 border border-dashed rounded-xl text-center space-y-2 bg-slate-50 dark:bg-slate-900/50">
+                      <Search className="w-8 h-8 text-slate-400 mx-auto opacity-50" />
+                      <p className="font-bold text-slate-600 dark:text-slate-400 text-xs">No sections matching "{sectionSearch}"</p>
+                      <p className="text-[11px] text-slate-400">Try clearing your search query.</p>
+                   </div>
+                 )}
+             </div>
           </TabsContent>
         </div>
       </Tabs>
@@ -753,31 +764,31 @@ function SectionEditor({ section, settings, mediaFolderBase }: { section: any, s
   };
 
   return (
-    <div className={`p-8 rounded-[3rem] border transition-all duration-500 ${isActive ? 'bg-white dark:bg-zinc-900 border-border shadow-md' : 'bg-muted/30 border-transparent opacity-60 grayscale'}`}>
-      <div className="flex items-center justify-between gap-4">
-        <div className="flex items-center gap-5">
-          <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-colors shadow-inner ${isActive ? 'bg-primary/10 text-primary' : 'bg-zinc-200 dark:bg-zinc-800 text-muted-foreground'}`}>
-            <Layout className="h-6 w-6" />
+    <div className={`p-3.5 sm:p-4 rounded-xl border transition-all duration-200 ${isActive ? 'bg-white dark:bg-slate-900 border-slate-200/80 dark:border-slate-800 shadow-xs' : 'bg-slate-50/50 dark:bg-slate-900/40 border-slate-200/40 dark:border-slate-800/40 opacity-70'}`}>
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-colors ${isActive ? 'bg-primary/10 text-primary' : 'bg-slate-100 dark:bg-slate-800 text-slate-400'}`}>
+            <Layout className="h-4 w-4" />
           </div>
           <div className="flex flex-col">
-            <h3 className="capitalize font-black text-lg tracking-tight">{section.type.replace("-", " ")}</h3>
-            <div className="flex items-center gap-2 mt-1">
-               <div className={`w-1.5 h-1.5 rounded-full ${isActive ? 'bg-green-500 animate-pulse' : 'bg-zinc-400'}`} />
-               <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest">{isActive ? 'Live on Site' : 'Hidden from Site'}</p>
+            <h3 className="capitalize font-semibold text-xs sm:text-sm text-slate-900 dark:text-white tracking-tight">{section.type.replace("-", " ")}</h3>
+            <div className="flex items-center gap-1.5 mt-0.5">
+               <div className={`w-1.5 h-1.5 rounded-full ${isActive ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'}`} />
+               <p className="text-[9px] text-slate-500 dark:text-slate-400 font-semibold uppercase tracking-wider">{isActive ? 'Live on Site' : 'Hidden from Site'}</p>
             </div>
           </div>
         </div>
 
-        <div className="flex items-center gap-5">
+        <div className="flex items-center gap-3">
           <Button 
             variant="ghost" 
             size="sm" 
             onClick={() => setIsExpanded(!isExpanded)}
-            className={`h-12 px-6 rounded-2xl font-black text-xs gap-3 transition-all ${isExpanded ? 'bg-primary text-primary-foreground shadow-md shadow-primary/20' : 'bg-muted/50 hover:bg-muted'}`}
+            className={`h-7 sm:h-8 px-2.5 sm:px-3 rounded-lg font-semibold text-xs gap-1.5 transition-all ${isExpanded ? 'bg-primary text-primary-foreground shadow-xs' : 'bg-slate-100 hover:bg-slate-200/70 dark:bg-slate-800 dark:hover:bg-slate-700/60 text-slate-700 dark:text-slate-300'}`}
           >
-            <Settings2 className="h-5 w-5" /> {isExpanded ? 'Close' : 'Edit'}
+            <Settings2 className="h-3.5 w-3.5" /> {isExpanded ? 'Close' : 'Configure'}
           </Button>
-          <div className="h-10 w-px bg-border/40 mx-2" />
+          <div className="h-4 w-px bg-slate-200 dark:bg-slate-800" />
           <Switch 
             checked={isActive} 
             onCheckedChange={(val) => {
@@ -790,39 +801,37 @@ function SectionEditor({ section, settings, mediaFolderBase }: { section: any, s
       </div>
 
       {isExpanded && (
-        <div className="mt-8 pt-8 border-t border-border/40 animate-in fade-in slide-in-from-top-4 duration-500">
-          <div className="space-y-10">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <div className="space-y-3">
-                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-2">Main Heading</Label>
-                <Input value={title || ""} onChange={(e) => setTitle(e.target.value)} className="h-14 rounded-2xl bg-zinc-50 dark:bg-zinc-800 border-none px-6 font-bold" />
-              </div>
-              <div className="space-y-3">
-                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-2">Subheading / Tagline</Label>
-                <Input value={subtitle || ""} onChange={(e) => setSubtitle(e.target.value)} className="h-14 rounded-2xl bg-zinc-50 dark:bg-zinc-800 border-none px-6 font-bold" />
-              </div>
+        <div className="mt-3.5 pt-3.5 border-t border-slate-100 dark:border-slate-800 space-y-4 animate-in fade-in slide-in-from-top-2 duration-200">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div className="space-y-1">
+              <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Main Heading</Label>
+              <Input value={title || ""} onChange={(e) => setTitle(e.target.value)} className="h-8 sm:h-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 font-medium" />
             </div>
+            <div className="space-y-1">
+              <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Subheading / Tagline</Label>
+              <Input value={subtitle || ""} onChange={(e) => setSubtitle(e.target.value)} className="h-8 sm:h-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 font-medium" />
+            </div>
+          </div>
 
-            <div className="bg-zinc-50 dark:bg-zinc-950 p-8 rounded-[2.5rem] border border-border/20 shadow-inner">
-               {section.type === 'hero' && <HeroContentEditor content={content} setContent={setContent} mediaFolderBase={mediaFolderBase} />}
-               {section.type === 'quick-links' && <QuickLinksContentEditor content={content} setContent={setContent} />}
-               {section.type === 'about' && <AboutNoticeContentEditor content={content} setContent={setContent} mediaFolderBase={mediaFolderBase} />}
-               {section.type === 'counters' && <CountersContentEditor content={content} setContent={setContent} mediaFolderBase={mediaFolderBase} />}
-               {section.type === 'courses' && <CoursesContentEditor content={content} setContent={setContent} mediaFolderBase={mediaFolderBase} />}
-               {section.type === 'events' && <EventsContentEditor content={content} setContent={setContent} mediaFolderBase={mediaFolderBase} />}
-               {section.type === 'why-choose-us' && <WhyChooseUsContentEditor content={content} setContent={setContent} mediaFolderBase={mediaFolderBase} />}
-               {section.type === 'achievements' && <AchievementsContentEditor content={content} setContent={setContent} mediaFolderBase={mediaFolderBase} />}
-               {section.type === 'partners' && <PartnersContentEditor content={content} setContent={setContent} mediaFolderBase={mediaFolderBase} />}
-               {section.type === 'testimonials' && <ListContentEditor title="Testimonial" content={content} setContent={setContent} itemFields={['name', 'role', 'text', 'avatar']} mediaFolderBase={mediaFolderBase} />}
-               {section.type === 'faq' && <FaqContentEditor content={content} setContent={setContent} mediaFolderBase={mediaFolderBase} />}
-               {section.type === 'contact' && <ContactContentEditor content={content} setContent={setContent} settings={settings} mediaFolderBase={mediaFolderBase} />}
-            </div>
+          <div className="bg-slate-50/60 dark:bg-slate-950/40 p-3.5 sm:p-4 rounded-xl border border-slate-200/70 dark:border-slate-800/80">
+             {section.type === 'hero' && <HeroContentEditor content={content} setContent={setContent} mediaFolderBase={mediaFolderBase} />}
+             {section.type === 'quick-links' && <QuickLinksContentEditor content={content} setContent={setContent} />}
+             {section.type === 'about' && <AboutNoticeContentEditor content={content} setContent={setContent} mediaFolderBase={mediaFolderBase} />}
+             {section.type === 'counters' && <CountersContentEditor content={content} setContent={setContent} mediaFolderBase={mediaFolderBase} />}
+             {section.type === 'courses' && <CoursesContentEditor content={content} setContent={setContent} mediaFolderBase={mediaFolderBase} />}
+             {section.type === 'events' && <EventsContentEditor content={content} setContent={setContent} mediaFolderBase={mediaFolderBase} />}
+             {section.type === 'why-choose-us' && <WhyChooseUsContentEditor content={content} setContent={setContent} mediaFolderBase={mediaFolderBase} />}
+             {section.type === 'achievements' && <AchievementsContentEditor content={content} setContent={setContent} mediaFolderBase={mediaFolderBase} />}
+             {section.type === 'partners' && <PartnersContentEditor content={content} setContent={setContent} mediaFolderBase={mediaFolderBase} />}
+             {section.type === 'testimonials' && <ListContentEditor title="Testimonial" content={content} setContent={setContent} itemFields={['name', 'role', 'text', 'avatar']} mediaFolderBase={mediaFolderBase} />}
+             {section.type === 'faq' && <FaqContentEditor content={content} setContent={setContent} mediaFolderBase={mediaFolderBase} />}
+             {section.type === 'contact' && <ContactContentEditor content={content} setContent={setContent} settings={settings} mediaFolderBase={mediaFolderBase} />}
+          </div>
 
-            <div className="flex justify-end">
-              <Button onClick={handleUpdate} disabled={isSaving} className="h-14 px-10 gap-3 rounded-2xl font-black bg-primary text-primary-foreground shadow-md shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all border-none">
-                <Save className="h-5 w-5" /> {isSaving ? "Saving..." : "Commit Changes"}
-              </Button>
-            </div>
+          <div className="flex justify-end pt-1">
+            <Button onClick={handleUpdate} disabled={isSaving} className="h-8 sm:h-9 px-4 gap-1.5 rounded-lg text-xs font-semibold bg-primary text-primary-foreground shadow-xs hover:bg-primary/90 border-none">
+              <Save className="h-3.5 w-3.5" /> {isSaving ? "Saving..." : "Commit Changes"}
+            </Button>
           </div>
         </div>
       )}
@@ -835,9 +844,9 @@ function SectionEditor({ section, settings, mediaFolderBase }: { section: any, s
 function HeroContentEditor({ content, setContent, mediaFolderBase }: any) {
   const slides = content.slides || [];
   return (
-    <div className="space-y-8">
-      <div className="flex items-center justify-between mb-4">
-        <h4 className="text-xs font-black uppercase tracking-[0.2em] text-primary">Hero Slides</h4>
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h4 className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Hero Slides ({slides.length})</h4>
         <Button size="sm" variant="outline" onClick={() => setContent({ ...content, slides: [...slides, { 
           title: "New Slide", 
           tagline: "Empowering Future", 
@@ -848,74 +857,74 @@ function HeroContentEditor({ content, setContent, mediaFolderBase }: any) {
           btn1Link: "/login",
           btn2Text: "Learn More",
           btn2Link: "/about"
-        }] })} className="rounded-xl font-bold h-10 border-primary/20 text-primary">
-          <Plus className="w-4 h-4 mr-2" /> Add Slide
+        }] })} className="h-7 sm:h-8 px-2.5 sm:px-3 rounded-lg text-xs font-semibold gap-1.5 border-slate-200 dark:border-slate-700">
+          <Plus className="w-3.5 h-3.5" /> Add Slide
         </Button>
       </div>
-      <div className="space-y-6">
+      <div className="space-y-3">
         {slides.map((slide: any, idx: number) => (
-          <div key={idx} className="p-8 bg-white dark:bg-zinc-900 rounded-[2.5rem] border border-border/40 shadow-sm relative group">
-            <Button variant="ghost" size="icon" className="absolute top-4 right-4 h-10 w-10 text-red-500 rounded-xl opacity-0 group-hover:opacity-100 transition-all" onClick={() => setContent({ ...content, slides: slides.filter((_: any, i: number) => i !== idx) })}>
-              <Trash2 className="w-5 h-5" />
+          <div key={idx} className="p-3.5 sm:p-4 bg-white dark:bg-slate-900 rounded-xl border border-slate-200/80 dark:border-slate-800 shadow-xs relative group">
+            <Button variant="ghost" size="icon" className="absolute top-3 right-3 h-7 w-7 text-slate-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-lg transition-all" onClick={() => setContent({ ...content, slides: slides.filter((_: any, i: number) => i !== idx) })}>
+              <Trash2 className="w-3.5 h-3.5" />
             </Button>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
-               <div className="space-y-6">
-                  <div className="space-y-2">
-                     <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Tagline (Badge)</Label>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+               <div className="space-y-3">
+                  <div className="space-y-1">
+                     <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Tagline (Badge)</Label>
                      <Input value={slide.tagline || ""} onChange={(e) => {
                        const next = [...slides];
                        next[idx].tagline = e.target.value;
                        setContent({ ...content, slides: next });
-                     }} className="h-10 rounded-xl" />
+                     }} className="h-8 sm:h-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 font-medium" />
                   </div>
-                  <div className="space-y-2">
-                     <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Hero Title</Label>
+                  <div className="space-y-1">
+                     <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Hero Title</Label>
                      <Input value={slide.title || ""} onChange={(e) => {
                        const next = [...slides];
                        next[idx].title = e.target.value;
                        setContent({ ...content, slides: next });
-                     }} className="h-12 rounded-xl font-bold text-lg" />
+                     }} className="h-8 sm:h-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 font-semibold text-slate-900 dark:text-white" />
                   </div>
-                  <div className="space-y-2">
-                     <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Description</Label>
+                  <div className="space-y-1">
+                     <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Description</Label>
                      <Textarea value={slide.description || ""} onChange={(e) => {
                        const next = [...slides];
                        next[idx].description = e.target.value;
                        setContent({ ...content, slides: next });
-                     }} className="min-h-[80px] rounded-xl resize-none" />
+                     }} className="min-h-[60px] text-xs p-2.5 rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 resize-none font-normal" />
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
-                     <div className="space-y-2">
-                        <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Primary Button</Label>
+                  <div className="grid grid-cols-2 gap-2.5">
+                     <div className="space-y-1">
+                        <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Primary Button</Label>
                         <Input value={slide.btn1Text || ""} onChange={(e) => {
                           const next = [...slides];
                           next[idx].btn1Text = e.target.value;
                           setContent({ ...content, slides: next });
-                        }} placeholder="Text" className="h-10 rounded-xl" />
+                        }} placeholder="Text" className="h-8 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700" />
                         <Input value={slide.btn1Link || ""} onChange={(e) => {
                           const next = [...slides];
                           next[idx].btn1Link = e.target.value;
                           setContent({ ...content, slides: next });
-                        }} placeholder="Link" className="h-10 rounded-xl text-[10px]" />
+                        }} placeholder="Link (/courses)" className="h-8 text-[11px] rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700" />
                      </div>
-                     <div className="space-y-2">
-                        <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Secondary Button</Label>
+                     <div className="space-y-1">
+                        <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Secondary Button</Label>
                         <Input value={slide.btn2Text || ""} onChange={(e) => {
                           const next = [...slides];
                           next[idx].btn2Text = e.target.value;
                           setContent({ ...content, slides: next });
-                        }} placeholder="Text" className="h-10 rounded-xl" />
+                        }} placeholder="Text" className="h-8 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700" />
                         <Input value={slide.btn2Link || ""} onChange={(e) => {
                           const next = [...slides];
                           next[idx].btn2Link = e.target.value;
                           setContent({ ...content, slides: next });
-                        }} placeholder="Link" className="h-10 rounded-xl text-[10px]" />
+                        }} placeholder="Link (/about)" className="h-8 text-[11px] rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700" />
                      </div>
                   </div>
                </div>
-               <div className="space-y-6">
-                  <div className="space-y-4">
-                    <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Background Banner</Label>
+               <div className="space-y-3">
+                  <div className="space-y-1.5">
+                    <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Background Banner</Label>
                     <ImageUpload value={slide.banner || slide.src} onChange={(url) => {
                        const next = [...slides];
                        next[idx].banner = url;
@@ -923,8 +932,8 @@ function HeroContentEditor({ content, setContent, mediaFolderBase }: any) {
                        setContent({ ...content, slides: next });
                     }} folder={`${mediaFolderBase}/hero`} />
                   </div>
-                  <div className="space-y-4">
-                    <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Right Side Image (Promo)</Label>
+                  <div className="space-y-1.5">
+                    <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Right Side Promo Graphic</Label>
                     <ImageUpload value={slide.offerImage} onChange={(url) => {
                        const next = [...slides];
                        next[idx].offerImage = url;
@@ -943,55 +952,55 @@ function HeroContentEditor({ content, setContent, mediaFolderBase }: any) {
 function AboutNoticeContentEditor({ content, setContent, mediaFolderBase }: any) {
   const notices = content.notices || [];
   return (
-    <div className="space-y-8">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="space-y-2">
-          <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Button Text</Label>
+    <div className="space-y-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div className="space-y-1">
+          <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">CTA Button Text</Label>
           <Input 
             value={content.btnText || ""} 
             onChange={(e) => setContent({ ...content, btnText: e.target.value })} 
             placeholder="e.g. Read More" 
-            className="h-10 rounded-xl" 
+            className="h-8 sm:h-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700" 
           />
         </div>
-        <div className="space-y-2">
-          <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Button Link</Label>
+        <div className="space-y-1">
+          <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">CTA Button Link</Label>
           <Input 
             value={content.btnLink || ""} 
             onChange={(e) => setContent({ ...content, btnLink: e.target.value })} 
             placeholder="e.g. /about" 
-            className="h-10 rounded-xl" 
+            className="h-8 sm:h-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700" 
           />
         </div>
       </div>
 
-      <div className="space-y-4">
-         <Label className="text-xs font-black uppercase tracking-widest text-primary">About Full Description</Label>
-         <Textarea value={content.description || ""} onChange={(e) => setContent({ ...content, description: e.target.value })} className="min-h-[160px] rounded-2xl bg-white dark:bg-zinc-900 border-border/40 p-6" placeholder="Detailed about description..." />
+      <div className="space-y-1">
+         <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">About Full Description</Label>
+         <Textarea value={content.description || ""} onChange={(e) => setContent({ ...content, description: e.target.value })} className="min-h-[90px] text-xs p-2.5 rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 resize-none font-normal" placeholder="Detailed about description..." />
       </div>
 
-      <div className="pt-8 border-t border-border/40 space-y-6">
+      <div className="pt-3 border-t border-slate-200/70 dark:border-slate-800 space-y-3">
         <div className="flex items-center justify-between">
-          <h4 className="text-xs font-black uppercase tracking-[0.2em] text-primary">Notices List</h4>
-          <Button size="sm" variant="outline" onClick={() => setContent({ ...content, notices: [...notices, { title: "New Notice", date: new Date().toLocaleDateString(), link: "#" }] })} className="rounded-xl font-bold h-10 border-primary/20 text-primary">
-            <Plus className="w-4 h-4 mr-2" /> Post Notice
+          <h4 className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Notices List ({notices.length})</h4>
+          <Button size="sm" variant="outline" onClick={() => setContent({ ...content, notices: [...notices, { title: "New Notice", date: new Date().toLocaleDateString(), link: "#" }] })} className="h-7 sm:h-8 px-2.5 sm:px-3 rounded-lg text-xs font-semibold gap-1.5 border-slate-200 dark:border-slate-700">
+            <Plus className="w-3.5 h-3.5" /> Post Notice
           </Button>
         </div>
-        <div className="space-y-4">
+        <div className="space-y-2">
           {notices.map((notice: any, idx: number) => (
-            <div key={idx} className="flex gap-4 items-center bg-white dark:bg-zinc-900 p-4 rounded-2xl border border-border/40 group">
+            <div key={idx} className="flex gap-2 items-center bg-white dark:bg-slate-900 p-2 sm:p-2.5 rounded-lg border border-slate-200/70 dark:border-slate-800 group">
               <Input value={notice.title || ""} onChange={(e) => {
                 const next = [...notices];
                 next[idx].title = e.target.value;
                 setContent({ ...content, notices: next });
-              }} className="flex-1 h-10 rounded-lg border-none bg-zinc-50 dark:bg-zinc-800 font-bold" />
+              }} placeholder="Notice title..." className="flex-1 h-8 text-xs rounded-md bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 font-medium" />
               <Input value={notice.date || ""} onChange={(e) => {
                 const next = [...notices];
                 next[idx].date = e.target.value;
                 setContent({ ...content, notices: next });
-              }} className="w-32 h-10 rounded-lg border-none bg-zinc-50 dark:bg-zinc-800 text-xs font-bold" />
-              <Button variant="ghost" size="icon" className="h-10 w-10 text-red-500 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => setContent({ ...content, notices: notices.filter((_: any, i: number) => i !== idx) })}>
-                <Trash2 className="w-4 h-4" />
+              }} placeholder="Date" className="w-28 sm:w-32 h-8 text-[11px] rounded-md bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 font-medium text-center" />
+              <Button variant="ghost" size="icon" className="h-7 w-7 text-slate-400 hover:text-red-500 rounded-md transition-colors" onClick={() => setContent({ ...content, notices: notices.filter((_: any, i: number) => i !== idx) })}>
+                <Trash2 className="w-3.5 h-3.5" />
               </Button>
             </div>
           ))}
@@ -1004,21 +1013,21 @@ function AboutNoticeContentEditor({ content, setContent, mediaFolderBase }: any)
 function CountersContentEditor({ content, setContent, mediaFolderBase }: any) {
   const stats = content.stats || [];
   return (
-    <div className="space-y-8">
+    <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h4 className="text-xs font-black uppercase tracking-[0.2em] text-primary">Live Counters</h4>
-        <Button size="sm" variant="outline" onClick={() => setContent({ ...content, stats: [...stats, { label: "Students", value: "1000", icon: "Users" }] })} className="rounded-xl font-bold h-10">
-          <Plus className="w-4 h-4 mr-2" /> Add Counter
+        <h4 className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Live Counters ({stats.length})</h4>
+        <Button size="sm" variant="outline" onClick={() => setContent({ ...content, stats: [...stats, { label: "Students", value: "1000", icon: "Users" }] })} className="h-7 sm:h-8 px-2.5 sm:px-3 rounded-lg text-xs font-semibold gap-1.5 border-slate-200 dark:border-slate-700">
+          <Plus className="w-3.5 h-3.5" /> Add Counter
         </Button>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
         {stats.map((stat: any, idx: number) => (
-          <div key={idx} className="p-5 bg-white dark:bg-zinc-900 rounded-2xl border border-border/40 relative flex gap-4 items-center">
+          <div key={idx} className="p-2.5 bg-white dark:bg-slate-900 rounded-xl border border-slate-200/70 dark:border-slate-800 relative flex gap-2 items-center">
             <select value={stat.icon || "Users"} onChange={(e) => {
                const next = [...stats];
                next[idx].icon = e.target.value;
                setContent({ ...content, stats: next });
-            }} className="h-10 px-2 rounded-lg bg-zinc-50 dark:bg-zinc-800 text-xs font-bold outline-none">
+            }} className="h-8 px-2 rounded-lg bg-slate-50 dark:bg-slate-800/50 text-xs font-medium border border-slate-200 dark:border-slate-700 outline-none">
                <option value="Users">Users</option>
                <option value="BookOpen">Books</option>
                <option value="Clock">Clock</option>
@@ -1032,14 +1041,14 @@ function CountersContentEditor({ content, setContent, mediaFolderBase }: any) {
               const next = [...stats];
               next[idx].label = e.target.value;
               setContent({ ...content, stats: next });
-            }} placeholder="Label" className="h-10 font-bold" />
+            }} placeholder="Label" className="h-8 text-xs font-medium rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700" />
             <Input value={stat.value || ""} onChange={(e) => {
               const next = [...stats];
               next[idx].value = e.target.value;
               setContent({ ...content, stats: next });
-            }} placeholder="Value" className="w-32 h-10 font-black text-primary text-center" />
-            <Button variant="ghost" size="icon" className="h-8 w-8 text-red-500 rounded-lg" onClick={() => setContent({ ...content, stats: stats.filter((_: any, i: number) => i !== idx) })}>
-              <Trash2 className="w-4 h-4" />
+            }} placeholder="Value" className="w-24 h-8 text-xs font-bold text-primary text-center rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700" />
+            <Button variant="ghost" size="icon" className="h-7 w-7 text-slate-400 hover:text-red-500 rounded-lg shrink-0" onClick={() => setContent({ ...content, stats: stats.filter((_: any, i: number) => i !== idx) })}>
+              <Trash2 className="w-3.5 h-3.5" />
             </Button>
           </div>
         ))}
@@ -1050,24 +1059,24 @@ function CountersContentEditor({ content, setContent, mediaFolderBase }: any) {
 
 function CoursesContentEditor({ content, setContent }: any) {
   return (
-    <div className="space-y-6">
-      <div className="space-y-3">
-        <Label className="text-xs font-black uppercase tracking-widest text-primary ml-1">Section Description</Label>
+    <div className="space-y-3">
+      <div className="space-y-1">
+        <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Section Description</Label>
         <Textarea 
           value={content.description || ""} 
           onChange={(e) => setContent({ ...content, description: e.target.value })} 
           placeholder="e.g. Unlock your potential with our meticulously crafted curriculum..." 
-          className="min-h-[120px] rounded-2xl bg-white dark:bg-zinc-900 border-border/40 p-6 font-medium leading-relaxed" 
+          className="min-h-[80px] text-xs p-2.5 rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 resize-none font-normal" 
         />
-        <p className="text-[10px] text-muted-foreground font-medium ml-1 italic">
+        <p className="text-[10px] text-slate-400 font-normal">
           This description appears at the top of the Courses section on your home page.
         </p>
       </div>
       
-      <div className="p-6 bg-blue-500/5 rounded-2xl border border-blue-500/10">
-        <p className="text-xs text-blue-600 dark:text-blue-400 font-bold flex items-center gap-2">
-          <BookOpenCheck className="w-4 h-4" />
-          The courses themselves are managed from the main <span className="uppercase tracking-widest">Courses</span> tab in the sidebar.
+      <div className="p-3 bg-blue-50/50 dark:bg-blue-950/20 rounded-xl border border-blue-200/60 dark:border-blue-900/40">
+        <p className="text-xs text-blue-700 dark:text-blue-300 font-medium flex items-center gap-2">
+          <BookOpenCheck className="w-4 h-4 shrink-0 text-blue-600 dark:text-blue-400" />
+          The courses themselves are managed from the main <span className="font-bold">Courses</span> tab in the sidebar.
         </p>
       </div>
     </div>
@@ -1077,58 +1086,58 @@ function CoursesContentEditor({ content, setContent }: any) {
 function EventsContentEditor({ content, setContent, mediaFolderBase }: any) {
   const events = content.events || [];
   return (
-    <div className="space-y-8">
+    <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h4 className="text-xs font-black uppercase tracking-[0.2em] text-primary">Events List</h4>
-        <Button size="sm" variant="outline" onClick={() => setContent({ ...content, events: [...events, { title: "New Event", date: "01 Jan, 2026", time: "10:00 AM", location: "Campus", image: "" }] })} className="rounded-xl font-bold h-10 border-primary/20 text-primary">
-          <Plus className="w-4 h-4 mr-2" /> Add Event
+        <h4 className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Events List ({events.length})</h4>
+        <Button size="sm" variant="outline" onClick={() => setContent({ ...content, events: [...events, { title: "New Event", date: "01 Jan, 2026", time: "10:00 AM", location: "Campus", image: "" }] })} className="h-7 sm:h-8 px-2.5 sm:px-3 rounded-lg text-xs font-semibold gap-1.5 border-slate-200 dark:border-slate-700">
+          <Plus className="w-3.5 h-3.5" /> Add Event
         </Button>
       </div>
-      <div className="grid grid-cols-1 gap-8">
+      <div className="space-y-3">
         {events.map((event: any, idx: number) => (
-          <div key={idx} className="p-8 bg-white dark:bg-zinc-900 rounded-[2rem] border border-border/40 shadow-sm relative group">
-            <Button variant="ghost" size="icon" className="absolute top-4 right-4 h-10 w-10 text-red-500 rounded-xl bg-red-50 dark:bg-red-950/30 opacity-0 group-hover:opacity-100 transition-all" onClick={() => setContent({ ...content, events: events.filter((_: any, i: number) => i !== idx) })}>
-              <Trash2 className="w-5 h-5" />
+          <div key={idx} className="p-3.5 sm:p-4 bg-white dark:bg-slate-900 rounded-xl border border-slate-200/80 dark:border-slate-800 shadow-xs relative group">
+            <Button variant="ghost" size="icon" className="absolute top-3 right-3 h-7 w-7 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-lg transition-all" onClick={() => setContent({ ...content, events: events.filter((_: any, i: number) => i !== idx) })}>
+              <Trash2 className="w-3.5 h-3.5" />
             </Button>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
-               <div className="space-y-6">
-                  <div className="space-y-2">
-                     <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Event Title</Label>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+               <div className="space-y-2.5">
+                  <div className="space-y-1">
+                     <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Event Title</Label>
                      <Input value={event.title || ""} onChange={(e) => {
                        const next = [...events];
                        next[idx].title = e.target.value;
                        setContent({ ...content, events: next });
-                     }} className="h-12 rounded-xl font-bold" />
+                     }} className="h-8 sm:h-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 font-semibold text-slate-900 dark:text-white" />
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
-                     <div className="space-y-2">
-                        <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Date</Label>
+                  <div className="grid grid-cols-2 gap-2.5">
+                     <div className="space-y-1">
+                        <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Date</Label>
                         <Input value={event.date || ""} onChange={(e) => {
                           const next = [...events];
                           next[idx].date = e.target.value;
                           setContent({ ...content, events: next });
-                        }} placeholder="15 May, 2026" className="h-10 rounded-xl" />
+                        }} placeholder="15 May, 2026" className="h-8 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700" />
                      </div>
-                     <div className="space-y-2">
-                        <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Time</Label>
+                     <div className="space-y-1">
+                        <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Time</Label>
                         <Input value={event.time || ""} onChange={(e) => {
                           const next = [...events];
                           next[idx].time = e.target.value;
                           setContent({ ...content, events: next });
-                        }} placeholder="10:00 AM" className="h-10 rounded-xl" />
+                        }} placeholder="10:00 AM" className="h-8 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700" />
                      </div>
                   </div>
-                  <div className="space-y-2">
-                     <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Location</Label>
+                  <div className="space-y-1">
+                     <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Location</Label>
                      <Input value={event.location || ""} onChange={(e) => {
                        const next = [...events];
                        next[idx].location = e.target.value;
                        setContent({ ...content, events: next });
-                     }} className="h-10 rounded-xl" />
+                     }} className="h-8 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700" />
                   </div>
                </div>
-               <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Event Image</Label>
+               <div className="space-y-1.5">
+                  <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Event Image</Label>
                   <ImageUpload value={event.image} onChange={(url) => {
                     const next = [...events];
                     next[idx].image = url;
@@ -1146,25 +1155,25 @@ function EventsContentEditor({ content, setContent, mediaFolderBase }: any) {
 function WhyChooseUsContentEditor({ content, setContent, mediaFolderBase }: any) {
   const items = content.features || content.items || [];
   return (
-    <div className="space-y-12">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="space-y-4">
-          <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Main Image</Label>
+    <div className="space-y-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div className="space-y-1.5">
+          <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Main Feature Graphic</Label>
           <ImageUpload 
             value={content.image || ""} 
             onChange={(url) => setContent({ ...content, image: url })} 
             folder={`${mediaFolderBase}/why-choose-us`} 
           />
         </div>
-        <div className="p-6 bg-primary/5 rounded-[2rem] border border-primary/10 space-y-4">
-           <Label className="text-[10px] font-black uppercase text-primary tracking-[0.2em]">Floating Badge Card</Label>
-           <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                 <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Icon</Label>
+        <div className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200/70 dark:border-slate-800 space-y-2.5">
+           <Label className="text-[10px] font-bold uppercase tracking-wider text-primary">Floating Badge Card</Label>
+           <div className="grid grid-cols-2 gap-2">
+              <div className="space-y-1">
+                 <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Icon</Label>
                  <select 
                    value={content.floatingCard?.icon || "Users"} 
                    onChange={(e) => setContent({ ...content, floatingCard: { ...(content.floatingCard || {}), icon: e.target.value } })}
-                   className="w-full h-10 bg-background border border-border/40 rounded-xl px-3 text-sm font-bold appearance-none"
+                   className="w-full h-8 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2 text-xs font-medium"
                  >
                     <option value="Users">Users</option>
                     <option value="Trophy">Trophy</option>
@@ -1173,80 +1182,83 @@ function WhyChooseUsContentEditor({ content, setContent, mediaFolderBase }: any)
                     <option value="Rocket">Launch</option>
                  </select>
               </div>
-              <div className="space-y-2">
-                 <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Value</Label>
+              <div className="space-y-1">
+                 <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Value</Label>
                  <Input 
                    value={content.floatingCard?.value || ""} 
                    onChange={(e) => setContent({ ...content, floatingCard: { ...(content.floatingCard || {}), value: e.target.value } })}
                    placeholder="10K+"
-                   className="h-10 rounded-xl"
+                   className="h-8 text-xs rounded-lg bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 font-bold text-primary"
                  />
               </div>
            </div>
-           <div className="space-y-2">
-              <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Label</Label>
+           <div className="space-y-1">
+              <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Label</Label>
               <Input 
                 value={content.floatingCard?.label || ""} 
                 onChange={(e) => setContent({ ...content, floatingCard: { ...(content.floatingCard || {}), label: e.target.value } })}
                 placeholder="Happy Students"
-                className="h-10 rounded-xl"
+                className="h-8 text-xs rounded-lg bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 font-medium"
               />
            </div>
         </div>
       </div>
 
-      <div className="space-y-4">
-         <Label className="text-xs font-black uppercase tracking-widest text-primary">Section Description</Label>
-         <Textarea value={content.description || ""} onChange={(e) => setContent({ ...content, description: e.target.value })} className="min-h-[100px] rounded-2xl bg-white dark:bg-zinc-900 border-border/40 p-6" />
+      <div className="space-y-1">
+         <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Section Description</Label>
+         <Textarea value={content.description || ""} onChange={(e) => setContent({ ...content, description: e.target.value })} className="min-h-[70px] text-xs p-2.5 rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 resize-none font-normal" />
       </div>
-      <div className="flex items-center justify-between">
-        <h4 className="text-xs font-black uppercase tracking-[0.2em] text-primary">Feature List</h4>
-        <Button size="sm" variant="outline" onClick={() => setContent({ ...content, features: [...items, { title: "New Feature", description: "", icon: "Zap" }] })} className="rounded-xl font-bold h-10">
-          <Plus className="w-4 h-4 mr-2" /> Add Feature
-        </Button>
-      </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {items.map((item: any, idx: number) => (
-          <div key={idx} className="p-6 bg-white dark:bg-zinc-900 rounded-3xl border border-border/40 shadow-sm relative">
-            <Button variant="ghost" size="icon" className="absolute top-2 right-2 h-8 w-8 text-red-500 rounded-lg" onClick={() => setContent({ ...content, features: items.filter((_: any, i: number) => i !== idx) })}>
-              <Trash2 className="w-4 h-4" />
-            </Button>
-            <div className="space-y-4">
-               <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Icon</Label>
-                  <select 
-                    value={item.icon || "Zap"} 
-                    onChange={(e) => {
-                      const next = [...items];
-                      next[idx].icon = e.target.value;
-                      setContent({ ...content, features: next });
-                    }}
-                    className="w-full h-10 bg-zinc-50 dark:bg-zinc-800 border-none rounded-xl px-3 text-sm font-bold appearance-none"
-                  >
-                     <option value="Zap">Zap (Fast)</option>
-                     <option value="ShieldCheck">Shield (Secure)</option>
-                     <option value="Cpu">CPU (Tech)</option>
-                     <option value="Globe">Globe (Global)</option>
-                     <option value="Rocket">Rocket (Growth)</option>
-                     <option value="Brain">Brain (Smart)</option>
-                     <option value="GraduationCap">Education</option>
-                     <option value="Users">Users</option>
-                     <option value="Layout">Layout</option>
-                  </select>
-               </div>
-               <Input value={item.title || ""} onChange={(e) => {
-                 const next = [...items];
-                 next[idx].title = e.target.value;
-                 setContent({ ...content, features: next });
-               }} placeholder="Feature Title" className="h-10 rounded-xl font-bold" />
-               <Textarea value={item.description || ""} onChange={(e) => {
-                 const next = [...items];
-                 next[idx].description = e.target.value;
-                 setContent({ ...content, features: next });
-               }} placeholder="Feature Description" className="h-20 rounded-xl resize-none text-xs" />
+
+      <div className="pt-2 border-t border-slate-200/70 dark:border-slate-800 space-y-3">
+        <div className="flex items-center justify-between">
+          <h4 className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Feature List ({items.length})</h4>
+          <Button size="sm" variant="outline" onClick={() => setContent({ ...content, features: [...items, { title: "New Feature", description: "", icon: "Zap" }] })} className="h-7 sm:h-8 px-2.5 sm:px-3 rounded-lg text-xs font-semibold gap-1.5 border-slate-200 dark:border-slate-700">
+            <Plus className="w-3.5 h-3.5" /> Add Feature
+          </Button>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
+          {items.map((item: any, idx: number) => (
+            <div key={idx} className="p-3 bg-white dark:bg-slate-900 rounded-xl border border-slate-200/70 dark:border-slate-800 shadow-xs relative group">
+              <Button variant="ghost" size="icon" className="absolute top-2 right-2 h-6 w-6 text-slate-400 hover:text-red-500 rounded-md" onClick={() => setContent({ ...content, features: items.filter((_: any, i: number) => i !== idx) })}>
+                <Trash2 className="w-3.5 h-3.5" />
+              </Button>
+              <div className="space-y-2">
+                 <div className="space-y-1">
+                    <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Icon</Label>
+                    <select 
+                      value={item.icon || "Zap"} 
+                      onChange={(e) => {
+                        const next = [...items];
+                        next[idx].icon = e.target.value;
+                        setContent({ ...content, features: next });
+                      }}
+                      className="w-full h-8 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-lg px-2 text-xs font-medium"
+                    >
+                       <option value="Zap">Zap (Fast)</option>
+                       <option value="ShieldCheck">Shield (Secure)</option>
+                       <option value="Cpu">CPU (Tech)</option>
+                       <option value="Globe">Globe (Global)</option>
+                       <option value="Rocket">Rocket (Growth)</option>
+                       <option value="Brain">Brain (Smart)</option>
+                       <option value="GraduationCap">Education</option>
+                       <option value="Users">Users</option>
+                       <option value="Layout">Layout</option>
+                    </select>
+                 </div>
+                 <Input value={item.title || ""} onChange={(e) => {
+                   const next = [...items];
+                   next[idx].title = e.target.value;
+                   setContent({ ...content, features: next });
+                 }} placeholder="Feature Title" className="h-8 text-xs font-semibold rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700" />
+                 <Textarea value={item.description || ""} onChange={(e) => {
+                   const next = [...items];
+                   next[idx].description = e.target.value;
+                   setContent({ ...content, features: next });
+                 }} placeholder="Feature Description" className="min-h-[50px] text-xs p-2 rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 resize-none font-normal" />
+              </div>
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
     </div>
   );
@@ -1256,32 +1268,32 @@ function AchievementsContentEditor({ content, setContent, mediaFolderBase }: any
   const stats = content.stats || [];
   const gallery = content.items || [];
   return (
-    <div className="space-y-12">
-      <div className="space-y-4">
-         <Label className="text-xs font-black uppercase tracking-widest text-primary">Section Description</Label>
-         <Textarea value={content.description || ""} onChange={(e) => setContent({ ...content, description: e.target.value })} placeholder="Describe your institute's pride and achievements..." className="min-h-[100px] rounded-2xl bg-white dark:bg-zinc-900 border-border/40 p-6" />
+    <div className="space-y-4">
+      <div className="space-y-1">
+         <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Section Description</Label>
+         <Textarea value={content.description || ""} onChange={(e) => setContent({ ...content, description: e.target.value })} placeholder="Describe your institute's pride and achievements..." className="min-h-[70px] text-xs p-2.5 rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 resize-none font-normal" />
       </div>
 
-      <div className="space-y-8">
+      <div className="space-y-3 pt-2 border-t border-slate-200/70 dark:border-slate-800">
         <div className="flex items-center justify-between">
-          <h4 className="text-xs font-black uppercase tracking-[0.2em] text-primary">Achievement Stats</h4>
-          <Button size="sm" variant="outline" onClick={() => setContent({ ...content, stats: [...stats, { label: "Success", value: "100", suffix: "%", icon: "Trophy" }] })} className="rounded-xl font-bold h-10">
-            <Plus className="w-4 h-4 mr-2" /> Add Stat
+          <h4 className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Achievement Stats ({stats.length})</h4>
+          <Button size="sm" variant="outline" onClick={() => setContent({ ...content, stats: [...stats, { label: "Success", value: "100", suffix: "%", icon: "Trophy" }] })} className="h-7 sm:h-8 px-2.5 sm:px-3 rounded-lg text-xs font-semibold gap-1.5 border-slate-200 dark:border-slate-700">
+            <Plus className="w-3.5 h-3.5" /> Add Stat
           </Button>
         </div>
-        <div className="grid grid-cols-1 gap-4">
+        <div className="grid grid-cols-1 gap-2">
           {stats.map((stat: any, idx: number) => (
-            <div key={idx} className="group p-5 bg-white dark:bg-zinc-900 rounded-2xl border border-border/40 relative flex flex-wrap sm:flex-nowrap items-center gap-4">
-              <Button variant="ghost" size="icon" className="absolute -top-2 -right-2 h-6 w-6 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10" onClick={() => setContent({ ...content, stats: stats.filter((_: any, i: number) => i !== idx) })}>
+            <div key={idx} className="group p-2.5 bg-white dark:bg-slate-900 rounded-xl border border-slate-200/70 dark:border-slate-800 relative flex flex-wrap sm:flex-nowrap items-center gap-2.5">
+              <Button variant="ghost" size="icon" className="absolute -top-2 -right-2 h-5 w-5 bg-red-500 hover:bg-red-600 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10" onClick={() => setContent({ ...content, stats: stats.filter((_: any, i: number) => i !== idx) })}>
                 <X className="w-3 h-3" />
               </Button>
               
-              <div className="flex items-center gap-3 flex-1 min-w-[200px]">
+              <div className="flex items-center gap-2 flex-1 min-w-[180px]">
                 <select value={stat.icon || "Trophy"} onChange={(e) => {
                   const next = [...stats];
                   next[idx].icon = e.target.value;
                   setContent({ ...content, stats: next });
-                }} className="h-11 px-3 rounded-xl bg-zinc-50 dark:bg-zinc-800 text-xs font-bold outline-none border border-transparent focus:border-primary/20 shrink-0">
+                }} className="h-8 px-2 rounded-lg bg-slate-50 dark:bg-slate-800/50 text-xs font-medium border border-slate-200 dark:border-slate-700 outline-none shrink-0">
                   <option value="Trophy">Trophy</option>
                   <option value="Star">Star</option>
                   <option value="GraduationCap">Cap</option>
@@ -1294,23 +1306,23 @@ function AchievementsContentEditor({ content, setContent, mediaFolderBase }: any
                   const next = [...stats];
                   next[idx].label = e.target.value;
                   setContent({ ...content, stats: next });
-                }} placeholder="Label (e.g. Students)" className="h-11 font-bold rounded-xl" />
+                }} placeholder="Label (e.g. Students)" className="h-8 text-xs font-medium rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700" />
               </div>
 
               <div className="flex items-center gap-2 w-full sm:w-auto">
-                <div className="relative flex-1 sm:w-32">
+                <div className="relative flex-1 sm:w-24">
                   <Input value={stat.value || ""} onChange={(e) => {
                     const next = [...stats];
                     next[idx].value = e.target.value;
                     setContent({ ...content, stats: next });
-                  }} placeholder="Value" className="h-11 text-center font-black text-primary rounded-xl" />
+                  }} placeholder="Value" className="h-8 text-center text-xs font-bold text-primary rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700" />
                 </div>
                 <div className="relative w-16">
                   <Input value={stat.suffix || ""} onChange={(e) => {
                     const next = [...stats];
                     next[idx].suffix = e.target.value;
                     setContent({ ...content, stats: next });
-                  }} placeholder="Suffix" className="h-11 text-center font-bold text-muted-foreground rounded-xl" />
+                  }} placeholder="Suffix" className="h-8 text-center text-xs font-medium text-slate-500 rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700" />
                 </div>
               </div>
             </div>
@@ -1318,31 +1330,31 @@ function AchievementsContentEditor({ content, setContent, mediaFolderBase }: any
         </div>
       </div>
 
-      <div className="space-y-8 pt-8 border-t border-border/40">
+      <div className="space-y-3 pt-2 border-t border-slate-200/70 dark:border-slate-800">
         <div className="flex items-center justify-between">
-          <h4 className="text-xs font-black uppercase tracking-[0.2em] text-primary">Pride Gallery</h4>
-          <Button size="sm" variant="outline" onClick={() => setContent({ ...content, items: [...gallery, { title: "Moment", description: "", src: "" }] })} className="rounded-xl font-bold h-10">
-            <Plus className="w-4 h-4 mr-2" /> Add Image
+          <h4 className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Pride Gallery ({gallery.length})</h4>
+          <Button size="sm" variant="outline" onClick={() => setContent({ ...content, items: [...gallery, { title: "Moment", description: "", src: "" }] })} className="h-7 sm:h-8 px-2.5 sm:px-3 rounded-lg text-xs font-semibold gap-1.5 border-slate-200 dark:border-slate-700">
+            <Plus className="w-3.5 h-3.5" /> Add Image
           </Button>
         </div>
-        <div className="space-y-6">
+        <div className="space-y-2.5">
           {gallery.map((item: any, idx: number) => (
-            <div key={idx} className="p-6 bg-white dark:bg-zinc-900 rounded-3xl border border-border/40 relative group">
-               <Button variant="ghost" size="icon" className="absolute top-2 right-2 h-8 w-8 text-red-500 rounded-lg" onClick={() => setContent({ ...content, items: gallery.filter((_: any, i: number) => i !== idx) })}>
-                 <Trash2 className="w-4 h-4" />
+            <div key={idx} className="p-3 bg-white dark:bg-slate-900 rounded-xl border border-slate-200/70 dark:border-slate-800 relative group">
+               <Button variant="ghost" size="icon" className="absolute top-2 right-2 h-6 w-6 text-slate-400 hover:text-red-500 rounded-md" onClick={() => setContent({ ...content, items: gallery.filter((_: any, i: number) => i !== idx) })}>
+                 <Trash2 className="w-3.5 h-3.5" />
                </Button>
-               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-4">
+               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div className="space-y-2">
                      <Input value={item.title || ""} onChange={(e) => {
                         const next = [...gallery];
                         next[idx].title = e.target.value;
                         setContent({ ...content, items: next });
-                     }} placeholder="Image Title" className="h-10 rounded-xl font-bold" />
+                     }} placeholder="Image Title" className="h-8 text-xs font-semibold rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700" />
                      <Textarea value={item.description || ""} onChange={(e) => {
                         const next = [...gallery];
                         next[idx].description = e.target.value;
                         setContent({ ...content, items: next });
-                     }} placeholder="Description" className="h-20 rounded-xl resize-none text-xs" />
+                     }} placeholder="Description" className="min-h-[50px] text-xs p-2 rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 resize-none font-normal" />
                   </div>
                   <ImageUpload value={item.src} onChange={(url) => {
                      const next = [...gallery];
@@ -1361,17 +1373,16 @@ function AchievementsContentEditor({ content, setContent, mediaFolderBase }: any
 function PartnersContentEditor({ content, setContent, mediaFolderBase }: any) {
   const logos = content.logos || [];
   return (
-    <div className="space-y-12">
-      <div className="space-y-8">
+    <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <h4 className="text-xs font-black uppercase tracking-[0.2em] text-primary">Partner Logos</h4>
-        <Button size="sm" variant="outline" onClick={() => setContent({ ...content, logos: [...logos, ""] })} className="rounded-xl font-bold h-10">
-          <Plus className="w-4 h-4 mr-2" /> Add Logo
+        <h4 className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Partner Logos ({logos.length})</h4>
+        <Button size="sm" variant="outline" onClick={() => setContent({ ...content, logos: [...logos, ""] })} className="h-7 sm:h-8 px-2.5 sm:px-3 rounded-lg text-xs font-semibold gap-1.5 border-slate-200 dark:border-slate-700">
+          <Plus className="w-3.5 h-3.5" /> Add Logo
         </Button>
       </div>
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
         {logos.map((logo: string, idx: number) => (
-          <div key={idx} className="space-y-2 relative group">
+          <div key={idx} className="space-y-1 relative group">
              <ImageUpload value={logo} onChange={(url) => {
                const next = [...logos];
                next[idx] = url;
@@ -1380,14 +1391,13 @@ function PartnersContentEditor({ content, setContent, mediaFolderBase }: any) {
               <Button 
                 variant="ghost" 
                 size="icon" 
-                className="absolute -top-3 -right-3 h-8 w-8 bg-red-500 hover:bg-red-600 text-white rounded-full shadow-xl z-50 flex items-center justify-center transition-all hover:scale-110 border-2 border-white dark:border-zinc-900" 
+                className="absolute -top-2 -right-2 h-6 w-6 bg-red-500 hover:bg-red-600 text-white rounded-full shadow-md z-50 flex items-center justify-center transition-all hover:scale-105 border-2 border-white dark:border-slate-900" 
                 onClick={() => setContent({ ...content, logos: logos.filter((_: any, i: number) => i !== idx) })}
               >
-                <X className="w-4 h-4" />
+                <X className="w-3 h-3" />
               </Button>
           </div>
         ))}
-      </div>
       </div>
     </div>
   );
@@ -1396,43 +1406,43 @@ function PartnersContentEditor({ content, setContent, mediaFolderBase }: any) {
 function ListContentEditor({ title, content, setContent, itemFields, mediaFolderBase }: any) {
   const items = content.items || [];
   return (
-    <div className="space-y-8">
+    <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <h4 className="text-xs font-black uppercase tracking-[0.2em] text-primary">{title} List</h4>
-        <Button size="sm" variant="outline" onClick={() => setContent({ ...content, items: [...items, {}] })} className="rounded-xl font-bold h-10">
-          <Plus className="w-4 h-4 mr-2" /> Add {title}
+        <h4 className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{title} List ({items.length})</h4>
+        <Button size="sm" variant="outline" onClick={() => setContent({ ...content, items: [...items, {}] })} className="h-7 sm:h-8 px-2.5 sm:px-3 rounded-lg text-xs font-semibold gap-1.5 border-slate-200 dark:border-slate-700">
+          <Plus className="w-3.5 h-3.5" /> Add {title}
         </Button>
       </div>
-      <div className="space-y-6">
+      <div className="space-y-3">
         {items.map((item: any, idx: number) => (
-          <div key={idx} className="p-8 bg-white dark:bg-zinc-900 rounded-[2.5rem] border border-border/40 relative group">
-            <Button variant="ghost" size="icon" className="absolute top-4 right-4 h-10 w-10 text-red-500 rounded-xl opacity-0 group-hover:opacity-100 transition-all" onClick={() => setContent({ ...content, items: items.filter((_: any, i: number) => i !== idx) })}>
-              <Trash2 className="w-5 h-5" />
+          <div key={idx} className="p-3.5 bg-white dark:bg-slate-900 rounded-xl border border-slate-200/70 dark:border-slate-800 shadow-xs relative group">
+            <Button variant="ghost" size="icon" className="absolute top-2.5 right-2.5 h-7 w-7 text-slate-400 hover:text-red-500 rounded-lg transition-colors" onClick={() => setContent({ ...content, items: items.filter((_: any, i: number) => i !== idx) })}>
+              <Trash2 className="w-3.5 h-3.5" />
             </Button>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-               <div className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+               <div className="space-y-2">
                   {itemFields.filter((f: string) => f !== 'avatar' && f !== 'image').map((field: string) => (
-                    <div key={field} className="space-y-2">
-                       <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">{field}</Label>
+                    <div key={field} className="space-y-1">
+                       <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{field}</Label>
                        {field === 'text' || field === 'description' ? (
                          <Textarea value={item[field] || ""} onChange={(e) => {
                            const next = [...items];
                            next[idx][field] = e.target.value;
                            setContent({ ...content, items: next });
-                         }} className="min-h-[80px] rounded-xl" />
+                         }} className="min-h-[60px] text-xs p-2 rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 resize-none font-normal" />
                        ) : (
                          <Input value={item[field] || ""} onChange={(e) => {
                            const next = [...items];
                            next[idx][field] = e.target.value;
                            setContent({ ...content, items: next });
-                         }} className="h-10 rounded-xl font-bold" />
+                         }} className="h-8 text-xs font-medium rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700" />
                        )}
                     </div>
                   ))}
                </div>
                {(itemFields.includes('avatar') || itemFields.includes('image')) && (
-                 <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Media</Label>
+                 <div className="space-y-1">
+                    <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Media</Label>
                     <ImageUpload value={item.avatar || item.image} onChange={(url) => {
                       const next = [...items];
                       if (itemFields.includes('avatar')) next[idx].avatar = url;
@@ -1452,60 +1462,60 @@ function ListContentEditor({ title, content, setContent, itemFields, mediaFolder
 function FaqContentEditor({ content, setContent, mediaFolderBase }: any) {
   const faqs = content.faqs || [];
   return (
-    <div className="space-y-12">
-      <div className="space-y-4">
-         <Label className="text-xs font-black uppercase tracking-widest text-primary">Section Description</Label>
-         <Textarea value={content.description || ""} onChange={(e) => setContent({ ...content, description: e.target.value })} placeholder="Describe your FAQ section..." className="min-h-[100px] rounded-2xl bg-white dark:bg-zinc-900 border-border/40 p-6" />
+    <div className="space-y-4">
+      <div className="space-y-1">
+         <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Section Description</Label>
+         <Textarea value={content.description || ""} onChange={(e) => setContent({ ...content, description: e.target.value })} placeholder="Describe your FAQ section..." className="min-h-[70px] text-xs p-2.5 rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 resize-none font-normal" />
       </div>
 
-      <div className="space-y-8">
+      <div className="space-y-3 pt-2 border-t border-slate-200/70 dark:border-slate-800">
         <div className="flex items-center justify-between">
-          <h4 className="text-xs font-black uppercase tracking-[0.2em] text-primary">Frequently Asked Questions</h4>
-          <Button size="sm" variant="outline" onClick={() => setContent({ ...content, faqs: [...faqs, { question: "New Question", answer: "" }] })} className="rounded-xl font-bold h-10">
-            <Plus className="w-4 h-4 mr-2" /> Add FAQ
+          <h4 className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Frequently Asked Questions ({faqs.length})</h4>
+          <Button size="sm" variant="outline" onClick={() => setContent({ ...content, faqs: [...faqs, { question: "New Question", answer: "" }] })} className="h-7 sm:h-8 px-2.5 sm:px-3 rounded-lg text-xs font-semibold gap-1.5 border-slate-200 dark:border-slate-700">
+            <Plus className="w-3.5 h-3.5" /> Add FAQ
           </Button>
         </div>
-      <div className="space-y-6">
-        {faqs.map((faq: any, idx: number) => (
-          <div key={idx} className="p-6 bg-white dark:bg-zinc-900 rounded-[2rem] border border-border/40 relative group">
-            <Button variant="ghost" size="icon" className="absolute top-2 right-2 h-8 w-8 text-red-500 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => setContent({ ...content, faqs: faqs.filter((_: any, i: number) => i !== idx) })}>
-              <Trash2 className="w-4 h-4" />
-            </Button>
-            <div className="space-y-4">
-               <Input value={faq.question || ""} onChange={(e) => {
-                 const next = [...faqs];
-                 next[idx].question = e.target.value;
-                 setContent({ ...content, faqs: next });
-               }} placeholder="Question" className="h-10 rounded-xl font-bold" />
-               <Textarea value={faq.answer || ""} onChange={(e) => {
-                 const next = [...faqs];
-                 next[idx].answer = e.target.value;
-                 setContent({ ...content, faqs: next });
-               }} placeholder="Answer" className="min-h-[80px] rounded-xl text-sm" />
+        <div className="space-y-2.5">
+          {faqs.map((faq: any, idx: number) => (
+            <div key={idx} className="p-3 bg-white dark:bg-slate-900 rounded-xl border border-slate-200/70 dark:border-slate-800 relative group">
+              <Button variant="ghost" size="icon" className="absolute top-2 right-2 h-6 w-6 text-slate-400 hover:text-red-500 rounded-md transition-opacity" onClick={() => setContent({ ...content, faqs: faqs.filter((_: any, i: number) => i !== idx) })}>
+                <Trash2 className="w-3.5 h-3.5" />
+              </Button>
+              <div className="space-y-2">
+                 <Input value={faq.question || ""} onChange={(e) => {
+                   const next = [...faqs];
+                   next[idx].question = e.target.value;
+                   setContent({ ...content, faqs: next });
+                 }} placeholder="Question" className="h-8 text-xs font-semibold rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700" />
+                 <Textarea value={faq.answer || ""} onChange={(e) => {
+                   const next = [...faqs];
+                   next[idx].answer = e.target.value;
+                   setContent({ ...content, faqs: next });
+                 }} placeholder="Answer" className="min-h-[50px] text-xs p-2 rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 resize-none font-normal" />
+              </div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
       </div>
 
-      <div className="space-y-8 pt-12 border-t border-border/40">
-         <h4 className="text-xs font-black uppercase tracking-[0.2em] text-primary">Call to Action Banner</h4>
-         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-2">
-               <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">CTA Title</Label>
-               <Input value={content.ctaTitle || ""} onChange={(e) => setContent({ ...content, ctaTitle: e.target.value })} placeholder="Still have questions?" className="h-11 rounded-xl font-bold" />
+      <div className="space-y-3 pt-2 border-t border-slate-200/70 dark:border-slate-800">
+         <h4 className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Call to Action Banner</h4>
+         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            <div className="space-y-1">
+               <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">CTA Title</Label>
+               <Input value={content.ctaTitle || ""} onChange={(e) => setContent({ ...content, ctaTitle: e.target.value })} placeholder="Still have questions?" className="h-8 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 font-medium" />
             </div>
-            <div className="space-y-2">
-               <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">CTA Description</Label>
-               <Input value={content.ctaDesc || ""} onChange={(e) => setContent({ ...content, ctaDesc: e.target.value })} placeholder="We're here to help you..." className="h-11 rounded-xl font-medium" />
+            <div className="space-y-1">
+               <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">CTA Description</Label>
+               <Input value={content.ctaDesc || ""} onChange={(e) => setContent({ ...content, ctaDesc: e.target.value })} placeholder="We're here to help you..." className="h-8 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 font-normal" />
             </div>
-            <div className="space-y-2">
-               <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Button Text</Label>
-               <Input value={content.ctaButtonText || ""} onChange={(e) => setContent({ ...content, ctaButtonText: e.target.value })} placeholder="Chat with Admissions" className="h-11 rounded-xl font-black text-primary" />
+            <div className="space-y-1">
+               <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Button Text</Label>
+               <Input value={content.ctaButtonText || ""} onChange={(e) => setContent({ ...content, ctaButtonText: e.target.value })} placeholder="Chat with Admissions" className="h-8 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 font-semibold text-primary" />
             </div>
-            <div className="space-y-2">
-               <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Button Link</Label>
-               <Input value={content.ctaButtonLink || ""} onChange={(e) => setContent({ ...content, ctaButtonLink: e.target.value })} placeholder="/contact" className="h-11 rounded-xl font-bold" />
+            <div className="space-y-1">
+               <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Button Link</Label>
+               <Input value={content.ctaButtonLink || ""} onChange={(e) => setContent({ ...content, ctaButtonLink: e.target.value })} placeholder="/contact" className="h-8 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 font-medium" />
             </div>
          </div>
       </div>
@@ -1515,34 +1525,34 @@ function FaqContentEditor({ content, setContent, mediaFolderBase }: any) {
 
 function ContactContentEditor({ content, setContent, settings, mediaFolderBase }: any) {
   return (
-    <div className="space-y-8">
-       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <div className="flex items-center justify-between p-6 bg-white dark:bg-zinc-900 rounded-[2rem] border border-border/40 shadow-sm">
-             <div className="space-y-1">
-                <span className="text-xs font-black uppercase tracking-widest text-primary">Social Visibility</span>
-                <p className="text-[10px] text-muted-foreground font-medium">Show social links in contact section.</p>
+    <div className="space-y-3">
+       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div className="flex items-center justify-between p-3 bg-white dark:bg-slate-900 rounded-xl border border-slate-200/70 dark:border-slate-800 shadow-xs">
+             <div className="space-y-0.5">
+                <span className="text-xs font-semibold text-slate-900 dark:text-white">Social Visibility</span>
+                <p className="text-[10px] text-slate-500 font-normal">Show social links in contact section.</p>
              </div>
              <Switch checked={content.showSocials !== false} onCheckedChange={(val) => setContent({ ...content, showSocials: val })} />
           </div>
-          <div className="p-6 bg-white dark:bg-zinc-900 rounded-[2rem] border border-border/40 shadow-sm space-y-4">
-             <span className="text-xs font-black uppercase tracking-widest text-primary">Contact Tagline</span>
-             <Input value={content.description || ""} onChange={(e) => setContent({ ...content, description: e.target.value })} className="h-10 rounded-xl text-xs font-medium" />
+          <div className="p-3 bg-white dark:bg-slate-900 rounded-xl border border-slate-200/70 dark:border-slate-800 shadow-xs space-y-1">
+             <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Contact Tagline</span>
+             <Input value={content.description || ""} onChange={(e) => setContent({ ...content, description: e.target.value })} className="h-8 text-xs font-medium rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700" />
           </div>
        </div>
 
-       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <div className="p-6 bg-white dark:bg-zinc-900 rounded-[2rem] border border-border/40 shadow-sm space-y-4">
-             <span className="text-xs font-black uppercase tracking-widest text-primary">Office Hours</span>
-             <Input value={content.officeHours || ""} onChange={(e) => setContent({ ...content, officeHours: e.target.value })} placeholder="Mon - Sat: 9:00 AM - 6:00 PM" className="h-10 rounded-xl text-xs font-medium" />
+       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div className="p-3 bg-white dark:bg-slate-900 rounded-xl border border-slate-200/70 dark:border-slate-800 shadow-xs space-y-1">
+             <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Office Hours</span>
+             <Input value={content.officeHours || ""} onChange={(e) => setContent({ ...content, officeHours: e.target.value })} placeholder="Mon - Sat: 9:00 AM - 6:00 PM" className="h-8 text-xs font-medium rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700" />
           </div>
-          <div className="p-6 bg-white dark:bg-zinc-900 rounded-[2rem] border border-border/40 shadow-sm space-y-4">
-             <span className="text-xs font-black uppercase tracking-widest text-primary">Inquiry Form Title</span>
-             <Input value={content.formTitle || ""} onChange={(e) => setContent({ ...content, formTitle: e.target.value })} placeholder="Admissions Inquiry" className="h-10 rounded-xl text-xs font-medium" />
+          <div className="p-3 bg-white dark:bg-slate-900 rounded-xl border border-slate-200/70 dark:border-slate-800 shadow-xs space-y-1">
+             <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Inquiry Form Title</span>
+             <Input value={content.formTitle || ""} onChange={(e) => setContent({ ...content, formTitle: e.target.value })} placeholder="Admissions Inquiry" className="h-8 text-xs font-medium rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700" />
           </div>
        </div>
 
-       <div className="p-6 bg-blue-500/5 rounded-[2rem] border border-blue-500/10 text-center">
-          <p className="text-xs text-blue-600 dark:text-blue-400 font-bold">Contact details are managed in the <span className="uppercase tracking-widest">Branding</span> tab to maintain consistency across the site.</p>
+       <div className="p-3 bg-blue-50/50 dark:bg-blue-950/20 rounded-xl border border-blue-200/60 dark:border-blue-900/40 text-center">
+          <p className="text-xs text-blue-700 dark:text-blue-300 font-medium">Contact details are managed in the <span className="font-bold">Branding</span> tab to maintain consistency across the site.</p>
        </div>
     </div>
   );
@@ -1604,16 +1614,16 @@ function EventsManagement({ workspaceId, events, mediaFolderBase }: any) {
 
   if (isAdding || editingEvent) {
     return (
-      <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-        <div className="flex items-center justify-between p-6 bg-white dark:bg-zinc-900 rounded-[2rem] border border-border/40 shadow-sm">
-           <div className="flex items-center gap-4">
-              <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
-                 <Calendar className="w-5 h-5" />
+      <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-200">
+        <div className="flex items-center justify-between p-3.5 sm:p-4 bg-white dark:bg-slate-900 rounded-xl border border-slate-200/80 dark:border-slate-800 shadow-xs">
+           <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
+                 <Calendar className="w-4 h-4" />
               </div>
-              <h3 className="text-xl font-black">{editingEvent ? "Edit Event" : "Create New Event"}</h3>
+              <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white">{editingEvent ? "Edit Event" : "Create New Event"}</h3>
            </div>
-           <Button variant="ghost" size="icon" onClick={() => { setIsAdding(false); setEditingEvent(null); }} className="rounded-full">
-              <X className="w-5 h-5" />
+           <Button variant="ghost" size="icon" onClick={() => { setIsAdding(false); setEditingEvent(null); }} className="h-7 w-7 rounded-lg text-slate-400 hover:text-slate-600">
+              <X className="w-4 h-4" />
            </Button>
         </div>
         <EventForm initialData={editingEvent} onSave={handleSave} isProcessing={isProcessing} mediaFolderBase={mediaFolderBase} />
@@ -1622,64 +1632,64 @@ function EventsManagement({ workspaceId, events, mediaFolderBase }: any) {
   }
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-        <div className="relative flex-1 max-w-md group">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
+    <div className="space-y-4 animate-in fade-in duration-200">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="relative flex-1 max-w-sm group">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 group-focus-within:text-primary transition-colors pointer-events-none" />
           <Input 
             placeholder="Search events by title or category..." 
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="pl-12 h-12 rounded-2xl border-border/40 bg-white dark:bg-zinc-900 shadow-sm focus:ring-primary/20"
+            className="pl-8 h-8 sm:h-9 text-xs rounded-lg border-slate-200 dark:border-slate-700/60 bg-slate-50 dark:bg-slate-800/50"
           />
         </div>
-        <Button onClick={() => setIsAdding(true)} className="h-12 px-8 rounded-2xl font-black gap-2 shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all">
-          <Plus className="w-5 h-5" /> Add New Event
+        <Button onClick={() => setIsAdding(true)} className="h-8 sm:h-9 px-3 sm:px-4 rounded-lg font-semibold text-xs gap-1.5 shadow-xs">
+          <Plus className="w-3.5 h-3.5" /> Add New Event
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
         {filteredEvents.map((event: any) => (
-          <div key={event.id} className="group bg-white dark:bg-zinc-900 border border-border/40 rounded-[2rem] overflow-hidden hover:border-primary/30 transition-all hover:shadow-xl hover:shadow-primary/5">
-            <div className="relative aspect-[16/9] overflow-hidden">
-              <img src={event.image || "https://images.unsplash.com/photo-1514525253361-bee8718a74a2?q=80&w=2070"} alt="" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
-              <div className="absolute top-4 right-4 flex gap-2">
-                 {event.isFeatured && (
-                    <div className="bg-primary text-white px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest shadow-lg">Featured</div>
-                 )}
-                 <div className={cn("px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest shadow-lg", event.isActive ? "bg-green-500 text-white" : "bg-zinc-500 text-white")}>
-                    {event.isActive ? "Active" : "Inactive"}
-                 </div>
+          <div key={event.id} className="group bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-xl overflow-hidden hover:border-primary/40 transition-all shadow-xs flex flex-col justify-between">
+            <div>
+              <div className="relative aspect-[16/9] overflow-hidden bg-slate-100 dark:bg-slate-800">
+                <img src={event.image || "https://images.unsplash.com/photo-1514525253361-bee8718a74a2?q=80&w=2070"} alt="" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                <div className="absolute top-2.5 right-2.5 flex gap-1.5">
+                   {event.isFeatured && (
+                      <span className="bg-primary text-white text-[9px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider shadow-xs">Featured</span>
+                   )}
+                   <span className={cn("text-[9px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider shadow-xs text-white", event.isActive ? "bg-emerald-600" : "bg-slate-600")}>
+                      {event.isActive ? "Active" : "Inactive"}
+                   </span>
+                </div>
+              </div>
+              <div className="p-3 sm:p-3.5 space-y-2">
+                <div className="space-y-0.5">
+                   <span className="text-[9px] font-bold uppercase tracking-wider text-primary">{event.category || "General Event"}</span>
+                   <h4 className="font-semibold text-xs sm:text-sm text-slate-900 dark:text-white line-clamp-1">{event.title}</h4>
+                </div>
+                <div className="flex items-center gap-3 text-[11px] font-medium text-slate-500">
+                   <div className="flex items-center gap-1"><Calendar className="w-3 h-3 text-slate-400" /> {new Date(event.date).toLocaleDateString('en-GB')}</div>
+                   <div className="flex items-center gap-1"><MapPin className="w-3 h-3 text-slate-400" /> {event.location || "Online"}</div>
+                </div>
               </div>
             </div>
-            <div className="p-6 space-y-4">
-              <div className="space-y-1">
-                 <span className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">{event.category || "General Event"}</span>
-                 <h4 className="font-black text-lg line-clamp-1">{event.title}</h4>
-              </div>
-              <div className="flex items-center gap-4 text-xs font-bold text-muted-foreground">
-                 <div className="flex items-center gap-1.5"><Calendar className="w-3 h-3" /> {new Date(event.date).toLocaleDateString('en-GB')}</div>
-                 <div className="flex items-center gap-1.5"><MapPin className="w-3 h-3" /> {event.location || "Online"}</div>
-              </div>
-              <div className="flex items-center gap-3 pt-2">
-                 <Button variant="outline" size="sm" onClick={() => setEditingEvent(event)} className="flex-1 rounded-xl font-bold h-10 hover:bg-primary/5 hover:text-primary border-border/60 transition-all">Edit</Button>
-                 <Button variant="ghost" size="icon" onClick={() => handleDeleteClick(event)} className="w-10 h-10 rounded-xl text-red-500 hover:bg-red-500/10 transition-all">
-                    <Trash2 className="w-4 h-4" />
-                 </Button>
-              </div>
+            <div className="p-3 sm:p-3.5 pt-0 flex items-center gap-2">
+               <Button variant="outline" size="sm" onClick={() => setEditingEvent(event)} className="flex-1 h-7 sm:h-8 rounded-lg text-xs font-semibold hover:bg-primary/5 hover:text-primary border-slate-200 dark:border-slate-700 transition-colors">Edit</Button>
+               <Button variant="ghost" size="icon" onClick={() => handleDeleteClick(event)} className="h-7 sm:h-8 w-7 sm:w-8 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors">
+                  <Trash2 className="w-3.5 h-3.5" />
+               </Button>
             </div>
           </div>
         ))}
 
         {filteredEvents.length === 0 && (
-          <div className="col-span-full py-24 flex flex-col items-center justify-center text-center space-y-4 bg-muted/20 rounded-[3rem] border border-dashed border-border/60">
-             <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center text-muted-foreground">
-                <Calendar className="w-8 h-8" />
+          <div className="col-span-full py-16 flex flex-col items-center justify-center text-center space-y-2 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-dashed border-slate-200 dark:border-slate-800">
+             <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400">
+                <Calendar className="w-5 h-5" />
              </div>
-             <div className="space-y-1">
-                <p className="font-black text-muted-foreground">No events found</p>
-                <p className="text-xs text-muted-foreground/60">Try adjusting your search or add a new event.</p>
-             </div>
+             <p className="font-bold text-slate-700 dark:text-slate-300 text-xs">No events found</p>
+             <p className="text-[11px] text-slate-400">Try adjusting your search query or add a new event.</p>
           </div>
         )}
       </div>
@@ -1728,7 +1738,7 @@ function GalleryManagement({ workspaceId, galleryItems, mediaFolderBase }: any) 
       toast.success(editingItem ? "Image updated" : "Image added to gallery");
       setEditingItem(null);
       setIsAdding(false);
-      window.location.reload(); // Refresh to show new data
+      window.location.reload();
     } else {
       toast.error(res.error || "Operation failed");
     }
@@ -1753,16 +1763,16 @@ function GalleryManagement({ workspaceId, galleryItems, mediaFolderBase }: any) 
 
   if (isAdding || editingItem) {
     return (
-      <div className="space-y-8 animate-in slide-in-from-bottom duration-500">
-        <div className="flex items-center justify-between p-6 bg-white dark:bg-zinc-900 rounded-[2rem] border border-border/40 shadow-sm">
-           <div className="flex items-center gap-4">
-              <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
-                 <ImageIcon className="w-5 h-5" />
+      <div className="space-y-4 animate-in slide-in-from-bottom-2 duration-200">
+        <div className="flex items-center justify-between p-3.5 sm:p-4 bg-white dark:bg-slate-900 rounded-xl border border-slate-200/80 dark:border-slate-800 shadow-xs">
+           <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
+                 <ImageIcon className="w-4 h-4" />
               </div>
-              <h3 className="text-xl font-black">{editingItem ? "Edit Gallery Item" : "Add to Gallery"}</h3>
+              <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white">{editingItem ? "Edit Gallery Item" : "Add to Gallery"}</h3>
            </div>
-           <Button variant="ghost" size="icon" onClick={() => { setIsAdding(false); setEditingItem(null); }} className="rounded-full">
-              <X className="w-5 h-5" />
+           <Button variant="ghost" size="icon" onClick={() => { setIsAdding(false); setEditingItem(null); }} className="h-7 w-7 rounded-lg text-slate-400 hover:text-slate-600">
+              <X className="w-4 h-4" />
            </Button>
         </div>
         <GalleryForm initialData={editingItem} onSave={handleSave} isProcessing={isProcessing} mediaFolderBase={mediaFolderBase} />
@@ -1771,57 +1781,55 @@ function GalleryManagement({ workspaceId, galleryItems, mediaFolderBase }: any) 
   }
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-        <div className="relative flex-1 max-w-md group">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
+    <div className="space-y-4 animate-in fade-in duration-200">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="relative flex-1 max-w-sm group">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 group-focus-within:text-primary transition-colors pointer-events-none" />
           <Input 
             placeholder="Search gallery by title or category..." 
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="pl-12 h-12 rounded-2xl border-border/40 bg-white dark:bg-zinc-900 shadow-sm focus:ring-primary/20"
+            className="pl-8 h-8 sm:h-9 text-xs rounded-lg border-slate-200 dark:border-slate-700/60 bg-slate-50 dark:bg-slate-800/50"
           />
         </div>
-        <Button onClick={() => setIsAdding(true)} className="h-12 px-8 rounded-2xl font-black gap-2 shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all">
-          <Plus className="w-5 h-5" /> Add Gallery Image
+        <Button onClick={() => setIsAdding(true)} className="h-8 sm:h-9 px-3 sm:px-4 rounded-lg font-semibold text-xs gap-1.5 shadow-xs">
+          <Plus className="w-3.5 h-3.5" /> Add Gallery Image
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
         {filteredItems.map((item: any) => (
-          <div key={item.id} className="group bg-white dark:bg-zinc-900 border border-border/40 rounded-[2rem] overflow-hidden hover:border-primary/30 transition-all hover:shadow-xl hover:shadow-primary/5">
-            <div className="relative aspect-square overflow-hidden">
-              <img src={item.image} alt="" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
-              <div className="absolute top-4 right-4 flex gap-2">
-                 <div className={cn("px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest shadow-lg", item.isActive ? "bg-green-500 text-white" : "bg-zinc-500 text-white")}>
+          <div key={item.id} className="group bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-xl overflow-hidden hover:border-primary/40 transition-all shadow-xs">
+            <div className="relative aspect-square overflow-hidden bg-slate-100 dark:bg-slate-800">
+              <img src={item.image} alt="" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+              <div className="absolute top-2 right-2 flex gap-1">
+                 <span className={cn("px-1.5 py-0.5 rounded text-[8px] font-bold uppercase tracking-wider shadow-xs text-white", item.isActive ? "bg-emerald-600" : "bg-slate-600")}>
                     {item.isActive ? "Active" : "Hidden"}
-                 </div>
+                 </span>
               </div>
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-6">
-                 <div className="flex items-center gap-2">
-                    <Button variant="secondary" size="sm" onClick={() => setEditingItem(item)} className="flex-1 rounded-xl font-bold h-10 hover:bg-white hover:text-primary transition-all">Edit</Button>
-                    <Button variant="destructive" size="icon" onClick={() => handleDeleteClick(item)} className="w-10 h-10 rounded-xl transition-all">
-                       <Trash2 className="w-4 h-4" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-2.5">
+                 <div className="flex items-center gap-1.5">
+                    <Button variant="secondary" size="sm" onClick={() => setEditingItem(item)} className="flex-1 h-7 text-xs font-semibold rounded-md">Edit</Button>
+                    <Button variant="destructive" size="icon" onClick={() => handleDeleteClick(item)} className="h-7 w-7 rounded-md">
+                       <Trash2 className="w-3.5 h-3.5" />
                     </Button>
                  </div>
               </div>
             </div>
-            <div className="p-5 space-y-1">
-               <span className="text-[10px] font-black uppercase tracking-widest text-primary">{item.category || "General"}</span>
-               <h4 className="font-bold text-sm line-clamp-1">{item.title || "Untitled Image"}</h4>
+            <div className="p-2.5 space-y-0.5">
+               <span className="text-[9px] font-bold uppercase tracking-wider text-primary">{item.category || "General"}</span>
+               <h4 className="font-semibold text-xs text-slate-900 dark:text-white line-clamp-1">{item.title || "Untitled Image"}</h4>
             </div>
           </div>
         ))}
 
         {filteredItems.length === 0 && (
-          <div className="col-span-full py-24 flex flex-col items-center justify-center text-center space-y-4 bg-muted/20 rounded-[3rem] border border-dashed border-border/60">
-             <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center text-muted-foreground">
-                <ImageIcon className="w-8 h-8" />
+          <div className="col-span-full py-16 flex flex-col items-center justify-center text-center space-y-2 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-dashed border-slate-200 dark:border-slate-800">
+             <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400">
+                <ImageIcon className="w-5 h-5" />
              </div>
-             <div className="space-y-1">
-                <p className="font-black text-muted-foreground">Gallery is empty</p>
-                <p className="text-xs text-muted-foreground/60">Upload your institute photos to showcase here.</p>
-             </div>
+             <p className="font-bold text-slate-700 dark:text-slate-300 text-xs">Gallery is empty</p>
+             <p className="text-[11px] text-slate-400">Upload your institute photos to showcase here.</p>
           </div>
         )}
       </div>
@@ -1860,36 +1868,36 @@ function GalleryForm({ initialData, onSave, isProcessing, mediaFolderBase }: any
   }, [initialData]);
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-      <div className="lg:col-span-2 space-y-8">
-        <div className="p-8 bg-white dark:bg-zinc-900 rounded-[2.5rem] border border-border/40 shadow-sm space-y-6">
-           <div className="space-y-3">
-              <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">Image Title (Optional)</Label>
-              <Input value={formData.title} onChange={(e) => setFormData({ ...formData, title: e.target.value })} placeholder="e.g., Convocation 2026" className="h-14 rounded-2xl font-bold text-lg" />
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      <div className="lg:col-span-2 space-y-4">
+        <div className="p-3.5 sm:p-4 bg-white dark:bg-slate-900 rounded-xl border border-slate-200/80 dark:border-slate-800 shadow-xs space-y-3">
+           <div className="space-y-1">
+              <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Image Title (Optional)</Label>
+              <Input value={formData.title} onChange={(e) => setFormData({ ...formData, title: e.target.value })} placeholder="e.g., Convocation 2026" className="h-8 sm:h-9 text-xs font-medium rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700" />
            </div>
-           <div className="space-y-3">
-              <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">Topic / Category</Label>
-              <Input value={formData.category} onChange={(e) => setFormData({ ...formData, category: e.target.value })} placeholder="e.g., Campus, Sports, Event, Classroom" className="h-12 rounded-2xl font-bold" />
+           <div className="space-y-1">
+              <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Topic / Category</Label>
+              <Input value={formData.category} onChange={(e) => setFormData({ ...formData, category: e.target.value })} placeholder="e.g., Campus, Sports, Event, Classroom" className="h-8 sm:h-9 text-xs font-medium rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700" />
            </div>
-           <div className="flex items-center gap-3">
-              <Label className="text-sm font-black uppercase tracking-widest">Active / Visible</Label>
+           <div className="flex items-center gap-3 pt-1">
               <Switch checked={formData.isActive} onCheckedChange={(val) => setFormData({ ...formData, isActive: val })} />
+              <Label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Active / Visible on Site</Label>
            </div>
         </div>
 
-        <div className="p-8 bg-white dark:bg-zinc-900 rounded-[2.5rem] border border-border/40 shadow-sm flex items-center justify-between">
-           <p className="text-sm text-muted-foreground font-medium italic">Make sure to provide a clear category for better sorting.</p>
-           <Button onClick={() => onSave(formData)} disabled={isProcessing || !formData.image} className="h-14 px-10 rounded-2xl font-black text-lg shadow-lg shadow-primary/20 transition-all">
+        <div className="p-3 sm:p-3.5 bg-white dark:bg-slate-900 rounded-xl border border-slate-200/80 dark:border-slate-800 shadow-xs flex items-center justify-between">
+           <p className="text-xs text-slate-400 font-normal">Provide a clear category for better filtering.</p>
+           <Button onClick={() => onSave(formData)} disabled={isProcessing || !formData.image} className="h-8 sm:h-9 px-4 rounded-lg font-semibold text-xs shadow-xs">
               {isProcessing ? "Saving..." : initialData ? "Update Item" : "Add to Gallery"}
            </Button>
         </div>
       </div>
 
-      <div className="space-y-8">
-        <div className="p-8 bg-white dark:bg-zinc-900 rounded-[2.5rem] border border-border/40 shadow-sm space-y-6 text-center">
-           <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">Upload Photo</Label>
+      <div>
+        <div className="p-3.5 sm:p-4 bg-white dark:bg-slate-900 rounded-xl border border-slate-200/80 dark:border-slate-800 shadow-xs space-y-2 text-center">
+           <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Upload Photo</Label>
            <ImageUpload value={formData.image} onChange={(url) => setFormData({ ...formData, image: url })} label="Gallery Image" folder={`${mediaFolderBase}/gallery`} />
-           <p className="text-[10px] text-muted-foreground font-medium">Supported formats: JPG, PNG, WebP (Max 5MB)</p>
+           <p className="text-[10px] text-slate-400 font-normal">Supported formats: JPG, PNG, WebP (Max 5MB)</p>
         </div>
       </div>
     </div>
@@ -1910,76 +1918,67 @@ function EventForm({ initialData, onSave, isProcessing, mediaFolderBase }: any) 
   });
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-      <div className="lg:col-span-2 space-y-8">
-        <div className="p-8 bg-white dark:bg-zinc-900 rounded-[2.5rem] border border-border/40 shadow-sm space-y-6">
-           <div className="space-y-3">
-              <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">Event Title</Label>
-              <Input value={formData.title} onChange={(e) => setFormData({ ...formData, title: e.target.value })} placeholder="e.g., Annual Science Fair 2026" className="h-14 rounded-2xl font-bold text-lg" />
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      <div className="lg:col-span-2 space-y-4">
+        <div className="p-3.5 sm:p-4 bg-white dark:bg-slate-900 rounded-xl border border-slate-200/80 dark:border-slate-800 shadow-xs space-y-3">
+           <div className="space-y-1">
+              <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Event Title</Label>
+              <Input value={formData.title} onChange={(e) => setFormData({ ...formData, title: e.target.value })} placeholder="e.g., Annual Science Fair 2026" className="h-8 sm:h-9 text-xs font-semibold rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700" />
            </div>
-           <div className="space-y-3">
-              <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">Description</Label>
-              <Textarea value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} placeholder="Tell us more about the event..." className="min-h-[160px] rounded-2xl p-6 font-medium leading-relaxed" />
+           <div className="space-y-1">
+              <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Description</Label>
+              <Textarea value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} placeholder="Tell us more about the event..." className="min-h-[90px] text-xs p-2.5 rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 resize-none font-normal" />
            </div>
-           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-3">
-                 <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">Category / Topic</Label>
-                 <Input value={formData.category} onChange={(e) => setFormData({ ...formData, category: e.target.value })} placeholder="e.g., Workshop, Seminar, Cultural" className="h-12 rounded-2xl font-bold" />
+           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="space-y-1">
+                 <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Category / Topic</Label>
+                 <Input value={formData.category} onChange={(e) => setFormData({ ...formData, category: e.target.value })} placeholder="e.g., Workshop, Seminar, Cultural" className="h-8 sm:h-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700" />
               </div>
-              <div className="space-y-3">
-                 <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">Location</Label>
-                 <Input value={formData.location} onChange={(e) => setFormData({ ...formData, location: e.target.value })} placeholder="e.g., Main Hall, Computer Lab 1, Online" className="h-12 rounded-2xl font-bold" />
+              <div className="space-y-1">
+                 <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Location</Label>
+                 <Input value={formData.location} onChange={(e) => setFormData({ ...formData, location: e.target.value })} placeholder="e.g., Main Hall, Computer Lab 1, Online" className="h-8 sm:h-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700" />
               </div>
            </div>
         </div>
 
-        <div className="p-8 bg-white dark:bg-zinc-900 rounded-[2.5rem] border border-border/40 shadow-sm flex items-center justify-between">
-           <div className="flex items-center gap-6">
-              <div className="flex items-center gap-3">
-                 <Label className="text-sm font-black uppercase tracking-widest">Featured</Label>
+        <div className="p-3 sm:p-3.5 bg-white dark:bg-slate-900 rounded-xl border border-slate-200/80 dark:border-slate-800 shadow-xs flex items-center justify-between">
+           <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
                  <Switch checked={formData.isFeatured} onCheckedChange={(val) => setFormData({ ...formData, isFeatured: val })} />
+                 <Label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Featured</Label>
               </div>
-              <div className="flex items-center gap-3">
-                 <Label className="text-sm font-black uppercase tracking-widest">Active</Label>
+              <div className="flex items-center gap-2">
                  <Switch checked={formData.isActive} onCheckedChange={(val) => setFormData({ ...formData, isActive: val })} />
+                 <Label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Active</Label>
               </div>
            </div>
-           <Button onClick={() => onSave(formData)} disabled={isProcessing || !formData.title || !formData.date} className="h-14 px-10 rounded-2xl font-black text-lg shadow-lg shadow-primary/20 transition-all">
+           <Button onClick={() => onSave(formData)} disabled={isProcessing || !formData.title || !formData.date} className="h-8 sm:h-9 px-4 rounded-lg font-semibold text-xs shadow-xs">
               {isProcessing ? "Saving..." : initialData ? "Update Event" : "Create Event"}
            </Button>
         </div>
       </div>
 
-      <div className="space-y-8">
-        <div className="p-8 bg-white dark:bg-zinc-900 rounded-[2.5rem] border border-border/40 shadow-sm space-y-6">
-           <div className="space-y-3">
-              <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">Event Date</Label>
-              <div className="relative">
-                <Button 
-                  variant="outline" 
-                  type="button"
-                  className="w-full h-12 rounded-2xl font-bold justify-start px-4 pointer-events-none"
-                >
-                  {formData.date ? new Date(formData.date).toLocaleDateString('en-GB') : "Select Date"}
-                </Button>
-                <input 
-                  type="date" 
-                  value={formData.date} 
-                  onChange={(e) => setFormData({ ...formData, date: e.target.value })} 
-                  className="absolute inset-0 opacity-0 cursor-pointer w-full h-full z-20"
-                />
-              </div>
+      <div className="space-y-4">
+        <div className="p-3.5 sm:p-4 bg-white dark:bg-slate-900 rounded-xl border border-slate-200/80 dark:border-slate-800 shadow-xs space-y-3">
+           <div className="space-y-1">
+              <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Event Date</Label>
+              <Input 
+                type="date" 
+                value={formData.date} 
+                onChange={(e) => setFormData({ ...formData, date: e.target.value })} 
+                className="h-8 sm:h-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700"
+              />
            </div>
-           <div className="space-y-3">
-              <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">Time</Label>
-              <Input value={formData.time} onChange={(e) => setFormData({ ...formData, time: e.target.value })} placeholder="e.g., 10:00 AM - 1:00 PM" className="h-12 rounded-2xl font-bold" />
+           <div className="space-y-1">
+              <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Time</Label>
+              <Input value={formData.time} onChange={(e) => setFormData({ ...formData, time: e.target.value })} placeholder="e.g., 10:00 AM - 1:00 PM" className="h-8 sm:h-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700" />
            </div>
         </div>
 
-        <div className="p-8 bg-white dark:bg-zinc-900 rounded-[2.5rem] border border-border/40 shadow-sm space-y-6">
-           <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">Event Banner Image</Label>
+        <div className="p-3.5 sm:p-4 bg-white dark:bg-slate-900 rounded-xl border border-slate-200/80 dark:border-slate-800 shadow-xs space-y-2 text-center">
+           <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Event Banner Image</Label>
            <ImageUpload value={formData.image} onChange={(url) => setFormData({ ...formData, image: url })} label="Event Banner" folder={`${mediaFolderBase}/events`} />
-           <p className="text-[10px] text-muted-foreground font-medium text-center italic">Recommended: 16:9 aspect ratio</p>
+           <p className="text-[10px] text-slate-400 font-normal italic">Recommended: 16:9 aspect ratio</p>
         </div>
       </div>
     </div>
@@ -2013,13 +2012,11 @@ function LegalContentEditor({ settings }: { settings: any }) {
   });
 
   useEffect(() => {
-    // Fallback logic for content loading
     const rawContent = currentSection?.content as any;
     let initialText = rawContent?.text || "";
     
-    // If no markdown text exists but HTML does (from initial sync), use HTML as starting point
     if (!initialText && rawContent?.html) {
-      initialText = rawContent.html.replace(/<[^>]*>?/gm, ''); // Very basic strip for legacy sync
+      initialText = rawContent.html.replace(/<[^>]*>?/gm, '');
     }
 
     setFormData({
@@ -2041,16 +2038,11 @@ function LegalContentEditor({ settings }: { settings: any }) {
     try {
       let sectionId = currentSection?.id;
 
-      // If section doesn't exist, sync it first
       if (!sectionId) {
         const syncRes = await syncAllSections(settings.id, [activeLegal], true);
         if (syncRes.success) {
-          // Find the newly created section ID
-          // We might need to refresh settings or just use a more direct create action
-          // To keep it simple for now, I'll advise syncing if it fails, 
-          // but I'll try to make it smarter by using a dedicated create-or-update action.
           toast.info("Initializing section... please try saving again in a moment.");
-          window.location.reload(); // Hard reload to get new IDs
+          window.location.reload();
           return;
         } else {
           toast.error("Failed to initialize section. Please use 'Sync Content' in the Sections tab.");
@@ -2069,7 +2061,6 @@ function LegalContentEditor({ settings }: { settings: any }) {
 
       if (result.success) {
         toast.success(`${legalPages.find(p => p.type === activeLegal)?.label} updated`);
-        // Refresh to get updated settings props
         window.location.reload();
       } else {
         toast.error(result.error || "Update failed");
@@ -2101,110 +2092,110 @@ function LegalContentEditor({ settings }: { settings: any }) {
   };
 
   return (
-    <div className="space-y-12">
-      <div className="flex flex-wrap gap-4">
+    <div className="space-y-4">
+      <div className="flex flex-wrap gap-1.5 p-1.5 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs">
         {legalPages.map((page) => (
           <button
             key={page.type}
             onClick={() => setActiveLegal(page.type)}
             className={cn(
-              "flex items-center gap-3 px-6 py-4 rounded-2xl border-2 transition-all font-bold",
+              "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all shrink-0",
               activeLegal === page.type 
-                ? "bg-primary text-primary-foreground border-primary shadow-lg shadow-primary/20" 
-                : "bg-white dark:bg-zinc-900 border-border/40 hover:border-primary/20 text-zinc-600 dark:text-zinc-400"
+                ? "bg-slate-100 dark:bg-slate-800 text-primary dark:text-white shadow-inner" 
+                : "text-slate-500 hover:text-slate-900 hover:bg-slate-50 dark:hover:text-white dark:hover:bg-slate-800/50"
             )}
           >
-            <page.icon className="w-5 h-5" />
+            <page.icon className="w-3.5 h-3.5" />
             {page.label}
           </button>
         ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2 space-y-8">
-          <div className="p-8 bg-white dark:bg-zinc-900 rounded-[2.5rem] border border-border/40 shadow-sm space-y-6">
-            <div className="space-y-3">
-              <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">Page Title</Label>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <div className="lg:col-span-2 space-y-4">
+          <div className="p-3.5 sm:p-4 bg-white dark:bg-slate-900 rounded-xl border border-slate-200/80 dark:border-slate-800 shadow-xs space-y-3">
+            <div className="space-y-1">
+              <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Page Title</Label>
               <Input 
                 value={formData.title} 
                 onChange={(e) => setFormData({ ...formData, title: e.target.value })} 
                 placeholder={`e.g., ${legalPages.find(p => p.type === activeLegal)?.label}`} 
-                className="h-14 rounded-2xl font-bold text-lg" 
+                className="h-8 sm:h-9 text-xs font-semibold rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700" 
               />
             </div>
-            <div className="space-y-3">
-              <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">Subtitle / Subheader</Label>
+            <div className="space-y-1">
+              <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Subtitle / Subheader</Label>
               <Input 
                 value={formData.subtitle} 
                 onChange={(e) => setFormData({ ...formData, subtitle: e.target.value })} 
                 placeholder="e.g., How can we assist you today?" 
-                className="h-12 rounded-2xl font-bold" 
+                className="h-8 sm:h-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700" 
               />
             </div>
 
             {activeLegal === 'help-center' && (
-              <div className="space-y-8 pt-6 border-t border-border/40">
+              <div className="space-y-3 pt-3 border-t border-slate-200/70 dark:border-slate-800">
                 <div className="flex items-center justify-between">
-                   <h4 className="text-sm font-black uppercase tracking-widest text-primary">Help Categories</h4>
-                   <Button onClick={addCategory} variant="outline" className="rounded-xl h-10 gap-2 border-primary/20 text-primary hover:bg-primary/5">
-                      <Plus className="w-4 h-4" /> Add Category
+                   <h4 className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Help Categories</h4>
+                   <Button onClick={addCategory} variant="outline" size="sm" className="h-7 sm:h-8 px-2.5 sm:px-3 text-xs font-semibold gap-1.5 border-slate-200 dark:border-slate-700">
+                      <Plus className="w-3.5 h-3.5" /> Add Category
                    </Button>
                 </div>
 
-                <div className="grid grid-cols-1 gap-6">
+                <div className="grid grid-cols-1 gap-2.5">
                    {formData.categories.map((cat: any, i: number) => (
-                     <div key={i} className="p-6 bg-zinc-50 dark:bg-zinc-900/50 rounded-2xl border border-border/40 space-y-4 relative group">
+                     <div key={i} className="p-3 bg-slate-50 dark:bg-slate-800/40 rounded-xl border border-slate-200/70 dark:border-slate-800 space-y-2 relative group">
                         <Button 
                           variant="ghost" 
                           size="icon" 
                           onClick={() => removeCategory(i)}
-                          className="absolute top-4 right-4 text-muted-foreground hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                          className="absolute top-2 right-2 h-6 w-6 text-slate-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
                         >
-                           <Trash2 className="w-4 h-4" />
+                           <Trash2 className="w-3.5 h-3.5" />
                         </Button>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                           <div className="space-y-2">
-                              <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Card Title</Label>
-                              <Input value={cat.title} onChange={(e) => updateCategory(i, "title", e.target.value)} placeholder="e.g., Getting Started" className="h-10 rounded-xl font-bold" />
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                           <div className="space-y-1">
+                              <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Card Title</Label>
+                              <Input value={cat.title} onChange={(e) => updateCategory(i, "title", e.target.value)} placeholder="e.g., Getting Started" className="h-8 text-xs font-semibold rounded-lg bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700" />
                            </div>
-                           <div className="space-y-2">
-                              <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Icon Name (Lucide)</Label>
-                              <Input value={cat.icon} onChange={(e) => updateCategory(i, "icon", e.target.value)} placeholder="e.g., BookOpen, Mail, HelpCircle" className="h-10 rounded-xl font-medium" />
+                           <div className="space-y-1">
+                              <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Icon Name (Lucide)</Label>
+                              <Input value={cat.icon} onChange={(e) => updateCategory(i, "icon", e.target.value)} placeholder="e.g., BookOpen, Mail, HelpCircle" className="h-8 text-xs rounded-lg bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700" />
                            </div>
                         </div>
-                        <div className="space-y-2">
-                           <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Description</Label>
-                           <Input value={cat.desc} onChange={(e) => updateCategory(i, "desc", e.target.value)} placeholder="Short description of the category..." className="h-10 rounded-xl font-medium text-xs" />
+                        <div className="space-y-1">
+                           <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Description</Label>
+                           <Input value={cat.desc} onChange={(e) => updateCategory(i, "desc", e.target.value)} placeholder="Short description of the category..." className="h-8 text-xs rounded-lg bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700" />
                         </div>
-                        <div className="space-y-2">
-                           <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Link URL</Label>
-                           <Input value={cat.link} onChange={(e) => updateCategory(i, "link", e.target.value)} placeholder="/help/getting-started" className="h-10 rounded-xl font-medium text-xs" />
+                        <div className="space-y-1">
+                           <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Link URL</Label>
+                           <Input value={cat.link} onChange={(e) => updateCategory(i, "link", e.target.value)} placeholder="/help/getting-started" className="h-8 text-xs rounded-lg bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700" />
                         </div>
                      </div>
                    ))}
                 </div>
 
-                <div className="space-y-6 pt-6 border-t border-border/40">
-                   <h4 className="text-sm font-black uppercase tracking-widest text-primary">Support Call-To-Action</h4>
-                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                      <div className="space-y-4">
-                         <div className="space-y-2">
-                            <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Primary Button Text</Label>
-                            <Input value={formData.cta.ticketText} onChange={(e) => setFormData({ ...formData, cta: { ...formData.cta, ticketText: e.target.value }})} className="h-10 rounded-xl font-bold" />
+                <div className="space-y-3 pt-3 border-t border-slate-200/70 dark:border-slate-800">
+                   <h4 className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Support Call-To-Action</h4>
+                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div className="space-y-2">
+                         <div className="space-y-1">
+                            <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Primary Button Text</Label>
+                            <Input value={formData.cta.ticketText} onChange={(e) => setFormData({ ...formData, cta: { ...formData.cta, ticketText: e.target.value }})} className="h-8 text-xs font-semibold rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700" />
                          </div>
-                         <div className="space-y-2">
-                            <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Primary Button Link</Label>
-                            <Input value={formData.cta.ticketLink} onChange={(e) => setFormData({ ...formData, cta: { ...formData.cta, ticketLink: e.target.value }})} className="h-10 rounded-xl font-medium text-xs" />
+                         <div className="space-y-1">
+                            <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Primary Button Link</Label>
+                            <Input value={formData.cta.ticketLink} onChange={(e) => setFormData({ ...formData, cta: { ...formData.cta, ticketLink: e.target.value }})} className="h-8 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700" />
                          </div>
                       </div>
-                      <div className="space-y-4">
-                         <div className="space-y-2">
-                            <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Secondary Button Text</Label>
-                            <Input value={formData.cta.emailText} onChange={(e) => setFormData({ ...formData, cta: { ...formData.cta, emailText: e.target.value }})} className="h-10 rounded-xl font-bold" />
+                      <div className="space-y-2">
+                         <div className="space-y-1">
+                            <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Secondary Button Text</Label>
+                            <Input value={formData.cta.emailText} onChange={(e) => setFormData({ ...formData, cta: { ...formData.cta, emailText: e.target.value }})} className="h-8 text-xs font-semibold rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700" />
                          </div>
-                         <div className="space-y-2">
-                            <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Secondary Button Link</Label>
-                            <Input value={formData.cta.emailLink} onChange={(e) => setFormData({ ...formData, cta: { ...formData.cta, emailLink: e.target.value }})} className="h-10 rounded-xl font-medium text-xs" />
+                         <div className="space-y-1">
+                            <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Secondary Button Link</Label>
+                            <Input value={formData.cta.emailLink} onChange={(e) => setFormData({ ...formData, cta: { ...formData.cta, emailLink: e.target.value }})} className="h-8 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700" />
                          </div>
                       </div>
                    </div>
@@ -2213,46 +2204,46 @@ function LegalContentEditor({ settings }: { settings: any }) {
             )}
 
             {activeLegal !== 'help-center' && (
-              <div className="space-y-3">
-                <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">Content (Markdown Supported)</Label>
+              <div className="space-y-1">
+                <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Content (Markdown Supported)</Label>
                 <Textarea 
                   value={formData.text} 
                   onChange={(e) => setFormData({ ...formData, text: e.target.value })} 
                   placeholder="Write your policy content here..." 
-                  className="min-h-[400px] rounded-2xl p-8 font-medium leading-relaxed" 
+                  className="min-h-[300px] text-xs p-3 rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 font-normal leading-relaxed" 
                 />
               </div>
             )}
           </div>
 
-          <div className="p-8 bg-white dark:bg-zinc-900 rounded-[2.5rem] border border-border/40 shadow-sm flex items-center justify-between">
-            <div className="flex items-center gap-3 text-sm text-muted-foreground font-medium italic">
-               <ShieldCheck className="w-4 h-4 text-primary" />
+          <div className="p-3 sm:p-3.5 bg-white dark:bg-slate-900 rounded-xl border border-slate-200/80 dark:border-slate-800 shadow-xs flex items-center justify-between">
+            <div className="flex items-center gap-2 text-xs text-slate-500 font-medium">
+               <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                Changes reflect immediately on the live page.
             </div>
             <Button 
               onClick={handleSave} 
               disabled={isProcessing} 
-              className="h-14 px-10 rounded-2xl font-black text-lg shadow-lg shadow-primary/20 transition-all"
+              className="h-8 sm:h-9 px-4 rounded-lg font-semibold text-xs shadow-xs"
             >
               {isProcessing ? "Saving..." : "Save Content"}
             </Button>
           </div>
         </div>
 
-        <div className="space-y-8">
-           <div className="p-8 bg-primary/5 rounded-[2.5rem] border border-primary/10 space-y-6">
-              <h4 className="text-xl font-black text-primary">Content Guide</h4>
-              <ul className="space-y-4">
+        <div>
+           <div className="p-3.5 bg-primary/5 rounded-xl border border-primary/10 space-y-3">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-primary">Content Guide</h4>
+              <ul className="space-y-2.5">
                  {[
                    { t: "Markdown Support", d: "Use # for headings, ** for bold, and - for lists." },
-                   { t: "Dynamic Headers", d: "The title and subtitle appear in the premium page header." },
-                   { t: "SEO Optimized", d: "Clean semantic HTML is generated from your content." },
+                   { t: "Dynamic Headers", d: "The title and subtitle appear in the header banner." },
+                   { t: "SEO Optimized", d: "Clean semantic HTML is generated automatically." },
                    { t: "Auto-Sync", d: "Links in the footer are automatically updated." }
                  ].map((item, i) => (
-                   <li key={i} className="space-y-1">
-                      <div className="text-sm font-black text-slate-900 dark:text-white">{item.t}</div>
-                      <div className="text-xs text-muted-foreground font-medium">{item.d}</div>
+                   <li key={i} className="space-y-0.5">
+                      <div className="text-xs font-semibold text-slate-900 dark:text-white">{item.t}</div>
+                      <div className="text-[11px] text-slate-500 font-normal">{item.d}</div>
                    </li>
                  ))}
               </ul>
@@ -2265,45 +2256,42 @@ function LegalContentEditor({ settings }: { settings: any }) {
 
 function QuickLinksContentEditor({ content, setContent }: any) {
   return (
-    <div className="space-y-8">
-      <div className="flex items-center justify-between mb-4">
-        <h4 className="text-xs font-black uppercase tracking-[0.2em] text-primary">Quick Links</h4>
+    <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <h4 className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Quick Links</h4>
         <Button size="sm" variant="outline" onClick={() => {
           const newLinks = [...(content.links || []), { title: "New Link", description: "Description", url: "#", icon: "Link" }];
           setContent({ ...content, links: newLinks });
-        }} className="rounded-xl font-bold h-10 border-primary/20 text-primary">
-          <Plus className="w-4 h-4 mr-2" /> Add Link
+        }} className="h-7 sm:h-8 px-2.5 sm:px-3 rounded-lg text-xs font-semibold gap-1.5 border-slate-200 dark:border-slate-700">
+          <Plus className="w-3.5 h-3.5" /> Add Link
         </Button>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
         {(content.links || []).map((link: any, idx: number) => (
-          <div key={idx} className="p-6 bg-white dark:bg-zinc-900 border border-border/40 rounded-[2rem] space-y-4 shadow-sm relative group">
+          <div key={idx} className="p-3 bg-white dark:bg-slate-900 border border-slate-200/70 dark:border-slate-800 rounded-xl space-y-2 shadow-xs relative group">
             <div className="flex justify-between items-center">
-              <span className="text-[10px] font-black text-primary/60 uppercase tracking-widest">Link #{idx + 1}</span>
-              <Button variant="ghost" size="icon" className="h-8 w-8 text-red-500 rounded-lg opacity-0 group-hover:opacity-100 transition-all" onClick={() => {
+              <span className="text-[9px] font-bold text-primary uppercase tracking-wider">Link #{idx + 1}</span>
+              <Button variant="ghost" size="icon" className="h-6 w-6 text-slate-400 hover:text-red-500 rounded-md transition-colors" onClick={() => {
                 const newLinks = content.links.filter((_: any, i: number) => i !== idx);
                 setContent({ ...content, links: newLinks });
-              }}><Trash2 className="h-4 w-4" /></Button>
+              }}><Trash2 className="h-3.5 w-3.5" /></Button>
             </div>
-            <div className="space-y-2">
-              <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Title</Label>
-              <Input value={link.title || ""} onChange={(e) => { const n = [...content.links]; n[idx].title = e.target.value; setContent({ ...content, links: n }); }} className="h-10 rounded-xl bg-zinc-50 dark:bg-zinc-800 border-none font-bold text-sm" />
+            <div className="space-y-1">
+              <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Title</Label>
+              <Input value={link.title || ""} onChange={(e) => { const n = [...content.links]; n[idx].title = e.target.value; setContent({ ...content, links: n }); }} className="h-8 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 font-semibold" />
             </div>
-            <div className="space-y-2">
-              <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Description</Label>
-              <Input value={link.description || ""} onChange={(e) => { const n = [...content.links]; n[idx].description = e.target.value; setContent({ ...content, links: n }); }} className="h-10 rounded-xl bg-zinc-50 dark:bg-zinc-800 border-none text-sm" />
+            <div className="space-y-1">
+              <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Description</Label>
+              <Input value={link.description || ""} onChange={(e) => { const n = [...content.links]; n[idx].description = e.target.value; setContent({ ...content, links: n }); }} className="h-8 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700" />
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">URL</Label>
-                <Input value={link.url || ""} onChange={(e) => { const n = [...content.links]; n[idx].url = e.target.value; setContent({ ...content, links: n }); }} className="h-10 rounded-xl bg-zinc-50 dark:bg-zinc-800 border-none text-sm" placeholder="/student/dashboard" />
+            <div className="grid grid-cols-2 gap-2">
+              <div className="space-y-1">
+                <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">URL</Label>
+                <Input value={link.url || ""} onChange={(e) => { const n = [...content.links]; n[idx].url = e.target.value; setContent({ ...content, links: n }); }} className="h-8 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700" placeholder="/student/dashboard" />
               </div>
-              <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase text-muted-foreground ml-1">Icon Name</Label>
-                <Input value={link.icon || ""} onChange={(e) => { const n = [...content.links]; n[idx].icon = e.target.value; setContent({ ...content, links: n }); }} className="h-10 rounded-xl bg-zinc-50 dark:bg-zinc-800 border-none text-sm" placeholder="e.g. Building2" />
-                <p className="text-[9px] text-muted-foreground mt-1 ml-1">
-                  Popular icons: <span className="font-bold">Building2, GraduationCap, FileCheck, Newspaper, User, Mail, Phone, Shield, Globe, BookOpen, Users</span>
-                </p>
+              <div className="space-y-1">
+                <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Icon Name</Label>
+                <Input value={link.icon || ""} onChange={(e) => { const n = [...content.links]; n[idx].icon = e.target.value; setContent({ ...content, links: n }); }} className="h-8 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700" placeholder="Building2" />
               </div>
             </div>
           </div>

@@ -27,7 +27,7 @@ export default async function FranchiseProductsPage({
   ]);
 
   return (
-    <div className="p-4 lg:p-10 max-w-7xl mx-auto space-y-8 w-full">
+    <div className="space-y-4 sm:space-y-5 pb-8 w-full mx-auto">
       <AdminPageHeader 
         title="Products & Store"
         description="Order uniforms, books, bags, and ID cards directly from headquarters."

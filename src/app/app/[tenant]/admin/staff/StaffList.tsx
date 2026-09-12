@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Card } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -164,52 +165,52 @@ export default function StaffList({
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="relative w-full max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+    <div className="space-y-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="relative w-full sm:max-w-[300px] group">
+          <Search className="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none h-3.5 w-3.5 text-slate-400" />
           <Input 
             placeholder="Search team members..." 
-            className="pl-9 rounded-xl border-slate-200 font-medium h-11"
+            className="h-8 sm:h-9 pl-8 pr-3 bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700/60 rounded-lg text-xs placeholder:text-xs placeholder:text-slate-400"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
         
         <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger render={<Button className="gap-2 rounded-xl h-11 font-bold" />}>
-            <UserPlus className="h-4 w-4" />
+          <DialogTrigger render={<Button className="gap-1.5 rounded-lg h-8 sm:h-9 px-3 text-xs font-semibold" />}>
+            <UserPlus className="h-3.5 w-3.5" />
             Add Team Member
           </DialogTrigger>
-          <DialogContent className="sm:max-w-xl rounded-[2.5rem] p-0 border-2 border-slate-100 overflow-hidden">
-            <DialogHeader className="p-8 pb-4 border-b">
-              <DialogTitle className="text-2xl font-bold">Add Team Member</DialogTitle>
+          <DialogContent className="sm:max-w-xl rounded-2xl p-4 sm:p-5 border border-slate-200 dark:border-slate-800 shadow-xl overflow-hidden">
+            <DialogHeader className="mb-2">
+              <DialogTitle className="text-base font-bold text-slate-900 dark:text-white">Add Team Member</DialogTitle>
             </DialogHeader>
-            <form onSubmit={handleSubmit} className="p-8 pt-4 space-y-6 overflow-y-auto max-h-[70vh] custom-scrollbar">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label className="text-xs font-bold text-slate-500">Full Name</Label>
-                  <Input required value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="h-11 rounded-xl" placeholder="John Doe" />
+            <form onSubmit={handleSubmit} className="space-y-4 overflow-y-auto max-h-[70vh] custom-scrollbar">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <Label className="text-xs font-medium">Full Name</Label>
+                  <Input required value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="h-8 sm:h-9 text-xs rounded-lg" placeholder="John Doe" />
                 </div>
-                <div className="space-y-2">
-                  <Label className="text-xs font-bold text-slate-500">Email Address</Label>
-                  <Input required type="email" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} className="h-11 rounded-xl" placeholder="john@example.com" />
+                <div className="space-y-1">
+                  <Label className="text-xs font-medium">Email Address</Label>
+                  <Input required type="email" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} className="h-8 sm:h-9 text-xs rounded-lg" placeholder="john@example.com" />
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label className="text-xs font-bold text-slate-500">Password</Label>
-                  <Input type="password" value={formData.password} onChange={e => setFormData({...formData, password: e.target.value})} className="h-11 rounded-xl" placeholder="••••••••" />
-                  <p className="text-[10px] text-muted-foreground">Leave blank if user already has an account.</p>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <Label className="text-xs font-medium">Password</Label>
+                  <Input type="password" value={formData.password} onChange={e => setFormData({...formData, password: e.target.value})} className="h-8 sm:h-9 text-xs rounded-lg" placeholder="••••••••" />
+                  <p className="text-[10px] text-slate-400">Leave blank if user already has an account.</p>
                 </div>
-                <div className="space-y-2">
-                  <Label className="text-xs font-bold text-slate-500">Role</Label>
+                <div className="space-y-1">
+                  <Label className="text-xs font-medium">Role</Label>
                   <Select value={formData.role} onValueChange={val => setFormData({...formData, role: val as any})}>
-                    <SelectTrigger className="h-11 rounded-xl">
+                    <SelectTrigger className="h-8 sm:h-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700/60">
                       <SelectValue placeholder="Select a role" />
                     </SelectTrigger>
-                    <SelectContent className="rounded-xl">
+                    <SelectContent className="rounded-xl text-xs">
                       <SelectItem value="STAFF">Manager / Staff</SelectItem>
                       <SelectItem value="TEACHER">Teacher</SelectItem>
                     </SelectContent>
@@ -218,18 +219,18 @@ export default function StaffList({
               </div>
 
               {formData.role !== "ADMIN" && (
-                <div className="space-y-3 pt-4 border-t">
-                  <Label className="text-sm font-bold">Page Permissions</Label>
-                  <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+                  <Label className="text-xs font-medium">Page Permissions</Label>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                     {PERMISSION_OPTIONS.map(opt => (
-                      <div key={opt.id} className="flex items-center space-x-2 bg-slate-50 p-3 rounded-xl border border-slate-100">
+                      <div key={opt.id} className="flex items-center space-x-2 bg-slate-50 dark:bg-slate-800/50 p-2 rounded-lg border border-slate-200 dark:border-slate-700/60">
                         <Checkbox 
                           id={`add-${opt.id}`} 
                           checked={formData.permissions.includes(opt.id)}
                           onCheckedChange={() => togglePermission(opt.id, 'add')}
                         />
-                        <label htmlFor={`add-${opt.id}`} className="text-sm font-medium cursor-pointer flex items-center gap-2">
-                          <opt.icon className="w-4 h-4 text-slate-400" />
+                        <label htmlFor={`add-${opt.id}`} className="text-xs font-medium cursor-pointer flex items-center gap-1.5">
+                          <opt.icon className="w-3.5 h-3.5 text-slate-400" />
                           {opt.label}
                         </label>
                       </div>
@@ -238,8 +239,8 @@ export default function StaffList({
                 </div>
               )}
 
-              <Button type="submit" disabled={isSubmitting} className="w-full h-11 rounded-xl font-bold mt-4">
-                {isSubmitting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+              <Button type="submit" disabled={isSubmitting} className="w-full h-8 sm:h-9 rounded-lg font-semibold text-xs mt-2">
+                {isSubmitting ? <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" /> : null}
                 {isSubmitting ? "Adding..." : "Add to Workspace"}
               </Button>
             </form>
@@ -247,9 +248,9 @@ export default function StaffList({
         </Dialog>
       </div>
 
-      {/* Modern Vertical List */}
-      <div className="bg-slate-50/50 dark:bg-slate-950/50 rounded-[2.5rem] border-2 border-slate-100 dark:border-slate-800/50 p-8 shadow-inner">
-        <div className="space-y-4">
+      {/* Modern Vertical List (Rule 7.5) */}
+      <Card className="border border-slate-200/80 dark:border-slate-800 rounded-xl shadow-sm overflow-hidden bg-white dark:bg-slate-900">
+        <div className="divide-y divide-slate-50 dark:divide-slate-800/50">
           {filteredStaff.map((item) => {
             let itemPermissions = [];
             try {
@@ -260,40 +261,40 @@ export default function StaffList({
             return (
               <div 
                 key={item.id} 
-                className="group bg-white dark:bg-slate-900 rounded-3xl border-2 border-slate-100 dark:border-slate-800/50 p-6 transition-all duration-300 hover:border-primary/30 dark:hover:border-primary/50 hover:shadow-2xl hover:shadow-primary/5 dark:hover:shadow-black/60 flex flex-col md:flex-row md:items-center justify-between gap-6"
+                className="flex flex-col lg:flex-row items-start lg:items-center justify-between p-3 sm:p-3.5 bg-white dark:bg-slate-900 hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-all gap-3 sm:gap-4 group"
               >
-                <div className="flex items-center gap-5 flex-1 min-w-0">
-                  <Avatar className="h-14 w-14 rounded-2xl border-2 border-slate-200/50 dark:border-slate-700/50 shrink-0">
-                    <AvatarFallback className="bg-slate-100 dark:bg-slate-800 text-primary font-bold text-lg rounded-2xl uppercase">
+                <div className="flex items-center gap-3 flex-1 min-w-0">
+                  <Avatar className="h-10 w-10 sm:h-11 sm:w-11 rounded-xl border border-slate-200/50 dark:border-slate-700/50 shrink-0">
+                    <AvatarFallback className="bg-slate-100 dark:bg-slate-800 text-primary font-bold text-xs rounded-xl uppercase">
                       {item.user.name?.charAt(0) || "U"}
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex flex-col min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <h3 className="font-bold text-slate-900 dark:text-white truncate text-lg leading-none">{item.user.name || "Unknown User"}</h3>
+                    <div className="flex items-center gap-2 mb-0.5">
+                      <h3 className="font-semibold text-xs sm:text-sm text-slate-900 dark:text-white truncate leading-none">{item.user.name || "Unknown User"}</h3>
                       <Badge 
                         variant="outline" 
                         className={cn(
-                          "capitalize text-[10px] py-0 border-none font-bold",
+                          "capitalize text-[9px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider border-none",
                           item.role === "ADMIN" ? "bg-primary/10 text-primary" :
                           item.role === "TEACHER" ? "bg-orange-500/10 text-orange-600" :
                           "bg-slate-100 text-slate-600"
                         )}
                       >
-                        {item.role === "ADMIN" && <Shield className="h-3 w-3 mr-1" />}
+                        {item.role === "ADMIN" && <Shield className="h-2.5 w-2.5 mr-1" />}
                         {item.role}
                       </Badge>
                     </div>
-                    <div className="flex items-center gap-2 text-slate-400 dark:text-slate-500">
+                    <div className="flex items-center gap-1.5 text-slate-400">
                       <Mail className="h-3 w-3" />
-                      <span className="text-xs font-medium">{item.user.email}</span>
+                      <span className="text-[11px] font-medium">{item.user.email}</span>
                     </div>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-8 md:px-8 md:border-x-2 md:border-slate-100 dark:md:border-slate-800/50">
-                  <div className="flex flex-col">
-                    <p className="text-[9px] font-bold text-slate-400 dark:text-slate-500 mb-1 flex items-center gap-1">
+                <div className="flex items-center gap-4 md:px-4 md:border-x border-slate-100 dark:md:border-slate-800/50">
+                  <div className="flex flex-col text-left shrink-0">
+                    <p className="text-[8px] font-bold uppercase tracking-wider text-slate-400 mb-0.5 flex items-center gap-1">
                       <ShieldCheck className="h-2.5 w-2.5" />
                       Access Level
                     </p>
@@ -303,13 +304,13 @@ export default function StaffList({
                   </div>
                 </div>
 
-                <div className="flex items-center justify-end gap-3 shrink-0">
+                <div className="flex items-center justify-end gap-2 shrink-0">
                   <DropdownMenu>
-                    <DropdownMenuTrigger className="flex h-10 w-10 items-center justify-center p-0 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 focus:outline-none transition-colors border-none bg-transparent">
-                      <MoreVertical className="h-5 w-5 text-slate-500" />
+                    <DropdownMenuTrigger className="flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center p-0 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 focus:outline-none transition-colors border-none bg-transparent">
+                      <MoreVertical className="h-3.5 w-3.5 text-slate-500" />
                       <span className="sr-only">Open menu</span>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-56 rounded-2xl p-2 border-slate-100 dark:border-slate-800 shadow-xl font-medium">
+                    <DropdownMenuContent align="end" className="w-48 rounded-xl p-1.5 border-slate-200 dark:border-slate-800 shadow-lg text-xs font-medium">
                       <DropdownMenuItem 
                         className="rounded-xl cursor-pointer py-2.5"
                         onClick={() => {
@@ -367,58 +368,55 @@ export default function StaffList({
             );
           })}
           {filteredStaff.length === 0 && (
-            <div className="p-12 text-center border-2 border-dashed border-slate-200 rounded-3xl">
-              <p className="text-muted-foreground font-medium">No team members found.</p>
+            <div className="p-10 text-center">
+              <p className="text-xs text-slate-500 font-medium">No team members found.</p>
             </div>
           )}
         </div>
-      </div>
+      </Card>
 
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
-        <DialogContent className="sm:max-w-[550px] rounded-3xl p-0 overflow-hidden border-0 shadow-2xl shadow-primary/10">
-          <div className="bg-gradient-to-br from-indigo-900 to-indigo-800 p-8 text-white relative overflow-hidden">
-            <div className="absolute top-0 right-0 p-6 opacity-10 transform scale-150 pointer-events-none">
-              <ShieldCheck className="w-32 h-32" />
-            </div>
-            <DialogTitle className="text-3xl font-black mb-2 relative z-10">Manage Access</DialogTitle>
-            <p className="text-indigo-200 relative z-10 text-sm">
-              Select the role and page access for <span className="font-bold text-white">{selectedStaff?.user?.name || "this staff member"}</span>.
+        <DialogContent className="sm:max-w-xl rounded-2xl p-4 sm:p-5 border border-slate-200 dark:border-slate-800 shadow-xl overflow-hidden">
+          <DialogHeader className="mb-2">
+            <DialogTitle className="text-base font-bold text-slate-900 dark:text-white">Manage Access</DialogTitle>
+            <p className="text-xs text-slate-500">
+              Select role and page access for <span className="font-semibold text-slate-900 dark:text-white">{selectedStaff?.user?.name || "this staff member"}</span>.
             </p>
-          </div>
-          <form onSubmit={handleUpdate} className="bg-white dark:bg-slate-950 flex flex-col max-h-[70vh]">
-            <div className="flex-1 p-8 overflow-y-auto space-y-8 custom-scrollbar">
-              <div className="space-y-3">
-                <Label className="text-xs font-bold text-slate-500 uppercase tracking-widest">System Role</Label>
+          </DialogHeader>
+          <form onSubmit={handleUpdate} className="space-y-4">
+            <div className="space-y-3 max-h-[60vh] overflow-y-auto custom-scrollbar pr-1">
+              <div className="space-y-1">
+                <Label className="text-xs font-medium">System Role</Label>
                 <Select value={editFormData.role} onValueChange={val => setEditFormData({...editFormData, role: val as any})}>
-                  <SelectTrigger className="h-12 rounded-xl border-slate-200 dark:border-slate-800 font-bold text-slate-900 dark:text-white">
+                  <SelectTrigger className="h-8 sm:h-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700/60 font-semibold text-slate-900 dark:text-white">
                     <SelectValue placeholder="Select a role" />
                   </SelectTrigger>
-                  <SelectContent className="rounded-xl">
-                    <SelectItem value="STAFF" className="font-medium">Manager / Staff</SelectItem>
-                    <SelectItem value="TEACHER" className="font-medium">Teacher</SelectItem>
+                  <SelectContent className="rounded-xl text-xs">
+                    <SelectItem value="STAFF">Manager / Staff</SelectItem>
+                    <SelectItem value="TEACHER">Teacher</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               {editFormData.role !== "ADMIN" && (
-                <div className="space-y-4">
+                <div className="space-y-2 pt-2 border-t border-slate-100 dark:border-slate-800">
                   <div className="flex items-center justify-between">
-                    <Label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Page Permissions</Label>
-                    <span className="text-[10px] font-bold text-indigo-500 bg-indigo-50 dark:bg-indigo-900/30 px-2 py-1 rounded-md">
-                      {editFormData.permissions.length} Pages Selected
+                    <Label className="text-xs font-medium">Page Permissions</Label>
+                    <span className="text-[10px] font-bold text-primary bg-primary/10 px-1.5 py-0.5 rounded">
+                      {editFormData.permissions.length} Selected
                     </span>
                   </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                     {PERMISSION_OPTIONS.map(opt => (
-                      <div key={opt.id} className="flex items-center space-x-3 p-3.5 rounded-xl border border-slate-200/60 dark:border-slate-800 hover:border-indigo-500/30 hover:bg-indigo-50/50 dark:hover:bg-indigo-900/20 transition-all cursor-pointer group">
+                      <div key={opt.id} className="flex items-center space-x-2 p-2 rounded-lg border border-slate-200/80 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer group">
                         <Checkbox 
                           id={`edit-${opt.id}`} 
                           checked={editFormData.permissions.includes(opt.id)}
                           onCheckedChange={() => togglePermission(opt.id, 'edit')}
-                          className="rounded-[4px] data-[state=checked]:bg-indigo-600 data-[state=checked]:border-indigo-600"
+                          className="rounded-[4px]"
                         />
-                        <label htmlFor={`edit-${opt.id}`} className="text-sm font-bold text-slate-700 dark:text-slate-300 cursor-pointer flex items-center gap-2.5 flex-1 select-none">
-                          <opt.icon className="w-4 h-4 text-slate-400 group-hover:text-indigo-500 transition-colors" />
+                        <label htmlFor={`edit-${opt.id}`} className="text-xs font-medium text-slate-700 dark:text-slate-300 cursor-pointer flex items-center gap-1.5 flex-1 select-none">
+                          <opt.icon className="w-3.5 h-3.5 text-slate-400 group-hover:text-primary transition-colors" />
                           {opt.label}
                         </label>
                       </div>
@@ -428,16 +426,16 @@ export default function StaffList({
               )}
             </div>
 
-            <div className="p-6 pt-4 border-t border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-950 flex items-center gap-3 shrink-0">
-              <Button type="button" variant="ghost" onClick={handleRemove} className="h-12 px-6 rounded-xl font-bold text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
+            <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center gap-2">
+              <Button type="button" variant="ghost" onClick={handleRemove} className="h-8 sm:h-9 px-3 rounded-lg text-xs font-semibold text-red-600 hover:bg-red-50 hover:text-red-700">
                 Remove
               </Button>
               <div className="flex-1" />
-              <Button type="button" variant="ghost" onClick={() => setEditOpen(false)} className="h-12 px-6 rounded-xl font-bold hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+              <Button type="button" variant="outline" onClick={() => setEditOpen(false)} className="h-8 sm:h-9 px-3 rounded-lg text-xs">
                 Cancel
               </Button>
-              <Button type="submit" disabled={isSubmitting} className="h-12 px-8 rounded-xl font-bold bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-600/30 hover:shadow-indigo-600/40 hover:scale-[1.02] active:scale-95 transition-all">
-                {isSubmitting ? <Loader2 className="w-5 h-5 mr-2 animate-spin" /> : null}
+              <Button type="submit" disabled={isSubmitting} className="h-8 sm:h-9 px-4 rounded-lg font-semibold text-xs">
+                {isSubmitting ? <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" /> : null}
                 Save Changes
               </Button>
             </div>
@@ -446,38 +444,40 @@ export default function StaffList({
       </Dialog>
 
       <Dialog open={isProfileOpen} onOpenChange={setIsProfileOpen}>
-        <DialogContent className="sm:max-w-[450px] rounded-3xl p-0 overflow-hidden border-0 shadow-2xl shadow-primary/10">
-          <div className="bg-gradient-to-br from-indigo-600 to-indigo-800 p-8 text-white relative overflow-hidden flex flex-col items-center">
-            <Avatar className="h-24 w-24 rounded-2xl border-4 border-white/20 shadow-xl mb-4 relative z-10">
-              <AvatarFallback className="bg-white text-indigo-700 font-black text-3xl rounded-2xl uppercase">
+        <DialogContent className="sm:max-w-md rounded-2xl p-4 sm:p-5 border border-slate-200 dark:border-slate-800 shadow-xl overflow-hidden">
+          <div className="flex flex-col items-center text-center space-y-2 pb-3 border-b border-slate-100 dark:border-slate-800">
+            <Avatar className="h-14 w-14 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
+              <AvatarFallback className="bg-primary/10 text-primary font-bold text-lg rounded-xl uppercase">
                 {selectedStaff?.user?.name?.charAt(0) || "U"}
               </AvatarFallback>
             </Avatar>
-            <DialogTitle className="text-2xl font-black mb-1 relative z-10 text-center">{selectedStaff?.user?.name || "Unknown Staff"}</DialogTitle>
-            <p className="text-indigo-100 font-medium relative z-10 text-sm flex items-center gap-2">
-              <Mail className="w-4 h-4" /> {selectedStaff?.user?.email}
-            </p>
+            <div>
+              <DialogTitle className="text-base font-bold text-slate-900 dark:text-white">{selectedStaff?.user?.name || "Unknown Staff"}</DialogTitle>
+              <p className="text-xs text-slate-500 font-medium flex items-center justify-center gap-1.5 mt-0.5">
+                <Mail className="w-3.5 h-3.5" /> {selectedStaff?.user?.email}
+              </p>
+            </div>
           </div>
-          <div className="p-8 space-y-6 bg-slate-50 dark:bg-slate-950">
-            <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-100 dark:border-slate-800 shadow-sm space-y-4">
+          <div className="py-3 space-y-3">
+            <div className="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-3 border border-slate-200 dark:border-slate-700/60 space-y-2 text-xs">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3 text-slate-600 dark:text-slate-400">
-                  <Shield className="w-5 h-5 text-indigo-500" />
-                  <span className="font-semibold text-sm">Role</span>
+                <div className="flex items-center gap-1.5 text-slate-500">
+                  <Shield className="w-3.5 h-3.5 text-primary" />
+                  <span className="font-medium">Role</span>
                 </div>
-                <span className="font-bold text-slate-900 dark:text-white capitalize">{selectedStaff?.role?.toLowerCase()}</span>
+                <span className="font-semibold text-slate-900 dark:text-white capitalize">{selectedStaff?.role?.toLowerCase()}</span>
               </div>
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3 text-slate-600 dark:text-slate-400">
-                  <ShieldCheck className="w-5 h-5 text-emerald-500" />
-                  <span className="font-semibold text-sm">Permissions</span>
+                <div className="flex items-center gap-1.5 text-slate-500">
+                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
+                  <span className="font-medium">Permissions</span>
                 </div>
-                <span className="font-bold text-slate-900 dark:text-white">
+                <span className="font-semibold text-slate-900 dark:text-white">
                   {selectedStaff?.role === "ADMIN" ? "Full Access" : `${selectedStaff?.permissions?.length || 0} Pages`}
                 </span>
               </div>
             </div>
-            <Button onClick={() => setIsProfileOpen(false)} variant="outline" className="w-full h-12 rounded-xl font-bold border-2">
+            <Button onClick={() => setIsProfileOpen(false)} variant="outline" className="w-full h-8 sm:h-9 rounded-lg text-xs font-semibold">
               Close Profile
             </Button>
           </div>
@@ -485,32 +485,32 @@ export default function StaffList({
       </Dialog>
 
       <Dialog open={isAccessLogOpen} onOpenChange={setIsAccessLogOpen}>
-        <DialogContent className="sm:max-w-[450px] rounded-3xl p-0 overflow-hidden border-0 shadow-2xl shadow-primary/10">
-          <div className="bg-slate-900 p-8 text-white">
-            <DialogTitle className="text-2xl font-black mb-2 flex items-center gap-3">
-              <Activity className="w-6 h-6 text-blue-400" />
+        <DialogContent className="sm:max-w-md rounded-2xl p-4 sm:p-5 border border-slate-200 dark:border-slate-800 shadow-xl overflow-hidden">
+          <DialogHeader className="mb-2">
+            <DialogTitle className="text-base font-bold flex items-center gap-2">
+              <Activity className="w-4 h-4 text-primary" />
               Access Log
             </DialogTitle>
-            <p className="text-slate-400 text-sm">Recent activity for <span className="text-white font-bold">{selectedStaff?.user?.name}</span></p>
-          </div>
-          <div className="p-8 bg-slate-50 dark:bg-slate-950">
-            <div className="space-y-4 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-slate-200 dark:before:via-slate-800 before:to-transparent">
+            <p className="text-xs text-slate-500">Recent activity for <span className="font-semibold text-slate-900 dark:text-white">{selectedStaff?.user?.name}</span></p>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            <div className="space-y-2 text-xs">
               {[1, 2, 3].map((_, i) => (
-                <div key={i} className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
-                  <div className="flex items-center justify-center w-10 h-10 rounded-full border border-white dark:border-slate-900 bg-blue-100 dark:bg-blue-900/30 text-blue-500 shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 z-10">
-                    <Activity className="w-4 h-4" />
-                  </div>
-                  <div className="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-sm">
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="font-bold text-slate-900 dark:text-white text-sm">Logged In</span>
-                      <span className="text-[10px] font-bold text-slate-400">{i === 0 ? "Just now" : `${i * 2} days ago`}</span>
+                <div key={i} className="flex items-center justify-between p-2.5 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/60">
+                  <div className="flex items-center gap-2">
+                    <div className="w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center">
+                      <Activity className="w-3 h-3" />
                     </div>
-                    <p className="text-xs text-slate-500">From Dashboard</p>
+                    <div>
+                      <p className="font-semibold text-slate-900 dark:text-white">Logged In</p>
+                      <p className="text-[10px] text-slate-400">From Dashboard</p>
+                    </div>
                   </div>
+                  <span className="text-[10px] font-medium text-slate-400">{i === 0 ? "Just now" : `${i * 2} days ago`}</span>
                 </div>
               ))}
             </div>
-            <Button onClick={() => setIsAccessLogOpen(false)} variant="outline" className="w-full h-12 mt-8 rounded-xl font-bold border-2 border-slate-200 dark:border-slate-800">
+            <Button onClick={() => setIsAccessLogOpen(false)} variant="outline" className="w-full h-8 sm:h-9 rounded-lg text-xs font-semibold">
               Close Log
             </Button>
           </div>

@@ -72,3 +72,23 @@ export async function deleteGlobalCourse(id: string) {
     return { success: false, error: error.message };
   }
 }
+
+export async function getGlobalCourseStats() {
+  try {
+    const [total, active, groups] = await Promise.all([
+      db.globalCourse.count(),
+      db.globalCourse.count({ where: { isActive: true } }),
+      db.globalCourseGroup.count({ where: { isActive: true } }),
+    ]);
+    return {
+      total,
+      active,
+      inactive: Math.max(0, total - active),
+      categories: groups,
+    };
+  } catch (error) {
+    console.error("Error fetching course stats:", error);
+    return { total: 0, active: 0, inactive: 0, categories: 0 };
+  }
+}
+

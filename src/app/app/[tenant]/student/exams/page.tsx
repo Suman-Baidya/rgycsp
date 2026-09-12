@@ -17,9 +17,10 @@ export default async function StudentExamsPage({
   const workspaceSettings = workspace.siteSettings as any;
 
   const profileResult = await getStudentProfile(workspace.id);
-  const courseId = profileResult.success ? profileResult.data?.studentProfile?.courseId : null;
+  const profile = profileResult.success ? profileResult.data?.studentProfile : null;
+  const courseId = profile?.courseId || profile?.batch?.courseId || profile?.batch?.course?.id || null;
 
-  const examsResult = await getStudentExams(workspace.id, courseId || null);
+  const examsResult = await getStudentExams(workspace.id, courseId);
   const exams = examsResult.success ? examsResult.data : [];
 
   return (
@@ -27,6 +28,8 @@ export default async function StudentExamsPage({
       settings={workspaceSettings}
       tenant={tenant}
       exams={exams}
+      profile={profile}
+      workspace={workspace}
     />
   );
 }

@@ -177,12 +177,12 @@ export function SettingsForm({ settings, isSuperAdmin = true }: { settings: any,
   const [activeTab, setActiveTab] = useState("branding");
 
   return (
-    <div className="w-full pb-24">
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full flex flex-col gap-12">
+    <div className="w-full pb-16">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full flex flex-col gap-4 sm:gap-5">
         {/* ROW 1: Navigation (Refined Professional Top Bar) */}
-        <div className="sticky top-0 z-30 w-full bg-background/80 backdrop-blur-sm border-b border-border/40 py-4 transition-all duration-300">
+        <div className="sticky top-0 z-30 w-full bg-background/90 backdrop-blur-md border-b border-border/40 pb-2 pt-1 transition-all duration-200">
           <div className="w-full">
-            <TabsList className="flex flex-nowrap overflow-x-auto no-scrollbar gap-2 p-2 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm max-w-full w-full justify-start">
+            <TabsList className="flex flex-nowrap overflow-x-auto no-scrollbar gap-1.5 p-1.5 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm max-w-full w-full justify-start">
               {[
                 { value: "branding", label: "Branding & Contact", icon: Palette },
                 { value: "navigation", label: "Navigation", icon: Globe },
@@ -196,9 +196,9 @@ export function SettingsForm({ settings, isSuperAdmin = true }: { settings: any,
                 <TabsTrigger
                   key={tab.value}
                   value={tab.value}
-                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 whitespace-nowrap shrink-0 data-[state=active]:bg-slate-100 dark:data-[state=active]:bg-slate-800 data-[state=active]:text-primary data-[state=active]:shadow-inner text-slate-500 hover:text-slate-900 hover:bg-slate-50 dark:hover:text-white dark:hover:bg-slate-800/50 data-[state=inactive]:bg-transparent"
+                  className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-medium shrink-0 whitespace-nowrap transition-all data-[state=active]:bg-slate-100 dark:data-[state=active]:bg-slate-800 data-[state=active]:text-primary dark:data-[state=active]:text-white data-[state=active]:font-semibold data-[state=active]:shadow-inner text-slate-500 hover:text-slate-900 hover:bg-slate-50 dark:hover:text-white dark:hover:bg-slate-800/50"
                 >
-                  <tab.icon className="h-4 w-4 transition-transform group-hover:scale-110" />
+                  <tab.icon className="h-3.5 w-3.5" />
                   {tab.label}
                 </TabsTrigger>
               ))}
@@ -207,35 +207,35 @@ export function SettingsForm({ settings, isSuperAdmin = true }: { settings: any,
         </div>
 
         {/* ROW 2: Content (Premium Minimalist Cards) */}
-        <div className="w-full animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <div className="w-full animate-in fade-in slide-in-from-bottom-2 duration-300">
           
           {isSuperAdmin && (
             <TabsContent value="documents" className="mt-0 w-full focus-visible:outline-none">
-              <Accordion defaultValue={["global-access"]} className="space-y-6">
-                <AccordionItem value="global-access" className="border border-border/50 bg-card/50 rounded-3xl overflow-hidden">
-                  <AccordionTrigger className="hover:no-underline py-8 px-6 sm:px-8">
-                    <div className="flex items-center gap-4 text-left">
-                      <div className="w-12 h-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center">
-                        <FileText className="w-6 h-6" />
+              <Accordion defaultValue={["global-access"]} className="space-y-4">
+                <AccordionItem value="global-access" className="border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 rounded-xl overflow-hidden shadow-sm">
+                  <AccordionTrigger className="hover:no-underline py-3.5 sm:py-4 px-4 sm:px-5 border-b border-slate-100 dark:border-slate-800">
+                    <div className="flex items-center gap-3 text-left">
+                      <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                        <FileText className="w-4 h-4 sm:w-5 sm:h-5" />
                       </div>
                       <div>
-                        <h3 className="text-xl font-bold tracking-tight">Global Document Access</h3>
-                        <p className="text-sm text-muted-foreground font-medium">Control default access to ID Cards and Admit Cards across the platform.</p>
+                        <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white tracking-tight">Global Document Access</h3>
+                        <p className="text-xs text-slate-500 font-medium mt-0.5">Control default access to ID Cards and Admit Cards across the platform.</p>
                       </div>
                     </div>
                   </AccordionTrigger>
-                  <AccordionContent className="pb-8 px-6 sm:px-8 space-y-8">
-                    <div className="flex items-center justify-between p-4 bg-muted/50 rounded-2xl border border-border/50">
+                  <AccordionContent className="p-4 sm:p-5 space-y-3">
+                    <div className="flex items-center justify-between p-3 sm:p-3.5 bg-slate-50/60 dark:bg-slate-800/30 rounded-xl border border-slate-100 dark:border-slate-800">
                       <div>
-                        <Label className="text-base font-bold">Global ID Card Access</Label>
-                        <p className="text-sm text-muted-foreground">If enabled, Franchise Admins and Students can view their ID cards directly without manual issuance.</p>
+                        <Label className="text-xs sm:text-sm font-semibold text-slate-800 dark:text-slate-200">Global ID Card Access</Label>
+                        <p className="text-[11px] sm:text-xs text-slate-500 mt-0.5">If enabled, Franchise Admins and Students can view their ID cards directly without manual issuance.</p>
                       </div>
                       <Switch checked={globalIdCardAccess} onCheckedChange={setGlobalIdCardAccess} />
                     </div>
-                    <div className="flex items-center justify-between p-4 bg-muted/50 rounded-2xl border border-border/50">
+                    <div className="flex items-center justify-between p-3 sm:p-3.5 bg-slate-50/60 dark:bg-slate-800/30 rounded-xl border border-slate-100 dark:border-slate-800">
                       <div>
-                        <Label className="text-base font-bold">Global Admit Card Access</Label>
-                        <p className="text-sm text-muted-foreground">If enabled, Students can download their Admit cards directly from their portal.</p>
+                        <Label className="text-xs sm:text-sm font-semibold text-slate-800 dark:text-slate-200">Global Admit Card Access</Label>
+                        <p className="text-[11px] sm:text-xs text-slate-500 mt-0.5">If enabled, Students can download their Admit cards directly from their portal.</p>
                       </div>
                       <Switch checked={globalAdmitCardAccess} onCheckedChange={setGlobalAdmitCardAccess} />
                     </div>
@@ -244,25 +244,24 @@ export function SettingsForm({ settings, isSuperAdmin = true }: { settings: any,
               </Accordion>
               
               {/* Save Button for Documents Tab */}
-              <div className="fixed bottom-0 left-0 lg:left-[280px] right-0 p-6 bg-background/80 backdrop-blur-sm border-t border-border/50 z-40">
+              <div className="fixed bottom-0 left-0 lg:left-[280px] right-0 p-3 sm:p-3.5 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-t border-slate-200 dark:border-slate-800 z-40">
                 <div className="max-w-7xl mx-auto flex justify-between items-center">
-                  <p className="text-sm text-muted-foreground hidden sm:block">
+                  <p className="text-xs text-slate-500 hidden sm:block">
                     Remember to save your changes to apply them to your site.
                   </p>
                   <Button 
                     onClick={handleSaveGeneral} 
                     disabled={isSaving}
-                    size="lg"
-                    className="ml-auto min-w-[200px] rounded-2xl font-semibold shadow-lg shadow-primary/20 transition-all hover:scale-[1.02] active:scale-95"
+                    className="ml-auto h-8 sm:h-9 px-4 rounded-lg text-xs font-semibold gap-1.5 shadow-sm bg-primary text-primary-foreground hover:bg-primary/90 transition-all"
                   >
                     {isSaving ? (
-                      <span className="flex items-center gap-2">
-                        <div className="h-4 w-4 rounded-full border-2 border-primary-foreground/30 border-t-primary-foreground animate-spin" />
+                      <span className="flex items-center gap-1.5">
+                        <div className="h-3.5 w-3.5 rounded-full border-2 border-primary-foreground/30 border-t-primary-foreground animate-spin" />
                         Saving Changes...
                       </span>
                     ) : (
-                      <span className="flex items-center gap-2">
-                        <Save className="h-5 w-5" />
+                      <span className="flex items-center gap-1.5">
+                        <Save className="h-3.5 w-3.5" />
                         Save Document Settings
                       </span>
                     )}
@@ -273,25 +272,25 @@ export function SettingsForm({ settings, isSuperAdmin = true }: { settings: any,
           )}
 
           <TabsContent value="branding" className="mt-0 w-full focus-visible:outline-none">
-            <Accordion defaultValue={[]} className="space-y-6">
+            <Accordion defaultValue={[]} className="space-y-4">
               
               {/* 1. Visual Identity */}
-              <AccordionItem value="identity" className="border border-border/50 bg-card/50 rounded-3xl overflow-hidden">
-                <AccordionTrigger className="hover:no-underline py-8 px-6 sm:px-8">
-                  <div className="flex items-center gap-4 text-left">
-                    <div className="w-12 h-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center">
-                      <Palette className="w-6 h-6" />
+              <AccordionItem value="identity" className="border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 rounded-xl overflow-hidden shadow-sm">
+                <AccordionTrigger className="hover:no-underline py-3.5 sm:py-4 px-4 sm:px-5 border-b border-slate-100 dark:border-slate-800">
+                  <div className="flex items-center gap-3 text-left">
+                    <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                      <Palette className="w-4 h-4 sm:w-5 sm:h-5" />
                     </div>
                     <div>
-                      <h3 className="text-xl font-bold tracking-tight">Visual Identity</h3>
-                      <p className="text-sm text-muted-foreground font-medium">Site name, logo, and brand colors.</p>
+                      <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white tracking-tight">Visual Identity</h3>
+                      <p className="text-xs text-slate-500 font-medium mt-0.5">Site name, logo, and brand colors.</p>
                     </div>
                   </div>
                 </AccordionTrigger>
-                <AccordionContent className="pb-8 px-6 sm:px-8 space-y-10">
-                  <div className="space-y-6">
-                    <Label className="text-sm font-semibold text-foreground/80">Theme Presets</Label>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <AccordionContent className="p-4 sm:p-5 space-y-4 sm:space-y-5">
+                  <div className="space-y-2.5">
+                    <Label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Theme Presets</Label>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
                       {THEME_PRESETS.map((preset) => (
                         <button
                           key={preset.name}
@@ -301,20 +300,20 @@ export function SettingsForm({ settings, isSuperAdmin = true }: { settings: any,
                             setAccentColor(preset.accent);
                           }}
                           className={cn(
-                            "group relative flex flex-col items-start p-4 rounded-2xl border-2 transition-all text-left",
+                            "group relative flex flex-col items-start p-3 rounded-xl border transition-all text-left",
                             primaryColor === preset.primary && accentColor === preset.accent
-                              ? "border-primary bg-primary/5 shadow-lg shadow-primary/5"
-                              : "border-border/40 hover:border-primary/20 hover:bg-muted/50"
+                              ? "border-primary bg-primary/5 shadow-xs"
+                              : "border-slate-200 dark:border-slate-800 hover:border-primary/20 hover:bg-slate-50 dark:hover:bg-slate-800/50"
                           )}
                         >
-                          <div className="flex items-center gap-2 mb-2">
-                            <div className="w-4 h-4 rounded-full" style={{ backgroundColor: preset.primary }} />
-                            <div className="w-4 h-4 rounded-full" style={{ backgroundColor: preset.accent }} />
-                            <span className="font-bold text-xs">{preset.name}</span>
+                          <div className="flex items-center gap-2 mb-1">
+                            <div className="w-3.5 h-3.5 rounded-full" style={{ backgroundColor: preset.primary }} />
+                            <div className="w-3.5 h-3.5 rounded-full" style={{ backgroundColor: preset.accent }} />
+                            <span className="font-bold text-xs text-slate-900 dark:text-white">{preset.name}</span>
                           </div>
-                          <p className="text-[10px] text-muted-foreground line-clamp-1">{preset.description}</p>
+                          <p className="text-[10px] text-slate-400 line-clamp-1">{preset.description}</p>
                           {primaryColor === preset.primary && accentColor === preset.accent && (
-                            <div className="absolute top-2 right-2">
+                            <div className="absolute top-2.5 right-2.5">
                               <Check className="w-3 h-3 text-primary" />
                             </div>
                           )}
@@ -323,55 +322,51 @@ export function SettingsForm({ settings, isSuperAdmin = true }: { settings: any,
                       <button
                         type="button"
                         className={cn(
-                          "group relative flex flex-col items-center justify-center p-4 rounded-2xl border-2 border-dashed transition-all text-center gap-1",
+                          "group relative flex flex-col items-center justify-center p-3 rounded-xl border border-dashed transition-all text-center gap-1",
                           !THEME_PRESETS.some(p => p.primary === primaryColor && p.accent === accentColor)
                             ? "border-primary bg-primary/5"
-                            : "border-border/40 hover:border-primary/20"
+                            : "border-slate-200 dark:border-slate-800 hover:border-primary/20"
                         )}
                       >
-                        <Zap className="w-4 h-4 text-muted-foreground" />
-                        <span className="font-bold text-xs uppercase tracking-widest">Custom</span>
+                        <Zap className="w-3.5 h-3.5 text-slate-400" />
+                        <span className="font-bold text-[11px] uppercase tracking-wider text-slate-600 dark:text-slate-300">Custom Colors</span>
                       </button>
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-4">
-                    <div className="space-y-3">
-                      <Label htmlFor="siteName" className="text-sm font-semibold text-foreground/80">Primary Site Name</Label>
-                      <Input id="siteName" value={siteName || ""} onChange={(e) => setSiteName(e.target.value)} placeholder="Enter primary site name" className="h-12 bg-background border-border/40 rounded-2xl" />
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 pt-1">
+                    <div className="space-y-1.5">
+                      <Label htmlFor="siteName" className="text-xs font-semibold text-slate-700 dark:text-slate-300">Primary Site Name</Label>
+                      <Input id="siteName" value={siteName || ""} onChange={(e) => setSiteName(e.target.value)} placeholder="Enter primary site name" className="h-8 sm:h-9 bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700/60 rounded-lg text-xs" />
                     </div>
-                    <div className="space-y-3">
-                      <Label htmlFor="secondarySiteName" className="text-sm font-semibold text-foreground/80">Secondary Name</Label>
-                      <Input id="secondarySiteName" value={navbarConfig.secondarySiteName || ""} onChange={(e) => setNavbarConfig({...navbarConfig, secondarySiteName: e.target.value})} placeholder="e.g. Other Language" className="h-12 bg-background border-border/40 rounded-2xl" />
+                    <div className="space-y-1.5">
+                      <Label htmlFor="secondarySiteName" className="text-xs font-semibold text-slate-700 dark:text-slate-300">Secondary Name</Label>
+                      <Input id="secondarySiteName" value={navbarConfig.secondarySiteName || ""} onChange={(e) => setNavbarConfig({...navbarConfig, secondarySiteName: e.target.value})} placeholder="e.g. Regional / Short Name" className="h-8 sm:h-9 bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700/60 rounded-lg text-xs" />
                     </div>
                   </div>
                   
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <div className="space-y-3">
-                      <Label className="text-sm font-semibold text-foreground/80">Primary Color</Label>
-                      <div className="flex items-center gap-6 p-4 bg-background rounded-2xl border border-border/40 h-16 w-full">
-                        <Input type="color" value={primaryColor || "#000000"} onChange={(e) => setPrimaryColor(e.target.value)} className="w-10 h-10 p-0.5 border-none bg-transparent cursor-pointer shrink-0" />
-                        <div className="flex flex-col">
-                          <span className="font-mono text-sm font-bold uppercase tracking-wider">{primaryColor}</span>
-                          <span className="text-[10px] text-muted-foreground uppercase font-bold">Main Theme</span>
-                        </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Primary Color</Label>
+                      <div className="flex items-center gap-3 p-2 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700/60 h-9 w-full">
+                        <Input type="color" value={primaryColor || "#000000"} onChange={(e) => setPrimaryColor(e.target.value)} className="w-6 h-6 p-0 border-none bg-transparent cursor-pointer shrink-0 rounded" />
+                        <span className="font-mono text-xs font-bold uppercase">{primaryColor}</span>
+                        <span className="text-[10px] text-slate-400 font-semibold uppercase ml-auto">Main Theme</span>
                       </div>
                     </div>
-                    <div className="space-y-3">
-                      <Label className="text-sm font-semibold text-foreground/80">Accent Color</Label>
-                      <div className="flex items-center gap-6 p-4 bg-background rounded-2xl border border-border/40 h-16 w-full">
-                        <Input type="color" value={accentColor || "#000000"} onChange={(e) => setAccentColor(e.target.value)} className="w-10 h-10 p-0.5 border-none bg-transparent cursor-pointer shrink-0" />
-                        <div className="flex flex-col">
-                          <span className="font-mono text-sm font-bold uppercase tracking-wider">{accentColor}</span>
-                          <span className="text-[10px] text-muted-foreground uppercase font-bold">Secondary Theme</span>
-                        </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Accent Color</Label>
+                      <div className="flex items-center gap-3 p-2 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700/60 h-9 w-full">
+                        <Input type="color" value={accentColor || "#000000"} onChange={(e) => setAccentColor(e.target.value)} className="w-6 h-6 p-0 border-none bg-transparent cursor-pointer shrink-0 rounded" />
+                        <span className="font-mono text-xs font-bold uppercase">{accentColor}</span>
+                        <span className="text-[10px] text-slate-400 font-semibold uppercase ml-auto">Secondary</span>
                       </div>
                     </div>
                   </div>
 
-                  <div className="space-y-6 pt-4">
-                    <Label className="text-sm font-semibold text-foreground/80">Typography (Font Family)</Label>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+                  <div className="space-y-2 pt-1">
+                    <Label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Typography (Font Family)</Label>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
                       {[
                         { name: "Inter", font: "Inter", description: "Modern Sans" },
                         { name: "Roboto", font: "Roboto", description: "Classic Sans" },
@@ -385,119 +380,119 @@ export function SettingsForm({ settings, isSuperAdmin = true }: { settings: any,
                           type="button"
                           onClick={() => setFontFamily(f.font)}
                           className={cn(
-                            "flex flex-col items-center justify-center p-6 rounded-2xl border-2 transition-all text-center gap-2",
+                            "flex flex-col items-center justify-center p-2.5 rounded-xl border transition-all text-center gap-1",
                             fontFamily === f.font
-                              ? "border-primary bg-primary/5 shadow-lg shadow-primary/5"
-                              : "border-border/40 hover:border-primary/20 hover:bg-muted/50"
+                              ? "border-primary bg-primary/5 shadow-xs"
+                              : "border-slate-200 dark:border-slate-800 hover:border-primary/20 hover:bg-slate-50 dark:hover:bg-slate-800/50"
                           )}
                         >
-                          <span className="text-2xl font-black" style={{ fontFamily: f.font }}>Aa</span>
-                          <div className="flex flex-col">
-                            <span className="text-xs font-bold">{f.name}</span>
-                            <span className="text-[9px] text-muted-foreground uppercase font-medium">{f.description}</span>
-                          </div>
+                          <span className="text-lg font-bold" style={{ fontFamily: f.font }}>Aa</span>
+                          <span className="text-xs font-semibold text-slate-800 dark:text-slate-200">{f.name}</span>
+                          <span className="text-[9px] text-slate-400 uppercase font-medium">{f.description}</span>
                         </button>
                       ))}
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4 pt-1">
                     <ImageUpload value={logoUrl} onChange={setLogoUrl} label="Main Logo" folder={`${mediaFolderBase}/branding`} />
-                    <ImageUpload value={faviconUrl || ""} onChange={setFaviconUrl} label="Favicon (Optional, defaults to Logo)" folder={`${mediaFolderBase}/branding`} />
+                    <ImageUpload value={faviconUrl || ""} onChange={setFaviconUrl} label="Favicon (Optional)" folder={`${mediaFolderBase}/branding`} />
                     <ImageUpload value={navbarConfig.secondaryLogoUrl || ""} onChange={(url) => setNavbarConfig({...navbarConfig, secondaryLogoUrl: url})} label="Secondary Logo (Optional)" folder={`${mediaFolderBase}/branding`} />
                   </div>
                   
-                  <div className="pt-8 mt-4 border-t border-border/40">
-                    <h4 className="font-bold text-lg mb-6">Footer Branding Configuration</h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                      <div className="space-y-3">
-                        <Label htmlFor="footerBrandName" className="text-sm font-semibold text-foreground/80">Footer Branding Name</Label>
-                        <Input id="footerBrandName" value={navbarConfig.footerBrandName || ""} onChange={(e) => setNavbarConfig({...navbarConfig, footerBrandName: e.target.value})} placeholder="e.g. Short Brand Name" className="h-12 bg-background border-border/40 rounded-2xl" />
+                  <div className="pt-3 border-t border-slate-100 dark:border-slate-800 space-y-3">
+                    <h4 className="font-semibold text-xs sm:text-sm text-slate-900 dark:text-white">Footer Branding Configuration</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
+                      <div className="space-y-1.5">
+                        <Label htmlFor="footerBrandName" className="text-xs font-semibold text-slate-700 dark:text-slate-300">Footer Branding Name</Label>
+                        <Input id="footerBrandName" value={navbarConfig.footerBrandName || ""} onChange={(e) => setNavbarConfig({...navbarConfig, footerBrandName: e.target.value})} placeholder="e.g. Short Brand Name" className="h-8 sm:h-9 bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700/60 rounded-lg text-xs" />
                       </div>
-                      <div className="space-y-3">
-                        <Label htmlFor="footerTagline" className="text-sm font-semibold text-foreground/80">Footer Branding Tag Name</Label>
-                        <Input id="footerTagline" value={navbarConfig.footerTagline || ""} onChange={(e) => setNavbarConfig({...navbarConfig, footerTagline: e.target.value})} placeholder="e.g. Empowering Education" className="h-12 bg-background border-border/40 rounded-2xl" />
+                      <div className="space-y-1.5">
+                        <Label htmlFor="footerTagline" className="text-xs font-semibold text-slate-700 dark:text-slate-300">Footer Branding Tag Name</Label>
+                        <Input id="footerTagline" value={navbarConfig.footerTagline || ""} onChange={(e) => setNavbarConfig({...navbarConfig, footerTagline: e.target.value})} placeholder="e.g. Empowering Education" className="h-8 sm:h-9 bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700/60 rounded-lg text-xs" />
                       </div>
-                      <div className="space-y-3 md:col-span-2">
-                        <Label htmlFor="brandDescription" className="text-sm font-semibold text-foreground/80">Footer Description</Label>
-                        <Textarea id="brandDescription" value={brandDescription || ""} onChange={(e) => setBrandDescription(e.target.value)} placeholder="Rendering at footer..." className="min-h-[48px] bg-background border-border/40 rounded-2xl" />
+                      <div className="space-y-1.5 md:col-span-2">
+                        <Label htmlFor="brandDescription" className="text-xs font-semibold text-slate-700 dark:text-slate-300">Footer Description</Label>
+                        <Textarea id="brandDescription" value={brandDescription || ""} onChange={(e) => setBrandDescription(e.target.value)} placeholder="Rendering at footer..." className="min-h-[48px] bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700/60 rounded-lg text-xs" />
                       </div>
                     </div>
                   </div>
                   
-                  <div className="pt-4 flex justify-end">
-                    <Button onClick={handleSaveGeneral} disabled={isSaving} className="h-11 px-8 gap-2 rounded-xl font-bold">
-                      <Save className="h-4 w-4" /> {isSaving ? "Saving..." : "Update Identity"}
+                  <div className="pt-2 flex justify-end">
+                    <Button onClick={handleSaveGeneral} disabled={isSaving} className="h-8 sm:h-9 px-3.5 sm:px-4 gap-1.5 rounded-lg text-xs font-semibold shadow-sm bg-primary text-primary-foreground hover:bg-primary/90 transition-all">
+                      <Save className="h-3.5 w-3.5" /> {isSaving ? "Saving..." : "Update Identity"}
                     </Button>
                   </div>
                 </AccordionContent>
               </AccordionItem>
 
               {/* 2. Global Contact Info */}
-              <AccordionItem value="contact" className="border border-border/50 bg-card/50 rounded-3xl overflow-hidden">
-                <AccordionTrigger className="hover:no-underline py-8 px-6 sm:px-8">
-                  <div className="flex items-center gap-4 text-left">
-                    <div className="w-12 h-12 rounded-2xl bg-blue-500/10 text-blue-600 flex items-center justify-center">
-                      <Phone className="w-6 h-6" />
+              <AccordionItem value="contact" className="border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 rounded-xl overflow-hidden shadow-sm">
+                <AccordionTrigger className="hover:no-underline py-3.5 sm:py-4 px-4 sm:px-5 border-b border-slate-100 dark:border-slate-800">
+                  <div className="flex items-center gap-3 text-left">
+                    <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-blue-500/10 text-blue-600 flex items-center justify-center shrink-0">
+                      <Phone className="w-4 h-4 sm:w-5 sm:h-5" />
                     </div>
                     <div>
-                      <h3 className="text-xl font-bold tracking-tight">Global Contact Info</h3>
-                      <p className="text-sm text-muted-foreground font-medium">Direct support channels and location.</p>
+                      <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white tracking-tight">Global Contact Info</h3>
+                      <p className="text-xs text-slate-500 font-medium mt-0.5">Direct support channels and location.</p>
                     </div>
                   </div>
                 </AccordionTrigger>
-                <AccordionContent className="pb-8 px-6 sm:px-8 space-y-8">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <div className="space-y-3">
-                      <Label className="text-sm font-semibold text-foreground/80">Support Email</Label>
-                      <Input value={contactEmail || ""} onChange={(e) => setContactEmail(e.target.value)} className="h-12 bg-background border-border/40 rounded-2xl" />
+                <AccordionContent className="p-4 sm:p-5 space-y-4 sm:space-y-5">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Support Email</Label>
+                      <Input value={contactEmail || ""} onChange={(e) => setContactEmail(e.target.value)} className="h-8 sm:h-9 bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700/60 rounded-lg text-xs" />
                     </div>
-                    <div className="space-y-3">
-                      <Label className="text-sm font-semibold text-foreground/80">Phone Number</Label>
-                      <Input value={contactPhone || ""} onChange={(e) => setContactPhone(e.target.value)} className="h-12 bg-background border-border/40 rounded-2xl" />
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <div className="space-y-3">
-                      <Label className="text-sm font-semibold text-foreground/80">WhatsApp Number</Label>
-                      <Input value={whatsapp || ""} onChange={(e) => setWhatsapp(e.target.value)} className="h-12 bg-background border-border/40 rounded-2xl" />
-                    </div>
-                    <div className="space-y-3">
-                      <Label className="text-sm font-semibold text-foreground/80">Physical Address</Label>
-                      <Input value={address || ""} onChange={(e) => setAddress(e.target.value)} className="h-12 bg-background border-border/40 rounded-2xl" />
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Phone Number</Label>
+                      <Input value={contactPhone || ""} onChange={(e) => setContactPhone(e.target.value)} className="h-8 sm:h-9 bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700/60 rounded-lg text-xs" />
                     </div>
                   </div>
-                  <div className="pt-4 flex justify-end">
-                    <Button onClick={handleSaveGeneral} disabled={isSaving} className="h-11 px-8 gap-2 rounded-xl font-bold">
-                      <Save className="h-4 w-4" /> {isSaving ? "Saving..." : "Update Contact Info"}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-semibold text-slate-700 dark:text-slate-300">WhatsApp Number</Label>
+                      <Input value={whatsapp || ""} onChange={(e) => setWhatsapp(e.target.value)} className="h-8 sm:h-9 bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700/60 rounded-lg text-xs" />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Physical Address</Label>
+                      <Input value={address || ""} onChange={(e) => setAddress(e.target.value)} className="h-8 sm:h-9 bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700/60 rounded-lg text-xs" />
+                    </div>
+                  </div>
+                  <div className="pt-2 flex justify-end">
+                    <Button onClick={handleSaveGeneral} disabled={isSaving} className="h-8 sm:h-9 px-3.5 sm:px-4 gap-1.5 rounded-lg text-xs font-semibold shadow-sm bg-primary text-primary-foreground hover:bg-primary/90 transition-all">
+                      <Save className="h-3.5 w-3.5" /> {isSaving ? "Saving..." : "Update Contact Info"}
                     </Button>
                   </div>
                 </AccordionContent>
               </AccordionItem>
 
               {/* 3. Social Presence */}
-              <AccordionItem value="social" className="border border-border/50 bg-card/50 rounded-3xl overflow-hidden">
-                <AccordionTrigger className="hover:no-underline py-8 px-6 sm:px-8">
-                  <div className="flex items-center gap-4 text-left">
-                    <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 text-indigo-600 flex items-center justify-center">
-                      <Globe className="w-6 h-6" />
+              <AccordionItem value="social" className="border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 rounded-xl overflow-hidden shadow-sm">
+                <AccordionTrigger className="hover:no-underline py-3.5 sm:py-4 px-4 sm:px-5 border-b border-slate-100 dark:border-slate-800">
+                  <div className="flex items-center gap-3 text-left">
+                    <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-indigo-500/10 text-indigo-600 flex items-center justify-center shrink-0">
+                      <Globe className="w-4 h-4 sm:w-5 sm:h-5" />
                     </div>
                     <div>
-                      <h3 className="text-xl font-bold tracking-tight">Social Presence</h3>
-                      <p className="text-sm text-muted-foreground font-medium">Links to your community profiles.</p>
+                      <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white tracking-tight">Social Presence</h3>
+                      <p className="text-xs text-slate-500 font-medium mt-0.5">Links to your community profiles.</p>
                     </div>
                   </div>
                 </AccordionTrigger>
-                <AccordionContent className="pb-8 px-6 sm:px-8 grid grid-cols-1 md:grid-cols-2 gap-8">
-                  {['facebook', 'twitter', 'instagram', 'linkedin', 'youtube'].map((platform) => (
-                    <div key={platform} className="space-y-2">
-                      <Label className="text-xs font-bold uppercase tracking-widest">{platform}</Label>
-                      <Input value={socialLinks[platform] || ""} onChange={(e) => setSocialLinks({ ...socialLinks, [platform]: e.target.value })} placeholder={`https://${platform}.com/...`} className="h-12 bg-background border-border/40 rounded-2xl" />
-                    </div>
-                  ))}
-                  <div className="md:col-span-2 pt-4 flex justify-end">
-                    <Button onClick={handleSaveGeneral} disabled={isSaving} className="h-11 px-8 gap-2 rounded-xl font-bold">
-                      <Save className="h-4 w-4" /> {isSaving ? "Saving..." : "Update Social Links"}
+                <AccordionContent className="p-4 sm:p-5 space-y-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                    {['facebook', 'twitter', 'instagram', 'linkedin', 'youtube'].map((platform) => (
+                      <div key={platform} className="space-y-1">
+                        <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400 capitalize">{platform}</Label>
+                        <Input value={socialLinks[platform] || ""} onChange={(e) => setSocialLinks({ ...socialLinks, [platform]: e.target.value })} placeholder={`https://${platform}.com/...`} className="h-8 sm:h-9 bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700/60 rounded-lg text-xs" />
+                      </div>
+                    ))}
+                  </div>
+                  <div className="pt-2 flex justify-end">
+                    <Button onClick={handleSaveGeneral} disabled={isSaving} className="h-8 sm:h-9 px-3.5 sm:px-4 gap-1.5 rounded-lg text-xs font-semibold shadow-sm bg-primary text-primary-foreground hover:bg-primary/90 transition-all">
+                      <Save className="h-3.5 w-3.5" /> {isSaving ? "Saving..." : "Update Social Links"}
                     </Button>
                   </div>
                 </AccordionContent>
@@ -505,53 +500,53 @@ export function SettingsForm({ settings, isSuperAdmin = true }: { settings: any,
 
               {/* 3.5 Floating Controls (Super Admin Only) */}
               {isSuperAdmin && (
-              <AccordionItem value="floating" className="border border-border/50 bg-card/50 rounded-3xl overflow-hidden">
-                <AccordionTrigger className="hover:no-underline py-8 px-6 sm:px-8">
-                  <div className="flex items-center gap-4 text-left">
-                    <div className="w-12 h-12 rounded-2xl bg-green-500/10 text-green-600 flex items-center justify-center">
-                      <Zap className="w-6 h-6" />
+              <AccordionItem value="floating" className="border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 rounded-xl overflow-hidden shadow-sm">
+                <AccordionTrigger className="hover:no-underline py-3.5 sm:py-4 px-4 sm:px-5 border-b border-slate-100 dark:border-slate-800">
+                  <div className="flex items-center gap-3 text-left">
+                    <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-emerald-500/10 text-emerald-600 flex items-center justify-center shrink-0">
+                      <Zap className="w-4 h-4 sm:w-5 sm:h-5" />
                     </div>
                     <div>
-                      <h3 className="text-xl font-bold tracking-tight">Floating Widget Controls</h3>
-                      <p className="text-sm text-muted-foreground font-medium">WhatsApp and AI Chatbot visibility and configuration.</p>
+                      <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white tracking-tight">Floating Widget Controls</h3>
+                      <p className="text-xs text-slate-500 font-medium mt-0.5">WhatsApp and AI Chatbot visibility and configuration.</p>
                     </div>
                   </div>
                 </AccordionTrigger>
-                <AccordionContent className="pb-8 px-6 sm:px-8 space-y-8">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="flex items-center justify-between p-5 bg-background rounded-2xl border border-border/40">
+                <AccordionContent className="p-4 sm:p-5 space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div className="flex items-center justify-between p-3 bg-slate-50/60 dark:bg-slate-800/30 rounded-xl border border-slate-100 dark:border-slate-800">
                       <div>
-                        <span className="text-sm font-bold block">Enable WhatsApp Widget</span>
-                        <span className="text-xs text-muted-foreground">Floating icon at the bottom left.</span>
+                        <span className="text-xs font-semibold text-slate-800 dark:text-slate-200 block">Enable WhatsApp Widget</span>
+                        <span className="text-[11px] text-slate-500">Floating icon at the bottom left.</span>
                       </div>
                       <Switch checked={!!floatingConfig.enableWhatsApp} onCheckedChange={(val) => setFloatingConfig({...floatingConfig, enableWhatsApp: val})} />
                     </div>
-                    <div className="flex items-center justify-between p-5 bg-background rounded-2xl border border-border/40">
+                    <div className="flex items-center justify-between p-3 bg-slate-50/60 dark:bg-slate-800/30 rounded-xl border border-slate-100 dark:border-slate-800">
                       <div>
-                        <span className="text-sm font-bold block">Enable Chatbot Widget</span>
-                        <span className="text-xs text-muted-foreground">Automated quick response system.</span>
+                        <span className="text-xs font-semibold text-slate-800 dark:text-slate-200 block">Enable Chatbot Widget</span>
+                        <span className="text-[11px] text-slate-500">Automated quick response system.</span>
                       </div>
                       <Switch checked={!!floatingConfig.enableChatbot} onCheckedChange={(val) => setFloatingConfig({...floatingConfig, enableChatbot: val})} />
                     </div>
                   </div>
 
-                  <div className="space-y-4 pt-4 border-t border-border/40">
-                    <h4 className="font-bold text-lg">Chatbot Configuration</h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div className="space-y-3">
-                        <Label className="text-sm font-semibold text-foreground/80">Chatbot Name</Label>
-                        <Input value={floatingConfig.chatbotName || ""} onChange={(e) => setFloatingConfig({...floatingConfig, chatbotName: e.target.value})} placeholder="e.g. AI Assistant" className="h-12 bg-background border-border/40 rounded-2xl" />
+                  <div className="space-y-3 pt-2 border-t border-slate-100 dark:border-slate-800">
+                    <h4 className="font-semibold text-xs sm:text-sm text-slate-900 dark:text-white">Chatbot Configuration</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
+                      <div className="space-y-1.5">
+                        <Label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Chatbot Name</Label>
+                        <Input value={floatingConfig.chatbotName || ""} onChange={(e) => setFloatingConfig({...floatingConfig, chatbotName: e.target.value})} placeholder="e.g. AI Assistant" className="h-8 sm:h-9 bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700/60 rounded-lg text-xs" />
                       </div>
-                      <div className="space-y-3 md:col-span-2">
-                        <Label className="text-sm font-semibold text-foreground/80">Welcome Message</Label>
-                        <Textarea value={floatingConfig.welcomeMessage || ""} onChange={(e) => setFloatingConfig({...floatingConfig, welcomeMessage: e.target.value})} placeholder="Initial greeting..." className="min-h-[48px] bg-background border-border/40 rounded-2xl" />
+                      <div className="space-y-1.5 md:col-span-2">
+                        <Label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Welcome Message</Label>
+                        <Textarea value={floatingConfig.welcomeMessage || ""} onChange={(e) => setFloatingConfig({...floatingConfig, welcomeMessage: e.target.value})} placeholder="Initial greeting..." className="min-h-[48px] bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700/60 rounded-lg text-xs" />
                       </div>
                     </div>
                   </div>
 
-                  <div className="pt-4 flex justify-end">
-                    <Button onClick={handleSaveGeneral} disabled={isSaving} className="h-11 px-8 gap-2 rounded-xl font-bold bg-green-600 hover:bg-green-700 text-white shadow-xl shadow-green-500/20">
-                      <Save className="h-4 w-4" /> {isSaving ? "Saving..." : "Update Floating Controls"}
+                  <div className="pt-2 flex justify-end">
+                    <Button onClick={handleSaveGeneral} disabled={isSaving} className="h-8 sm:h-9 px-3.5 sm:px-4 gap-1.5 rounded-lg text-xs font-semibold shadow-sm bg-emerald-600 hover:bg-emerald-700 text-white transition-all">
+                      <Save className="h-3.5 w-3.5" /> {isSaving ? "Saving..." : "Update Floating Controls"}
                     </Button>
                   </div>
                 </AccordionContent>
@@ -560,68 +555,68 @@ export function SettingsForm({ settings, isSuperAdmin = true }: { settings: any,
 
               {/* 4. Navbar Configuration (Super Admin Only) */}
               {isSuperAdmin && (
-              <AccordionItem value="navbar" className="border border-border/50 bg-card/50 rounded-3xl overflow-hidden">
-                <AccordionTrigger className="hover:no-underline py-8 px-6 sm:px-8">
-                  <div className="flex items-center gap-4 text-left">
-                    <div className="w-12 h-12 rounded-2xl bg-amber-500/10 text-amber-600 flex items-center justify-center">
-                      <Menu className="w-6 h-6" />
+              <AccordionItem value="navbar" className="border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 rounded-xl overflow-hidden shadow-sm">
+                <AccordionTrigger className="hover:no-underline py-3.5 sm:py-4 px-4 sm:px-5 border-b border-slate-100 dark:border-slate-800">
+                  <div className="flex items-center gap-3 text-left">
+                    <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-amber-500/10 text-amber-600 flex items-center justify-center shrink-0">
+                      <Menu className="w-4 h-4 sm:w-5 sm:h-5" />
                     </div>
                     <div>
-                      <h3 className="text-xl font-bold tracking-tight">Navbar Logic</h3>
-                      <p className="text-sm text-muted-foreground font-medium">Global header visibility and CTA buttons.</p>
+                      <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white tracking-tight">Navbar Logic</h3>
+                      <p className="text-xs text-slate-500 font-medium mt-0.5">Global header visibility and CTA buttons.</p>
                     </div>
                   </div>
                 </AccordionTrigger>
-                <AccordionContent className="pb-10 px-6 sm:px-8 space-y-12">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div className="flex items-center justify-between p-5 bg-background rounded-2xl border border-border/40">
-                      <span className="text-sm font-bold">Show Navbar</span>
+                <AccordionContent className="p-4 sm:p-5 space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <div className="flex items-center justify-between p-3 bg-slate-50/60 dark:bg-slate-800/30 rounded-xl border border-slate-100 dark:border-slate-800">
+                      <span className="text-xs font-semibold text-slate-800 dark:text-slate-200">Show Navbar</span>
                       <Switch checked={!!navbarConfig.showNavbar} onCheckedChange={(val) => setNavbarConfig({...navbarConfig, showNavbar: val})} />
                     </div>
-                    <div className="flex items-center justify-between p-5 bg-background rounded-2xl border border-border/40">
-                      <span className="text-sm font-bold">Show Top Bar</span>
+                    <div className="flex items-center justify-between p-3 bg-slate-50/60 dark:bg-slate-800/30 rounded-xl border border-slate-100 dark:border-slate-800">
+                      <span className="text-xs font-semibold text-slate-800 dark:text-slate-200">Show Top Bar</span>
                       <Switch checked={!!navbarConfig.showTopBar} onCheckedChange={(val) => setNavbarConfig({...navbarConfig, showTopBar: val})} />
                     </div>
-                    <div className="flex items-center justify-between p-5 bg-background rounded-2xl border border-border/40">
-                      <span className="text-sm font-bold">Show Menus</span>
+                    <div className="flex items-center justify-between p-3 bg-slate-50/60 dark:bg-slate-800/30 rounded-xl border border-slate-100 dark:border-slate-800">
+                      <span className="text-xs font-semibold text-slate-800 dark:text-slate-200">Show Menus</span>
                       <Switch checked={!!navbarConfig.showMenus} onCheckedChange={(val) => setNavbarConfig({...navbarConfig, showMenus: val})} />
                     </div>
                   </div>
 
-                  <div className="space-y-6">
-                    <div className="flex items-center gap-3">
-                      <MousePointer2 className="w-5 h-5 text-primary" />
-                      <h4 className="font-bold uppercase tracking-widest text-[10px]">Button Actions</h4>
+                  <div className="space-y-3 pt-2 border-t border-slate-100 dark:border-slate-800">
+                    <div className="flex items-center gap-2">
+                      <MousePointer2 className="w-3.5 h-3.5 text-primary" />
+                      <h4 className="font-bold uppercase tracking-wider text-[10px] text-slate-400">Header CTA Buttons</h4>
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                      <div className="space-y-4 p-6 bg-background rounded-[2rem] border border-border/40">
-                        <Label className="text-xs font-black uppercase text-primary">Primary Button (Solid)</Label>
-                        <div className="space-y-3">
-                          <Label className="text-[10px] font-bold">Text Label</Label>
-                          <Input value={navbarConfig.ctaPrimary?.text} onChange={(e) => setNavbarConfig({...navbarConfig, ctaPrimary: {...navbarConfig.ctaPrimary, text: e.target.value}})} className="h-10 rounded-xl" />
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
+                      <div className="space-y-3 p-3.5 bg-slate-50/60 dark:bg-slate-800/30 rounded-xl border border-slate-100 dark:border-slate-800">
+                        <Label className="text-[10px] font-bold uppercase tracking-wider text-primary">Primary Button (Solid)</Label>
+                        <div className="space-y-1">
+                          <Label className="text-[10px] text-slate-400">Text Label</Label>
+                          <Input value={navbarConfig.ctaPrimary?.text} onChange={(e) => setNavbarConfig({...navbarConfig, ctaPrimary: {...navbarConfig.ctaPrimary, text: e.target.value}})} className="h-8 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-xs rounded-lg" />
                         </div>
-                        <div className="space-y-3">
-                          <Label className="text-[10px] font-bold">Action URL</Label>
-                          <Input value={navbarConfig.ctaPrimary?.link} onChange={(e) => setNavbarConfig({...navbarConfig, ctaPrimary: {...navbarConfig.ctaPrimary, link: e.target.value}})} className="h-10 rounded-xl" />
+                        <div className="space-y-1">
+                          <Label className="text-[10px] text-slate-400">Action URL</Label>
+                          <Input value={navbarConfig.ctaPrimary?.link} onChange={(e) => setNavbarConfig({...navbarConfig, ctaPrimary: {...navbarConfig.ctaPrimary, link: e.target.value}})} className="h-8 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-xs rounded-lg" />
                         </div>
                       </div>
-                      <div className="space-y-4 p-6 bg-background rounded-[2rem] border border-border/40">
-                        <Label className="text-xs font-black uppercase text-muted-foreground">Secondary Button (Ghost)</Label>
-                        <div className="space-y-3">
-                          <Label className="text-[10px] font-bold">Text Label</Label>
-                          <Input value={navbarConfig.ctaSecondary?.text} onChange={(e) => setNavbarConfig({...navbarConfig, ctaSecondary: {...navbarConfig.ctaSecondary, text: e.target.value}})} className="h-10 rounded-xl" />
+                      <div className="space-y-3 p-3.5 bg-slate-50/60 dark:bg-slate-800/30 rounded-xl border border-slate-100 dark:border-slate-800">
+                        <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Secondary Button (Ghost)</Label>
+                        <div className="space-y-1">
+                          <Label className="text-[10px] text-slate-400">Text Label</Label>
+                          <Input value={navbarConfig.ctaSecondary?.text} onChange={(e) => setNavbarConfig({...navbarConfig, ctaSecondary: {...navbarConfig.ctaSecondary, text: e.target.value}})} className="h-8 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-xs rounded-lg" />
                         </div>
-                        <div className="space-y-3">
-                          <Label className="text-[10px] font-bold">Action URL</Label>
-                          <Input value={navbarConfig.ctaSecondary?.link} onChange={(e) => setNavbarConfig({...navbarConfig, ctaSecondary: {...navbarConfig.ctaSecondary, link: e.target.value}})} className="h-10 rounded-xl" />
+                        <div className="space-y-1">
+                          <Label className="text-[10px] text-slate-400">Action URL</Label>
+                          <Input value={navbarConfig.ctaSecondary?.link} onChange={(e) => setNavbarConfig({...navbarConfig, ctaSecondary: {...navbarConfig.ctaSecondary, link: e.target.value}})} className="h-8 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-xs rounded-lg" />
                         </div>
                       </div>
                     </div>
                   </div>
 
-                  <div className="pt-6 flex justify-end">
-                    <Button onClick={handleSaveGeneral} disabled={isSaving} className="h-12 px-10 gap-3 rounded-2xl font-black bg-primary text-primary-foreground shadow-xl shadow-primary/20 hover:scale-[1.02] transition-all">
-                      <Save className="h-5 w-5" /> {isSaving ? "Updating..." : "Update Navbar Settings"}
+                  <div className="pt-2 flex justify-end">
+                    <Button onClick={handleSaveGeneral} disabled={isSaving} className="h-8 sm:h-9 px-3.5 sm:px-4 gap-1.5 rounded-lg text-xs font-semibold shadow-sm bg-primary text-primary-foreground hover:bg-primary/90 transition-all">
+                      <Save className="h-3.5 w-3.5" /> {isSaving ? "Updating..." : "Update Navbar Settings"}
                     </Button>
                   </div>
                 </AccordionContent>
@@ -631,11 +626,11 @@ export function SettingsForm({ settings, isSuperAdmin = true }: { settings: any,
           </TabsContent>
 
           <TabsContent value="navigation" className="mt-0 w-full focus-visible:outline-none">
-            <div className="space-y-10">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div className="flex flex-col gap-2">
-                  <h2 className="text-2xl font-bold tracking-tight">Menu Ecosystem</h2>
-                  <p className="text-muted-foreground text-sm">Add, remove, or toggle visibility of navigation links.</p>
+            <div className="space-y-4 sm:space-y-5">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="flex flex-col">
+                  <h2 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white tracking-tight">Menu Ecosystem</h2>
+                  <p className="text-xs text-slate-500 font-medium mt-0.5">Add, remove, or toggle visibility of navigation links.</p>
                 </div>
                 <Button 
                   variant="outline" 
@@ -665,21 +660,21 @@ export function SettingsForm({ settings, isSuperAdmin = true }: { settings: any,
                     setNavigation(isSuperAdmin ? defaultGlobalNav : defaultWorkspaceNav);
                     toast.success("Default menus loaded! Click 'Save Navigation' to apply.");
                   }}
-                  className="rounded-2xl h-12 px-6 gap-3 border-primary/20 text-primary hover:bg-primary/5 font-black shadow-lg shadow-primary/5 active:scale-95 transition-all"
+                  className="rounded-lg h-8 sm:h-9 px-3.5 gap-1.5 border border-primary/20 text-primary hover:bg-primary/5 text-xs font-semibold shadow-xs active:scale-95 transition-all"
                 >
-                  <Plus className="h-5 w-5" /> Sync Default Menus
+                  <Plus className="h-3.5 w-3.5" /> Sync Default Menus
                 </Button>
               </div>
 
-              <div className="grid grid-cols-1 gap-4">
+              <div className="grid grid-cols-1 gap-2.5">
                 {navigation.map((nav: any, index: number) => (
-                  <div key={nav.id || index} className={`group flex flex-col md:flex-row items-center justify-between p-6 rounded-[2rem] border transition-all duration-300 ${nav.isActive ? "bg-white dark:bg-zinc-900 border-border/60 shadow-sm" : "bg-muted/30 border-transparent opacity-60 grayscale"}`}>
-                    <div className="flex items-center gap-6 w-full md:w-auto">
-                      <div className={`w-12 h-12 rounded-2xl flex items-center justify-center font-black text-sm transition-colors ${nav.isActive ? "bg-primary text-primary-foreground" : "bg-zinc-200 dark:bg-zinc-800 text-muted-foreground"}`}>
+                  <div key={nav.id || index} className={`group flex flex-col md:flex-row items-center justify-between p-3 sm:p-3.5 rounded-xl border transition-all ${nav.isActive ? "bg-white dark:bg-slate-900 border-slate-200/80 dark:border-slate-800 shadow-xs" : "bg-slate-50/60 dark:bg-slate-800/30 border-slate-200/40 dark:border-slate-800/40 opacity-60"}`}>
+                    <div className="flex items-center gap-3 w-full md:w-auto">
+                      <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center font-bold text-xs transition-colors shrink-0 ${nav.isActive ? "bg-primary text-primary-foreground" : "bg-slate-200 dark:bg-slate-800 text-slate-400"}`}>
                         {index + 1}
                       </div>
-                      <div className="flex flex-col gap-1 flex-1">
-                        <div className="flex items-center gap-2 group/edit h-8">
+                      <div className="flex flex-col gap-0.5 flex-1 min-w-0">
+                        <div className="flex items-center gap-1.5 group/edit h-7">
                           {editingNavIndex === index ? (
                             <Input 
                               autoFocus
@@ -691,25 +686,25 @@ export function SettingsForm({ settings, isSuperAdmin = true }: { settings: any,
                               }} 
                               onBlur={() => setEditingNavIndex(null)}
                               onKeyDown={(e) => { if (e.key === 'Enter') setEditingNavIndex(null); }}
-                              className="h-8 font-black bg-white dark:bg-zinc-800 border border-border px-2 focus-visible:ring-1 text-xl tracking-tight rounded-md w-full max-w-[200px]" 
+                              className="h-7 font-bold bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 px-2 focus-visible:ring-1 text-xs rounded-md w-full max-w-[180px]" 
                             />
                           ) : (
                             <>
-                              <span className="font-bold text-lg">{nav.name || "Unnamed"}</span>
+                              <span className="font-semibold text-xs sm:text-sm text-slate-900 dark:text-white truncate">{nav.name || "Unnamed"}</span>
                               <Button 
                                 type="button"
                                 variant="ghost" 
                                 size="icon" 
                                 onClick={() => setEditingNavIndex(index)} 
-                                className="h-6 w-6 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-full"
+                                className="h-5 w-5 text-slate-400 hover:text-primary hover:bg-primary/10 rounded-md shrink-0"
                               >
-                                <Pencil className="h-3 w-3" />
+                                <Pencil className="h-2.5 w-2.5" />
                               </Button>
                             </>
                           )}
                         </div>
-                        <div className="flex items-center gap-2 group/edit h-6 mt-1">
-                          <ExternalLink className="w-3 h-3 text-primary shrink-0" />
+                        <div className="flex items-center gap-1.5 group/edit h-5">
+                          <ExternalLink className="w-2.5 h-2.5 text-primary shrink-0" />
                           {editingLinkIndex === index ? (
                             <Input 
                               autoFocus
@@ -721,17 +716,17 @@ export function SettingsForm({ settings, isSuperAdmin = true }: { settings: any,
                               }} 
                               onBlur={() => setEditingLinkIndex(null)}
                               onKeyDown={(e) => { if (e.key === 'Enter') setEditingLinkIndex(null); }}
-                              className="h-6 font-mono bg-white dark:bg-zinc-800 border border-border px-1 focus-visible:ring-1 text-xs text-primary rounded max-w-[200px]" 
+                              className="h-5 font-mono bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-1 focus-visible:ring-1 text-[10px] text-primary rounded max-w-[180px]" 
                             />
                           ) : (
                             <>
-                              <span className="font-mono text-xs text-primary underline">{nav.href || "No link"}</span>
+                              <span className="font-mono text-[11px] text-primary hover:underline truncate">{nav.href || "No link"}</span>
                               <Button 
                                 type="button"
                                 variant="ghost" 
                                 size="icon" 
                                 onClick={() => setEditingLinkIndex(index)} 
-                                className="h-4 w-4 opacity-0 group-hover/edit:opacity-100 transition-opacity text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-full shrink-0"
+                                className="h-4 w-4 opacity-0 group-hover/edit:opacity-100 transition-opacity text-slate-400 hover:text-primary hover:bg-primary/10 rounded shrink-0"
                               >
                                 <Pencil className="h-2 w-2" />
                               </Button>
@@ -741,12 +736,13 @@ export function SettingsForm({ settings, isSuperAdmin = true }: { settings: any,
                       </div>
                     </div>
                     
-                    <div className="flex items-center gap-4 mt-6 md:mt-0 w-full md:w-auto justify-end">
-                      <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-zinc-100 dark:bg-zinc-800 border border-border/40">
-                        <span className="text-[10px] font-black uppercase tracking-widest">{nav.isActive ? "Active" : "Hidden"}</span>
+                    <div className="flex items-center gap-2 mt-3 md:mt-0 w-full md:w-auto justify-end shrink-0">
+                      <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200/60 dark:border-slate-700/60">
+                        <span className="text-[9px] font-bold uppercase tracking-wider text-slate-500">{nav.isActive ? "Active" : "Hidden"}</span>
                         <Switch 
                           checked={!!nav.isActive} 
                           disabled={nav.name === "Home" || nav.name === "Support"}
+                          className="scale-75 origin-right"
                           onCheckedChange={(val) => {
                             const newNav = [...navigation];
                             newNav[index] = { ...newNav[index], isActive: val };
@@ -754,35 +750,35 @@ export function SettingsForm({ settings, isSuperAdmin = true }: { settings: any,
                           }} 
                         />
                       </div>
-                      <div className="flex items-center gap-1 mr-1">
+                      <div className="flex items-center gap-0.5">
                         <Button variant="ghost" size="icon" disabled={index === 0} onClick={() => {
                           const newNav = [...navigation];
                           [newNav[index - 1], newNav[index]] = [newNav[index], newNav[index - 1]];
                           setNavigation(newNav);
-                        }} className="h-10 w-10 rounded-xl text-muted-foreground hover:bg-muted/50 hover:text-foreground transition-colors"><ChevronUp className="h-4 w-4" /></Button>
+                        }} className="h-7 w-7 rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-700 transition-colors"><ChevronUp className="h-3.5 w-3.5" /></Button>
                         <Button variant="ghost" size="icon" disabled={index === navigation.length - 1} onClick={() => {
                           const newNav = [...navigation];
                           [newNav[index + 1], newNav[index]] = [newNav[index], newNav[index + 1]];
                           setNavigation(newNav);
-                        }} className="h-10 w-10 rounded-xl text-muted-foreground hover:bg-muted/50 hover:text-foreground transition-colors"><ChevronDown className="h-4 w-4" /></Button>
+                        }} className="h-7 w-7 rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-700 transition-colors"><ChevronDown className="h-3.5 w-3.5" /></Button>
                       </div>
                       <Button variant="ghost" size="icon" onClick={() => {
                         setNavigation(navigation.filter((_: any, i: number) => i !== index));
-                      }} className="h-10 w-10 rounded-xl text-red-500 hover:bg-red-500/10"><Trash2 className="h-4 w-4" /></Button>
+                      }} className="h-7 w-7 rounded-lg text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30"><Trash2 className="h-3.5 w-3.5" /></Button>
                     </div>
                   </div>
                 ))}
 
                 <Button variant="outline" onClick={() => {
                   setNavigation([...navigation, { name: "New Link", href: "#", id: Math.random().toString(), isActive: true }]);
-                }} className="h-24 border-dashed border-2 rounded-[2rem] flex flex-col gap-2 hover:bg-primary/5 hover:border-primary/30 transition-all w-full group">
-                  <Plus className="h-6 w-6 text-muted-foreground group-hover:scale-125 transition-transform" />
-                  <span className="font-bold text-xs text-muted-foreground uppercase tracking-widest">Append Navigation Link</span>
+                }} className="h-8 sm:h-9 border-dashed border border-slate-300 dark:border-slate-700 rounded-lg flex items-center justify-center gap-1.5 hover:bg-primary/5 hover:border-primary/30 transition-all w-full text-xs font-semibold text-slate-500 hover:text-primary">
+                  <Plus className="h-3.5 w-3.5" />
+                  <span>Append Navigation Link</span>
                 </Button>
                 
-                <div className="pt-10 flex justify-end">
-                  <Button onClick={handleSaveGeneral} disabled={isSaving} className="h-14 px-12 gap-3 rounded-[1.5rem] font-black text-lg shadow-2xl hover:shadow-primary/20 active:scale-95 transition-all">
-                    <Save className="h-5 w-5" /> {isSaving ? "Applying Menus..." : "Save Navigation"}
+                <div className="pt-3 flex justify-end">
+                  <Button onClick={handleSaveGeneral} disabled={isSaving} className="h-8 sm:h-9 px-4 gap-1.5 rounded-lg text-xs font-semibold shadow-sm bg-primary text-primary-foreground hover:bg-primary/90 active:scale-95 transition-all">
+                    <Save className="h-3.5 w-3.5" /> {isSaving ? "Applying Menus..." : "Save Navigation"}
                   </Button>
                 </div>
               </div>
@@ -790,33 +786,33 @@ export function SettingsForm({ settings, isSuperAdmin = true }: { settings: any,
           </TabsContent>
 
           <TabsContent value="notices" className="mt-0 w-full focus-visible:outline-none">
-            <div className="space-y-10 pb-12 w-full mx-auto">
-              <div className="flex flex-col gap-2">
-                <h2 className="text-2xl font-bold tracking-tight">Notice Board Management</h2>
-                <p className="text-muted-foreground text-sm">Manage live updates and notifications for your students and visitors.</p>
+            <div className="space-y-4 sm:space-y-5 pb-8 w-full mx-auto">
+              <div className="flex flex-col">
+                <h2 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white tracking-tight">Notice Board Management</h2>
+                <p className="text-xs text-slate-500 font-medium mt-0.5">Manage live updates and notifications for your students and visitors.</p>
               </div>
 
               {/* Find the 'about' section which contains notices */}
               {(() => {
                 const aboutSection = settings.sections?.find((s: any) => s.type === 'about');
                 if (!aboutSection) return (
-                  <div className="p-12 border-2 border-dashed rounded-[2rem] text-center space-y-4 bg-muted/20">
-                    <Bell className="w-12 h-12 text-muted-foreground mx-auto opacity-20" />
-                    <p className="text-muted-foreground font-medium">Notice Board is bundled with the 'About' section. Please sync sections first.</p>
-                    <Button variant="outline" onClick={() => setActiveTab("sections")} className="rounded-xl">Go to Sections</Button>
+                  <div className="p-8 border border-dashed border-slate-200 dark:border-slate-800 rounded-xl text-center space-y-3 bg-slate-50/50 dark:bg-slate-800/20">
+                    <Bell className="w-8 h-8 text-slate-400 mx-auto opacity-40" />
+                    <p className="text-xs text-slate-500 font-medium">Notice Board is bundled with the &apos;About&apos; section. Please sync sections first.</p>
+                    <Button variant="outline" onClick={() => setActiveTab("sections")} className="h-8 text-xs rounded-lg">Go to Sections</Button>
                   </div>
                 );
 
                 return (
-                  <div className="p-8 bg-card border border-border/60 rounded-[2.5rem] shadow-sm space-y-8">
+                  <div className="p-3.5 sm:p-4 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-xl shadow-sm space-y-4">
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center">
-                          <Bell className="w-6 h-6 animate-pulse" />
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                          <Bell className="w-4 h-4 animate-pulse" />
                         </div>
                         <div>
-                          <h3 className="text-lg font-bold">Dynamic Notice Board</h3>
-                          <p className="text-xs text-muted-foreground">Updates are reflected instantly on the landing page.</p>
+                          <h3 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">Dynamic Notice Board</h3>
+                          <p className="text-[11px] sm:text-xs text-slate-500">Updates are reflected instantly on the landing page.</p>
                         </div>
                       </div>
                       <Switch 
@@ -825,11 +821,10 @@ export function SettingsForm({ settings, isSuperAdmin = true }: { settings: any,
                       />
                     </div>
 
-                    <div className="pt-6 border-t border-border/40">
+                    <div className="pt-3 border-t border-slate-100 dark:border-slate-800">
                        <AboutNoticeContentEditor 
                          content={aboutSection.content || {}} 
                          setContent={async (newContent: any) => {
-                           // This is a local update for the UI, but we need to save it
                            await updateLandingSection(aboutSection.id, {
                              ...aboutSection,
                              content: newContent
@@ -845,11 +840,11 @@ export function SettingsForm({ settings, isSuperAdmin = true }: { settings: any,
             </div>
           </TabsContent>
 
-          <TabsContent value="sections" className="mt-0 w-full space-y-8 focus-visible:outline-none">
-             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
-               <div className="flex flex-col gap-1">
-                 <h2 className="text-2xl font-bold tracking-tight">Page Sections</h2>
-                 <p className="text-muted-foreground text-sm">Enable or disable specific areas of your landing page.</p>
+          <TabsContent value="sections" className="mt-0 w-full space-y-4 focus-visible:outline-none">
+             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+               <div className="flex flex-col">
+                 <h2 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white tracking-tight">Page Sections</h2>
+                 <p className="text-xs text-slate-500 font-medium mt-0.5">Enable or disable specific areas of your landing page.</p>
                </div>
                <Button 
                  variant="outline" 
@@ -862,23 +857,23 @@ export function SettingsForm({ settings, isSuperAdmin = true }: { settings: any,
                      if (res.created) window.location.reload();
                    }
                  }}
-                 className="rounded-2xl h-12 px-6 gap-3 border-primary/20 text-primary hover:bg-primary/5 font-black shadow-lg shadow-primary/5 active:scale-95 transition-all"
+                 className="rounded-lg h-8 sm:h-9 px-3.5 gap-1.5 border border-primary/20 text-primary hover:bg-primary/5 text-xs font-semibold shadow-xs active:scale-95 transition-all"
                >
-                 <Plus className="h-5 w-5" /> Sync Missing Sections
+                 <Plus className="h-3.5 w-3.5" /> Sync Missing Sections
                </Button>
              </div>
-            <div className="space-y-4">
+            <div className="space-y-3">
                 {settings.sections?.filter((s: any) => !s.type.startsWith('page-header-') && !s.type.startsWith('legal-')).map((section: any) => (
                   <SectionEditor key={section.id} section={section} settings={settings} mediaFolderBase={mediaFolderBase} isSuperAdmin={isSuperAdmin} />
                 ))}
             </div>
           </TabsContent>
 
-          <TabsContent value="page-headers" className="mt-0 w-full space-y-8 focus-visible:outline-none">
-             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
-               <div className="flex flex-col gap-1">
-                 <h2 className="text-2xl font-bold tracking-tight">Page Headers</h2>
-                 <p className="text-muted-foreground text-sm">Manage the top sections of your internal pages.</p>
+          <TabsContent value="page-headers" className="mt-0 w-full space-y-4 focus-visible:outline-none">
+             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+               <div className="flex flex-col">
+                 <h2 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white tracking-tight">Page Headers</h2>
+                 <p className="text-xs text-slate-500 font-medium mt-0.5">Manage the top sections of your internal pages.</p>
                </div>
                <Button 
                  variant="outline" 
@@ -891,27 +886,27 @@ export function SettingsForm({ settings, isSuperAdmin = true }: { settings: any,
                      if (res.created) window.location.reload();
                    }
                  }}
-                 className="rounded-2xl h-12 px-6 gap-3 border-primary/20 text-primary hover:bg-primary/5 font-black shadow-lg shadow-primary/5 active:scale-95 transition-all"
+                 className="rounded-lg h-8 sm:h-9 px-3.5 gap-1.5 border border-primary/20 text-primary hover:bg-primary/5 text-xs font-semibold shadow-xs active:scale-95 transition-all"
                >
-                 <Plus className="h-5 w-5" /> Sync Missing Sections
+                 <Plus className="h-3.5 w-3.5" /> Sync Missing Sections
                </Button>
              </div>
-            <div className="space-y-4">
+            <div className="space-y-3">
                 {settings.sections?.filter((s: any) => s.type.startsWith('page-header-') && !s.type.includes('privacy') && !s.type.includes('terms') && !s.type.includes('cookie') && !s.type.includes('refund') && !s.type.includes('sitemap')).map((section: any) => (
                   <SectionEditor key={section.id} section={section} settings={settings} mediaFolderBase={mediaFolderBase} isSuperAdmin={isSuperAdmin} />
                 ))}
             </div>
           </TabsContent>
 
-          <TabsContent value="events" className="mt-0 w-full space-y-8 focus-visible:outline-none">
+          <TabsContent value="events" className="mt-0 w-full space-y-4 focus-visible:outline-none">
             <SuperAdminEventsTab />
           </TabsContent>
 
-          <TabsContent value="legal-pages" className="mt-0 w-full space-y-8 focus-visible:outline-none">
-             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
-               <div className="flex flex-col gap-1">
-                 <h2 className="text-2xl font-bold tracking-tight">Legal & Policy Pages</h2>
-                 <p className="text-muted-foreground text-sm">Manage your Privacy Policy, Terms, and other legal documents.</p>
+          <TabsContent value="legal-pages" className="mt-0 w-full space-y-4 focus-visible:outline-none">
+             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+               <div className="flex flex-col">
+                 <h2 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white tracking-tight">Legal & Policy Pages</h2>
+                 <p className="text-xs text-slate-500 font-medium mt-0.5">Manage your Privacy Policy, Terms, and other legal documents.</p>
                </div>
                {isSuperAdmin && (
                <Button 
@@ -925,13 +920,13 @@ export function SettingsForm({ settings, isSuperAdmin = true }: { settings: any,
                      if (res.created) window.location.reload();
                    }
                  }}
-                 className="rounded-2xl h-12 px-6 gap-3 border-primary/20 text-primary hover:bg-primary/5 font-black shadow-lg shadow-primary/5 active:scale-95 transition-all"
+                 className="rounded-lg h-8 sm:h-9 px-3.5 gap-1.5 border border-primary/20 text-primary hover:bg-primary/5 text-xs font-semibold shadow-xs active:scale-95 transition-all"
                >
-                 <Plus className="h-5 w-5" /> Sync Missing Sections
+                 <Plus className="h-3.5 w-3.5" /> Sync Missing Sections
                </Button>
                )}
              </div>
-            <div className="space-y-4">
+            <div className="space-y-3">
                 {settings.sections?.filter((s: any) => s.type.startsWith('legal-')).map((section: any) => (
                   <SectionEditor key={section.id} section={section} settings={settings} mediaFolderBase={mediaFolderBase} isSuperAdmin={isSuperAdmin} />
                 ))}
@@ -966,67 +961,66 @@ function SectionEditor({ section, settings, mediaFolderBase, isSuperAdmin }: { s
   };
 
   return (
-    <div className={`p-6 sm:p-8 rounded-[2rem] border transition-all duration-300 ${isActive ? 'bg-white dark:bg-zinc-900 border-border/60 shadow-sm' : 'bg-muted/30 border-transparent opacity-60'}`}>
-      <div className="flex items-center justify-between gap-4">
-        <div className="flex items-center gap-4">
-          <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${isActive ? 'bg-primary/10 text-primary' : 'bg-zinc-200 dark:bg-zinc-800 text-muted-foreground'}`}>
-            <Layout className="h-5 w-5" />
+    <div className={`p-3.5 sm:p-4 rounded-xl border transition-all ${isActive ? 'bg-white dark:bg-slate-900 border-slate-200/80 dark:border-slate-800 shadow-xs' : 'bg-slate-50/60 dark:bg-slate-800/30 border-slate-200/40 dark:border-slate-800/40 opacity-60'}`}>
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <div className={`w-8 h-8 sm:w-9 sm:h-9 rounded-lg flex items-center justify-center shrink-0 ${isActive ? 'bg-primary/10 text-primary' : 'bg-slate-200 dark:bg-slate-800 text-slate-400'}`}>
+            <Layout className="h-4 w-4" />
           </div>
           <div className="flex flex-col">
-            <h3 className="capitalize font-black text-sm tracking-tight">{section.type.replace("-", " ")}</h3>
-            <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">{isActive ? 'Visible to Public' : 'Hidden from Public'}</p>
+            <h3 className="capitalize font-semibold text-xs sm:text-sm text-slate-900 dark:text-white tracking-tight">{section.type.replace("-", " ")}</h3>
+            <p className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">{isActive ? 'Visible' : 'Hidden'}</p>
           </div>
         </div>
 
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2">
           <Button 
             variant="ghost" 
             size="sm" 
             onClick={() => setIsExpanded(!isExpanded)}
-            className={`h-10 px-4 rounded-xl font-bold text-xs gap-2 ${isExpanded ? 'bg-primary/5 text-primary' : ''}`}
+            className={`h-7 sm:h-8 px-2.5 sm:px-3 rounded-lg font-semibold text-xs gap-1.5 ${isExpanded ? 'bg-primary/10 text-primary' : 'text-slate-600 dark:text-slate-300'}`}
           >
-            <Settings2 className="h-4 w-4" /> {isExpanded ? 'Close Editor' : 'Modify Content'}
+            <Settings2 className="h-3.5 w-3.5" /> {isExpanded ? 'Close' : 'Edit Content'}
           </Button>
-          <div className="h-10 w-[1px] bg-border/40 mx-1" />
+          <div className="h-6 w-[1px] bg-slate-200 dark:border-slate-800 mx-0.5" />
           <Switch 
             checked={isActive} 
             onCheckedChange={(val) => {
               setIsActive(val);
-              // Auto-save toggle for better UX
               updateLandingSection(section.id, { ...section, isActive: val });
             }} 
-            className="data-[state=checked]:bg-primary" 
+            className="scale-75 origin-right" 
           />
         </div>
       </div>
 
       {isExpanded && (
-        <div className="mt-6 pt-6 border-t border-border/40 animate-in fade-in slide-in-from-top-2">
-          <div className="space-y-8">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Section Heading</Label>
-                <Input value={title || ""} onChange={(e) => setTitle(e.target.value)} className="h-12 rounded-2xl bg-muted/5 border-none" />
+        <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800 animate-in fade-in slide-in-from-top-1">
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
+              <div className="space-y-1">
+                <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Section Heading</Label>
+                <Input value={title || ""} onChange={(e) => setTitle(e.target.value)} className="h-8 sm:h-9 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 text-xs" />
               </div>
-              <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">
+              <div className="space-y-1">
+                <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
                   {section.type.startsWith('page-header-') ? "Page Description" : "Section Tagline"}
                 </Label>
                 {section.type.startsWith('page-header-') ? (
                   <Textarea 
                     value={subtitle || ""} 
                     onChange={(e) => setSubtitle(e.target.value)} 
-                    className="min-h-[100px] rounded-2xl bg-muted/5 border-none resize-none" 
+                    className="min-h-[60px] rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 text-xs resize-none" 
                     placeholder="Enter page description..."
                   />
                 ) : (
-                  <Input value={subtitle || ""} onChange={(e) => setSubtitle(e.target.value)} className="h-12 rounded-2xl bg-muted/5 border-none" />
+                  <Input value={subtitle || ""} onChange={(e) => setSubtitle(e.target.value)} className="h-8 sm:h-9 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 text-xs" />
                 )}
               </div>
             </div>
 
             {/* Specialized Content Editors */}
-            <div className="bg-muted/5 p-6 rounded-[2rem] border border-border/20 shadow-inner">
+            <div className="bg-slate-50/50 dark:bg-slate-800/30 p-3.5 sm:p-4 rounded-xl border border-slate-100 dark:border-slate-800">
                {section.type === 'hero' && <HeroContentEditor content={content} setContent={setContent} mediaFolderBase={mediaFolderBase} />}
                {section.type === 'quick-links' && <QuickLinksContentEditor content={content} setContent={setContent} />}
                {section.type === 'about' && <AboutNoticeContentEditor content={content} setContent={setContent} mediaFolderBase={mediaFolderBase} isSuperAdmin={isSuperAdmin} />}
@@ -1057,8 +1051,8 @@ function SectionEditor({ section, settings, mediaFolderBase, isSuperAdmin }: { s
             </div>
 
             <div className="flex justify-end">
-              <Button onClick={handleUpdate} disabled={isSaving} className="h-12 px-8 gap-3 rounded-2xl font-black shadow-xl shadow-primary/10">
-                <Save className="h-5 w-5" /> {isSaving ? "Saving..." : "Commit Changes"}
+              <Button onClick={handleUpdate} disabled={isSaving} className="h-8 sm:h-9 px-4 gap-1.5 rounded-lg text-xs font-semibold shadow-sm bg-primary text-primary-foreground hover:bg-primary/90 transition-all">
+                <Save className="h-3.5 w-3.5" /> {isSaving ? "Saving..." : "Commit Changes"}
               </Button>
             </div>
           </div>
@@ -1072,13 +1066,13 @@ function SectionEditor({ section, settings, mediaFolderBase, isSuperAdmin }: { s
 
 function StudyCenterContentEditor({ content, setContent }: any) {
   return (
-    <div className="space-y-4">
-      <div className="space-y-2">
-        <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Section Description (Keep to 10 words)</Label>
+    <div className="space-y-3">
+      <div className="space-y-1.5">
+        <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 ml-0.5">Section Description (Keep to 10 words)</Label>
         <Textarea 
           value={content.description || ""} 
           onChange={(e) => setContent({ ...content, description: e.target.value })} 
-          className="min-h-[100px] rounded-2xl bg-muted/5 border-none resize-none" 
+          className="min-h-[80px] rounded-lg text-xs bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 resize-none" 
           placeholder="e.g. Search by institute name, code, state, or pin code."
         />
       </div>
@@ -1088,10 +1082,10 @@ function StudyCenterContentEditor({ content, setContent }: any) {
 
 function HeroContentEditor({ content, setContent, mediaFolderBase }: any) {
   return (
-    <div className="space-y-8">
+    <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <Label className="text-sm font-black uppercase text-primary tracking-widest">Slide Management</Label>
-        <Button variant="outline" size="sm" className="rounded-lg h-8 text-xs font-bold" onClick={() => {
+        <Label className="text-[10px] font-bold uppercase text-primary tracking-wider">Slide Management</Label>
+        <Button variant="outline" size="sm" className="rounded-lg h-7 sm:h-8 px-2.5 text-xs font-semibold" onClick={() => {
           const newSlides = [...(content.slides || []), { 
             src: "", 
             tagline: "New Adventure", 
@@ -1106,18 +1100,18 @@ function HeroContentEditor({ content, setContent, mediaFolderBase }: any) {
           setContent({ ...content, slides: newSlides });
         }}>Add Slide</Button>
       </div>
-      <div className="space-y-6">
+      <div className="space-y-3">
         {(content.slides || []).map((slide: any, idx: number) => (
-          <div key={idx} className="p-6 bg-background border border-border/40 rounded-2xl space-y-6 relative group shadow-sm">
+          <div key={idx} className="p-3.5 sm:p-4 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-xl space-y-3.5 relative group shadow-xs">
             <div className="flex justify-between items-center">
-              <span className="text-[10px] font-black text-primary/60">SLIDE #{idx + 1}</span>
-              <Button variant="ghost" size="icon" className="h-8 w-8 text-red-500 rounded-lg" onClick={() => {
+              <span className="text-[10px] font-bold text-primary/70 uppercase tracking-wider">SLIDE #{idx + 1}</span>
+              <Button variant="ghost" size="icon" className="h-7 w-7 text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded-lg" onClick={() => {
                 const newSlides = content.slides.filter((_: any, i: number) => i !== idx);
                 setContent({ ...content, slides: newSlides });
-              }}><Trash2 className="h-4 w-4" /></Button>
+              }}><Trash2 className="h-3.5 w-3.5" /></Button>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-2">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="space-y-1">
                 <ImageUpload 
                   value={slide.src || ""} 
                   onChange={(url) => { const n = [...content.slides]; n[idx].src = url; setContent({ ...content, slides: n }); }} 
@@ -1125,40 +1119,40 @@ function HeroContentEditor({ content, setContent, mediaFolderBase }: any) {
                   folder={`${mediaFolderBase}/hero`}
                 />
               </div>
-              <div className="space-y-2">
-                <Label className="text-[10px] uppercase font-bold">Tagline</Label>
-                <Input value={slide.tagline || ""} onChange={(e) => { const n = [...content.slides]; n[idx].tagline = e.target.value; setContent({ ...content, slides: n }); }} className="h-10 bg-muted/5" />
+              <div className="space-y-1">
+                <Label className="text-[10px] uppercase font-bold tracking-wider text-slate-500">Tagline</Label>
+                <Input value={slide.tagline || ""} onChange={(e) => { const n = [...content.slides]; n[idx].tagline = e.target.value; setContent({ ...content, slides: n }); }} className="h-8 sm:h-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700" />
               </div>
             </div>
-            <div className="space-y-2">
-              <Label className="text-[10px] uppercase font-bold">Slide Heading</Label>
-              <Input value={slide.title || ""} onChange={(e) => { const n = [...content.slides]; n[idx].title = e.target.value; setContent({ ...content, slides: n }); }} className="h-10 bg-muted/5" />
+            <div className="space-y-1">
+              <Label className="text-[10px] uppercase font-bold tracking-wider text-slate-500">Slide Heading</Label>
+              <Input value={slide.title || ""} onChange={(e) => { const n = [...content.slides]; n[idx].title = e.target.value; setContent({ ...content, slides: n }); }} className="h-8 sm:h-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 font-semibold" />
             </div>
-            <div className="space-y-2">
-              <Label className="text-[10px] uppercase font-bold">Description</Label>
-              <Textarea value={slide.subtitle || ""} onChange={(e) => { const n = [...content.slides]; n[idx].subtitle = e.target.value; setContent({ ...content, slides: n }); }} className="min-h-[80px] bg-muted/5" />
+            <div className="space-y-1">
+              <Label className="text-[10px] uppercase font-bold tracking-wider text-slate-500">Description</Label>
+              <Textarea value={slide.subtitle || ""} onChange={(e) => { const n = [...content.slides]; n[idx].subtitle = e.target.value; setContent({ ...content, slides: n }); }} className="min-h-[60px] text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700" />
             </div>
-            <div className="grid grid-cols-2 gap-4 pt-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
               <div className="space-y-1">
-                <Label className="text-[10px] uppercase font-bold text-primary">Primary Button Label</Label>
-                <Input value={slide.primaryButtonText || ""} onChange={(e) => { const n = [...content.slides]; n[idx].primaryButtonText = e.target.value; setContent({ ...content, slides: n }); }} placeholder="e.g. Get Started" className="h-9 text-xs" />
-              </div>
-              <div className="space-y-1">
-                <Label className="text-[10px] uppercase font-bold text-primary">Primary Button Link</Label>
-                <Input value={slide.primaryButtonLink || ""} onChange={(e) => { const n = [...content.slides]; n[idx].primaryButtonLink = e.target.value; setContent({ ...content, slides: n }); }} placeholder="e.g. /register" className="h-9 text-xs" />
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4 pt-2">
-              <div className="space-y-1">
-                <Label className="text-[10px] uppercase font-bold text-muted-foreground">Secondary Button Label</Label>
-                <Input value={slide.secondaryButtonText || ""} onChange={(e) => { const n = [...content.slides]; n[idx].secondaryButtonText = e.target.value; setContent({ ...content, slides: n }); }} placeholder="e.g. Enquiry Now" className="h-9 text-xs" />
+                <Label className="text-[10px] uppercase font-bold tracking-wider text-primary">Primary Button Label</Label>
+                <Input value={slide.primaryButtonText || ""} onChange={(e) => { const n = [...content.slides]; n[idx].primaryButtonText = e.target.value; setContent({ ...content, slides: n }); }} placeholder="e.g. Get Started" className="h-8 sm:h-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700" />
               </div>
               <div className="space-y-1">
-                <Label className="text-[10px] uppercase font-bold text-muted-foreground">Secondary Button Link</Label>
-                <Input value={slide.secondaryButtonLink || ""} onChange={(e) => { const n = [...content.slides]; n[idx].secondaryButtonLink = e.target.value; setContent({ ...content, slides: n }); }} placeholder="e.g. /contact" className="h-9 text-xs" />
+                <Label className="text-[10px] uppercase font-bold tracking-wider text-primary">Primary Button Link</Label>
+                <Input value={slide.primaryButtonLink || ""} onChange={(e) => { const n = [...content.slides]; n[idx].primaryButtonLink = e.target.value; setContent({ ...content, slides: n }); }} placeholder="e.g. /register" className="h-8 sm:h-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700" />
               </div>
             </div>
-            <div className="space-y-2 pt-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+              <div className="space-y-1">
+                <Label className="text-[10px] uppercase font-bold tracking-wider text-slate-500">Secondary Button Label</Label>
+                <Input value={slide.secondaryButtonText || ""} onChange={(e) => { const n = [...content.slides]; n[idx].secondaryButtonText = e.target.value; setContent({ ...content, slides: n }); }} placeholder="e.g. Enquiry Now" className="h-8 sm:h-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700" />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-[10px] uppercase font-bold tracking-wider text-slate-500">Secondary Button Link</Label>
+                <Input value={slide.secondaryButtonLink || ""} onChange={(e) => { const n = [...content.slides]; n[idx].secondaryButtonLink = e.target.value; setContent({ ...content, slides: n }); }} placeholder="e.g. /contact" className="h-8 sm:h-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700" />
+              </div>
+            </div>
+            <div className="space-y-1 pt-1">
               <ImageUpload 
                 value={slide.offerImage || ""} 
                 onChange={(url) => { const n = [...content.slides]; n[idx].offerImage = url; setContent({ ...content, slides: n }); }} 
@@ -1175,8 +1169,8 @@ function HeroContentEditor({ content, setContent, mediaFolderBase }: any) {
 
 function AboutNoticeContentEditor({ content, setContent, mediaFolderBase, isSuperAdmin }: any) {
   return (
-    <div className="space-y-10">
-       <div className="space-y-3">
+    <div className="space-y-5">
+       <div className="space-y-2">
           <ImageUpload 
             value={content.image || ""} 
             onChange={(url) => setContent({ ...content, image: url })} 
@@ -1185,35 +1179,35 @@ function AboutNoticeContentEditor({ content, setContent, mediaFolderBase, isSupe
           />
        </div>
 
-       <div className="space-y-4 p-6 bg-muted/5 rounded-[2rem] border border-border/20">
-          <Label className="text-sm font-bold uppercase tracking-widest text-primary">Floating Metric Card</Label>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-               <Label className="text-[10px] font-bold uppercase text-muted-foreground">Title</Label>
-               <Input value={content.metricTitle || ""} onChange={(e) => setContent({ ...content, metricTitle: e.target.value })} placeholder="e.g. Global Reach" className="h-10 bg-background" />
+       <div className="space-y-3 p-3.5 sm:p-4 bg-slate-50/60 dark:bg-slate-800/30 rounded-xl border border-slate-200/80 dark:border-slate-800">
+          <Label className="text-[10px] font-bold uppercase tracking-wider text-primary">Floating Metric Card</Label>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="space-y-1">
+               <Label className="text-[10px] font-bold uppercase text-slate-500">Title</Label>
+               <Input value={content.metricTitle || ""} onChange={(e) => setContent({ ...content, metricTitle: e.target.value })} placeholder="e.g. Global Reach" className="h-8 sm:h-9 text-xs rounded-lg bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700" />
             </div>
-            <div className="space-y-2">
-               <Label className="text-[10px] font-bold uppercase text-muted-foreground">Value</Label>
-               <Input value={content.metricValue || ""} onChange={(e) => setContent({ ...content, metricValue: e.target.value })} placeholder="e.g. 500+" className="h-10 bg-background" />
+            <div className="space-y-1">
+               <Label className="text-[10px] font-bold uppercase text-slate-500">Value</Label>
+               <Input value={content.metricValue || ""} onChange={(e) => setContent({ ...content, metricValue: e.target.value })} placeholder="e.g. 500+" className="h-8 sm:h-9 text-xs rounded-lg bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 font-semibold" />
             </div>
-            <div className="space-y-2">
-               <Label className="text-[10px] font-bold uppercase text-muted-foreground">Suffix</Label>
-               <Input value={content.metricSuffix || ""} onChange={(e) => setContent({ ...content, metricSuffix: e.target.value })} placeholder="e.g. Inst." className="h-10 bg-background" />
+            <div className="space-y-1">
+               <Label className="text-[10px] font-bold uppercase text-slate-500">Suffix</Label>
+               <Input value={content.metricSuffix || ""} onChange={(e) => setContent({ ...content, metricSuffix: e.target.value })} placeholder="e.g. Inst." className="h-8 sm:h-9 text-xs rounded-lg bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700" />
             </div>
-            <div className="space-y-2">
-               <Label className="text-[10px] font-bold uppercase text-muted-foreground">Icon Name</Label>
-               <Input value={content.metricIcon || ""} onChange={(e) => setContent({ ...content, metricIcon: e.target.value })} placeholder="e.g. Globe, Users, CheckCircle2" className="h-10 bg-background" />
+            <div className="space-y-1">
+               <Label className="text-[10px] font-bold uppercase text-slate-500">Icon Name</Label>
+               <Input value={content.metricIcon || ""} onChange={(e) => setContent({ ...content, metricIcon: e.target.value })} placeholder="e.g. Globe, Users, CheckCircle2" className="h-8 sm:h-9 text-xs rounded-lg bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700" />
             </div>
           </div>
-          <p className="text-[10px] text-muted-foreground italic px-2">Available Icons: CheckCircle2, Globe, Users, Building2, TrendingUp, Award, Zap</p>
+          <p className="text-[9px] text-muted-foreground italic">Available Icons: CheckCircle2, Globe, Users, Building2, TrendingUp, Award, Zap</p>
        </div>
 
-       <div className="space-y-3">
-          <Label className="text-xs font-bold uppercase">Institute Description (About Us)</Label>
-          <Textarea value={content.description || ""} onChange={(e) => setContent({ ...content, description: e.target.value })} className="min-h-[120px] bg-background" />
+       <div className="space-y-1.5">
+          <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Institute Description (About Us)</Label>
+          <Textarea value={content.description || ""} onChange={(e) => setContent({ ...content, description: e.target.value })} className="min-h-[90px] text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700" />
        </div>
 
-       <div className="pt-8 border-t border-border/30">
+       <div className="pt-4 border-t border-slate-100 dark:border-slate-800">
           <ListContentEditor 
             title="About Features" 
             content={{ items: (content.features || []).map((f: string) => ({ text: f })) }} 
@@ -1222,7 +1216,7 @@ function AboutNoticeContentEditor({ content, setContent, mediaFolderBase, isSupe
           />
        </div>
 
-       <div className="pt-8 border-t border-border/30">
+       <div className="pt-4 border-t border-slate-100 dark:border-slate-800">
           <ListContentEditor 
             title="Statistical Counters" 
             content={{ items: content.stats || [] }} 
@@ -1231,9 +1225,8 @@ function AboutNoticeContentEditor({ content, setContent, mediaFolderBase, isSupe
           />
        </div>
 
-       {/* Only show Notice Board for franchise instance, not for the main landing page */}
        {!isSuperAdmin && (
-       <div className="pt-8 border-t border-border/30">
+       <div className="pt-4 border-t border-slate-100 dark:border-slate-800">
           <ListContentEditor 
             title="Notice Board Items" 
             content={{ items: content.notices || [] }} 
@@ -1249,7 +1242,7 @@ function AboutNoticeContentEditor({ content, setContent, mediaFolderBase, isSupe
 
 function CountersContentEditor({ content, setContent, mediaFolderBase }: any) {
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
        <ListContentEditor 
          title="Counters (Total Students, Courses, etc.)" 
          content={{ items: content.stats || [] }} 
@@ -1257,20 +1250,20 @@ function CountersContentEditor({ content, setContent, mediaFolderBase }: any) {
          itemFields={['label', 'value']} 
          mediaFolderBase={mediaFolderBase}
        />
-       <p className="text-[10px] text-muted-foreground italic px-2">Common icons are automatically assigned based on labels.</p>
+       <p className="text-[9px] text-muted-foreground italic">Common icons are automatically assigned based on labels.</p>
     </div>
   );
 }
 
 function CoursesContentEditor({ content, setContent }: any) {
   return (
-    <div className="space-y-4">
-      <div className="space-y-2">
-        <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Courses Section Description</Label>
+    <div className="space-y-3">
+      <div className="space-y-1.5">
+        <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 ml-0.5">Courses Section Description</Label>
         <Textarea 
           value={content.description || ""} 
           onChange={(e) => setContent({ ...content, description: e.target.value })} 
-          className="min-h-[100px] rounded-2xl bg-muted/5 border-none resize-none" 
+          className="min-h-[80px] rounded-lg text-xs bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 resize-none" 
           placeholder="Enter the description to show below the courses title..."
         />
       </div>
@@ -1280,8 +1273,8 @@ function CoursesContentEditor({ content, setContent }: any) {
 
 function WhyChooseUsContentEditor({ content, setContent, mediaFolderBase }: any) {
   return (
-    <div className="space-y-10">
-       <div className="space-y-3">
+    <div className="space-y-5">
+       <div className="space-y-2">
           <ImageUpload 
             value={content.image || ""} 
             onChange={(url) => setContent({ ...content, image: url })} 
@@ -1289,12 +1282,12 @@ function WhyChooseUsContentEditor({ content, setContent, mediaFolderBase }: any)
             folder={`${mediaFolderBase}/why-choose-us`}
           />
        </div>
-       <div className="space-y-3">
-          <Label className="text-xs font-bold uppercase">Intro Description</Label>
-          <Textarea value={content.description || ""} onChange={(e) => setContent({ ...content, description: e.target.value })} className="min-h-[100px] bg-background" />
+       <div className="space-y-1.5">
+          <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Intro Description</Label>
+          <Textarea value={content.description || ""} onChange={(e) => setContent({ ...content, description: e.target.value })} className="min-h-[80px] text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700" />
        </div>
 
-       <div className="pt-8 border-t border-border/30">
+       <div className="pt-4 border-t border-slate-100 dark:border-slate-800">
           <ListContentEditor 
             title="Benefit Cards (Features)" 
             content={{ items: content.features || [] }} 
@@ -1302,7 +1295,7 @@ function WhyChooseUsContentEditor({ content, setContent, mediaFolderBase }: any)
             itemFields={['icon', 'title', 'description']} 
             mediaFolderBase={mediaFolderBase}
           />
-          <p className="text-[10px] text-muted-foreground mt-2 px-2 italic">Available Icons: Zap, ShieldCheck, Cpu, Globe, Rocket, Brain, GraduationCap, Users, Layout</p>
+          <p className="text-[9px] text-muted-foreground mt-1.5 italic">Available Icons: Zap, ShieldCheck, Cpu, Globe, Rocket, Brain, GraduationCap, Users, Layout</p>
        </div>
     </div>
   );
@@ -1310,13 +1303,13 @@ function WhyChooseUsContentEditor({ content, setContent, mediaFolderBase }: any)
 
 function AchievementsContentEditor({ content, setContent, mediaFolderBase }: any) {
   return (
-    <div className="space-y-10">
-       <div className="space-y-3">
-          <Label className="text-xs font-bold uppercase">Intro Description</Label>
-          <Textarea value={content.description || ""} onChange={(e) => setContent({ ...content, description: e.target.value })} className="min-h-[80px] bg-background" />
+    <div className="space-y-5">
+       <div className="space-y-1.5">
+          <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Intro Description</Label>
+          <Textarea value={content.description || ""} onChange={(e) => setContent({ ...content, description: e.target.value })} className="min-h-[70px] text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700" />
        </div>
 
-       <div className="pt-8 border-t border-border/30">
+       <div className="pt-4 border-t border-slate-100 dark:border-slate-800">
           <ListContentEditor 
             title="Achievement Cards" 
             content={{ items: content.items || [] }} 
@@ -1331,7 +1324,7 @@ function AchievementsContentEditor({ content, setContent, mediaFolderBase }: any
 
 function PartnersContentEditor({ content, setContent, mediaFolderBase }: any) {
   return (
-    <div className="pt-4">
+    <div className="pt-2">
        <ListContentEditor 
          title="Partner Logos" 
          content={{ items: (content.logos || []).map((l: string) => ({ image: l })) }} 
@@ -1345,8 +1338,8 @@ function PartnersContentEditor({ content, setContent, mediaFolderBase }: any) {
 
 function FaqContentEditor({ content, setContent, mediaFolderBase }: any) {
   return (
-    <div className="space-y-10">
-       <div className="space-y-3">
+    <div className="space-y-5">
+       <div className="space-y-2">
           <ImageUpload 
             value={content.image || ""} 
             onChange={(url) => setContent({ ...content, image: url })} 
@@ -1354,22 +1347,22 @@ function FaqContentEditor({ content, setContent, mediaFolderBase }: any) {
             folder={`${mediaFolderBase}/faq`}
           />
        </div>
-       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <div className="space-y-3">
-             <Label className="text-xs font-bold uppercase">Image Title Overlay</Label>
-             <Input value={content.imageTitle || ""} onChange={(e) => setContent({ ...content, imageTitle: e.target.value })} placeholder="e.g. 24/7 Support" className="h-11 bg-background" />
+       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="space-y-1">
+             <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Image Title Overlay</Label>
+             <Input value={content.imageTitle || ""} onChange={(e) => setContent({ ...content, imageTitle: e.target.value })} placeholder="e.g. 24/7 Support" className="h-8 sm:h-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700" />
           </div>
-          <div className="space-y-3">
-             <Label className="text-xs font-bold uppercase">Image Desc Overlay</Label>
-             <Input value={content.imageDesc || ""} onChange={(e) => setContent({ ...content, imageDesc: e.target.value })} placeholder="e.g. Always ready to help" className="h-11 bg-background" />
+          <div className="space-y-1">
+             <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Image Desc Overlay</Label>
+             <Input value={content.imageDesc || ""} onChange={(e) => setContent({ ...content, imageDesc: e.target.value })} placeholder="e.g. Always ready to help" className="h-8 sm:h-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700" />
           </div>
        </div>
-       <div className="space-y-3">
-          <Label className="text-xs font-bold uppercase">Intro Description</Label>
-          <Textarea value={content.description || ""} onChange={(e) => setContent({ ...content, description: e.target.value })} className="min-h-[100px] bg-background" />
+       <div className="space-y-1.5">
+          <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Intro Description</Label>
+          <Textarea value={content.description || ""} onChange={(e) => setContent({ ...content, description: e.target.value })} className="min-h-[80px] text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700" />
        </div>
 
-       <div className="pt-8 border-t border-border/30">
+       <div className="pt-4 border-t border-slate-100 dark:border-slate-800">
           <ListContentEditor 
             title="Questions & Answers" 
             content={{ items: content.items || [] }} 
@@ -1383,30 +1376,30 @@ function FaqContentEditor({ content, setContent, mediaFolderBase }: any) {
 
 function OurMessageContentEditor({ content, setContent, mediaFolderBase }: any) {
   return (
-    <div className="space-y-10">
-       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+    <div className="space-y-5">
+       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <ImageUpload value={content.bgImage || ""} onChange={(url) => setContent({ ...content, bgImage: url })} label="Parallax Background Image" folder={`${mediaFolderBase}/about`} />
           <ImageUpload value={content.sideImage || ""} onChange={(url) => setContent({ ...content, sideImage: url })} label="Side Cinematic Image" folder={`${mediaFolderBase}/about`} />
        </div>
-       <div className="space-y-6">
-          <div className="space-y-3">
-             <Label className="text-xs font-bold uppercase">Main Quote</Label>
-             <Textarea value={content.quote || ""} onChange={(e) => setContent({ ...content, quote: e.target.value })} className="min-h-[80px] font-serif italic text-lg" />
+       <div className="space-y-3">
+          <div className="space-y-1">
+             <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Main Quote</Label>
+             <Textarea value={content.quote || ""} onChange={(e) => setContent({ ...content, quote: e.target.value })} className="min-h-[60px] font-serif italic text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700" />
           </div>
-          <div className="space-y-3">
-             <Label className="text-xs font-bold uppercase">Message Description</Label>
-             <Textarea value={content.description || ""} onChange={(e) => setContent({ ...content, description: e.target.value })} className="min-h-[100px]" />
+          <div className="space-y-1">
+             <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Message Description</Label>
+             <Textarea value={content.description || ""} onChange={(e) => setContent({ ...content, description: e.target.value })} className="min-h-[80px] text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700" />
           </div>
        </div>
-       <div className="pt-8 border-t border-border/30 grid grid-cols-1 md:grid-cols-2 gap-8 items-end">
-          <div className="space-y-6">
-             <div className="space-y-3">
-                <Label className="text-xs font-bold uppercase">Author Name</Label>
-                <Input value={content.authorName || ""} onChange={(e) => setContent({ ...content, authorName: e.target.value })} />
+       <div className="pt-4 border-t border-slate-100 dark:border-slate-800 grid grid-cols-1 sm:grid-cols-2 gap-3 items-end">
+          <div className="space-y-3">
+             <div className="space-y-1">
+                <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Author Name</Label>
+                <Input value={content.authorName || ""} onChange={(e) => setContent({ ...content, authorName: e.target.value })} className="h-8 sm:h-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 font-semibold" />
              </div>
-             <div className="space-y-3">
-                <Label className="text-xs font-bold uppercase">Author Role</Label>
-                <Input value={content.authorRole || ""} onChange={(e) => setContent({ ...content, authorRole: e.target.value })} />
+             <div className="space-y-1">
+                <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Author Role</Label>
+                <Input value={content.authorRole || ""} onChange={(e) => setContent({ ...content, authorRole: e.target.value })} className="h-8 sm:h-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700" />
              </div>
           </div>
           <ImageUpload value={content.authorAvatar || ""} onChange={(url) => setContent({ ...content, authorAvatar: url })} label="Author Avatar" folder={`${mediaFolderBase}/about`} />
@@ -1417,13 +1410,13 @@ function OurMessageContentEditor({ content, setContent, mediaFolderBase }: any) 
 
 function MissionContentEditor({ content, setContent, mediaFolderBase }: any) {
   return (
-    <div className="space-y-10">
+    <div className="space-y-5">
        <ImageUpload value={content.image || ""} onChange={(url) => setContent({ ...content, image: url })} label="Mission Image" folder={`${mediaFolderBase}/about`} />
-       <div className="space-y-3">
-          <Label className="text-xs font-bold uppercase">Mission Description</Label>
-          <Textarea value={content.description || ""} onChange={(e) => setContent({ ...content, description: e.target.value })} className="min-h-[100px]" />
+       <div className="space-y-1.5">
+          <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Mission Description</Label>
+          <Textarea value={content.description || ""} onChange={(e) => setContent({ ...content, description: e.target.value })} className="min-h-[80px] text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700" />
        </div>
-       <div className="pt-8 border-t border-border/30">
+       <div className="pt-4 border-t border-slate-100 dark:border-slate-800">
           <ListContentEditor 
             title="Mission Highlights" 
             content={{ items: (content.items || []).map((i: string) => ({ text: i })) }} 
@@ -1437,20 +1430,20 @@ function MissionContentEditor({ content, setContent, mediaFolderBase }: any) {
 
 function VisionContentEditor({ content, setContent, mediaFolderBase }: any) {
   return (
-    <div className="space-y-10">
+    <div className="space-y-5">
        <ImageUpload value={content.image || ""} onChange={(url) => setContent({ ...content, image: url })} label="Vision Image" folder={`${mediaFolderBase}/about`} />
-       <div className="space-y-3">
-          <Label className="text-xs font-bold uppercase">Vision Description</Label>
-          <Textarea value={content.description || ""} onChange={(e) => setContent({ ...content, description: e.target.value })} className="min-h-[100px]" />
+       <div className="space-y-1.5">
+          <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Vision Description</Label>
+          <Textarea value={content.description || ""} onChange={(e) => setContent({ ...content, description: e.target.value })} className="min-h-[80px] text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700" />
        </div>
-       <div className="pt-8 border-t border-border/30">
+       <div className="pt-4 border-t border-slate-100 dark:border-slate-800">
           <ListContentEditor 
             title="Vision Cards" 
             content={{ items: content.items || [] }} 
             setContent={(newContent: any) => setContent({ ...content, items: newContent.items })} 
             itemFields={['icon', 'title', 'text']} 
           />
-          <p className="text-[10px] text-muted-foreground mt-2 px-2 italic">Icons: rocket, sparkles, globe, eye, target, zap</p>
+          <p className="text-[9px] text-muted-foreground mt-1.5 italic">Icons: rocket, sparkles, globe, eye, target, zap</p>
        </div>
     </div>
   );
@@ -1462,27 +1455,27 @@ function ServicesContentEditor({ content, setContent, mediaFolderBase }: any) {
   const highlights = content.highlights || [];
 
   return (
-    <div className="space-y-16">
-       {/* 0. Global Toggles */}
-       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-6 bg-primary/5 rounded-[2rem] border border-primary/20">
-          <div className="flex items-center justify-between p-3 bg-background rounded-xl border border-border/40">
-            <span className="text-sm font-bold">Show Highlights</span>
-            <Switch checked={content.showHighlights !== false} onCheckedChange={(val) => setContent({...content, showHighlights: val})} />
+    <div className="space-y-6">
+       {/* Global Toggles */}
+       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-3 bg-slate-50/70 dark:bg-slate-800/30 rounded-xl border border-slate-200/80 dark:border-slate-800">
+          <div className="flex items-center justify-between p-2.5 bg-white dark:bg-slate-900 rounded-lg border border-slate-200/60 dark:border-slate-800 shadow-xs">
+            <span className="text-xs font-semibold">Highlights</span>
+            <Switch checked={content.showHighlights !== false} onCheckedChange={(val) => setContent({...content, showHighlights: val})} className="scale-75" />
           </div>
-          <div className="flex items-center justify-between p-3 bg-background rounded-xl border border-border/40">
-            <span className="text-sm font-bold">Show LMS</span>
-            <Switch checked={content.showLms !== false} onCheckedChange={(val) => setContent({...content, showLms: val})} />
+          <div className="flex items-center justify-between p-2.5 bg-white dark:bg-slate-900 rounded-lg border border-slate-200/60 dark:border-slate-800 shadow-xs">
+            <span className="text-xs font-semibold">LMS Preview</span>
+            <Switch checked={content.showLms !== false} onCheckedChange={(val) => setContent({...content, showLms: val})} className="scale-75" />
           </div>
-          <div className="flex items-center justify-between p-3 bg-background rounded-xl border border-border/40">
-            <span className="text-sm font-bold">Show Ecosystem</span>
-            <Switch checked={content.showEcosystem !== false} onCheckedChange={(val) => setContent({...content, showEcosystem: val})} />
+          <div className="flex items-center justify-between p-2.5 bg-white dark:bg-slate-900 rounded-lg border border-slate-200/60 dark:border-slate-800 shadow-xs">
+            <span className="text-xs font-semibold">Ecosystem</span>
+            <Switch checked={content.showEcosystem !== false} onCheckedChange={(val) => setContent({...content, showEcosystem: val})} className="scale-75" />
           </div>
        </div>
 
-       {/* 1. Highlights Editor (The 4 Cards) */}
-       <div className="space-y-8">
-          <Label className="text-lg font-black uppercase text-primary border-b-2 border-primary/20 pb-2 flex items-center gap-2">
-             <Zap className="h-5 w-5" /> Service Highlights (4 Cards)
+       {/* Highlights Editor */}
+       <div className="space-y-4 pt-2">
+          <Label className="text-xs font-bold uppercase text-primary border-b border-primary/20 pb-1 flex items-center gap-1.5">
+             <Zap className="h-3.5 w-3.5" /> Service Highlights (4 Cards)
           </Label>
           <ListContentEditor 
              title="Highlights" 
@@ -1491,32 +1484,32 @@ function ServicesContentEditor({ content, setContent, mediaFolderBase }: any) {
              itemFields={['icon', 'title', 'desc']} 
              mediaFolderBase={mediaFolderBase}
           />
-          <p className="text-[10px] text-muted-foreground mt-2 px-2 italic">Icons: globe, cpu, shield, zap, rocket, target</p>
+          <p className="text-[9px] text-muted-foreground mt-1 italic">Icons: globe, cpu, shield, zap, rocket, target</p>
        </div>
 
-       {/* 2. LMS Part */}
-       <div className="space-y-8">
-          <Label className="text-lg font-black uppercase text-primary border-b-2 border-primary/20 pb-2 flex items-center gap-2">
-             <Cpu className="h-5 w-5" /> Next-Gen LMS
+       {/* LMS Part */}
+       <div className="space-y-4 pt-4 border-t border-slate-100 dark:border-slate-800">
+          <Label className="text-xs font-bold uppercase text-primary border-b border-primary/20 pb-1 flex items-center gap-1.5">
+             <Cpu className="h-3.5 w-3.5" /> Next-Gen LMS
           </Label>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-             <div className="space-y-6">
-                <div className="space-y-3">
-                   <Label className="text-xs font-bold uppercase">LMS Title</Label>
-                   <Input value={lms.title || ""} onChange={(e) => setContent({ ...content, lms: { ...lms, title: e.target.value } })} />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+             <div className="space-y-3">
+                <div className="space-y-1">
+                   <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">LMS Title</Label>
+                   <Input value={lms.title || ""} onChange={(e) => setContent({ ...content, lms: { ...lms, title: e.target.value } })} className="h-8 sm:h-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700" />
                 </div>
-                <div className="space-y-3">
-                   <Label className="text-xs font-bold uppercase">LMS Subtitle (Badge)</Label>
-                   <Input value={lms.subtitle || ""} onChange={(e) => setContent({ ...content, lms: { ...lms, subtitle: e.target.value } })} />
+                <div className="space-y-1">
+                   <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">LMS Subtitle (Badge)</Label>
+                   <Input value={lms.subtitle || ""} onChange={(e) => setContent({ ...content, lms: { ...lms, subtitle: e.target.value } })} className="h-8 sm:h-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700" />
                 </div>
-                <div className="space-y-3">
-                   <Label className="text-xs font-bold uppercase">LMS Description</Label>
-                   <Textarea value={lms.description || ""} onChange={(e) => setContent({ ...content, lms: { ...lms, description: e.target.value } })} className="min-h-[100px]" />
+                <div className="space-y-1">
+                   <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">LMS Description</Label>
+                   <Textarea value={lms.description || ""} onChange={(e) => setContent({ ...content, lms: { ...lms, description: e.target.value } })} className="min-h-[70px] text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700" />
                 </div>
              </div>
              <ImageUpload value={lms.image || ""} onChange={(url) => setContent({ ...content, lms: { ...lms, image: url } })} label="LMS Preview Image" folder={`${mediaFolderBase}/services`} />
           </div>
-          <div className="pt-4">
+          <div className="pt-2">
              <ListContentEditor 
                 title="LMS Key Features" 
                 content={{ items: lms.features || [] }} 
@@ -1527,22 +1520,22 @@ function ServicesContentEditor({ content, setContent, mediaFolderBase }: any) {
           </div>
        </div>
 
-       {/* 3. Ecosystem Part */}
-       <div className="space-y-8">
-          <Label className="text-lg font-black uppercase text-primary border-b-2 border-primary/20 pb-2 flex items-center gap-2">
-             <LayoutDashboard className="h-5 w-5" /> Dashboard Ecosystem
+       {/* Ecosystem Part */}
+       <div className="space-y-4 pt-4 border-t border-slate-100 dark:border-slate-800">
+          <Label className="text-xs font-bold uppercase text-primary border-b border-primary/20 pb-1 flex items-center gap-1.5">
+             <LayoutDashboard className="h-3.5 w-3.5" /> Dashboard Ecosystem
           </Label>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-             <div className="space-y-3">
-                <h4 className="text-xs font-bold uppercase">Ecosystem Title</h4>
-                <Input value={ecosystem.title || ""} onChange={(e) => setContent({ ...content, ecosystem: { ...ecosystem, title: e.target.value } })} />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+             <div className="space-y-1">
+                <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Ecosystem Title</Label>
+                <Input value={ecosystem.title || ""} onChange={(e) => setContent({ ...content, ecosystem: { ...ecosystem, title: e.target.value } })} className="h-8 sm:h-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700" />
              </div>
-             <div className="space-y-3">
-                <h4 className="text-xs font-bold uppercase">Ecosystem Description</h4>
-                <Textarea value={ecosystem.description || ""} onChange={(e) => setContent({ ...content, ecosystem: { ...ecosystem, description: e.target.value } })} />
+             <div className="space-y-1">
+                <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Ecosystem Description</Label>
+                <Textarea value={ecosystem.description || ""} onChange={(e) => setContent({ ...content, ecosystem: { ...ecosystem, description: e.target.value } })} className="min-h-[70px] text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700" />
              </div>
           </div>
-          <div className="pt-4">
+          <div className="pt-2">
              <ListContentEditor 
                 title="Role Management Cards" 
                 content={{ items: ecosystem.roles || [] }} 
@@ -1550,7 +1543,7 @@ function ServicesContentEditor({ content, setContent, mediaFolderBase }: any) {
                 itemFields={['title', 'description', 'icon', 'color']} 
                 mediaFolderBase={mediaFolderBase}
              />
-             <p className="text-[10px] text-muted-foreground mt-2 px-2 italic">Icons: shield, briefcase, wallet, users, graduation, heart, globe, zap, target</p>
+             <p className="text-[9px] text-muted-foreground mt-1 italic">Icons: shield, briefcase, wallet, users, graduation, heart, globe, zap, target</p>
           </div>
        </div>
     </div>
@@ -1559,27 +1552,29 @@ function ServicesContentEditor({ content, setContent, mediaFolderBase }: any) {
 
 function PageHeaderContentEditor({ content, setContent, mediaFolderBase }: any) {
   return (
-    <div className="space-y-8">
+    <div className="space-y-4">
        <ImageUpload 
          value={content.bgImage || ""} 
          onChange={(url) => setContent({ ...content, bgImage: url })} 
          label="Header Background Image" 
          folder={`${mediaFolderBase}/headers`} 
        />
-       <div className="space-y-2">
-          <Label className="text-[10px] uppercase font-bold text-muted-foreground">Or Provide Image Link</Label>
+       <div className="space-y-1">
+          <Label className="text-[10px] uppercase font-bold tracking-wider text-slate-500">Or Provide Image Link</Label>
           <Input 
             value={content.bgImage || ""} 
             onChange={(e) => setContent({ ...content, bgImage: e.target.value })} 
             placeholder="https://example.com/image.jpg"
+            className="h-8 sm:h-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700"
           />
        </div>
-       <div className="space-y-2">
-          <Label className="text-[10px] uppercase font-bold text-muted-foreground">Breadcrumb Text</Label>
+       <div className="space-y-1">
+          <Label className="text-[10px] uppercase font-bold tracking-wider text-slate-500">Breadcrumb Text</Label>
           <Input 
             value={content.breadcrumb || ""} 
             onChange={(e) => setContent({ ...content, breadcrumb: e.target.value })} 
             placeholder="e.g. About Us"
+            className="h-8 sm:h-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 font-medium"
           />
        </div>
     </div>
@@ -1588,48 +1583,48 @@ function PageHeaderContentEditor({ content, setContent, mediaFolderBase }: any) 
 
 function LegalContentEditor({ content, setContent, mediaFolderBase }: any) {
   return (
-    <div className="space-y-12">
+    <div className="space-y-5">
        {/* Header Controls */}
-       <div className="space-y-6 bg-primary/5 p-8 rounded-[2rem] border border-primary/10">
-         <h4 className="text-[10px] font-black uppercase tracking-widest text-primary flex items-center gap-2">
-           <LayoutDashboard className="h-4 w-4" /> Header Customization
+       <div className="space-y-3 bg-slate-50/60 dark:bg-slate-800/30 p-3.5 sm:p-4 rounded-xl border border-slate-200/80 dark:border-slate-800">
+         <h4 className="text-[10px] font-bold uppercase tracking-wider text-primary flex items-center gap-1.5">
+           <LayoutDashboard className="h-3.5 w-3.5" /> Header Customization
          </h4>
-         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <ImageUpload 
               value={content.bgImage || ""} 
               onChange={(url) => setContent({ ...content, bgImage: url })} 
               label="Page Background Image" 
               folder={`${mediaFolderBase}/legal`} 
             />
-            <div className="space-y-3 justify-end flex flex-col">
-              <Label className="text-[10px] uppercase font-bold text-muted-foreground ml-1">Breadcrumb Text</Label>
+            <div className="space-y-2 justify-end flex flex-col">
+              <Label className="text-[10px] uppercase font-bold tracking-wider text-slate-500 ml-0.5">Breadcrumb Text</Label>
               <Input 
                 value={content.breadcrumb || ""} 
                 onChange={(e) => setContent({ ...content, breadcrumb: e.target.value })} 
                 placeholder="e.g. Privacy Policy"
-                className="h-12 rounded-2xl bg-white border-none"
+                className="h-8 sm:h-9 text-xs rounded-lg bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 font-medium"
               />
             </div>
          </div>
        </div>
 
        {/* Content Controls */}
-       <div className="space-y-8">
-         <div className="space-y-3">
-            <Label className="text-[10px] uppercase font-bold text-muted-foreground">Last Updated Date</Label>
+       <div className="space-y-4">
+         <div className="space-y-1">
+            <Label className="text-[10px] uppercase font-bold tracking-wider text-slate-500">Last Updated Date</Label>
             <Input 
               value={content.lastUpdated || ""} 
               onChange={(e) => setContent({ ...content, lastUpdated: e.target.value })} 
               placeholder="e.g. October 2023"
-              className="h-12 rounded-2xl bg-muted/5 border-none"
+              className="h-8 sm:h-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700"
             />
          </div>
-         <div className="space-y-3">
-            <Label className="text-[10px] uppercase font-bold text-muted-foreground">Page Content</Label>
+         <div className="space-y-1">
+            <Label className="text-[10px] uppercase font-bold tracking-wider text-slate-500">Page Content</Label>
             <Textarea 
               value={content.html || ""} 
               onChange={(e) => setContent({ ...content, html: e.target.value })} 
-              className="min-h-[400px] font-mono text-sm rounded-3xl bg-muted/5 p-6 border-none"
+              className="min-h-[350px] font-mono text-xs rounded-xl bg-slate-50 dark:bg-slate-800/50 p-3.5 border-slate-200 dark:border-slate-700"
               placeholder="<h1>Privacy Policy</h1><p>Your privacy is important to us...</p>"
             />
          </div>
@@ -1640,31 +1635,31 @@ function LegalContentEditor({ content, setContent, mediaFolderBase }: any) {
 
 function ReadyToModernizeContentEditor({ content, setContent, mediaFolderBase }: any) {
   return (
-    <div className="space-y-10">
+    <div className="space-y-5">
         <ImageUpload value={content.bgImage || ""} onChange={(url) => setContent({ ...content, bgImage: url })} label="Parallax Background Image" folder={`${mediaFolderBase}/services`} />
-        <div className="space-y-3">
-           <Label className="text-xs font-bold uppercase">Main Description</Label>
-           <Textarea value={content.description || ""} onChange={(e) => setContent({ ...content, description: e.target.value })} />
+        <div className="space-y-1.5">
+           <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Main Description</Label>
+           <Textarea value={content.description || ""} onChange={(e) => setContent({ ...content, description: e.target.value })} className="min-h-[80px] text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700" />
         </div>
-       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <div className="p-4 border border-border/40 rounded-2xl space-y-4">
-             <Label className="text-xs font-bold uppercase">Primary Button (Pill)</Label>
-             <div className="space-y-2">
-                <Input value={content.primaryBtn?.label || ""} onChange={(e) => setContent({ ...content, primaryBtn: { ...content.primaryBtn, label: e.target.value } })} placeholder="Label" />
-                <Input value={content.primaryBtn?.link || ""} onChange={(e) => setContent({ ...content, primaryBtn: { ...content.primaryBtn, link: e.target.value } })} placeholder="Link" />
+       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="p-3 border border-slate-200/80 dark:border-slate-800 rounded-xl space-y-2.5 bg-white dark:bg-slate-900">
+             <Label className="text-[10px] font-bold uppercase tracking-wider text-primary">Primary Button (Pill)</Label>
+             <div className="space-y-1.5">
+                <Input value={content.primaryBtn?.label || ""} onChange={(e) => setContent({ ...content, primaryBtn: { ...content.primaryBtn, label: e.target.value } })} placeholder="Label" className="h-8 sm:h-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700" />
+                <Input value={content.primaryBtn?.link || ""} onChange={(e) => setContent({ ...content, primaryBtn: { ...content.primaryBtn, link: e.target.value } })} placeholder="Link" className="h-8 sm:h-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700" />
              </div>
           </div>
-          <div className="p-4 border border-border/40 rounded-2xl space-y-4">
-             <Label className="text-xs font-bold uppercase">Secondary Button (Ghost)</Label>
-             <div className="space-y-2">
-                <Input value={content.secondaryBtn?.label || ""} onChange={(e) => setContent({ ...content, secondaryBtn: { ...content.secondaryBtn, label: e.target.value } })} placeholder="Label" />
-                <Input value={content.secondaryBtn?.link || ""} onChange={(e) => setContent({ ...content, secondaryBtn: { ...content.secondaryBtn, link: e.target.value } })} placeholder="Link" />
+          <div className="p-3 border border-slate-200/80 dark:border-slate-800 rounded-xl space-y-2.5 bg-white dark:bg-slate-900">
+             <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Secondary Button (Ghost)</Label>
+             <div className="space-y-1.5">
+                <Input value={content.secondaryBtn?.label || ""} onChange={(e) => setContent({ ...content, secondaryBtn: { ...content.secondaryBtn, label: e.target.value } })} placeholder="Label" className="h-8 sm:h-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700" />
+                <Input value={content.secondaryBtn?.link || ""} onChange={(e) => setContent({ ...content, secondaryBtn: { ...content.secondaryBtn, link: e.target.value } })} placeholder="Link" className="h-8 sm:h-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700" />
              </div>
           </div>
        </div>
-       <div className="space-y-3">
-          <Label className="text-xs font-bold uppercase">Trust Badge Text</Label>
-          <Input value={content.trustText || ""} onChange={(e) => setContent({ ...content, trustText: e.target.value })} />
+       <div className="space-y-1">
+          <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Trust Badge Text</Label>
+          <Input value={content.trustText || ""} onChange={(e) => setContent({ ...content, trustText: e.target.value })} className="h-8 sm:h-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700" />
        </div>
     </div>
   );
@@ -1677,12 +1672,12 @@ function GuideStepsContentEditor({ content, setContent, mediaFolderBase }: any) 
   }));
 
   return (
-    <div className="space-y-10">
-       <div className="space-y-3">
-          <Label className="text-xs font-bold uppercase">Description</Label>
-          <Textarea value={content.description || ""} onChange={(e) => setContent({ ...content, description: e.target.value })} />
+    <div className="space-y-5">
+       <div className="space-y-1.5">
+          <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Description</Label>
+          <Textarea value={content.description || ""} onChange={(e) => setContent({ ...content, description: e.target.value })} className="min-h-[80px] text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700" />
        </div>
-       <div className="pt-8 border-t border-border/30">
+       <div className="pt-4 border-t border-slate-100 dark:border-slate-800">
           <ListContentEditor 
             title="Onboarding Steps" 
             content={{ items: steps }} 
@@ -1696,7 +1691,7 @@ function GuideStepsContentEditor({ content, setContent, mediaFolderBase }: any) 
             itemFields={['title', 'subtitle', 'desc', 'icon', 'substeps']} 
             mediaFolderBase={mediaFolderBase}
           />
-          <p className="text-[10px] text-muted-foreground mt-2 px-2 italic">Icons: userPlus, settings, book, rocket, userCheck, dashboard, cpu, shield</p>
+          <p className="text-[9px] text-muted-foreground mt-1.5 italic">Icons: userPlus, settings, book, rocket, userCheck, dashboard, cpu, shield</p>
        </div>
     </div>
   );
@@ -1707,66 +1702,66 @@ function GuideResourcesContentEditor({ content, setContent, mediaFolderBase }: a
   const docs = content.docs || {};
 
   return (
-    <div className="space-y-16">
+    <div className="space-y-6">
        {/* Video Part */}
-       <div className="space-y-8">
-          <Label className="text-lg font-black uppercase text-primary border-b-2 border-primary/20 pb-2 flex items-center gap-2">
-             <Play className="h-5 w-5" /> Video Tutorial
+       <div className="space-y-4">
+          <Label className="text-xs font-bold uppercase text-primary border-b border-primary/20 pb-1 flex items-center gap-1.5">
+             <Play className="h-3.5 w-3.5" /> Video Tutorial
           </Label>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-             <div className="space-y-4">
-                <div className="space-y-2">
-                   <Label className="text-xs font-bold uppercase">Video Badge</Label>
-                   <Input value={video.badge || ""} onChange={(e) => setContent({ ...content, video: { ...video, badge: e.target.value } })} />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
+             <div className="space-y-2.5">
+                <div className="space-y-1">
+                   <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Video Badge</Label>
+                   <Input value={video.badge || ""} onChange={(e) => setContent({ ...content, video: { ...video, badge: e.target.value } })} className="h-8 sm:h-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700" />
                 </div>
-                <div className="space-y-2">
-                   <Label className="text-xs font-bold uppercase">Video Title</Label>
-                   <Input value={video.title || ""} onChange={(e) => setContent({ ...content, video: { ...video, title: e.target.value } })} />
+                <div className="space-y-1">
+                   <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Video Title</Label>
+                   <Input value={video.title || ""} onChange={(e) => setContent({ ...content, video: { ...video, title: e.target.value } })} className="h-8 sm:h-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 font-semibold" />
                 </div>
-                <div className="space-y-2">
-                   <Label className="text-xs font-bold uppercase">Video Description</Label>
-                   <Textarea value={video.description || ""} onChange={(e) => setContent({ ...content, video: { ...video, description: e.target.value } })} />
+                <div className="space-y-1">
+                   <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Video Description</Label>
+                   <Textarea value={video.description || ""} onChange={(e) => setContent({ ...content, video: { ...video, description: e.target.value } })} className="min-h-[70px] text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700" />
                 </div>
-                <div className="space-y-2">
-                   <Label className="text-xs font-bold uppercase">YouTube Embed URL</Label>
-                   <Input value={video.url || ""} onChange={(e) => setContent({ ...content, video: { ...video, url: e.target.value } })} placeholder="https://www.youtube.com/embed/..." />
+                <div className="space-y-1">
+                   <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">YouTube Embed URL</Label>
+                   <Input value={video.url || ""} onChange={(e) => setContent({ ...content, video: { ...video, url: e.target.value } })} placeholder="https://www.youtube.com/embed/..." className="h-8 sm:h-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700" />
                 </div>
              </div>
-             <div className="p-8 border-2 border-dashed border-border rounded-3xl flex flex-col items-center justify-center text-center">
-                <Play className="h-12 w-12 text-primary/20 mb-4" />
+             <div className="p-4 border border-dashed border-slate-200 dark:border-slate-800 rounded-xl flex flex-col items-center justify-center text-center bg-slate-50/50 dark:bg-slate-800/20">
+                <Play className="h-8 w-8 text-primary/30 mb-2" />
                 <p className="text-xs text-muted-foreground">Video preview will appear on the guide page.</p>
              </div>
           </div>
        </div>
 
        {/* Documentation Part */}
-       <div className="space-y-8">
-          <Label className="text-lg font-black uppercase text-primary border-b-2 border-primary/20 pb-2 flex items-center gap-2">
-             <FileText className="h-5 w-5" /> Documentation PDF
+       <div className="space-y-4 pt-4 border-t border-slate-100 dark:border-slate-800">
+          <Label className="text-xs font-bold uppercase text-primary border-b border-primary/20 pb-1 flex items-center gap-1.5">
+             <FileText className="h-3.5 w-3.5" /> Documentation PDF
           </Label>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-             <div className="space-y-4">
-                <div className="space-y-2">
-                   <Label className="text-xs font-bold uppercase">Docs Title</Label>
-                   <Input value={docs.title || ""} onChange={(e) => setContent({ ...content, docs: { ...docs, title: e.target.value } })} />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
+             <div className="space-y-2.5">
+                <div className="space-y-1">
+                   <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Docs Title</Label>
+                   <Input value={docs.title || ""} onChange={(e) => setContent({ ...content, docs: { ...docs, title: e.target.value } })} className="h-8 sm:h-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 font-semibold" />
                 </div>
-                <div className="space-y-2">
-                   <Label className="text-xs font-bold uppercase">Docs Description</Label>
-                   <Textarea value={docs.description || ""} onChange={(e) => setContent({ ...content, docs: { ...docs, description: e.target.value } })} />
+                <div className="space-y-1">
+                   <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Docs Description</Label>
+                   <Textarea value={docs.description || ""} onChange={(e) => setContent({ ...content, docs: { ...docs, description: e.target.value } })} className="min-h-[70px] text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700" />
                 </div>
              </div>
-             <div className="space-y-4">
-                <div className="space-y-2">
-                   <Label className="text-xs font-bold uppercase">Button Label</Label>
-                   <Input value={docs.btnLabel || ""} onChange={(e) => setContent({ ...content, docs: { ...docs, btnLabel: e.target.value } })} />
+             <div className="space-y-2.5">
+                <div className="space-y-1">
+                   <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Button Label</Label>
+                   <Input value={docs.btnLabel || ""} onChange={(e) => setContent({ ...content, docs: { ...docs, btnLabel: e.target.value } })} className="h-8 sm:h-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700" />
                 </div>
-                <div className="space-y-2">
-                   <Label className="text-xs font-bold uppercase">Download Link (PDF)</Label>
-                   <Input value={docs.btnLink || ""} onChange={(e) => setContent({ ...content, docs: { ...docs, btnLink: e.target.value } })} />
+                <div className="space-y-1">
+                   <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Download Link (PDF)</Label>
+                   <Input value={docs.btnLink || ""} onChange={(e) => setContent({ ...content, docs: { ...docs, btnLink: e.target.value } })} className="h-8 sm:h-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700" />
                 </div>
-                <div className="space-y-2">
-                   <Label className="text-xs font-bold uppercase">Social Proof Text</Label>
-                   <Input value={docs.joinedText || ""} onChange={(e) => setContent({ ...content, docs: { ...docs, joinedText: e.target.value } })} />
+                <div className="space-y-1">
+                   <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Social Proof Text</Label>
+                   <Input value={docs.joinedText || ""} onChange={(e) => setContent({ ...content, docs: { ...docs, joinedText: e.target.value } })} className="h-8 sm:h-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700" />
                 </div>
              </div>
           </div>
@@ -1779,53 +1774,53 @@ function CustomSolutionContentEditor({ content, setContent, mediaFolderBase }: a
   const contact = content.contact || {};
 
   return (
-    <div className="space-y-10">
+    <div className="space-y-5">
        <ImageUpload value={content.bgImage || ""} onChange={(url) => setContent({ ...content, bgImage: url })} label="Parallax Background Image" folder={`${mediaFolderBase}/pricing`} />
-       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <div className="space-y-3">
-             <Label className="text-xs font-bold uppercase">Badge Text</Label>
-             <Input value={content.badge || ""} onChange={(e) => setContent({ ...content, badge: e.target.value })} />
+       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="space-y-1">
+             <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Badge Text</Label>
+             <Input value={content.badge || ""} onChange={(e) => setContent({ ...content, badge: e.target.value })} className="h-8 sm:h-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700" />
           </div>
-          <div className="space-y-3">
-             <Label className="text-xs font-bold uppercase">Section Heading</Label>
-             <Input value={content.title || ""} onChange={(e) => setContent({ ...content, title: e.target.value })} />
+          <div className="space-y-1">
+             <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Section Heading</Label>
+             <Input value={content.title || ""} onChange={(e) => setContent({ ...content, title: e.target.value })} className="h-8 sm:h-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 font-semibold" />
           </div>
        </div>
-       <div className="space-y-3">
-          <Label className="text-xs font-bold uppercase">Main Description</Label>
-          <Textarea value={content.description || ""} onChange={(e) => setContent({ ...content, description: e.target.value })} />
+       <div className="space-y-1.5">
+          <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Main Description</Label>
+          <Textarea value={content.description || ""} onChange={(e) => setContent({ ...content, description: e.target.value })} className="min-h-[70px] text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700" />
        </div>
 
        {/* Contact Details */}
-       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="space-y-2">
-             <Label className="text-xs font-bold uppercase">Phone Number</Label>
-             <Input value={contact.phone || ""} onChange={(e) => setContent({ ...content, contact: { ...contact, phone: e.target.value } })} />
+       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="space-y-1">
+             <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Phone Number</Label>
+             <Input value={contact.phone || ""} onChange={(e) => setContent({ ...content, contact: { ...contact, phone: e.target.value } })} className="h-8 sm:h-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700" />
           </div>
-          <div className="space-y-2">
-             <Label className="text-xs font-bold uppercase">Email Address</Label>
-             <Input value={contact.email || ""} onChange={(e) => setContent({ ...content, contact: { ...contact, email: e.target.value } })} />
+          <div className="space-y-1">
+             <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Email Address</Label>
+             <Input value={contact.email || ""} onChange={(e) => setContent({ ...content, contact: { ...contact, email: e.target.value } })} className="h-8 sm:h-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700" />
           </div>
-          <div className="space-y-2">
-             <Label className="text-xs font-bold uppercase">WhatsApp Number</Label>
-             <Input value={contact.whatsapp || ""} onChange={(e) => setContent({ ...content, contact: { ...contact, whatsapp: e.target.value } })} />
+          <div className="space-y-1">
+             <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">WhatsApp Number</Label>
+             <Input value={contact.whatsapp || ""} onChange={(e) => setContent({ ...content, contact: { ...contact, whatsapp: e.target.value } })} className="h-8 sm:h-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700" />
           </div>
        </div>
 
        {/* Buttons */}
-       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-4">
-          <div className="p-4 border border-border/40 rounded-2xl space-y-4">
-             <Label className="text-xs font-bold uppercase">Primary Button</Label>
-             <div className="space-y-2">
-                <Input value={content.primaryBtn?.label || ""} onChange={(e) => setContent({ ...content, primaryBtn: { ...content.primaryBtn, label: e.target.value } })} placeholder="Label" />
-                <Input value={content.primaryBtn?.link || ""} onChange={(e) => setContent({ ...content, primaryBtn: { ...content.primaryBtn, link: e.target.value } })} placeholder="Link" />
+       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+          <div className="p-3 border border-slate-200/80 dark:border-slate-800 rounded-xl space-y-2 bg-white dark:bg-slate-900">
+             <Label className="text-[10px] font-bold uppercase tracking-wider text-primary">Primary Button</Label>
+             <div className="space-y-1.5">
+                <Input value={content.primaryBtn?.label || ""} onChange={(e) => setContent({ ...content, primaryBtn: { ...content.primaryBtn, label: e.target.value } })} placeholder="Label" className="h-8 sm:h-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700" />
+                <Input value={content.primaryBtn?.link || ""} onChange={(e) => setContent({ ...content, primaryBtn: { ...content.primaryBtn, link: e.target.value } })} placeholder="Link" className="h-8 sm:h-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700" />
              </div>
           </div>
-          <div className="p-4 border border-border/40 rounded-2xl space-y-4">
-             <Label className="text-xs font-bold uppercase">Secondary Button</Label>
-             <div className="space-y-2">
-                <Input value={content.secondaryBtn?.label || ""} onChange={(e) => setContent({ ...content, secondaryBtn: { ...content.secondaryBtn, label: e.target.value } })} placeholder="Label" />
-                <Input value={content.secondaryBtn?.link || ""} onChange={(e) => setContent({ ...content, secondaryBtn: { ...content.secondaryBtn, link: e.target.value } })} placeholder="Link" />
+          <div className="p-3 border border-slate-200/80 dark:border-slate-800 rounded-xl space-y-2 bg-white dark:bg-slate-900">
+             <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Secondary Button</Label>
+             <div className="space-y-1.5">
+                <Input value={content.secondaryBtn?.label || ""} onChange={(e) => setContent({ ...content, secondaryBtn: { ...content.secondaryBtn, label: e.target.value } })} placeholder="Label" className="h-8 sm:h-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700" />
+                <Input value={content.secondaryBtn?.link || ""} onChange={(e) => setContent({ ...content, secondaryBtn: { ...content.secondaryBtn, link: e.target.value } })} placeholder="Link" className="h-8 sm:h-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700" />
              </div>
           </div>
        </div>
@@ -1841,71 +1836,72 @@ function PricingContentEditor({ content, setContent, mediaFolderBase }: any) {
   ];
 
   return (
-    <div className="space-y-12">
+    <div className="space-y-5">
       {/* Demo Banner Toggle */}
-      <div className="p-6 bg-primary/5 rounded-[2rem] border border-primary/20 flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <div className="w-10 h-10 rounded-xl bg-primary/20 text-primary flex items-center justify-center">
-            <Rocket className="w-5 h-5" />
+      <div className="p-3 sm:p-3.5 bg-slate-50/70 dark:bg-slate-800/30 rounded-xl border border-slate-200/80 dark:border-slate-800 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
+            <Rocket className="w-4 h-4" />
           </div>
           <div>
-            <h4 className="font-bold">Free Demo Banner</h4>
-            <p className="text-xs text-muted-foreground">Show the 30-day free trial offer at the top.</p>
+            <h4 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">Free Demo Banner</h4>
+            <p className="text-[10px] text-muted-foreground">Show the 30-day free trial offer at the top.</p>
           </div>
         </div>
         <Switch 
           checked={!!content.showDemoBanner} 
           onCheckedChange={(val) => setContent({ ...content, showDemoBanner: val })} 
+          className="scale-75"
         />
       </div>
 
       {/* Plans List */}
-      <div className="space-y-8">
-        <Label className="text-sm font-black uppercase text-primary tracking-widest px-2">Subscription Plans</Label>
-        <div className="grid grid-cols-1 gap-6">
+      <div className="space-y-3 pt-2">
+        <Label className="text-[10px] font-bold uppercase text-primary tracking-wider">Subscription Plans</Label>
+        <div className="grid grid-cols-1 gap-3">
           {plans.map((plan: any, idx: number) => (
-            <div key={idx} className="p-8 bg-background border border-border/40 rounded-[2.5rem] space-y-6 relative group shadow-sm hover:shadow-md transition-all">
-              <div className="flex flex-col md:flex-row gap-6">
-                <div className="flex-1 space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label className="text-[10px] uppercase font-bold text-muted-foreground">Plan Name</Label>
+            <div key={idx} className="p-3.5 sm:p-4 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-xl space-y-3 relative group shadow-xs">
+              <div className="flex flex-col md:flex-row gap-3">
+                <div className="flex-1 space-y-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                    <div className="space-y-1">
+                      <Label className="text-[10px] uppercase font-bold text-slate-500">Plan Name</Label>
                       <Input value={plan.name} onChange={(e) => {
                         const newPlans = [...plans];
                         newPlans[idx].name = e.target.value;
                         setContent({ ...content, plans: newPlans });
-                      }} className="h-10 font-bold" />
+                      }} className="h-8 sm:h-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 font-bold" />
                     </div>
-                    <div className="space-y-2">
-                      <Label className="text-[10px] uppercase font-bold text-muted-foreground">Description</Label>
+                    <div className="space-y-1">
+                      <Label className="text-[10px] uppercase font-bold text-slate-500">Description</Label>
                       <Input value={plan.description} onChange={(e) => {
                         const newPlans = [...plans];
                         newPlans[idx].description = e.target.value;
                         setContent({ ...content, plans: newPlans });
-                      }} className="h-10" />
+                      }} className="h-8 sm:h-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700" />
                     </div>
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                    <div className="space-y-1">
                       <Label className="text-[10px] uppercase font-bold text-primary">Monthly Price (₹)</Label>
                       <Input value={plan.monthlyPrice} onChange={(e) => {
                         const newPlans = [...plans];
                         newPlans[idx].monthlyPrice = e.target.value;
                         setContent({ ...content, plans: newPlans });
-                      }} className="h-10 font-black" />
+                      }} className="h-8 sm:h-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 font-bold" />
                     </div>
-                    <div className="space-y-2">
+                    <div className="space-y-1">
                       <Label className="text-[10px] uppercase font-bold text-indigo-600">Yearly Price (₹)</Label>
                       <Input value={plan.yearlyPrice} onChange={(e) => {
                         const newPlans = [...plans];
                         newPlans[idx].yearlyPrice = e.target.value;
                         setContent({ ...content, plans: newPlans });
-                      }} className="h-10 font-black" />
+                      }} className="h-8 sm:h-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 font-bold" />
                     </div>
                   </div>
                 </div>
-                <div className="w-full md:w-64 space-y-3">
-                   <Label className="text-[10px] uppercase font-bold text-muted-foreground">Features (Comma Separated)</Label>
+                <div className="w-full md:w-56 space-y-1 shrink-0">
+                   <Label className="text-[10px] uppercase font-bold text-slate-500">Features (Comma Separated)</Label>
                    <Textarea 
                      value={plan.features?.join(", ")} 
                      onChange={(e) => {
@@ -1913,7 +1909,7 @@ function PricingContentEditor({ content, setContent, mediaFolderBase }: any) {
                        newPlans[idx].features = e.target.value.split(",").map(f => f.trim());
                        setContent({ ...content, plans: newPlans });
                      }} 
-                     className="min-h-[120px] text-xs leading-relaxed" 
+                     className="min-h-[80px] text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 leading-relaxed" 
                    />
                 </div>
               </div>
@@ -1927,25 +1923,25 @@ function PricingContentEditor({ content, setContent, mediaFolderBase }: any) {
 
 function ContactContentEditor({ content, setContent, settings, mediaFolderBase }: any) {
   return (
-    <div className="space-y-12">
-      <div className="p-8 bg-indigo-500/5 rounded-[2.5rem] border border-indigo-500/20 space-y-6">
-        <div className="flex items-center gap-4 border-b border-indigo-500/10 pb-4">
-          <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 text-indigo-600 flex items-center justify-center">
-            <Mail className="w-6 h-6" />
+    <div className="space-y-5">
+      <div className="p-3.5 sm:p-4 bg-slate-50/70 dark:bg-slate-800/30 rounded-xl border border-slate-200/80 dark:border-slate-800 space-y-3.5">
+        <div className="flex items-center gap-3 border-b border-slate-200 dark:border-slate-800 pb-2.5">
+          <div className="w-8 h-8 rounded-lg bg-indigo-500/10 text-indigo-600 flex items-center justify-center shrink-0">
+            <Mail className="w-4 h-4" />
           </div>
           <div>
-            <h4 className="font-bold text-lg">Contact Form Settings</h4>
-            <p className="text-xs text-muted-foreground font-medium">Control what visitors see on the contact section.</p>
+            <h4 className="font-bold text-xs sm:text-sm text-slate-900 dark:text-white">Contact Form Settings</h4>
+            <p className="text-[10px] text-muted-foreground font-medium">Control what visitors see on the contact section.</p>
           </div>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-           <div className="space-y-4">
-              <Label className="text-[10px] uppercase font-bold tracking-widest text-muted-foreground">Visible Fields</Label>
-              <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
+           <div className="space-y-2">
+              <Label className="text-[10px] uppercase font-bold tracking-wider text-slate-500">Visible Fields</Label>
+              <div className="grid grid-cols-2 gap-2">
                 {['showPhone', 'showAddress', 'showSocials', 'showMap'].map((field) => (
-                  <div key={field} className="flex items-center justify-between p-3 bg-background rounded-xl border border-border/40">
-                    <span className="text-[10px] font-bold uppercase">{field.replace("show", "")}</span>
+                  <div key={field} className="flex items-center justify-between p-2 bg-white dark:bg-slate-900 rounded-lg border border-slate-200/60 dark:border-slate-800">
+                    <span className="text-[10px] font-semibold uppercase">{field.replace("show", "")}</span>
                     <Switch 
                       checked={content[field] !== false} 
                       onCheckedChange={(val) => setContent({ ...content, [field]: val })} 
@@ -1955,89 +1951,90 @@ function ContactContentEditor({ content, setContent, settings, mediaFolderBase }
                 ))}
               </div>
            </div>
-           <div className="space-y-4">
-              <Label className="text-[10px] uppercase font-bold tracking-widest text-muted-foreground">Custom Text</Label>
-              <div className="space-y-3">
-                 <Label className="text-[10px]">Button Text</Label>
-                 <Input value={content.buttonText || "Send Message"} onChange={(e) => setContent({ ...content, buttonText: e.target.value })} className="h-10" />
+           <div className="space-y-2.5">
+              <Label className="text-[10px] uppercase font-bold tracking-wider text-slate-500">Custom Text</Label>
+              <div className="space-y-1">
+                 <Label className="text-[10px] text-slate-400">Button Text</Label>
+                 <Input value={content.buttonText || "Send Message"} onChange={(e) => setContent({ ...content, buttonText: e.target.value })} className="h-8 sm:h-9 text-xs rounded-lg bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700" />
               </div>
-              <div className="space-y-3">
-                 <Label className="text-[10px]">Success Message</Label>
-                 <Input value={content.successMsg || "Message sent successfully!"} onChange={(e) => setContent({ ...content, successMsg: e.target.value })} className="h-10 text-xs" />
+              <div className="space-y-1">
+                 <Label className="text-[10px] text-slate-400">Success Message</Label>
+                 <Input value={content.successMsg || "Message sent successfully!"} onChange={(e) => setContent({ ...content, successMsg: e.target.value })} className="h-8 sm:h-9 text-xs rounded-lg bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700" />
               </div>
            </div>
         </div>
       </div>
 
       {/* CTA Box Settings */}
-      <div className="p-8 bg-primary/5 rounded-[2.5rem] border border-primary/20 space-y-8">
-        <div className="flex items-center justify-between border-b border-primary/10 pb-6">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center">
-              <Rocket className="w-6 h-6" />
+      <div className="p-3.5 sm:p-4 bg-slate-50/70 dark:bg-slate-800/30 rounded-xl border border-slate-200/80 dark:border-slate-800 space-y-3.5">
+        <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2.5">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
+              <Rocket className="w-4 h-4" />
             </div>
             <div>
-              <h4 className="font-bold text-lg">CTA Box Settings</h4>
-              <p className="text-xs text-muted-foreground font-medium">Customize the "Get Started" box on the left side.</p>
+              <h4 className="font-bold text-xs sm:text-sm text-slate-900 dark:text-white">CTA Box Settings</h4>
+              <p className="text-[10px] text-muted-foreground font-medium">Customize the "Get Started" box on the left side.</p>
             </div>
           </div>
-          <div className="flex items-center gap-3 px-4 py-2 bg-background rounded-xl border border-border/40 shadow-sm">
-            <span className="text-[10px] font-black uppercase tracking-widest">{content.ctaBox?.show !== false ? "Enabled" : "Disabled"}</span>
+          <div className="flex items-center gap-2 px-2.5 py-1 bg-white dark:bg-slate-900 rounded-lg border border-slate-200/60 dark:border-slate-800 shadow-xs">
+            <span className="text-[9px] font-bold uppercase tracking-wider text-slate-500">{content.ctaBox?.show !== false ? "Enabled" : "Disabled"}</span>
             <Switch 
               checked={content.ctaBox?.show !== false} 
               onCheckedChange={(val) => setContent({ ...content, ctaBox: { ...(content.ctaBox || {}), show: val } })} 
+              className="scale-75"
             />
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <div className="space-y-6">
-            <div className="space-y-2">
-              <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Box Title</Label>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
+          <div className="space-y-2.5">
+            <div className="space-y-1">
+              <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Box Title</Label>
               <Input 
                 value={content.ctaBox?.title || "Ready to Start?"} 
                 onChange={(e) => setContent({ ...content, ctaBox: { ...(content.ctaBox || {}), title: e.target.value } })} 
-                className="h-12 rounded-2xl bg-background"
+                className="h-8 sm:h-9 text-xs rounded-lg bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 font-semibold"
               />
             </div>
-            <div className="space-y-2">
-              <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Box Description</Label>
+            <div className="space-y-1">
+              <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Box Description</Label>
               <Textarea 
                 value={content.ctaBox?.description || "Join 100+ institutes already scaling with us. Start your 30-day free trial."} 
                 onChange={(e) => setContent({ ...content, ctaBox: { ...(content.ctaBox || {}), description: e.target.value } })} 
-                className="min-h-[100px] rounded-2xl bg-background"
+                className="min-h-[80px] text-xs rounded-lg bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700"
               />
             </div>
           </div>
-          <div className="space-y-6">
-            <div className="space-y-2">
-              <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Button Label</Label>
+          <div className="space-y-2.5">
+            <div className="space-y-1">
+              <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Button Label</Label>
               <Input 
                 value={content.ctaBox?.buttonText || "Get Started"} 
                 onChange={(e) => setContent({ ...content, ctaBox: { ...(content.ctaBox || {}), buttonText: e.target.value } })} 
-                className="h-12 rounded-2xl bg-background font-bold text-primary"
+                className="h-8 sm:h-9 text-xs rounded-lg bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 font-bold text-primary"
               />
             </div>
-            <div className="space-y-2">
-              <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Button Redirect URL</Label>
+            <div className="space-y-1">
+              <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Button Redirect URL</Label>
               <Input 
                 value={content.ctaBox?.buttonLink || "/pricing"} 
                 onChange={(e) => setContent({ ...content, ctaBox: { ...(content.ctaBox || {}), buttonLink: e.target.value } })} 
-                className="h-12 rounded-2xl bg-background font-mono text-xs"
+                className="h-8 sm:h-9 text-xs rounded-lg bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 font-mono"
               />
             </div>
           </div>
         </div>
       </div>
 
-      <div className="p-8 bg-zinc-900 rounded-[2.5rem] text-white space-y-6">
-         <div className="flex items-center gap-4">
-            <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center">
-               <ShieldCheck className="w-5 h-5 text-green-400" />
+      <div className="p-3.5 sm:p-4 bg-slate-900 rounded-xl text-white space-y-2">
+         <div className="flex items-center gap-2.5">
+            <div className="w-7 h-7 rounded-md bg-white/10 flex items-center justify-center shrink-0">
+               <ShieldCheck className="w-4 h-4 text-emerald-400" />
             </div>
-            <h4 className="font-bold tracking-tight">Data Integrity Info</h4>
+            <h4 className="font-bold text-xs sm:text-sm tracking-tight">Data Integrity Info</h4>
          </div>
-         <p className="text-sm text-zinc-400 font-medium leading-relaxed">
+         <p className="text-xs text-slate-400 font-normal leading-relaxed">
            The phone number, email, and social links in this section are automatically synced from your <span className="text-primary font-bold">General Branding</span> settings. This ensures a consistent brand identity across the whole site.
          </p>
       </div>
@@ -2048,24 +2045,24 @@ function ContactContentEditor({ content, setContent, settings, mediaFolderBase }
 function ListContentEditor({ title, content, setContent, itemFields, mediaFolderBase }: any) {
   const items = content.items || [];
   return (
-    <div className="space-y-6">
+    <div className="space-y-3.5">
        <div className="flex items-center justify-between">
-          <Label className="text-sm font-black uppercase text-primary tracking-widest">{title}</Label>
-          <Button variant="outline" size="sm" className="rounded-lg h-8 text-xs" onClick={() => {
+          <Label className="text-[10px] font-bold uppercase text-primary tracking-wider">{title}</Label>
+          <Button variant="outline" size="sm" className="rounded-lg h-7 sm:h-8 px-2.5 text-xs font-semibold" onClick={() => {
              const newItem = itemFields.reduce((acc: any, field: string) => ({ ...acc, [field]: "" }), {});
              setContent({ ...content, items: [...items, newItem] });
           }}>Add Item</Button>
        </div>
-       <div className="space-y-4">
+       <div className="space-y-2.5">
           {items.map((item: any, idx: number) => (
-             <div key={idx} className="p-6 bg-background border border-border/40 rounded-2xl relative">
-                <Button variant="ghost" size="icon" className="absolute top-4 right-4 h-8 w-8 text-red-500" onClick={() => {
+             <div key={idx} className="p-3 sm:p-3.5 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-xl relative shadow-xs">
+                <Button variant="ghost" size="icon" className="absolute top-2.5 right-2.5 h-7 w-7 text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded-lg" onClick={() => {
                    const n = items.filter((_: any, i: number) => i !== idx);
                    setContent({ ...content, items: n });
-                }}><Trash2 className="h-4 w-4" /></Button>
-                <div className="grid grid-cols-1 gap-6 pr-10">
+                }}><Trash2 className="h-3.5 w-3.5" /></Button>
+                <div className="grid grid-cols-1 gap-2.5 pr-8">
                    {itemFields.map((field: string) => (
-                      <div key={field} className="space-y-2">
+                      <div key={field} className="space-y-1">
                          {['src', 'avatar', 'image'].includes(field) ? (
                             <ImageUpload 
                               value={item[field] || ""} 
@@ -2077,20 +2074,20 @@ function ListContentEditor({ title, content, setContent, itemFields, mediaFolder
                             />
                          ) : field === 'description' || field === 'text' || field === 'answer' ? (
                             <div className="space-y-1">
-                               <Label className="text-[10px] uppercase font-bold text-muted-foreground">{field}</Label>
+                               <Label className="text-[10px] uppercase font-bold text-slate-500">{field}</Label>
                                <Textarea value={item[field] || ""} onChange={(e) => {
                                   const n = [...items]; n[idx][field] = e.target.value; setContent({ ...content, items: n });
-                               }} className="min-h-[80px]" />
+                               }} className="min-h-[60px] text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700" />
                             </div>
                          ) : (
                             <div className="space-y-1">
-                               <Label className="text-[10px] uppercase font-bold text-muted-foreground">{field}</Label>
+                               <Label className="text-[10px] uppercase font-bold text-slate-500">{field}</Label>
                                <Input 
                                  type={field === 'value' ? 'number' : 'text'}
                                  value={item[field] || ""} 
                                  onChange={(e) => {
                                   const n = [...items]; n[idx][field] = e.target.value; setContent({ ...content, items: n });
-                               }} className="h-9" />
+                               }} className="h-8 sm:h-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700" />
                             </div>
                          )}
                       </div>
@@ -2105,42 +2102,42 @@ function ListContentEditor({ title, content, setContent, itemFields, mediaFolder
 
 function QuickLinksContentEditor({ content, setContent }: any) {
   return (
-    <div className="space-y-8">
+    <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <Label className="text-sm font-black uppercase text-primary tracking-widest">Quick Links</Label>
-        <Button variant="outline" size="sm" className="rounded-lg h-8 text-xs font-bold" onClick={() => {
+        <Label className="text-[10px] font-bold uppercase text-primary tracking-wider">Quick Links</Label>
+        <Button variant="outline" size="sm" className="rounded-lg h-7 sm:h-8 px-2.5 text-xs font-semibold" onClick={() => {
           const newLinks = [...(content.links || []), { title: "New Link", description: "Description", url: "#", icon: "Link" }];
           setContent({ ...content, links: newLinks });
         }}>Add Link</Button>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         {(content.links || []).map((link: any, idx: number) => (
-          <div key={idx} className="p-6 bg-background border border-border/40 rounded-2xl space-y-4 shadow-sm relative group">
+          <div key={idx} className="p-3 sm:p-3.5 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-xl space-y-2.5 shadow-xs relative group">
             <div className="flex justify-between items-center">
-              <span className="text-[10px] font-black text-primary/60">LINK #{idx + 1}</span>
-              <Button variant="ghost" size="icon" className="h-6 w-6 text-red-500 rounded-lg" onClick={() => {
+              <span className="text-[10px] font-bold text-primary/70 uppercase tracking-wider">LINK #{idx + 1}</span>
+              <Button variant="ghost" size="icon" className="h-6 w-6 text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded-lg" onClick={() => {
                 const newLinks = content.links.filter((_: any, i: number) => i !== idx);
                 setContent({ ...content, links: newLinks });
-              }}><Trash2 className="h-4 w-4" /></Button>
+              }}><Trash2 className="h-3.5 w-3.5" /></Button>
             </div>
-            <div className="space-y-2">
-              <Label className="text-[10px] uppercase font-bold">Title</Label>
-              <Input value={link.title || ""} onChange={(e) => { const n = [...content.links]; n[idx].title = e.target.value; setContent({ ...content, links: n }); }} className="h-9 bg-muted/5 text-sm" />
+            <div className="space-y-1">
+              <Label className="text-[10px] uppercase font-bold text-slate-500">Title</Label>
+              <Input value={link.title || ""} onChange={(e) => { const n = [...content.links]; n[idx].title = e.target.value; setContent({ ...content, links: n }); }} className="h-8 sm:h-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 font-semibold" />
             </div>
-            <div className="space-y-2">
-              <Label className="text-[10px] uppercase font-bold">Description</Label>
-              <Input value={link.description || ""} onChange={(e) => { const n = [...content.links]; n[idx].description = e.target.value; setContent({ ...content, links: n }); }} className="h-9 bg-muted/5 text-sm" />
+            <div className="space-y-1">
+              <Label className="text-[10px] uppercase font-bold text-slate-500">Description</Label>
+              <Input value={link.description || ""} onChange={(e) => { const n = [...content.links]; n[idx].description = e.target.value; setContent({ ...content, links: n }); }} className="h-8 sm:h-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700" />
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
+            <div className="grid grid-cols-2 gap-2.5">
+              <div className="space-y-1">
                 <Label className="text-[10px] uppercase font-bold text-primary">URL</Label>
-                <Input value={link.url || ""} onChange={(e) => { const n = [...content.links]; n[idx].url = e.target.value; setContent({ ...content, links: n }); }} className="h-9 bg-muted/5 text-sm" placeholder="/student/dashboard" />
+                <Input value={link.url || ""} onChange={(e) => { const n = [...content.links]; n[idx].url = e.target.value; setContent({ ...content, links: n }); }} className="h-8 sm:h-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700" placeholder="/student/dashboard" />
               </div>
-              <div className="space-y-2">
+              <div className="space-y-1">
                 <Label className="text-[10px] uppercase font-bold text-primary">Icon Name</Label>
-                <Input value={link.icon || ""} onChange={(e) => { const n = [...content.links]; n[idx].icon = e.target.value; setContent({ ...content, links: n }); }} className="h-9 bg-muted/5 text-sm" placeholder="e.g. Building2" />
-                <p className="text-[9px] text-muted-foreground mt-1">
-                  Popular icons: <span className="font-bold">Building2, GraduationCap, FileCheck, Newspaper, User, Mail, Phone, Shield, Globe, BookOpen, Users</span>
+                <Input value={link.icon || ""} onChange={(e) => { const n = [...content.links]; n[idx].icon = e.target.value; setContent({ ...content, links: n }); }} className="h-8 sm:h-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700" placeholder="e.g. Building2" />
+                <p className="text-[8px] text-muted-foreground mt-0.5 truncate">
+                  Building2, GraduationCap, FileCheck, Newspaper, User, Mail, Shield, Globe
                 </p>
               </div>
             </div>
@@ -2153,20 +2150,20 @@ function QuickLinksContentEditor({ content, setContent }: any) {
 
 function FranchisesOfferBannerEditor({ content, setContent, mediaFolderBase }: any) {
   return (
-    <div className="space-y-6">
-      <div className="space-y-2">
-        <Label className="text-[10px] uppercase font-bold text-muted-foreground">Banner Title</Label>
-        <Input value={content.title || ""} onChange={(e) => setContent({ ...content, title: e.target.value })} className="h-10 bg-muted/5" />
+    <div className="space-y-3">
+      <div className="space-y-1">
+        <Label className="text-[10px] uppercase font-bold text-slate-500">Banner Title</Label>
+        <Input value={content.title || ""} onChange={(e) => setContent({ ...content, title: e.target.value })} className="h-8 sm:h-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 font-semibold" />
       </div>
-      <div className="space-y-2">
-        <Label className="text-[10px] uppercase font-bold text-muted-foreground">Banner Subtitle</Label>
-        <Input value={content.subtitle || ""} onChange={(e) => setContent({ ...content, subtitle: e.target.value })} className="h-10 bg-muted/5" />
+      <div className="space-y-1">
+        <Label className="text-[10px] uppercase font-bold text-slate-500">Banner Subtitle</Label>
+        <Input value={content.subtitle || ""} onChange={(e) => setContent({ ...content, subtitle: e.target.value })} className="h-8 sm:h-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700" />
       </div>
-      <div className="space-y-2">
-        <Label className="text-[10px] uppercase font-bold text-muted-foreground">Button Link</Label>
-        <Input value={content.link || ""} onChange={(e) => setContent({ ...content, link: e.target.value })} className="h-10 bg-muted/5" />
+      <div className="space-y-1">
+        <Label className="text-[10px] uppercase font-bold text-slate-500">Button Link</Label>
+        <Input value={content.link || ""} onChange={(e) => setContent({ ...content, link: e.target.value })} className="h-8 sm:h-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700" />
       </div>
-      <div className="space-y-2">
+      <div className="space-y-1 pt-1">
         <ImageUpload value={content.bannerUrl || ""} onChange={(url) => setContent({ ...content, bannerUrl: url })} label="Offer Banner Image" folder={`${mediaFolderBase}/franchise-settings`} />
       </div>
     </div>
@@ -2176,33 +2173,33 @@ function FranchisesOfferBannerEditor({ content, setContent, mediaFolderBase }: a
 function FranchisesRulesEditor({ content, setContent, mediaFolderBase }: any) {
   const rules = content.rules || [];
   return (
-    <div className="space-y-6">
-      <div className="space-y-4">
+    <div className="space-y-4">
+      <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <Label className="text-[10px] uppercase font-bold text-muted-foreground">Franchise Rules List</Label>
-          <Button variant="outline" size="sm" onClick={() => setContent({ ...content, rules: [...rules, { title: "New Rule", description: "Rule details here..." }] })}>Add Rule</Button>
+          <Label className="text-[10px] uppercase font-bold text-slate-500">Franchise Rules List</Label>
+          <Button variant="outline" size="sm" className="h-7 sm:h-8 px-2.5 text-xs font-semibold rounded-lg" onClick={() => setContent({ ...content, rules: [...rules, { title: "New Rule", description: "Rule details here..." }] })}>Add Rule</Button>
         </div>
         {rules.map((r: any, idx: number) => {
           const title = typeof r === 'string' ? r : (r.title || "");
           const desc = typeof r === 'string' ? "" : (r.description || "");
           return (
-            <div key={idx} className="p-4 border rounded-xl space-y-4 bg-background relative shadow-sm">
-              <Button variant="ghost" size="icon" className="absolute top-2 right-2 h-8 w-8 text-red-500" onClick={() => { const n = rules.filter((_: any, i: number) => i !== idx); setContent({ ...content, rules: n }); }}><Trash2 className="h-4 w-4" /></Button>
-              <div className="space-y-1 pr-10">
+            <div key={idx} className="p-3 border border-slate-200/80 dark:border-slate-800 rounded-xl space-y-2 bg-white dark:bg-slate-900 relative shadow-xs">
+              <Button variant="ghost" size="icon" className="absolute top-2 right-2 h-7 w-7 text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded-lg" onClick={() => { const n = rules.filter((_: any, i: number) => i !== idx); setContent({ ...content, rules: n }); }}><Trash2 className="h-3.5 w-3.5" /></Button>
+              <div className="space-y-1 pr-8">
                 <Label className="text-[10px] uppercase font-bold text-primary">Rule {idx + 1} Title</Label>
-                <Input value={title} onChange={(e) => { const n = [...rules]; n[idx] = { title: e.target.value, description: desc }; setContent({ ...content, rules: n }); }} className="h-9 font-medium" />
+                <Input value={title} onChange={(e) => { const n = [...rules]; n[idx] = { title: e.target.value, description: desc }; setContent({ ...content, rules: n }); }} className="h-8 sm:h-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 font-medium" />
               </div>
               <div className="space-y-1">
-                <Label className="text-[10px] uppercase font-bold text-muted-foreground">Description</Label>
-                <Input value={desc} onChange={(e) => { const n = [...rules]; n[idx] = { title, description: e.target.value }; setContent({ ...content, rules: n }); }} className="h-9 bg-muted/5 text-muted-foreground" placeholder="Optional detailed description..." />
+                <Label className="text-[10px] uppercase font-bold text-slate-500">Description</Label>
+                <Input value={desc} onChange={(e) => { const n = [...rules]; n[idx] = { title, description: e.target.value }; setContent({ ...content, rules: n }); }} className="h-8 sm:h-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 text-muted-foreground" placeholder="Optional detailed description..." />
               </div>
             </div>
           );
         })}
       </div>
-      <div className="space-y-2 pt-4 border-t">
-        <Label className="text-[10px] uppercase font-bold text-muted-foreground">PDF Download Link (Optional)</Label>
-        <Input value={content.downloadUrl || ""} onChange={(e) => setContent({ ...content, downloadUrl: e.target.value })} className="h-10 bg-muted/5" placeholder="https://..." />
+      <div className="space-y-1 pt-3 border-t border-slate-100 dark:border-slate-800">
+        <Label className="text-[10px] uppercase font-bold text-slate-500">PDF Download Link (Optional)</Label>
+        <Input value={content.downloadUrl || ""} onChange={(e) => setContent({ ...content, downloadUrl: e.target.value })} className="h-8 sm:h-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700" placeholder="https://..." />
       </div>
     </div>
   );
@@ -2211,27 +2208,27 @@ function FranchisesRulesEditor({ content, setContent, mediaFolderBase }: any) {
 function FranchisesGuidelinesEditor({ content, setContent }: any) {
   const steps = content.steps || [];
   return (
-    <div className="space-y-8">
-      <div className="space-y-2">
-        <Label className="text-[10px] uppercase font-bold text-muted-foreground">YouTube Video URL</Label>
-        <Input value={content.videoUrl || ""} onChange={(e) => setContent({ ...content, videoUrl: e.target.value })} className="h-10 bg-muted/5" placeholder="https://www.youtube.com/embed/..." />
+    <div className="space-y-4">
+      <div className="space-y-1">
+        <Label className="text-[10px] uppercase font-bold text-slate-500">YouTube Video URL</Label>
+        <Input value={content.videoUrl || ""} onChange={(e) => setContent({ ...content, videoUrl: e.target.value })} className="h-8 sm:h-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700" placeholder="https://www.youtube.com/embed/..." />
       </div>
       
-      <div className="space-y-4 pt-4 border-t">
+      <div className="space-y-3 pt-3 border-t border-slate-100 dark:border-slate-800">
         <div className="flex items-center justify-between">
-          <Label className="text-[10px] uppercase font-bold text-muted-foreground">Verification Steps</Label>
-          <Button variant="outline" size="sm" onClick={() => setContent({ ...content, steps: [...steps, { title: "New Step", description: "Step detail" }] })}>Add Step</Button>
+          <Label className="text-[10px] uppercase font-bold text-slate-500">Verification Steps</Label>
+          <Button variant="outline" size="sm" className="h-7 sm:h-8 px-2.5 text-xs font-semibold rounded-lg" onClick={() => setContent({ ...content, steps: [...steps, { title: "New Step", description: "Step detail" }] })}>Add Step</Button>
         </div>
         {steps.map((step: any, idx: number) => (
-          <div key={idx} className="p-4 border rounded-xl space-y-4 bg-background relative">
-            <Button variant="ghost" size="icon" className="absolute top-2 right-2 h-8 w-8 text-red-500" onClick={() => { const n = steps.filter((_: any, i: number) => i !== idx); setContent({ ...content, steps: n }); }}><Trash2 className="h-4 w-4" /></Button>
-            <div className="space-y-1 pr-10">
+          <div key={idx} className="p-3 border border-slate-200/80 dark:border-slate-800 rounded-xl space-y-2 bg-white dark:bg-slate-900 relative shadow-xs">
+            <Button variant="ghost" size="icon" className="absolute top-2 right-2 h-7 w-7 text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded-lg" onClick={() => { const n = steps.filter((_: any, i: number) => i !== idx); setContent({ ...content, steps: n }); }}><Trash2 className="h-3.5 w-3.5" /></Button>
+            <div className="space-y-1 pr-8">
               <Label className="text-[10px] uppercase font-bold text-primary">Step {idx + 1} Title</Label>
-              <Input value={step.title || ""} onChange={(e) => { const n = [...steps]; n[idx].title = e.target.value; setContent({ ...content, steps: n }); }} className="h-9" />
+              <Input value={step.title || ""} onChange={(e) => { const n = [...steps]; n[idx].title = e.target.value; setContent({ ...content, steps: n }); }} className="h-8 sm:h-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 font-medium" />
             </div>
             <div className="space-y-1">
-              <Label className="text-[10px] uppercase font-bold text-muted-foreground">Description</Label>
-              <Textarea value={step.description || ""} onChange={(e) => { const n = [...steps]; n[idx].description = e.target.value; setContent({ ...content, steps: n }); }} className="min-h-[60px]" />
+              <Label className="text-[10px] uppercase font-bold text-slate-500">Description</Label>
+              <Textarea value={step.description || ""} onChange={(e) => { const n = [...steps]; n[idx].description = e.target.value; setContent({ ...content, steps: n }); }} className="min-h-[50px] text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700" />
             </div>
           </div>
         ))}
@@ -2242,22 +2239,22 @@ function FranchisesGuidelinesEditor({ content, setContent }: any) {
 
 function FranchisesVerificationEditor({ content, setContent, mediaFolderBase }: any) {
   return (
-    <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="space-y-2">
-          <Label className="text-[10px] uppercase font-bold text-muted-foreground">Button Text</Label>
-          <Input value={content.buttonText || ""} onChange={(e) => setContent({ ...content, buttonText: e.target.value })} className="h-10 bg-muted/5" placeholder="e.g. Run Official Verification" />
+    <div className="space-y-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div className="space-y-1">
+          <Label className="text-[10px] uppercase font-bold text-slate-500">Button Text</Label>
+          <Input value={content.buttonText || ""} onChange={(e) => setContent({ ...content, buttonText: e.target.value })} className="h-8 sm:h-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700" placeholder="e.g. Run Official Verification" />
         </div>
-        <div className="space-y-2">
-          <Label className="text-[10px] uppercase font-bold text-muted-foreground">Loading Button Text</Label>
-          <Input value={content.loadingButtonText || ""} onChange={(e) => setContent({ ...content, loadingButtonText: e.target.value })} className="h-10 bg-muted/5" placeholder="e.g. Authenticating Record..." />
+        <div className="space-y-1">
+          <Label className="text-[10px] uppercase font-bold text-slate-500">Loading Button Text</Label>
+          <Input value={content.loadingButtonText || ""} onChange={(e) => setContent({ ...content, loadingButtonText: e.target.value })} className="h-8 sm:h-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700" placeholder="e.g. Authenticating Record..." />
         </div>
       </div>
-      <div className="space-y-2">
-        <Label className="text-[10px] uppercase font-bold text-muted-foreground">Watermark Text</Label>
-        <Input value={content.watermarkText || ""} onChange={(e) => setContent({ ...content, watermarkText: e.target.value })} className="h-10 bg-muted/5" placeholder="e.g. VERIFIED" />
+      <div className="space-y-1">
+        <Label className="text-[10px] uppercase font-bold text-slate-500">Watermark Text</Label>
+        <Input value={content.watermarkText || ""} onChange={(e) => setContent({ ...content, watermarkText: e.target.value })} className="h-8 sm:h-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700" placeholder="e.g. VERIFIED" />
       </div>
-      <div className="space-y-2">
+      <div className="space-y-1 pt-1">
         <ImageUpload value={content.backgroundUrl || ""} onChange={(url) => setContent({ ...content, backgroundUrl: url })} label="Background Image" folder={`${mediaFolderBase}/franchise-settings`} />
       </div>
     </div>

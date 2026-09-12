@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { markAttendanceByQR } from "@/app/actions/attendance";
 import { CheckCircle2, Camera, RefreshCw, AlertTriangle, Loader2, Power, PowerOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 export default function QRScanner({ workspaceId, type = "THEORY" }: { workspaceId: string, type?: "THEORY" | "PRACTICAL" }) {
   const [cameras, setCameras] = useState<CameraDevice[]>([]);
@@ -189,40 +190,40 @@ export default function QRScanner({ workspaceId, type = "THEORY" }: { workspaceI
 
 
   return (
-    <div className="flex flex-col items-center max-w-lg mx-auto w-full">
-      <div className="bg-white dark:bg-slate-900 rounded-3xl border-2 border-slate-100 dark:border-slate-800 shadow-sm p-6 w-full space-y-6">
-        <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4">
-           <div className="flex items-center gap-4">
-             <div className="w-12 h-12 rounded-2xl bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 flex items-center justify-center">
-               <Camera className="w-6 h-6" />
+    <div className="flex flex-col items-center max-w-md mx-auto w-full">
+      <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200/80 dark:border-slate-800 shadow-sm p-4 sm:p-5 w-full space-y-4">
+        <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+           <div className="flex items-center gap-3">
+             <div className="w-9 h-9 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
+               <Camera className="w-4 h-4" />
              </div>
              <div>
-               <h3 className="font-bold text-lg tracking-tight">Smart Scanner</h3>
-               <p className="text-xs text-slate-500 font-medium">Position the ID card in frame.</p>
+               <h3 className="font-bold text-sm tracking-tight text-slate-900 dark:text-white">Smart QR Scanner</h3>
+               <p className="text-[11px] text-slate-500 font-medium">Position student QR pass in frame.</p>
              </div>
            </div>
            
-           <div className="flex items-center gap-3">
+           <div className="flex items-center gap-2">
              <button
                onClick={handleToggleScanner}
                disabled={isStarting}
-               className={`px-4 py-2 rounded-xl flex items-center gap-2 text-sm font-bold transition-all ${
-                 isStarting ? "opacity-50 cursor-not-allowed " : ""
-               }${
+               className={cn(
+                 "h-8 sm:h-9 px-3 rounded-lg flex items-center gap-1.5 text-xs font-semibold transition-all",
+                 isStarting && "opacity-50 cursor-not-allowed",
                  isScannerOn 
-                   ? "bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-500/10 dark:text-red-400 dark:hover:bg-red-500/20" 
-                   : "bg-emerald-50 text-emerald-600 hover:bg-emerald-100 dark:bg-emerald-500/10 dark:text-emerald-400 dark:hover:bg-emerald-500/20"
-               }`}
+                   ? "bg-rose-50 text-rose-600 hover:bg-rose-100 dark:bg-rose-950/40 dark:text-rose-400 border border-rose-200 dark:border-rose-900/40" 
+                   : "bg-emerald-50 text-emerald-600 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-900/40"
+               )}
              >
                {isScannerOn ? (
                  <>
-                   <PowerOff className="w-4 h-4" />
-                   Stop
+                   <PowerOff className="w-3.5 h-3.5" />
+                   <span>Stop</span>
                  </>
                ) : (
                  <>
-                   <Power className="w-4 h-4" />
-                   Start Scanner
+                   <Power className="w-3.5 h-3.5" />
+                   <span>Start Scanner</span>
                  </>
                )}
              </button>
@@ -231,45 +232,45 @@ export default function QRScanner({ workspaceId, type = "THEORY" }: { workspaceI
                <button 
                  onClick={handleSwitchCamera}
                  disabled={isStarting}
-                 className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition-colors"
+                 className="h-8 w-8 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 flex items-center justify-center transition-colors"
                  title="Switch Camera"
                >
-                 <RefreshCw className={`w-5 h-5 ${isStarting ? 'animate-spin opacity-50' : ''}`} />
+                 <RefreshCw className={cn("w-3.5 h-3.5", isStarting && "animate-spin opacity-50")} />
                </button>
              )}
            </div>
         </div>
 
         {/* Camera Container */}
-        <div className="relative w-full overflow-hidden rounded-2xl border-4 border-slate-100 dark:border-slate-800 bg-slate-900 flex items-center justify-center min-h-[300px]">
+        <div className="relative w-full overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-950 flex items-center justify-center min-h-[260px]">
           {hasPermissionError ? (
-            <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-400 z-10 bg-slate-900 p-6 text-center">
-               <AlertTriangle className="w-12 h-12 text-red-500 mb-4" />
-               <p className="text-sm font-bold text-white">Camera Access Denied</p>
-               <p className="text-xs mt-2 text-slate-400 max-w-xs mx-auto">
-                 Please click the <strong className="text-white">lock icon 🔒</strong> in your browser's address bar, allow camera access, and then click Try Again.
+            <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-400 z-10 bg-slate-950 p-4 text-center">
+               <AlertTriangle className="w-8 h-8 text-rose-500 mb-2" />
+               <p className="text-xs font-bold text-white">Camera Access Denied</p>
+               <p className="text-[11px] mt-1 text-slate-400 max-w-xs mx-auto">
+                 Please allow camera permissions in your browser bar and click retry.
                </p>
                <Button 
                  onClick={() => {
                    setHasPermissionError(false);
-                   setIsScannerOn(true); // Retry immediately
+                   setIsScannerOn(true);
                  }} 
                  variant="outline" 
-                 className="mt-6 border-slate-700 text-slate-300 hover:bg-slate-800 hover:text-white"
+                 className="mt-4 h-7 text-xs border-slate-700 text-slate-300 hover:bg-slate-800 hover:text-white"
                >
                  Try Again
                </Button>
             </div>
           ) : !isScannerOn ? (
-            <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-400 z-10 bg-slate-900">
-               <Power className="w-12 h-12 mb-4 opacity-50" />
-               <p className="text-sm font-medium">Scanner is off</p>
-               <p className="text-xs mt-1 opacity-75">Click Start Scanner to begin</p>
+            <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-500 z-10 bg-slate-950">
+               <Power className="w-8 h-8 mb-2 opacity-40" />
+               <p className="text-xs font-semibold text-slate-400">Scanner is off</p>
+               <p className="text-[10px] mt-0.5 opacity-70 text-slate-500">Click Start Scanner to begin</p>
             </div>
           ) : isStarting ? (
-            <div className="absolute inset-0 flex flex-col items-center justify-center text-white z-10 bg-slate-900/80 backdrop-blur-sm">
-               <Loader2 className="w-8 h-8 animate-spin mb-2" />
-               <p className="text-sm font-medium">Starting camera...</p>
+            <div className="absolute inset-0 flex flex-col items-center justify-center text-white z-10 bg-slate-950/80 backdrop-blur-sm">
+               <Loader2 className="w-6 h-6 animate-spin mb-1.5 text-primary" />
+               <p className="text-xs font-medium text-slate-300">Starting camera...</p>
             </div>
           ) : null}
           
@@ -277,9 +278,9 @@ export default function QRScanner({ workspaceId, type = "THEORY" }: { workspaceI
         </div>
 
         {successMessage && (
-          <div className="animate-in fade-in slide-in-from-bottom-4 flex items-center gap-3 p-4 bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 text-emerald-700 dark:text-emerald-400 rounded-2xl">
-            <CheckCircle2 className="w-6 h-6 shrink-0" />
-            <span className="font-bold text-sm">{successMessage}</span>
+          <div className="animate-in fade-in slide-in-from-bottom-2 flex items-center gap-2.5 p-3 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400 rounded-xl text-xs">
+            <CheckCircle2 className="w-4 h-4 shrink-0" />
+            <span className="font-semibold">{successMessage}</span>
           </div>
         )}
       </div>

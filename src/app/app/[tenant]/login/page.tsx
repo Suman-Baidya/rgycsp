@@ -32,7 +32,7 @@ export default async function WorkspaceLoginPage({
   if (!workspace) redirect(await getServerTenantLink("/", tenant));
 
   return (
-    <div className="h-screen w-full flex flex-col items-center justify-center bg-slate-50 dark:bg-zinc-950 p-4 md:p-6 relative overflow-hidden">
+    <div className="min-h-[100dvh] w-full flex flex-col items-center justify-center bg-slate-50 dark:bg-zinc-950 p-2 sm:p-4 md:p-6 relative overflow-y-auto">
       {/* Dynamic Background Gradients */}
       <div className="absolute inset-0 z-0">
         <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-primary/10 blur-[120px] animate-pulse"></div>
@@ -47,7 +47,7 @@ export default async function WorkspaceLoginPage({
         />
       )}
 
-      <div className="relative z-10 w-full flex justify-center items-center">
+      <div className="relative z-10 w-full my-auto flex justify-center items-center py-1 sm:py-0">
         <LoginForm 
           tenantName={workspace.name}
           tenantLogo={workspace.logoUrl || workspace.siteSettings?.logoUrl}

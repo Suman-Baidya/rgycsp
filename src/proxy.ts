@@ -112,6 +112,36 @@ export default auth((req) => {
       });
     }
 
+    // Special case: Franchises Subdomain
+    if (tenant === 'franchises' || tenant === 'franchise') {
+      const targetPath = path.startsWith('/franchises') ? path : `/franchises${path === "/" ? "" : path}`;
+      const rewriteUrl = new URL(targetPath, req.url);
+      const requestHeaders = new Headers(req.headers);
+      requestHeaders.set('x-pathname', url.pathname);
+      
+      return NextResponse.rewrite(rewriteUrl, {
+        request: {
+          headers: requestHeaders,
+        }
+      });
+    }
+
+    // Bypass global franchise routes when accessed from any tenant subdomain
+    if (url.pathname.startsWith('/franchises') || url.pathname.startsWith('/franchise')) {
+      const normalizedPath = url.pathname.startsWith('/franchises') 
+        ? path 
+        : path.replace(/^\/franchise/, '/franchises');
+      const rewriteUrl = new URL(normalizedPath, req.url);
+      const requestHeaders = new Headers(req.headers);
+      requestHeaders.set('x-pathname', url.pathname);
+      
+      return NextResponse.rewrite(rewriteUrl, {
+        request: {
+          headers: requestHeaders,
+        }
+      });
+    }
+
     // Generic Tenant Subdomain
     if (tenant !== 'www' && tenant !== 'admin') {
       const rewriteUrl = new URL(`/app/${tenant}${path === "/" ? "" : path}`, req.url);

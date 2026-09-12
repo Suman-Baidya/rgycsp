@@ -46,6 +46,7 @@ export default async function TenantLayout({
   params: Promise<{ tenant: string }>;
 }) {
   const { tenant } = await params;
+  console.log(">>> [DEBUG] REACHED TenantLayout for tenant:", tenant);
   
   // Verify the tenant exists before rendering anything on this subdomain
   const workspace = await db.workspace.findUnique({

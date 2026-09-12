@@ -61,6 +61,7 @@ export async function getStudentProfile(workspaceId: string, overrideProfileId?:
                 course: true
               }
             },
+            course: true,
             attendances: {
               orderBy: { date: 'desc' },
               take: 5

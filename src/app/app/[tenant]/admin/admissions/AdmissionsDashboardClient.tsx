@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { AdminPageHeader } from "@/components/layout/AdminPageHeader";
-import { UserPlus, FileText, Settings, Database, BarChart, Layers } from "lucide-react";
+import { UserPlus, FileText, Settings, BarChart, Layers, Trash2, CheckCircle2, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { AdminApplicationsClient } from "../students/AdminApplicationsClient";
@@ -13,12 +13,13 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import AnalyticsTab from "./AnalyticsTab";
 import { toast } from "sonner";
 import { cleanupRejectedApplications } from "@/app/actions/cleanup";
+import { StatCard } from "@/components/dashboard/StatCard";
 
 export default function AdmissionsDashboardClient({
   workspaceId,
-  applications,
+  applications = [],
   config,
-  pendingCount,
+  pendingCount = 0,
   courses = [],
   batches = []
 }: {
@@ -33,6 +34,9 @@ export default function AdmissionsDashboardClient({
   const [isCleaning, setIsCleaning] = useState(false);
   const [editingOnlineApp, setEditingOnlineApp] = useState<any>(null);
   const [confirmCleanup, setConfirmCleanup] = useState(false);
+
+  const draftsCount = applications.filter(a => a.status === "DRAFT").length;
+  const approvedCount = applications.filter(a => a.status === "APPROVED").length;
 
   const handleCleanupClick = () => {
     setConfirmCleanup(true);
@@ -56,25 +60,73 @@ export default function AdmissionsDashboardClient({
   };
 
   const tabs = [
-    { id: "new-admission", label: "Enroll Student (Manual)", icon: UserPlus },
-    { id: "applications", label: "Online Applications", icon: FileText, count: pendingCount },
+    { id: "new-admission", label: "Enroll Student (Manual)", icon: UserPlus, count: draftsCount > 0 ? draftsCount : undefined },
+    { id: "applications", label: "Online Applications", icon: FileText, count: pendingCount > 0 ? pendingCount : undefined },
     { id: "analytics", label: "Analytics & Reports", icon: BarChart },
-    { id: "batches", label: "Batch Creation", icon: Layers },
+    { id: "batches", label: "Batch Creation", icon: Layers, count: batches.length > 0 ? batches.length : undefined },
     { id: "form-config", label: "Form Settings", icon: Settings },
   ];
 
   return (
-    <div className="p-4 lg:p-10 max-w-7xl mx-auto space-y-8">
+    <div className="space-y-4 sm:space-y-5 pb-8 w-full mx-auto">
       <AdminPageHeader 
         title="Student Admissions" 
-        description="Manage new enrollments, process applications, and configure admission form."
+        description="Manage student admissions, process online applications, and configure forms."
       >
-        <Button onClick={handleCleanupClick} disabled={isCleaning} variant="destructive" className="rounded-xl h-9 text-xs">
+        <Button 
+          onClick={handleCleanupClick} 
+          disabled={isCleaning} 
+          variant="outline" 
+          className="h-8 sm:h-9 px-3 rounded-lg text-xs font-semibold gap-1.5 border-red-200 dark:border-red-900/40 text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30"
+        >
+          <Trash2 className="w-3.5 h-3.5" />
           {isCleaning ? "Cleaning..." : "Cleanup Rejected Forms"}
         </Button>
       </AdminPageHeader>
 
-      <div className="flex flex-nowrap overflow-x-auto no-scrollbar gap-2 p-2 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm max-w-full">
+      {/* Top Metric Cards Grid (Rule 7.2) */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <StatCard
+          label="Pending Applications"
+          value={pendingCount}
+          description={pendingCount > 0 ? "Awaiting verification" : "All applications reviewed"}
+          icon={<AlertCircle className="h-5 w-5 text-amber-500" />}
+          color={pendingCount > 0 ? "#f59e0b" : undefined}
+          isActive={activeTab === "applications"}
+          onClick={() => setActiveTab("applications")}
+        />
+
+        <StatCard
+          label="Manual Drafts"
+          value={draftsCount}
+          description="Incomplete enrollments"
+          icon={<UserPlus className="h-5 w-5 text-blue-500" />}
+          isActive={activeTab === "new-admission"}
+          onClick={() => setActiveTab("new-admission")}
+        />
+
+        <StatCard
+          label="Approved Admissions"
+          value={approvedCount}
+          description="Enrolled this session"
+          icon={<CheckCircle2 className="h-5 w-5 text-emerald-500" />}
+          color={approvedCount > 0 ? "#10b981" : undefined}
+          isActive={activeTab === "analytics"}
+          onClick={() => setActiveTab("analytics")}
+        />
+
+        <StatCard
+          label="Active Batches"
+          value={batches.length}
+          description="Available for assignment"
+          icon={<Layers className="h-5 w-5 text-indigo-500" />}
+          isActive={activeTab === "batches"}
+          onClick={() => setActiveTab("batches")}
+        />
+      </div>
+
+      {/* Sub Tabs Pill Navigation (Rule 7.3) */}
+      <div className="flex flex-nowrap overflow-x-auto no-scrollbar gap-1.5 p-1.5 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm max-w-full">
         {tabs.map((tab) => (
           <button
             key={tab.id}
@@ -83,16 +135,19 @@ export default function AdmissionsDashboardClient({
                if (tab.id !== "new-admission") setEditingOnlineApp(null);
             }}
             className={cn(
-              "flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 whitespace-nowrap shrink-0",
+              "flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs transition-all duration-150 whitespace-nowrap shrink-0",
               activeTab === tab.id
-                ? "bg-slate-100 dark:bg-slate-800 text-primary shadow-inner"
-                : "text-slate-500 hover:text-slate-900 hover:bg-slate-50 dark:hover:text-white dark:hover:bg-slate-800/50"
+                ? "bg-slate-100 dark:bg-slate-800 text-primary dark:text-white font-semibold shadow-inner"
+                : "text-slate-500 hover:text-slate-900 hover:bg-slate-50 dark:hover:text-white dark:hover:bg-slate-800/50 font-medium"
             )}
           >
-            <tab.icon className="w-4 h-4" />
-            {tab.label}
-            {tab.count !== undefined && tab.count > 0 && (
-              <span className="flex items-center justify-center min-w-[1.4rem] h-5 px-1.5 bg-primary text-white rounded-lg text-[10px] font-bold shadow-sm">
+            <tab.icon className="w-3.5 h-3.5" />
+            <span>{tab.label}</span>
+            {tab.count !== undefined && (
+              <span className={cn(
+                "flex items-center justify-center min-w-[1.15rem] h-4 px-1 rounded text-[9px] font-bold",
+                tab.id === "applications" && pendingCount > 0 ? "bg-amber-500 text-white" : "bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300"
+              )}>
                 {tab.count}
               </span>
             )}
@@ -100,6 +155,7 @@ export default function AdmissionsDashboardClient({
         ))}
       </div>
 
+      {/* Tab Content */}
       <div className="transition-all duration-300">
         {activeTab === "new-admission" && (
           <ManualEnrollmentTab 
@@ -137,9 +193,7 @@ export default function AdmissionsDashboardClient({
         )}
 
         {activeTab === "batches" && (
-          <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 p-6 rounded-3xl shadow-sm">
-             <BatchManagement workspaceId={workspaceId} courses={courses} batches={batches} />
-          </div>
+          <BatchManagement workspaceId={workspaceId} courses={courses} batches={batches} />
         )}
       </div>
       

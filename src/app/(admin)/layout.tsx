@@ -1,5 +1,6 @@
 import { AdminSidebar } from "@/components/layout/AdminSidebar";
 import { SuperAdminHeader } from "@/components/layout/SuperAdminHeader";
+import { QuickActionFAB } from "@/components/dashboard/QuickActionFAB";
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
@@ -71,13 +72,17 @@ export default async function AdminLayout({
         serverIsDeveloper={session?.user?.isDeveloper ?? false}
       />
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        <SuperAdminHeader user={{ name: dbUser.name, email: dbUser.email, image: (dbUser as any).image }} />
-        <main className="flex-1 overflow-y-auto p-4 lg:p-8 custom-scrollbar">
+        <SuperAdminHeader 
+          user={{ name: dbUser.name, email: dbUser.email, image: (dbUser as any).image }} 
+          role={dbUser.role}
+        />
+        <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-6 pb-24 lg:pb-6 custom-scrollbar">
           <div className="max-w-[1600px] mx-auto">
             {children}
           </div>
         </main>
       </div>
+      <QuickActionFAB portal="super-admin" />
     </div>
   );
 }

@@ -59,7 +59,7 @@ const chartConfig = {
 
 export default function TokenEconomy() {
   return (
-    <div className="space-y-10 pb-12 max-w-7xl mx-auto">
+    <div className="space-y-6 pb-8 max-w-7xl mx-auto">
       <AdminPageHeader 
         title="Token Economy" 
         description="Monitor global token flow, minting, and workspace consumption."

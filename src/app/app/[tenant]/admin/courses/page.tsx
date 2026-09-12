@@ -22,7 +22,7 @@ export default async function CoursesPage({
   const coursesResult = await getGlobalCoursesForFranchise(workspace.id);
 
   return (
-    <div className="p-4 lg:px-10 lg:py-10 max-w-7xl mx-auto space-y-10">
+    <div className="space-y-4 sm:space-y-5 pb-8 w-full mx-auto">
       <AdminPageHeader 
         title="Courses Catalog" 
         description="Browse available courses and enable them for your franchise."

@@ -41,8 +41,18 @@ export async function generateMetadata(): Promise<Metadata> {
       siteName: siteName,
     },
     icons: {
-      icon: globalSettings?.faviconUrl || globalSettings?.logoUrl || "https://res.cloudinary.com/dmhipemqk/image/upload/v1780409947/RGYCSP/SuperAdmin/branding/mjwcqjcyprkxpyleggms.webp"
-    }
+      icon: globalSettings?.faviconUrl || globalSettings?.logoUrl || "https://res.cloudinary.com/dmhipemqk/image/upload/v1780409947/RGYCSP/SuperAdmin/branding/mjwcqjcyprkxpyleggms.webp",
+      apple: globalSettings?.faviconUrl || globalSettings?.logoUrl || "https://res.cloudinary.com/dmhipemqk/image/upload/v1780409947/RGYCSP/SuperAdmin/branding/mjwcqjcyprkxpyleggms.webp",
+    },
+    manifest: "/manifest.webmanifest",
+    appleWebApp: {
+      capable: true,
+      statusBarStyle: "default",
+      title: siteName,
+    },
+    formatDetection: {
+      telephone: false,
+    },
   };
 }
 
@@ -51,6 +61,7 @@ import { ThemeProvider } from "@/components/providers/ThemeProvider";
 import { UserHeartbeat } from "@/components/providers/UserHeartbeat";
 import { auth } from "@/auth";
 import { OfflineIndicator } from "@/components/OfflineIndicator";
+import { TopProgressBar } from "@/components/layout/TopProgressBar";
 import { Toaster } from "sonner";
 
 export default async function RootLayout({
@@ -66,6 +77,7 @@ export default async function RootLayout({
       suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col font-sans" suppressHydrationWarning>
+        <TopProgressBar />
         <SessionProvider session={session}>
           <UserHeartbeat />
           <OfflineIndicator />

@@ -49,7 +49,7 @@ export default async function FeesPage({
   };
 
   return (
-    <div className="p-4 lg:p-10 max-w-7xl mx-auto space-y-8 w-full">
+    <div className="space-y-4 sm:space-y-5 pb-8 w-full mx-auto">
       <FeesManagementClient 
         workspaceId={workspace.id}
         students={studentsResult.data ?? []}

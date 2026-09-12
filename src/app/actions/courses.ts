@@ -74,31 +74,102 @@ export async function toggleCourseActivation(workspaceId: string, globalCourseId
   }
 }
 
-export async function updateFranchiseCoursePricing(courseId: string, data: { 
-  feeAmount: number, priceDisplay: string, discountText: string, showFee: boolean,
-  admissionFee: number, registrationFee: number, examFee: number, 
-  isInstallmentBased: boolean, installmentAmount: number | null, 
-  totalInstallments: number | null, totalCourseFee: number 
-}) {
+export async function updateFranchiseCoursePricing(
+  identifier: string, 
+  second: any, 
+  third?: any
+) {
   try {
-    const course = await db.course.update({
-      where: { id: courseId },
-      data: {
-        feeAmount: data.feeAmount,
-        priceDisplay: data.priceDisplay,
-        discountText: data.discountText,
-        showFee: data.showFee,
-        admissionFee: data.admissionFee,
-        registrationFee: data.registrationFee,
-        examFee: data.examFee,
-        isInstallmentBased: data.isInstallmentBased,
-        installmentAmount: data.installmentAmount,
-        totalInstallments: data.totalInstallments,
-        totalCourseFee: data.totalCourseFee
-      }
-    });
+    let workspaceId: string | null = null;
+    let course: any = null;
 
-    await revalidateWorkspacePath(typeof workspaceId !== 'undefined' ? workspaceId : (typeof data !== 'undefined' ? data.workspaceId : null), "/admin/courses", "page");
+    if (third !== undefined) {
+      // Called with (workspaceId, globalCourseId, data)
+      workspaceId = identifier;
+      const globalCourseId = second;
+      const data = third;
+
+      const existingCourse = await db.course.findFirst({
+        where: { workspaceId, globalCourseId }
+      });
+
+      if (existingCourse) {
+        course = await db.course.update({
+          where: { id: existingCourse.id },
+          data: {
+            feeAmount: data.feeAmount ?? existingCourse.feeAmount,
+            priceDisplay: data.priceDisplay ?? existingCourse.priceDisplay,
+            discountText: data.discountText ?? existingCourse.discountText,
+            showFee: data.showFee ?? existingCourse.showFee,
+            admissionFee: data.admissionFee ?? existingCourse.admissionFee,
+            registrationFee: data.registrationFee ?? existingCourse.registrationFee,
+            examFee: data.examFee ?? existingCourse.examFee,
+            isInstallmentBased: data.isInstallmentBased ?? existingCourse.isInstallmentBased,
+            installmentAmount: data.isInstallmentBased ? data.installmentAmount : null,
+            totalInstallments: data.isInstallmentBased ? data.totalInstallments : null,
+            totalCourseFee: data.totalCourseFee ?? existingCourse.totalCourseFee,
+            ...(data.isActive !== undefined ? { isActive: data.isActive } : {})
+          }
+        });
+      } else {
+        const gc = await db.globalCourse.findUnique({
+          where: { id: globalCourseId }
+        });
+        if (!gc) throw new Error("Global course not found");
+
+        course = await db.course.create({
+          data: {
+            workspaceId,
+            globalCourseId,
+            title: gc.name,
+            code: gc.short || "",
+            description: gc.description || "",
+            image: gc.banner || "",
+            feeAmount: data.feeAmount ?? gc.price,
+            priceDisplay: data.priceDisplay ?? gc.priceDisplay ?? "",
+            discountText: data.discountText ?? gc.discountText ?? "",
+            showFee: data.showFee ?? gc.showFee ?? true,
+            admissionFee: data.admissionFee ?? 0,
+            registrationFee: data.registrationFee ?? 0,
+            examFee: data.examFee ?? 0,
+            isInstallmentBased: !!data.isInstallmentBased,
+            installmentAmount: data.isInstallmentBased ? data.installmentAmount : null,
+            totalInstallments: data.isInstallmentBased ? data.totalInstallments : null,
+            totalCourseFee: data.totalCourseFee ?? data.feeAmount ?? gc.price,
+            duration: gc.duration || "",
+            topics: gc.syllabus || [],
+            isActive: data.isActive !== undefined ? data.isActive : true
+          }
+        });
+      }
+    } else {
+      // Legacy signature: (courseId, data)
+      const courseId = identifier;
+      const data = second;
+
+      course = await db.course.update({
+        where: { id: courseId },
+        data: {
+          feeAmount: data.feeAmount,
+          priceDisplay: data.priceDisplay,
+          discountText: data.discountText,
+          showFee: data.showFee,
+          admissionFee: data.admissionFee,
+          registrationFee: data.registrationFee,
+          examFee: data.examFee,
+          isInstallmentBased: data.isInstallmentBased,
+          installmentAmount: data.installmentAmount,
+          totalInstallments: data.totalInstallments,
+          totalCourseFee: data.totalCourseFee,
+          ...(data.isActive !== undefined ? { isActive: data.isActive } : {})
+        }
+      });
+      workspaceId = course.workspaceId;
+    }
+
+    if (workspaceId) {
+      await revalidateWorkspacePath(workspaceId, "/admin/courses", "page");
+    }
     return { success: true, data: course };
   } catch (error: any) {
     console.error("Failed to update franchise course pricing:", error);

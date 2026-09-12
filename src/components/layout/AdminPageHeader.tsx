@@ -19,13 +19,13 @@ export function AdminPageHeader({
   badge
 }: AdminPageHeaderProps) {
   return (
-    <div className={cn("flex flex-col lg:flex-row lg:items-center justify-between gap-6 mb-10", className)}>
-      <div className="space-y-1.5">
-        <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
+    <div className={cn("flex flex-col lg:flex-row lg:items-center justify-between gap-3 mb-4 sm:mb-5", className)}>
+      <div className="space-y-0.5">
+        <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
           {title}
         </h1>
         {description && (
-          <p className="text-sm font-medium text-slate-500 dark:text-slate-400 max-w-2xl leading-relaxed">
+          <p className="text-xs sm:text-sm font-medium text-slate-500 dark:text-slate-400 max-w-2xl leading-normal">
             {description}
           </p>
         )}

@@ -2,12 +2,9 @@ import { getStudentProfile } from "@/app/actions/student";
 import { getWorkspaceByTenant } from "@/lib/workspace";
 import { redirect } from "next/navigation";
 import { getServerTenantLink } from "@/lib/routing-server";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Wallet, Receipt, CreditCard, Download, ArrowUpRight, History } from "lucide-react";
-import { Button } from "@/components/ui/button";
-
+import { db } from "@/lib/prisma";
 import StudentFeesClient from "@/components/student/StudentFeesClient";
+import { getFranchisePaymentConfig } from "@/app/actions/payments";
 
 export default async function StudentFeesPage({
   params
@@ -23,14 +20,25 @@ export default async function StudentFeesPage({
 
   const student = result.data as any;
   if (!student) redirect(await getServerTenantLink("/student/dashboard", tenant));
-  const invoices = student.studentProfile?.invoices || [];
+  const studentProfile = student.studentProfile;
+  const studentProfileId = studentProfile?.id;
+
+  const invoices = studentProfileId
+    ? await db.invoice.findMany({
+        where: { studentProfileId, workspaceId: workspace.id },
+        orderBy: { createdAt: "desc" }
+      })
+    : [];
+
+  const configRes = await getFranchisePaymentConfig(workspace.id);
+  const paymentConfig = configRes.success ? configRes.data : null;
 
   const totalPaid = invoices
     .filter((i: any) => i.status === "PAID")
     .reduce((sum: number, i: any) => sum + i.amount, 0);
   
   const pendingAmount = invoices
-    .filter((i: any) => i.status !== "PAID" && i.status !== "CANCELLED")
+    .filter((i: any) => i.status === "PENDING" || i.status === "OVERDUE")
     .reduce((sum: number, i: any) => sum + i.amount, 0);
 
   const lastInvoice = invoices.find((i: any) => i.status === "PAID");
@@ -38,8 +46,11 @@ export default async function StudentFeesPage({
   const stats = {
     totalPaid,
     pendingAmount,
+    totalInvoices: invoices.length,
+    paidCount: invoices.filter((i: any) => i.status === "PAID").length,
+    pendingCount: invoices.filter((i: any) => i.status === "PENDING" || i.status === "OVERDUE").length,
     lastPayment: lastInvoice?.amount || 0,
-    lastDate: lastInvoice ? new Date(lastInvoice.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit' }) : null
+    lastDate: lastInvoice ? new Date(lastInvoice.paidDate || lastInvoice.createdAt).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : null
   };
 
   const settings = workspace.siteSettings as any;
@@ -50,9 +61,10 @@ export default async function StudentFeesPage({
       stats={stats}
       settings={settings}
       tenant={tenant}
+      workspace={workspace}
+      studentProfile={studentProfile}
+      paymentConfig={paymentConfig}
     />
   );
 }
 
-import { CheckCircle2 } from "lucide-react";
-import { cn } from "@/lib/utils";

@@ -309,40 +309,40 @@ export default function PracticalClassesTab({ workspaceId }: { workspaceId: stri
   const slots = config?.slots || [];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Header Actions */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm gap-4">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-white dark:bg-slate-900 p-3.5 sm:p-4 rounded-xl border border-slate-200/80 dark:border-slate-800 shadow-sm gap-3">
         <div>
-          <h3 className="text-lg font-black text-slate-900 dark:text-white">Practical Schedule Configuration</h3>
-          <p className="text-sm text-slate-500 font-medium">Manage your weekly routine for practical classes</p>
+          <h3 className="text-sm font-bold text-slate-900 dark:text-white">Practical Schedule Routine</h3>
+          <p className="text-xs text-slate-500 font-medium">Manage weekly routines and slot allocations for lab practicals</p>
         </div>
-        <div className="flex flex-wrap gap-3 w-full sm:w-auto">
-          <Button onClick={() => setIsViewingCurrentBatch(true)} variant="outline" className="h-12 px-6 font-bold rounded-xl flex-1 sm:flex-none border-2 bg-emerald-50 text-emerald-600 border-emerald-200 hover:bg-emerald-100 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/30 dark:hover:bg-emerald-500/20">
-            <Users className="w-4 h-4 mr-2" /> Current Batch
+        <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+          <Button onClick={() => setIsViewingCurrentBatch(true)} variant="outline" className="h-8 sm:h-9 px-3 font-semibold text-xs rounded-lg border-emerald-200 text-emerald-700 hover:bg-emerald-50 dark:border-emerald-900/30 dark:text-emerald-400 dark:hover:bg-emerald-950/20">
+            <Users className="w-3.5 h-3.5 mr-1.5" /> Current Batch
           </Button>
-          <Button onClick={() => setIsConfiguring(true)} variant="outline" className="h-12 px-6 font-bold rounded-xl flex-1 sm:flex-none border-2">
-            <Settings className="w-4 h-4 mr-2" /> Configure
+          <Button onClick={() => setIsConfiguring(true)} variant="outline" className="h-8 sm:h-9 px-3 font-semibold text-xs rounded-lg border-slate-200 dark:border-slate-700">
+            <Settings className="w-3.5 h-3.5 mr-1.5" /> Configure
           </Button>
-          <Button onClick={() => setIsAddingSlot(true)} className="h-12 px-6 font-bold rounded-xl flex-1 sm:flex-none bg-indigo-500 hover:bg-indigo-600 shadow-lg shadow-indigo-500/20">
-            <Clock className="w-4 h-4 mr-2" /> Add Time Slot
+          <Button onClick={() => setIsAddingSlot(true)} className="h-8 sm:h-9 px-3.5 font-semibold text-xs rounded-lg bg-primary text-primary-foreground shadow-xs">
+            <Clock className="w-3.5 h-3.5 mr-1.5" /> Add Time Slot
           </Button>
         </div>
       </div>
 
       {/* Weekly Grid (Transposed: Days = Columns, Slots = Rows) */}
       {slots.length === 0 ? (
-        <div className="text-center p-12 bg-white dark:bg-slate-900 rounded-[2rem] border border-dashed border-slate-300 dark:border-slate-800 shadow-sm">
-          <div className="w-16 h-16 bg-indigo-50 dark:bg-indigo-500/10 text-indigo-500 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Clock className="w-8 h-8" />
+        <div className="text-center p-8 sm:p-12 bg-white dark:bg-slate-900 rounded-xl border border-dashed border-slate-300 dark:border-slate-800 shadow-sm">
+          <div className="w-12 h-12 bg-primary/10 text-primary rounded-xl flex items-center justify-center mx-auto mb-3">
+            <Clock className="w-6 h-6" />
           </div>
-          <h3 className="text-xl font-black text-slate-900 dark:text-white mb-2">No time slots yet</h3>
-          <p className="text-slate-500 mb-6 max-w-sm mx-auto">Create your first time slot to start organizing your weekly practical classes.</p>
-          <Button onClick={() => setIsAddingSlot(true)} className="bg-indigo-500 hover:bg-indigo-600 rounded-xl px-8 shadow-lg shadow-indigo-500/25">
+          <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-1">No time slots yet</h3>
+          <p className="text-xs text-slate-500 mb-4 max-w-sm mx-auto">Create your first time slot to start organizing your weekly practical classes.</p>
+          <Button onClick={() => setIsAddingSlot(true)} className="h-8 sm:h-9 px-4 text-xs font-semibold rounded-lg bg-primary text-primary-foreground">
             Create Time Slot
           </Button>
         </div>
       ) : (
-        <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-xl shadow-slate-200/40 dark:shadow-black/40">
+        <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200/80 dark:border-slate-800 overflow-hidden shadow-sm">
           
           {/* Top Scroll Navigation & Search */}
           <div className="flex items-center justify-between p-2 px-4 bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-800">

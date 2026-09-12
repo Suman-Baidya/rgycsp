@@ -96,10 +96,10 @@ export default async function WorkspaceSettingsPage({ params }: { params: Promis
   }
 
   return (
-    <div className="p-4 lg:p-10 max-w-7xl mx-auto space-y-10 w-full">
+    <div className="space-y-4 sm:space-y-5 pb-8 w-full mx-auto">
       <AdminPageHeader 
-        title="Institute Settings" 
-        description="Configure your institute's landing page content, branding, and visibility."
+        title="Landing Page & Website Settings" 
+        description="Configure your franchise public landing page sections, navigation menu, branding, events, and notices."
       />
 
       <WorkspaceSettingsForm settings={siteSettings} />

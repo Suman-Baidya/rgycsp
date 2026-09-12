@@ -2,11 +2,7 @@ import { getStudentProfile } from "@/app/actions/student";
 import { getWorkspaceByTenant } from "@/lib/workspace";
 import { redirect } from "next/navigation";
 import { getServerTenantLink } from "@/lib/routing-server";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { CheckCircle2, XCircle, Clock, Calendar as CalendarIcon, Filter } from "lucide-react";
-import { Button } from "@/components/ui/button";
-
+import { db } from "@/lib/prisma";
 import StudentAttendanceClient from "@/components/student/StudentAttendanceClient";
 
 export default async function StudentAttendancePage({
@@ -23,51 +19,69 @@ export default async function StudentAttendancePage({
 
   const student = result.data as any;
   if (!student) redirect(await getServerTenantLink("/student/dashboard", tenant));
-  const attendances = student.studentProfile?.attendances || [];
+  const studentProfileId = student.studentProfile?.id;
 
-  const theoryAttendances = attendances.filter((a: any) => a.type === "THEORY").sort((a: any, b: any) => 
-    new Date(b.date).getTime() - new Date(a.date).getTime()
-  );
-  const practicalAttendances = attendances.filter((a: any) => a.type === "PRACTICAL").sort((a: any, b: any) => 
-    new Date(b.date).getTime() - new Date(a.date).getTime()
-  );
+  const attendances = studentProfileId
+    ? await db.attendance.findMany({
+        where: { studentProfileId, workspaceId: workspace.id },
+        orderBy: { date: 'desc' },
+        take: 250
+      })
+    : [];
+
+  const theoryAttendances = attendances.filter((a: any) => a.type === "THEORY");
+  const practicalAttendances = attendances.filter((a: any) => a.type === "PRACTICAL");
 
   const calculateStats = (records: any[]) => {
+    const present = records.filter(a => a.status === "PRESENT").length;
+    const absent = records.filter(a => a.status === "ABSENT").length;
+    const late = records.filter(a => a.status === "LATE").length;
+    const halfDay = records.filter(a => a.status === "HALF_DAY").length;
+    const total = records.length;
+    const percentage = total > 0 
+      ? Math.round(((present + late + (halfDay * 0.5)) / total) * 100) 
+      : 100;
+
     return {
-      present: records.filter(a => a.status === "PRESENT").length,
-      absent: records.filter(a => a.status === "ABSENT").length,
-      late: records.filter(a => a.status === "LATE").length,
-      total: records.length,
-      percentage: records.length > 0 
-        ? Math.round((records.filter(a => a.status === "PRESENT" || a.status === "LATE").length / records.length) * 100) 
-        : 0
+      present,
+      absent,
+      late,
+      halfDay,
+      total,
+      percentage
     };
   };
 
   const theoryStats = calculateStats(theoryAttendances);
   const practicalStats = calculateStats(practicalAttendances);
+  const overallStats = calculateStats(attendances);
 
   const settings = workspace.siteSettings as any;
 
   const theorySchedule = {
-    batchName: student.studentProfile?.batch?.name || "Pending Assignment",
-    schedule: student.studentProfile?.batch?.schedule || "No schedule set."
+    batchName: student.studentProfile?.batch?.name || "Regular Batch",
+    schedule: student.studentProfile?.batch?.schedule || (
+      student.studentProfile?.batch?.startTime && student.studentProfile?.batch?.endTime
+        ? `${student.studentProfile.batch.startTime} - ${student.studentProfile.batch.endTime}`
+        : "Standard Academic Timetable"
+    )
   };
 
   const practicalSchedule = student.studentProfile?.practicalSchedules || [];
 
   return (
     <StudentAttendanceClient 
+      attendances={attendances}
       theoryAttendances={theoryAttendances}
       practicalAttendances={practicalAttendances}
       theoryStats={theoryStats}
       practicalStats={practicalStats}
+      overallStats={overallStats}
       theorySchedule={theorySchedule}
       practicalSchedule={practicalSchedule}
       settings={settings}
       tenant={tenant}
+      workspace={workspace}
     />
   );
 }
-
-import { cn } from "@/lib/utils";

@@ -271,23 +271,23 @@ export default function QuestionPapersTab({ workspaceId, workspaceTokens, course
    };
 
    return (
-      <div className="space-y-6 mt-6">
-         {/* Top Action Bar */}
-         <div className="flex flex-col md:flex-row gap-4 items-center justify-between bg-white dark:bg-slate-900 p-4 rounded-[2rem] border-2 border-slate-100 dark:border-slate-800 shadow-sm">
-            <div className="flex flex-wrap gap-4 items-center flex-1">
-               <div className="relative max-w-sm w-full lg:w-[300px]">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
+      <div className="space-y-4">
+         {/* Top Action Bar & Filter Toolbar (Rule 7.4) */}
+         <div className="border border-slate-200/80 dark:border-slate-800 rounded-xl p-3 sm:p-3.5 bg-white dark:bg-slate-900 shadow-xs flex flex-col md:flex-row gap-2.5 items-stretch md:items-center justify-between">
+            <div className="flex flex-wrap gap-2 items-center flex-1">
+               <div className="relative w-full sm:w-64 group">
+                  <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 w-3.5 h-3.5" />
                   <Input 
                      placeholder="Search questions, courses..." 
                      value={searchQuery}
                      onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
-                     className="pl-10 h-10 rounded-xl bg-slate-50 dark:bg-slate-950 border-none font-medium"
+                     className="pl-8 h-8 sm:h-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700/60 font-medium"
                   />
                </div>
                
-               <Select value={selectedCourseFilter} onValueChange={v => { setSelectedCourseFilter(v); setSelectedChapterFilter("all"); setCurrentPage(1); }}>
-                  <SelectTrigger className="h-10 w-[200px] rounded-xl font-bold bg-slate-50 dark:bg-slate-950 border-none">
-                     <span className="truncate text-left block w-full pr-2">{selectedCourseFilter === "all" ? "All Courses" : courses.find(c => c.id === selectedCourseFilter)?.title || "All Courses"}</span>
+               <Select value={selectedCourseFilter} onValueChange={(v: any) => { setSelectedCourseFilter(v); setSelectedChapterFilter("all"); setCurrentPage(1); }}>
+                  <SelectTrigger className="h-8 sm:h-9 w-full sm:w-[180px] rounded-lg text-xs font-medium bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700/60">
+                     <span className="truncate text-left block w-full pr-1">{selectedCourseFilter === "all" ? "All Courses" : courses.find(c => c.id === selectedCourseFilter)?.title || "All Courses"}</span>
                   </SelectTrigger>
                   <SelectContent>
                      <SelectItem value="all">All Courses</SelectItem>
@@ -295,9 +295,9 @@ export default function QuestionPapersTab({ workspaceId, workspaceTokens, course
                   </SelectContent>
                </Select>
 
-               <Select value={selectedChapterFilter} onValueChange={v => { setSelectedChapterFilter(v); setCurrentPage(1); }} disabled={selectedCourseFilter === "all"}>
-                  <SelectTrigger className="h-10 w-[200px] rounded-xl font-bold bg-slate-50 dark:bg-slate-950 border-none">
-                     <span className="truncate text-left block w-full pr-2">{selectedChapterFilter === "all" ? "All Chapters" : chapters.find(c => c.id === selectedChapterFilter)?.name || "All Chapters"}</span>
+               <Select value={selectedChapterFilter} onValueChange={(v: any) => { setSelectedChapterFilter(v); setCurrentPage(1); }} disabled={selectedCourseFilter === "all"}>
+                  <SelectTrigger className="h-8 sm:h-9 w-full sm:w-[180px] rounded-lg text-xs font-medium bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700/60">
+                     <span className="truncate text-left block w-full pr-1">{selectedChapterFilter === "all" ? "All Chapters" : chapters.find(c => c.id === selectedChapterFilter)?.name || "All Chapters"}</span>
                   </SelectTrigger>
                   <SelectContent>
                      <SelectItem value="all">All Chapters</SelectItem>
@@ -306,59 +306,67 @@ export default function QuestionPapersTab({ workspaceId, workspaceTokens, course
                </Select>
             </div>
 
-            <Dialog open={isCreateQuestionOpen} onOpenChange={setIsCreateQuestionOpen}>
-               <DialogTrigger render={<Button className="rounded-xl h-10 px-6 font-bold shadow-md shadow-primary/20" />}>
-                  <Plus className="w-4 h-4 mr-2" /> Add Questions
-               </DialogTrigger>
-               <DialogContent className="sm:max-w-[700px] rounded-[2rem] p-0 overflow-hidden border-2 bg-slate-50 dark:bg-zinc-950">
-                  <div className="bg-white dark:bg-slate-900 p-6 border-b border-slate-100 dark:border-slate-800">
-                     <DialogTitle className="text-xl font-bold">Add Questions</DialogTitle>
-                     <div className="flex bg-slate-100 dark:bg-slate-800/50 p-1.5 rounded-2xl w-fit mt-4">
-                        <button onClick={() => setMode("manual")} className={cn("px-4 py-2 rounded-xl font-bold text-sm transition-all flex items-center gap-2", mode === "manual" ? "bg-white dark:bg-slate-700 shadow text-primary" : "text-slate-500 hover:text-slate-900")}>
-                           <FileText className="w-4 h-4" /> Manual
-                        </button>
-                        <button onClick={() => setMode("csv")} className={cn("px-4 py-2 rounded-xl font-bold text-sm transition-all flex items-center gap-2", mode === "csv" ? "bg-white dark:bg-slate-700 shadow text-primary" : "text-slate-500 hover:text-slate-900")}>
-                           <UploadCloud className="w-4 h-4" /> CSV Import
-                        </button>
-                        <button onClick={() => setMode("ai")} className={cn("px-4 py-2 rounded-xl font-bold text-sm transition-all flex items-center gap-2", mode === "ai" ? "bg-white dark:bg-slate-700 shadow text-amber-500" : "text-slate-500 hover:text-slate-900")}>
-                           <Sparkles className="w-4 h-4" /> AI Generate
-                        </button>
-                     </div>
-                  </div>
-
-                  <div className="p-6 overflow-y-auto max-h-[60vh]">
-                     {/* Select Course & Chapter for Creation */}
-                     <div className="flex gap-4 mb-6">
-                        <div className="flex-1 space-y-2">
-                           <Label className="text-xs font-bold uppercase text-slate-400">Course</Label>
-                           <Select value={selectedCourse} onValueChange={v => { setSelectedCourse(v); setSelectedChapter(""); }}>
-                              <SelectTrigger className="h-12 rounded-xl"><span className="truncate text-left block w-full pr-2">{selectedCourse ? courses.find(c => c.id === selectedCourse)?.title || "Select Course" : "Select Course"}</span></SelectTrigger>
-                              <SelectContent>{courses.map(c => <SelectItem key={c.id} value={c.id}>{c.title}</SelectItem>)}</SelectContent>
-                           </Select>
+            <div className="flex items-center gap-2">
+               <Dialog open={isCreateQuestionOpen} onOpenChange={setIsCreateQuestionOpen}>
+                  <DialogTrigger render={<Button className="h-8 sm:h-9 px-3.5 rounded-lg text-xs font-semibold bg-primary hover:bg-primary/90 text-primary-foreground shadow-xs flex items-center gap-1.5" />}>
+                     <Plus className="w-3.5 h-3.5" />
+                     <span>Add Questions</span>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-2xl rounded-2xl p-0 overflow-hidden border border-slate-200 dark:border-slate-800 shadow-xl bg-white dark:bg-slate-900">
+                     <div className="p-4 sm:p-5 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30">
+                        <DialogTitle className="text-sm sm:text-base font-bold text-slate-900 dark:text-white">Add Questions to Bank</DialogTitle>
+                        <div className="flex gap-1.5 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl w-fit mt-3">
+                           <button onClick={() => setMode("manual")} className={cn("px-3 py-1.5 rounded-lg font-semibold text-xs transition-all flex items-center gap-1.5", mode === "manual" ? "bg-white dark:bg-slate-700 shadow-xs text-primary dark:text-white" : "text-slate-500 hover:text-slate-900")}>
+                              <FileText className="w-3.5 h-3.5" /> Manual Entry
+                           </button>
+                           <button onClick={() => setMode("csv")} className={cn("px-3 py-1.5 rounded-lg font-semibold text-xs transition-all flex items-center gap-1.5", mode === "csv" ? "bg-white dark:bg-slate-700 shadow-xs text-primary dark:text-white" : "text-slate-500 hover:text-slate-900")}>
+                              <UploadCloud className="w-3.5 h-3.5" /> CSV Import
+                           </button>
+                           <button onClick={() => setMode("ai")} className={cn("px-3 py-1.5 rounded-lg font-semibold text-xs transition-all flex items-center gap-1.5", mode === "ai" ? "bg-white dark:bg-slate-700 shadow-xs text-amber-600 dark:text-amber-400" : "text-slate-500 hover:text-slate-900")}>
+                              <Sparkles className="w-3.5 h-3.5" /> AI Generate
+                           </button>
                         </div>
-                        <div className="flex-1 space-y-2">
-                           <Label className="text-xs font-bold uppercase text-slate-400">Chapter</Label>
-                           <div className="flex gap-2">
-                              <Select value={selectedChapter} onValueChange={v => setSelectedChapter(v)} disabled={!selectedCourse}>
-                                 <SelectTrigger className="h-12 rounded-xl flex-1"><span className="truncate text-left block w-full pr-2">{selectedChapter ? chapters.find(c => c.id === selectedChapter)?.name || "Select Chapter" : "Select Chapter"}</span></SelectTrigger>
-                                 <SelectContent>
+                     </div>
+
+                     <div className="p-4 sm:p-5 overflow-y-auto max-h-[60vh] space-y-4">
+                        {/* Select Course & Chapter for Creation */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                           <div className="space-y-1">
+                              <Label className="text-[11px] font-semibold text-slate-700 dark:text-slate-300">Target Course</Label>
+                              <Select value={selectedCourse} onValueChange={(v: any) => { setSelectedCourse(v); setSelectedChapter(""); }}>
+                                 <SelectTrigger className="h-8 sm:h-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700"><span className="truncate text-left block w-full pr-1">{selectedCourse ? courses.find(c => c.id === selectedCourse)?.title || "Select Course" : "Select Course"}</span></SelectTrigger>
+                                 <SelectContent>{courses.map(c => <SelectItem key={c.id} value={c.id}>{c.title}</SelectItem>)}</SelectContent>
+                              </Select>
+                           </div>
+                           <div className="space-y-1">
+                              <Label className="text-[11px] font-semibold text-slate-700 dark:text-slate-300">Target Chapter</Label>
+                              <div className="flex gap-1.5">
+                                 <Select value={selectedChapter} onValueChange={(v: any) => setSelectedChapter(v)} disabled={!selectedCourse}>
+                                    <SelectTrigger className="h-8 sm:h-9 text-xs rounded-lg flex-1 bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700"><span className="truncate text-left block w-full pr-1">{selectedChapter ? chapters.find(c => c.id === selectedChapter)?.name || "Select Chapter" : "Select Chapter"}</span></SelectTrigger>
+                                    <SelectContent>
                                     {chapters.filter(c => c.courseId === selectedCourse).map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
                                  </SelectContent>
                               </Select>
                               <Dialog open={isCreateChapterOpen} onOpenChange={setIsCreateChapterOpen}>
-                                 <DialogTrigger render={<Button variant="outline" className="h-12 w-12 p-0 rounded-xl shrink-0" />}>
-                                    <Plus className="w-5 h-5"/>
+                                 <DialogTrigger render={<Button variant="outline" className="h-8 sm:h-9 w-9 p-0 rounded-lg shrink-0" title="Create new chapter" />}>
+                                    <Plus className="w-4 h-4"/>
                                  </DialogTrigger>
-                                 <DialogContent className="sm:max-w-md rounded-[2rem] p-6">
-                                    <DialogTitle>New Chapter</DialogTitle>
-                                    <div className="space-y-4 py-4">
-                                       <Select value={newChapterCourseId} onValueChange={v => setNewChapterCourseId(v)}>
-                                          <SelectTrigger className="h-12 rounded-xl"><span className="truncate text-left block w-full pr-2">{newChapterCourseId ? courses.find(c => c.id === newChapterCourseId)?.title || "Select Course" : "Select Course"}</span></SelectTrigger>
-                                          <SelectContent>{courses.map(c => <SelectItem key={c.id} value={c.id}>{c.title}</SelectItem>)}</SelectContent>
-                                       </Select>
-                                       <Input placeholder="Chapter Name" value={newChapterName} onChange={e => setNewChapterName(e.target.value)} className="h-12 rounded-xl" />
-                                       <Button onClick={handleCreateChapter} disabled={isCreatingChapter} className="w-full h-12 rounded-xl font-bold">
-                                          {isCreatingChapter ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />} Save Chapter
+                                 <DialogContent className="max-w-md rounded-2xl p-4 sm:p-5 border border-slate-200 dark:border-slate-800 shadow-xl bg-white dark:bg-slate-900">
+                                    <DialogTitle className="text-sm sm:text-base font-bold text-slate-900 dark:text-white">Create New Chapter</DialogTitle>
+                                    <div className="space-y-3 py-2">
+                                       <div className="space-y-1">
+                                           <Label className="text-[11px] font-semibold">Course</Label>
+                                           <Select value={newChapterCourseId} onValueChange={(v: any) => setNewChapterCourseId(v)}>
+                                             <SelectTrigger className="h-8 sm:h-9 text-xs rounded-lg"><span className="truncate text-left block w-full pr-1">{newChapterCourseId ? courses.find(c => c.id === newChapterCourseId)?.title || "Select Course" : "Select Course"}</span></SelectTrigger>
+                                             <SelectContent>{courses.map(c => <SelectItem key={c.id} value={c.id}>{c.title}</SelectItem>)}</SelectContent>
+                                          </Select>
+                                       </div>
+                                       <div className="space-y-1">
+                                          <Label className="text-[11px] font-semibold">Chapter Name</Label>
+                                          <Input placeholder="e.g. Chapter 1: Introduction to Computing" value={newChapterName} onChange={e => setNewChapterName(e.target.value)} className="h-8 sm:h-9 text-xs rounded-lg" />
+                                       </div>
+                                       <Button onClick={handleCreateChapter} disabled={isCreatingChapter} className="w-full h-8 sm:h-9 rounded-lg text-xs font-semibold bg-primary hover:bg-primary/90 text-primary-foreground mt-2">
+                                          {isCreatingChapter ? <Loader2 className="w-3.5 h-3.5 animate-spin mr-1.5" /> : <Save className="w-3.5 h-3.5 mr-1.5" />} Save Chapter
                                        </Button>
                                     </div>
                                  </DialogContent>
@@ -367,35 +375,60 @@ export default function QuestionPapersTab({ workspaceId, workspaceTokens, course
                         </div>
                      </div>
 
-                     {!selectedChapter && <div className="text-center py-10 opacity-50"><BookOpen className="w-12 h-12 mx-auto mb-2"/>Select a chapter first</div>}
+                     {!selectedChapter && (
+                        <div className="text-center py-8 rounded-xl bg-slate-50 dark:bg-slate-800/30 border border-dashed border-slate-200 dark:border-slate-700/60 text-slate-400 space-y-1">
+                           <BookOpen className="w-8 h-8 mx-auto opacity-40"/>
+                           <p className="text-xs font-semibold text-slate-600 dark:text-slate-300">Select a course and chapter to continue</p>
+                        </div>
+                     )}
 
                      {selectedChapter && mode === "manual" && (
-                        <div className="space-y-6">
-                           <Textarea value={manualQ.questionText} onChange={e => setManualQ({...manualQ, questionText: e.target.value})} placeholder="Question Text..." className="min-h-[100px] rounded-xl resize-none" />
-                           <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-3 pt-1">
+                           <div className="space-y-1">
+                              <Label className="text-[11px] font-semibold text-slate-700 dark:text-slate-300">Question Statement</Label>
+                              <Textarea value={manualQ.questionText} onChange={e => setManualQ({...manualQ, questionText: e.target.value})} placeholder="Type the question..." className="min-h-[70px] text-xs rounded-lg resize-none" />
+                           </div>
+                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                               {['A','B','C','D'].map(opt => (
-                                 <div key={opt} className="relative">
-                                    <Label className="text-xs ml-1 text-slate-500">Option {opt}</Label>
-                                    <Input value={(manualQ as any)[`option${opt}`]} onChange={e => setManualQ({...manualQ, [`option${opt}`]: e.target.value})} className="h-12 rounded-xl pr-10" />
-                                    <div onClick={() => setManualQ({...manualQ, correctOption: opt})} className={cn("absolute right-2 top-7 w-6 h-6 rounded flex items-center justify-center text-xs font-bold cursor-pointer", manualQ.correctOption === opt ? "bg-green-500 text-white" : "bg-slate-100 text-slate-400 hover:bg-slate-200")}>{opt}</div>
+                                 <div key={opt} className="relative space-y-1">
+                                    <Label className="text-[10px] font-semibold text-slate-500 uppercase">Option {opt}</Label>
+                                    <div className="relative">
+                                       <Input value={(manualQ as any)[`option${opt}`]} onChange={e => setManualQ({...manualQ, [`option${opt}`]: e.target.value})} className="h-8 sm:h-9 text-xs rounded-lg pr-9" placeholder={`Answer ${opt}`} />
+                                       <button 
+                                          type="button"
+                                          onClick={() => setManualQ({...manualQ, correctOption: opt})} 
+                                          title="Mark as correct answer"
+                                          className={cn("absolute right-1.5 top-1/2 -translate-y-1/2 w-6 h-6 rounded-md flex items-center justify-center text-[10px] font-bold cursor-pointer transition-colors", manualQ.correctOption === opt ? "bg-emerald-600 text-white shadow-xs" : "bg-slate-100 text-slate-400 hover:bg-slate-200 dark:bg-slate-800")}
+                                       >
+                                          {opt}
+                                       </button>
+                                    </div>
                                  </div>
                               ))}
                            </div>
-                           <Button onClick={handleSaveManual} disabled={isSavingManual} className="w-full h-12 rounded-xl font-bold">{isSavingManual ? <Loader2 className="w-4 h-4 animate-spin mr-2"/> : <Save className="w-4 h-4 mr-2"/>} Save Question</Button>
+                           <div className="pt-2">
+                              <Button onClick={handleSaveManual} disabled={isSavingManual} className="w-full h-8 sm:h-9 rounded-lg text-xs font-semibold bg-primary hover:bg-primary/90 text-primary-foreground shadow-xs">
+                                 {isSavingManual ? <Loader2 className="w-3.5 h-3.5 animate-spin mr-1.5"/> : <Save className="w-3.5 h-3.5 mr-1.5"/>} Save Question to Bank
+                              </Button>
+                           </div>
                         </div>
                      )}
 
                      {selectedChapter && mode === "csv" && (
-                        <div className="text-center py-8 space-y-6">
-                           <UploadCloud className="w-16 h-16 text-blue-500 mx-auto" />
-                           <div className="flex justify-center gap-4">
-                              <Button variant="outline" onClick={handleDownloadTemplate} className="h-12 px-6 rounded-xl font-bold border-2 border-slate-200 dark:border-slate-800">
-                                Download Template
+                        <div className="text-center py-6 space-y-4 rounded-xl bg-slate-50 dark:bg-slate-800/30 border border-dashed border-slate-200 dark:border-slate-700/60">
+                           <UploadCloud className="w-10 h-10 text-blue-500 mx-auto" />
+                           <div className="space-y-1">
+                              <p className="text-xs font-bold text-slate-800 dark:text-slate-200">Bulk Upload Questions via CSV</p>
+                              <p className="text-[11px] text-slate-400">Download the formatted template and fill in Question, Option A-D, and Correct Answer.</p>
+                           </div>
+                           <div className="flex flex-wrap justify-center gap-2 pt-1">
+                              <Button variant="outline" size="sm" onClick={handleDownloadTemplate} className="h-8 rounded-lg text-xs font-semibold">
+                                 Download Template
                               </Button>
                               <div className="relative inline-block">
                                  <input type="file" accept=".csv" onChange={handleFileUpload} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" />
-                                 <Button disabled={isUploadingCSV} className="h-12 px-6 rounded-xl font-bold bg-blue-600 hover:bg-blue-700 text-white pointer-events-none">
-                                    {isUploadingCSV ? <Loader2 className="w-4 h-4 animate-spin mr-2"/> : <UploadCloud className="w-4 h-4 mr-2"/>}
+                                 <Button disabled={isUploadingCSV} size="sm" className="h-8 rounded-lg text-xs font-semibold bg-blue-600 hover:bg-blue-700 text-white pointer-events-none">
+                                    {isUploadingCSV ? <Loader2 className="w-3.5 h-3.5 animate-spin mr-1.5"/> : <UploadCloud className="w-3.5 h-3.5 mr-1.5"/>}
                                     {isUploadingCSV ? "Importing..." : "Upload CSV"}
                                  </Button>
                               </div>
@@ -404,202 +437,215 @@ export default function QuestionPapersTab({ workspaceId, workspaceTokens, course
                      )}
 
                      {selectedChapter && mode === "ai" && (
-                        <div className="text-center py-8 opacity-60">
-                           <BrainCircuit className="w-16 h-16 text-amber-500 mx-auto mb-4" />
-                           <h3 className="text-lg font-bold">AI Generator Coming Soon</h3>
+                        <div className="text-center py-8 opacity-60 rounded-xl bg-slate-50 dark:bg-slate-800/30">
+                           <BrainCircuit className="w-10 h-10 text-amber-500 mx-auto mb-2" />
+                           <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200">AI Generator Coming Soon</h3>
+                           <p className="text-[11px] text-slate-400 mt-1">Automatic question synthesis based on course syllabus is undergoing evaluation.</p>
                         </div>
                      )}
                   </div>
                </DialogContent>
             </Dialog>
-         </div>
 
-         {/* Questions Table */}
-         <Card className="border-2 border-slate-100 dark:border-slate-800 rounded-[2.5rem] bg-white dark:bg-slate-900 shadow-xl shadow-slate-200/20 dark:shadow-none overflow-hidden">
-            <CardHeader className="bg-slate-50/50 dark:bg-slate-800/30 px-6 py-4 flex flex-row items-center justify-between border-b border-slate-100 dark:border-slate-800">
-               <div className="flex items-center gap-4">
-                  <CardTitle className="text-lg font-bold">Question Bank</CardTitle>
-                  <span className="text-xs font-bold bg-primary/10 text-primary px-3 py-1 rounded-full">{allQuestions.length} Total</span>
-               </div>
-               
-               {selectedQuestionIds.size > 0 && (
-                  <Dialog open={isCreateExamOpen} onOpenChange={setIsCreateExamOpen}>
-                     <DialogTrigger render={<Button className="h-10 rounded-xl font-bold bg-green-600 hover:bg-green-700 text-white animate-in fade-in slide-in-from-right-4" />}>
-                        Create Exam ({selectedQuestionIds.size})
-                     </DialogTrigger>
-                     <DialogContent className="sm:max-w-md rounded-[2rem] p-6">
-                        <DialogTitle className="text-xl font-bold mb-4">Create Online Exam</DialogTitle>
-                        <div className="space-y-4">
-                           <div className="space-y-2">
-                              <Label>Exam Title</Label>
-                              <Input placeholder="e.g. Final Semester Exam" value={examConfig.title} onChange={e => setExamConfig({...examConfig, title: e.target.value})} className="h-12 rounded-xl" />
+            {selectedQuestionIds.size > 0 && (
+               <Dialog open={isCreateExamOpen} onOpenChange={setIsCreateExamOpen}>
+                  <DialogTrigger render={<Button className="h-8 sm:h-9 px-3 rounded-lg text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs animate-in fade-in flex items-center gap-1.5" />}>
+                     <CheckCircle2 className="w-3.5 h-3.5" />
+                     <span>Create Exam ({selectedQuestionIds.size})</span>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-md rounded-2xl p-4 sm:p-5 border border-slate-200 dark:border-slate-800 shadow-xl bg-white dark:bg-slate-900">
+                     <DialogTitle className="text-sm sm:text-base font-bold text-slate-900 dark:text-white">Create Online Exam</DialogTitle>
+                     <div className="space-y-3 pt-2">
+                        <div className="space-y-1">
+                           <Label className="text-[11px] font-semibold">Exam Title</Label>
+                           <Input placeholder="e.g. Final Semester Examination" value={examConfig.title} onChange={e => setExamConfig({...examConfig, title: e.target.value})} className="h-8 sm:h-9 text-xs rounded-lg" />
+                        </div>
+                        <div className="space-y-1">
+                           <Label className="text-[11px] font-semibold">Course Link (Optional)</Label>
+                           <Select value={examConfig.courseId} onValueChange={(v: any) => setExamConfig({...examConfig, courseId: v})}>
+                              <SelectTrigger className="h-8 sm:h-9 text-xs rounded-lg"><span className="truncate text-left block w-full pr-1">{examConfig.courseId === "all" || !examConfig.courseId ? "None" : courses.find(c => c.id === examConfig.courseId)?.title || "None"}</span></SelectTrigger>
+                              <SelectContent>
+                                 <SelectItem value="all">None</SelectItem>
+                                 {courses.map(c => <SelectItem key={c.id} value={c.id}>{c.title}</SelectItem>)}
+                              </SelectContent>
+                           </Select>
+                        </div>
+                        <div className="space-y-1">
+                           <Label className="text-[11px] font-semibold">Date of Exam (Optional)</Label>
+                           <Input type="date" value={examConfig.date} onChange={e => setExamConfig({...examConfig, date: e.target.value})} className="h-8 sm:h-9 text-xs rounded-lg" />
+                        </div>
+                        <div className="grid grid-cols-2 gap-2.5">
+                           <div className="space-y-1">
+                              <Label className="text-[11px] font-semibold">Marks / Question</Label>
+                              <Input type="number" min="1" value={examConfig.marksPerQuestion} onChange={e => setExamConfig({...examConfig, marksPerQuestion: e.target.value})} className="h-8 sm:h-9 text-xs rounded-lg" />
                            </div>
-                           <div className="space-y-2">
-                              <Label>Course Link (Optional)</Label>
-                              <Select value={examConfig.courseId} onValueChange={v => setExamConfig({...examConfig, courseId: v})}>
-                                 <SelectTrigger className="h-12 rounded-xl"><span className="truncate text-left block w-full pr-2">{examConfig.courseId === "all" || !examConfig.courseId ? "None" : courses.find(c => c.id === examConfig.courseId)?.title || "None"}</span></SelectTrigger>
-                                 <SelectContent>
-                                    <SelectItem value="all">None</SelectItem>
-                                    {courses.map(c => <SelectItem key={c.id} value={c.id}>{c.title}</SelectItem>)}
-                                 </SelectContent>
-                              </Select>
-                           </div>
-                           <div className="space-y-2">
-                              <Label>Date of Exam (Optional)</Label>
-                              <Input type="date" value={examConfig.date} onChange={e => setExamConfig({...examConfig, date: e.target.value})} className="h-12 rounded-xl" />
-                           </div>
-                           <div className="grid grid-cols-2 gap-4">
-                              <div className="space-y-2">
-                                 <Label>Marks Per Question</Label>
-                                 <Input type="number" min="1" value={examConfig.marksPerQuestion} onChange={e => setExamConfig({...examConfig, marksPerQuestion: e.target.value})} className="h-12 rounded-xl" />
-                              </div>
-                              <div className="space-y-2">
-                                 <Label>Duration (Mins)</Label>
-                                 <Input type="number" min="10" value={examConfig.duration} onChange={e => setExamConfig({...examConfig, duration: e.target.value})} className="h-12 rounded-xl" />
-                              </div>
-                           </div>
-                           <div className="space-y-2">
-                              <Label>Passing Marks</Label>
-                              <Input type="number" min="1" value={examConfig.passingMarks} onChange={e => setExamConfig({...examConfig, passingMarks: e.target.value})} className="h-12 rounded-xl" />
-                           </div>
-                           <div className="pt-2">
-                              <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-2xl mb-4 border border-green-100 dark:border-green-900/50">
-                                 <div className="flex justify-between text-sm mb-1">
-                                    <span className="text-slate-500">Selected Questions:</span>
-                                    <span className="font-bold">{selectedQuestionIds.size}</span>
-                                 </div>
-                                 <div className="flex justify-between text-sm">
-                                    <span className="text-slate-500">Total Marks:</span>
-                                    <span className="font-bold text-green-600 dark:text-green-400">{selectedQuestionIds.size * parseFloat(examConfig.marksPerQuestion || "0")}</span>
-                                 </div>
-                              </div>
-                              <Button onClick={handleCreateExam} disabled={isCreatingExam} className="w-full h-12 rounded-xl font-bold bg-green-600 hover:bg-green-700 text-white">
-                                 {isCreatingExam ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : <CheckCircle2 className="w-5 h-5 mr-2" />} Publish Exam
-                              </Button>
+                           <div className="space-y-1">
+                              <Label className="text-[11px] font-semibold">Duration (Mins)</Label>
+                              <Input type="number" min="10" value={examConfig.duration} onChange={e => setExamConfig({...examConfig, duration: e.target.value})} className="h-8 sm:h-9 text-xs rounded-lg" />
                            </div>
                         </div>
-                     </DialogContent>
-                  </Dialog>
-               )}
-            </CardHeader>
-            <CardContent className="p-0">
-               <div className="overflow-x-auto">
-                  <table className="w-full text-sm text-left">
-                     <thead className="text-xs text-slate-500 uppercase bg-slate-50 dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800">
-                        <tr>
-                           <th className="px-6 py-4 w-12">
+                        <div className="space-y-1">
+                           <Label className="text-[11px] font-semibold">Passing Marks</Label>
+                           <Input type="number" min="1" value={examConfig.passingMarks} onChange={e => setExamConfig({...examConfig, passingMarks: e.target.value})} className="h-8 sm:h-9 text-xs rounded-lg" />
+                        </div>
+                        <div className="p-2.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-xs flex justify-between items-center text-emerald-800 dark:text-emerald-300">
+                           <span>Questions: <b>{selectedQuestionIds.size}</b></span>
+                           <span>Total Marks: <b>{selectedQuestionIds.size * parseFloat(examConfig.marksPerQuestion || "0")}</b></span>
+                        </div>
+                        <Button onClick={handleCreateExam} disabled={isCreatingExam} className="w-full h-8 sm:h-9 rounded-lg text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs mt-1">
+                           {isCreatingExam ? <Loader2 className="w-3.5 h-3.5 animate-spin mr-1.5" /> : <CheckCircle2 className="w-3.5 h-3.5 mr-1.5" />} Publish Online Exam
+                        </Button>
+                     </div>
+                  </DialogContent>
+               </Dialog>
+            )}
+         </div>
+      </div>
+
+      {/* Questions Table (Rule 7.4 & 7.5) */}
+      <Card className="border border-slate-200/80 dark:border-slate-800 rounded-xl shadow-xs overflow-hidden bg-white dark:bg-slate-900">
+         <CardHeader className="p-3.5 sm:p-4 border-b border-slate-100 dark:border-slate-800 flex flex-row items-center justify-between">
+            <div className="flex items-center gap-2">
+               <CardTitle className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">Question Bank</CardTitle>
+               <span className="text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 px-2 py-0.5 rounded-full">{filteredQuestions.length} Questions</span>
+            </div>
+            {selectedQuestionIds.size > 0 && (
+               <span className="text-xs font-medium text-primary">
+                  {selectedQuestionIds.size} selected
+               </span>
+            )}
+         </CardHeader>
+         <CardContent className="p-0">
+            <div className="overflow-x-auto">
+               <table className="w-full text-xs text-left">
+                  <thead className="text-[10px] font-bold text-slate-400 uppercase tracking-wider bg-slate-50/80 dark:bg-slate-800/40 border-b border-slate-100 dark:border-slate-800">
+                     <tr>
+                        <th className="px-3 py-2.5 w-10">
+                           <input 
+                              type="checkbox" 
+                              className="w-3.5 h-3.5 rounded text-primary border-slate-300 dark:border-slate-700 cursor-pointer"
+                              checked={paginatedQuestions.length > 0 && paginatedQuestions.every(q => selectedQuestionIds.has(q.id))}
+                              onChange={(e) => handleSelectAll(e.target.checked)}
+                           />
+                        </th>
+                        <th className="px-3 py-2.5 w-12">#</th>
+                        <th className="px-3 py-2.5 min-w-[200px]">Question Statement</th>
+                        <th className="px-3 py-2.5 w-40">Course</th>
+                        <th className="px-3 py-2.5 w-36">Chapter</th>
+                        <th className="px-3 py-2.5 w-20 text-right">Actions</th>
+                     </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 dark:divide-slate-800/50">
+                     {paginatedQuestions.map((q, i) => (
+                        <tr key={q.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors">
+                           <td className="px-3 py-2.5">
                               <input 
                                  type="checkbox" 
-                                 className="w-4 h-4 rounded text-primary"
-                                 checked={paginatedQuestions.length > 0 && paginatedQuestions.every(q => selectedQuestionIds.has(q.id))}
-                                 onChange={(e) => handleSelectAll(e.target.checked)}
+                                 className="w-3.5 h-3.5 rounded text-primary border-slate-300 dark:border-slate-700 cursor-pointer"
+                                 checked={selectedQuestionIds.has(q.id)}
+                                 onChange={() => toggleSelection(q.id)}
                               />
-                           </th>
-                           <th className="px-6 py-4 font-bold tracking-widest w-16">S.No</th>
-                           <th className="px-6 py-4 font-bold tracking-widest">Question Text</th>
-                           <th className="px-6 py-4 font-bold tracking-widest w-48">Course</th>
-                           <th className="px-6 py-4 font-bold tracking-widest w-48">Chapter</th>
-                           <th className="px-6 py-4 font-bold tracking-widest w-24">Actions</th>
+                           </td>
+                           <td className="px-3 py-2.5 text-slate-400 font-medium">
+                              {(currentPage - 1) * itemsPerPage + i + 1}
+                           </td>
+                           <td className="px-3 py-2.5 font-medium text-slate-800 dark:text-slate-200">
+                              <div className="line-clamp-2 leading-relaxed">{q.questionText}</div>
+                           </td>
+                           <td className="px-3 py-2.5 text-slate-500">
+                              <span className="truncate block max-w-[150px] font-medium" title={q.courseName}>{q.courseName}</span>
+                           </td>
+                           <td className="px-3 py-2.5">
+                              <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+                                 {q.chapterName}
+                              </span>
+                           </td>
+                           <td className="px-3 py-2.5 text-right">
+                              <div className="flex items-center justify-end gap-1">
+                                 <button onClick={() => { setEditingQuestion(q); setIsEditing(true); }} className="h-7 w-7 rounded-lg text-slate-500 hover:text-primary hover:bg-primary/5 flex items-center justify-center transition-colors" title="Edit Question">
+                                    <Edit2 className="w-3.5 h-3.5" />
+                                 </button>
+                                 <button disabled={isDeleting === q.id} onClick={() => handleDeleteQuestion(q.id)} className="h-7 w-7 rounded-lg text-slate-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 flex items-center justify-center transition-colors disabled:opacity-50" title="Delete Question">
+                                    {isDeleting === q.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+                                 </button>
+                              </div>
+                           </td>
                         </tr>
-                     </thead>
-                     <tbody>
-                        {paginatedQuestions.map((q, i) => (
-                           <tr key={q.id} className="border-b border-slate-50 dark:border-slate-800/50 hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors">
-                              <td className="px-6 py-4">
-                                 <input 
-                                    type="checkbox" 
-                                    className="w-4 h-4 rounded text-primary"
-                                    checked={selectedQuestionIds.has(q.id)}
-                                    onChange={() => toggleSelection(q.id)}
-                                 />
-                              </td>
-                              <td className="px-6 py-4 text-slate-500 font-medium">
-                                 {(currentPage - 1) * itemsPerPage + i + 1}
-                              </td>
-                              <td className="px-6 py-4 font-medium text-slate-700 dark:text-slate-200">
-                                 <div className="line-clamp-2">{q.questionText}</div>
-                              </td>
-                              <td className="px-6 py-4 text-slate-500">
-                                 <div className="truncate max-w-[10rem]" title={q.courseName}>{q.courseName}</div>
-                              </td>
-                              <td className="px-6 py-4">
-                                 <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-300">
-                                    {q.chapterName}
-                                 </span>
-                              </td>
-                              <td className="px-6 py-4">
-                                 <div className="flex gap-2">
-                                    <button onClick={() => { setEditingQuestion(q); setIsEditing(true); }} className="p-1.5 text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-md transition-colors" title="Edit Question">
-                                       <Edit2 className="w-4 h-4" />
-                                    </button>
-                                    <button disabled={isDeleting === q.id} onClick={() => handleDeleteQuestion(q.id)} className="p-1.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-md transition-colors disabled:opacity-50" title="Delete Question">
-                                       {isDeleting === q.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
-                                    </button>
-                                 </div>
-                              </td>
-                           </tr>
-                        ))}
-                        {paginatedQuestions.length === 0 && (
-                           <tr>
-                              <td colSpan={6} className="px-6 py-12 text-center text-slate-500">
-                                 No questions found. Try adding some or changing your filters!
-                              </td>
-                           </tr>
-                        )}
-                     </tbody>
-                  </table>
+                     ))}
+                     {paginatedQuestions.length === 0 && (
+                        <tr>
+                           <td colSpan={6} className="px-4 py-8 text-center text-xs text-slate-400">
+                              No questions found matching your filter criteria.
+                           </td>
+                        </tr>
+                     )}
+                  </tbody>
+               </table>
+            </div>
+            
+            {/* Pagination Footer (Rule 7.6) */}
+            {totalPages > 1 && (
+               <div className="flex items-center justify-between px-4 py-2.5 border-t border-slate-100 dark:border-slate-800/50 bg-slate-50/50 dark:bg-slate-800/20">
+                  <div className="text-xs font-medium text-slate-500">
+                     Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, filteredQuestions.length)} of {filteredQuestions.length}
+                  </div>
+                  <div className="flex items-center gap-1">
+                     <Button variant="outline" size="sm" disabled={currentPage === 1} onClick={() => setCurrentPage(p => p - 1)} className="h-7 px-2 rounded-md border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-xs text-xs font-semibold">
+                        <ChevronLeft className="w-3.5 h-3.5 mr-0.5" /> Prev
+                     </Button>
+                     <Button variant="outline" size="sm" disabled={currentPage === totalPages} onClick={() => setCurrentPage(p => p + 1)} className="h-7 px-2 rounded-md border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-xs text-xs font-semibold">
+                        Next <ChevronRight className="w-3.5 h-3.5 ml-0.5" />
+                     </Button>
+                  </div>
                </div>
-               
-               {/* Pagination Footer */}
-               {totalPages > 1 && (
-                  <div className="flex items-center justify-between px-6 py-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50/30 dark:bg-slate-900/30">
-                     <div className="text-sm text-slate-500 font-medium">
-                        Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, filteredQuestions.length)} of {filteredQuestions.length} Questions
-                     </div>
-                     <div className="flex gap-2">
-                        <Button variant="outline" size="sm" disabled={currentPage === 1} onClick={() => setCurrentPage(p => p - 1)} className="rounded-lg font-bold">
-                           <ChevronLeft className="w-4 h-4 mr-1" /> Prev
-                        </Button>
-                        <Button variant="outline" size="sm" disabled={currentPage === totalPages} onClick={() => setCurrentPage(p => p + 1)} className="rounded-lg font-bold">
-                           Next <ChevronRight className="w-4 h-4 ml-1" />
-                        </Button>
-                     </div>
-                  </div>
-               )}
-            </CardContent>
-         </Card>
+            )}
+         </CardContent>
+      </Card>
 
-         {/* Edit Question Modal */}
-         <Dialog open={isEditing} onOpenChange={setIsEditing}>
-            <DialogContent className="sm:max-w-[700px] rounded-[2rem] p-6 border-2 bg-slate-50 dark:bg-zinc-950">
-               <DialogTitle className="text-xl font-bold mb-4">Edit Question</DialogTitle>
-               {editingQuestion && (
-                  <div className="space-y-6">
-                     <Textarea value={editingQuestion.questionText} onChange={e => setEditingQuestion({...editingQuestion, questionText: e.target.value})} className="min-h-[100px] rounded-xl resize-none bg-white dark:bg-slate-900" />
-                     <div className="grid grid-cols-2 gap-4">
-                        {['A','B','C','D'].map(opt => (
-                           <div key={opt} className="relative">
-                              <Label className="text-xs ml-1 text-slate-500">Option {opt}</Label>
-                              <Input value={(editingQuestion as any)[`option${opt}`] || ""} onChange={e => setEditingQuestion({...editingQuestion, [`option${opt}`]: e.target.value})} className="h-12 rounded-xl pr-10 bg-white dark:bg-slate-900" />
-                              <div onClick={() => setEditingQuestion({...editingQuestion, correctOption: opt})} className={cn("absolute right-2 top-7 w-6 h-6 rounded flex items-center justify-center text-xs font-bold cursor-pointer transition-colors", editingQuestion.correctOption === opt ? "bg-green-500 text-white shadow-sm" : "bg-slate-100 text-slate-400 dark:bg-slate-800")}>{opt}</div>
-                           </div>
-                        ))}
-                     </div>
-                     <Button onClick={handleSaveEdit} disabled={isSavingEdit} className="w-full h-12 rounded-xl font-bold">{isSavingEdit ? <Loader2 className="w-4 h-4 animate-spin mr-2"/> : <Save className="w-4 h-4 mr-2"/>} Save Changes</Button>
+      {/* Edit Question Modal (Rule 7.7) */}
+      <Dialog open={isEditing} onOpenChange={setIsEditing}>
+         <DialogContent className="max-w-xl rounded-2xl p-4 sm:p-5 border border-slate-200 dark:border-slate-800 shadow-xl bg-white dark:bg-slate-900">
+            <DialogTitle className="text-sm sm:text-base font-bold text-slate-900 dark:text-white mb-2">Edit Question</DialogTitle>
+            {editingQuestion && (
+               <div className="space-y-3.5">
+                  <div className="space-y-1">
+                     <Label className="text-[11px] font-semibold">Question Text</Label>
+                     <Textarea value={editingQuestion.questionText} onChange={e => setEditingQuestion({...editingQuestion, questionText: e.target.value})} className="min-h-[80px] text-xs rounded-lg resize-none" />
                   </div>
-               )}
-            </DialogContent>
-         </Dialog>
-         <ConfirmDialog 
-            open={deleteConfirmOpen} 
-            onOpenChange={setDeleteConfirmOpen}
-            title="Delete Question"
-            description="Are you absolutely sure you want to delete this question? This action cannot be undone."
-            confirmText={isDeleting ? "Deleting..." : "Delete"}
-            cancelText="Cancel"
-            destructive={true}
-            onConfirm={performDelete}
-         />
-      </div>
-   );
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                     {['A','B','C','D'].map(opt => (
+                        <div key={opt} className="relative space-y-1">
+                           <Label className="text-[10px] font-semibold text-slate-500 uppercase">Option {opt}</Label>
+                           <div className="relative">
+                              <Input value={(editingQuestion as any)[`option${opt}`] || ""} onChange={e => setEditingQuestion({...editingQuestion, [`option${opt}`]: e.target.value})} className="h-8 sm:h-9 text-xs rounded-lg pr-9" />
+                              <button 
+                                 type="button" 
+                                 onClick={() => setEditingQuestion({...editingQuestion, correctOption: opt})} 
+                                 className={cn("absolute right-1.5 top-1/2 -translate-y-1/2 w-6 h-6 rounded-md flex items-center justify-center text-[10px] font-bold cursor-pointer transition-colors", editingQuestion.correctOption === opt ? "bg-emerald-600 text-white shadow-xs" : "bg-slate-100 text-slate-400 dark:bg-slate-800")}
+                              >
+                                 {opt}
+                              </button>
+                           </div>
+                        </div>
+                     ))}
+                  </div>
+                  <Button onClick={handleSaveEdit} disabled={isSavingEdit} className="w-full h-8 sm:h-9 rounded-lg text-xs font-semibold bg-primary hover:bg-primary/90 text-primary-foreground shadow-xs mt-2">
+                     {isSavingEdit ? <Loader2 className="w-3.5 h-3.5 animate-spin mr-1.5"/> : <Save className="w-3.5 h-3.5 mr-1.5"/>} Save Changes
+                  </Button>
+               </div>
+            )}
+         </DialogContent>
+      </Dialog>
+      <ConfirmDialog 
+         open={deleteConfirmOpen} 
+         onOpenChange={setDeleteConfirmOpen}
+         title="Delete Question"
+         description="Are you absolutely sure you want to delete this question? This action cannot be undone."
+         confirmText={isDeleting ? "Deleting..." : "Delete"}
+         cancelText="Cancel"
+         destructive={true}
+         onConfirm={performDelete}
+      />
+   </div>
+);
 }

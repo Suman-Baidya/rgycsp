@@ -26,6 +26,7 @@ export default async function StudentNoticesPage({
       notices={notices}
       settings={workspaceSettings}
       tenant={tenant}
+      workspace={workspace}
     />
   );
 }

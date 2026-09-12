@@ -138,27 +138,27 @@ export default function FranchiseWalletAnalyticsTab({ transactions }: FranchiseW
   if (!mounted) return null;
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500">
+    <div className="space-y-4 sm:space-y-5 animate-in fade-in duration-300">
       {/* Date Filters & Actions */}
-      <div className="flex flex-col xl:flex-row xl:items-end justify-between gap-6 p-6 md:p-8 bg-white dark:bg-slate-900 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 shadow-sm">
+      <div className="flex flex-col xl:flex-row xl:items-end justify-between gap-3 p-3.5 sm:p-4 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
         {/* Left side: Date Filters */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-end gap-3 w-full xl:w-auto">
+        <div className="flex flex-col sm:flex-row items-start sm:items-end gap-2.5 w-full xl:w-auto">
           <div className="flex flex-col gap-1 w-full sm:w-auto">
-            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider pl-1">From Date</label>
+            <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest pl-1">From Date</label>
             <Input 
               type="date" 
               value={fromDate} 
               onChange={(e) => setFromDate(e.target.value)}
-              className="w-full sm:w-[140px] h-11 rounded-xl border-2 border-slate-100 bg-slate-50 dark:bg-slate-800 dark:border-slate-700 text-sm font-semibold text-slate-700 dark:text-slate-300 px-3"
+              className="w-full sm:w-[135px] h-9 rounded-lg border border-slate-200 bg-slate-50 dark:bg-slate-800 dark:border-slate-700 text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-300 px-2.5"
             />
           </div>
           <div className="flex flex-col gap-1 w-full sm:w-auto">
-            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider pl-1">To Date</label>
+            <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest pl-1">To Date</label>
             <Input 
               type="date" 
               value={toDate} 
               onChange={(e) => setToDate(e.target.value)}
-              className="w-full sm:w-[140px] h-11 rounded-xl border-2 border-slate-100 bg-slate-50 dark:bg-slate-800 dark:border-slate-700 text-sm font-semibold text-slate-700 dark:text-slate-300 px-3"
+              className="w-full sm:w-[135px] h-9 rounded-lg border border-slate-200 bg-slate-50 dark:bg-slate-800 dark:border-slate-700 text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-300 px-2.5"
             />
           </div>
           <Button 
@@ -169,136 +169,129 @@ export default function FranchiseWalletAnalyticsTab({ transactions }: FranchiseW
               setToDate(new Date().toISOString().split('T')[0]);
             }}
             variant="ghost"
-            className="h-11 rounded-xl text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 hidden md:inline-flex w-full sm:w-auto mt-2 sm:mt-0"
+            className="h-9 rounded-lg text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 text-xs font-semibold px-3 hidden md:inline-flex w-full sm:w-auto"
           >
             Last 30 Days
           </Button>
         </div>
 
         {/* Right side: Search & Download */}
-        <div className="flex flex-col sm:flex-row gap-3 w-full xl:w-auto">
-          <div className="relative w-full sm:w-[260px]">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+        <div className="flex flex-col sm:flex-row gap-2.5 w-full xl:w-auto">
+          <div className="relative w-full sm:w-[240px]">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
             <Input 
               placeholder="Search reference..." 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 h-11 rounded-xl border-2 border-slate-100 bg-slate-50 dark:bg-slate-800 dark:border-slate-700 text-sm font-semibold placeholder:font-normal w-full"
+              className="pl-8 h-9 rounded-lg border border-slate-200 bg-slate-50 dark:bg-slate-800 dark:border-slate-700 text-xs placeholder:text-xs font-normal placeholder:font-normal text-slate-700 dark:text-slate-300 w-full"
             />
           </div>
           <Button 
             onClick={handleDownloadCSV}
-            className="h-11 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white shadow-md hover:shadow-lg transition-all active:scale-[0.98] w-full sm:w-auto"
+            className="h-9 px-3.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white dark:bg-slate-100 dark:hover:bg-white dark:text-slate-900 shadow-sm text-xs sm:text-sm font-bold w-full sm:w-auto"
           >
-            <Download className="w-4 h-4 mr-2" />
+            <Download className="w-3.5 h-3.5 mr-1.5" />
             Download CSV
           </Button>
         </div>
       </div>
 
       {/* Metrics Row */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card className="border-2 border-emerald-100 dark:border-emerald-900/30 rounded-[2.5rem] bg-emerald-50/50 dark:bg-emerald-950/20 shadow-sm overflow-hidden relative">
-          <div className="absolute right-0 top-0 p-8 opacity-10">
-            <TrendingUp className="w-32 h-32 text-emerald-600" />
-          </div>
-          <CardContent className="p-8 relative z-10">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-12 h-12 rounded-2xl bg-emerald-100 dark:bg-emerald-900/50 text-emerald-600 flex items-center justify-center">
-                <IndianRupee className="w-6 h-6" />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
+        <Card className="border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 rounded-xl shadow-sm overflow-hidden relative">
+          <CardContent className="p-4 sm:p-5">
+            <div className="flex items-center justify-between gap-3">
+              <div className="space-y-1">
+                <p className="text-[11px] font-black text-slate-500 uppercase tracking-widest">Total Recharges</p>
+                <div className="flex items-baseline gap-1">
+                  <span className="text-xl sm:text-2xl font-bold text-emerald-600 dark:text-emerald-400">₹</span>
+                  <span className="text-2xl sm:text-3xl lg:text-4xl font-black text-slate-900 dark:text-white tracking-tight">
+                    {metrics.totalRecharges.toFixed(2)}
+                  </span>
+                </div>
+                <p className="text-[11px] font-medium text-slate-400">Selected period approved recharges</p>
               </div>
-              <div>
-                <p className="text-xs font-bold text-emerald-600/80 uppercase tracking-widest">Total Recharges</p>
-                <p className="text-sm font-medium text-emerald-700/60">Selected Period</p>
+              <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+                <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6" />
               </div>
-            </div>
-            <div className="flex items-baseline gap-1">
-              <span className="text-emerald-500 font-bold text-2xl">₹</span>
-              <span className="text-5xl font-black text-emerald-700 dark:text-emerald-400 tracking-tight">
-                {metrics.totalRecharges.toLocaleString()}
-              </span>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="border-2 border-rose-100 dark:border-rose-900/30 rounded-[2.5rem] bg-rose-50/50 dark:bg-rose-950/20 shadow-sm overflow-hidden relative">
-          <div className="absolute right-0 top-0 p-8 opacity-10">
-            <TrendingDown className="w-32 h-32 text-rose-600" />
-          </div>
-          <CardContent className="p-8 relative z-10">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-12 h-12 rounded-2xl bg-rose-100 dark:bg-rose-900/50 text-rose-600 flex items-center justify-center">
-                <IndianRupee className="w-6 h-6" />
+        <Card className="border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 rounded-xl shadow-sm overflow-hidden relative">
+          <CardContent className="p-4 sm:p-5">
+            <div className="flex items-center justify-between gap-3">
+              <div className="space-y-1">
+                <p className="text-[11px] font-black text-slate-500 uppercase tracking-widest">Total Deductions</p>
+                <div className="flex items-baseline gap-1">
+                  <span className="text-xl sm:text-2xl font-bold text-rose-600 dark:text-rose-400">₹</span>
+                  <span className="text-2xl sm:text-3xl lg:text-4xl font-black text-slate-900 dark:text-white tracking-tight">
+                    {metrics.totalDeductions.toFixed(2)}
+                  </span>
+                </div>
+                <p className="text-[11px] font-medium text-slate-400">From student registrations & fees</p>
               </div>
-              <div>
-                <p className="text-xs font-bold text-rose-600/80 uppercase tracking-widest">Total Deductions</p>
-                <p className="text-sm font-medium text-rose-700/60">Selected Period</p>
+              <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-xl bg-rose-50 dark:bg-rose-950/50 text-rose-600 dark:text-rose-400 flex items-center justify-center shrink-0">
+                <TrendingDown className="w-5 h-5 sm:w-6 sm:h-6" />
               </div>
-            </div>
-            <div className="flex items-baseline gap-1">
-              <span className="text-rose-500 font-bold text-2xl">₹</span>
-              <span className="text-5xl font-black text-rose-700 dark:text-rose-400 tracking-tight">
-                {metrics.totalDeductions.toLocaleString()}
-              </span>
             </div>
           </CardContent>
         </Card>
       </div>
 
       {/* Chart Section */}
-      <Card className="border-2 border-slate-100 dark:border-slate-800 rounded-[2.5rem] shadow-sm overflow-hidden">
-        <CardHeader className="p-6 md:p-8 border-b border-slate-50 dark:border-slate-800">
-          <CardTitle className="text-xl font-bold">Transaction Trends</CardTitle>
-          <CardDescription>Daily recharges and deductions over the selected period</CardDescription>
+      <Card className="border-2 border-slate-100 dark:border-slate-800 rounded-xl shadow-sm overflow-hidden">
+        <CardHeader className="p-3.5 sm:p-4 border-b border-slate-50 dark:border-slate-800">
+          <CardTitle className="text-sm sm:text-base font-bold">Transaction Trends</CardTitle>
+          <CardDescription className="text-xs">Recharges vs Deductions over selected period.</CardDescription>
         </CardHeader>
-        <CardContent className="p-6 md:p-8">
-          <div className="h-[400px] w-full">
+        <CardContent className="p-3.5 sm:p-4">
+          <div className="h-[280px] sm:h-[320px] w-full">
             {chartData.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                <BarChart data={chartData} margin={{ top: 10, right: 15, left: 0, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
                   <XAxis 
                     dataKey="date" 
                     axisLine={false}
                     tickLine={false}
-                    tick={{ fill: '#64748b', fontSize: 12, fontWeight: 500 }}
-                    dy={10}
+                    tick={{ fill: '#94a3b8', fontSize: 11, fontWeight: 500 }}
+                    dy={5}
                   />
                   <YAxis 
                     axisLine={false}
                     tickLine={false}
-                    tick={{ fill: '#64748b', fontSize: 12, fontWeight: 500 }}
+                    tick={{ fill: '#94a3b8', fontSize: 11, fontWeight: 500 }}
                     tickFormatter={(value) => `₹${value}`}
-                    dx={-10}
+                    dx={-5}
                   />
                   <Tooltip 
-                    cursor={{ fill: 'rgba(148, 163, 184, 0.1)' }}
+                    cursor={{ fill: 'rgba(148, 163, 184, 0.08)' }}
                     contentStyle={{ 
-                      borderRadius: '16px', 
+                      borderRadius: '8px', 
                       border: '1px solid rgba(148, 163, 184, 0.2)', 
                       backgroundColor: 'rgba(15, 23, 42, 0.95)',
                       color: '#f8fafc',
-                      boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.2)',
-                      padding: '16px'
+                      fontSize: '12px',
+                      padding: '8px 12px'
                     }}
                     itemStyle={{ color: '#e2e8f0', fontWeight: 500 }}
-                    labelStyle={{ color: '#94a3b8', marginBottom: '8px', fontWeight: 600 }}
+                    labelStyle={{ color: '#94a3b8', marginBottom: '4px', fontWeight: 600 }}
                   />
-                  <Legend wrapperStyle={{ paddingTop: '20px' }} />
-                  <Bar dataKey="recharges" name="Recharges" fill="#10b981" radius={[4, 4, 0, 0]} maxBarSize={40} />
-                  <Bar dataKey="deductions" name="Deductions" fill="#f43f5e" radius={[4, 4, 0, 0]} maxBarSize={40} />
+                  <Legend wrapperStyle={{ paddingTop: '10px', fontSize: '12px' }} />
+                  <Bar dataKey="recharges" name="Recharges" fill="#10b981" radius={[4, 4, 0, 0]} maxBarSize={32} />
+                  <Bar dataKey="deductions" name="Deductions" fill="#f43f5e" radius={[4, 4, 0, 0]} maxBarSize={32} />
                 </BarChart>
               </ResponsiveContainer>
             ) : (
               <div className="h-full w-full flex flex-col items-center justify-center text-slate-400">
-                <BarChart className="w-16 h-16 text-slate-200 mb-4" />
-                <p className="font-medium text-slate-500">No transaction data for this period</p>
+                <BarChart className="w-10 h-10 text-slate-200 mb-2" />
+                <p className="font-semibold text-xs text-slate-500">No transaction data for this period</p>
               </div>
             )}
           </div>
         </CardContent>
       </Card>
-
     </div>
   );
 }

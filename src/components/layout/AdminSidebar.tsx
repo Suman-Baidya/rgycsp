@@ -161,41 +161,43 @@ export function AdminSidebar({
       >
         {/* Header */}
         <div className={cn(
-          "h-20 flex items-center border-b border-white/5 transition-all duration-300",
-          isCollapsed ? "justify-center" : "px-6 justify-between"
+          "h-16 flex items-center border-b border-white/10 px-4 transition-all duration-300 shrink-0",
+          isCollapsed ? "justify-center px-2" : "justify-between"
         )}>
-          {!isCollapsed && (
-            <AnimatePresence mode="wait">
-              <motion.div
-                key="full"
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -10 }}
-                className="flex items-center gap-3 overflow-hidden"
-              >
-                <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center shadow-[0_0_15px_rgba(var(--primary),0.5)] shrink-0">
-                  <ShieldCheck className="h-5 w-5 text-primary-foreground" />
+          {isCollapsed ? (
+            <button
+              onClick={toggleSidebar}
+              title="Expand Sidebar"
+              className="h-10 w-10 rounded-xl bg-white/5 hover:bg-white/10 text-zinc-300 hover:text-white border border-white/10 flex items-center justify-center transition-all shadow-sm group"
+            >
+              <ChevronRight className="h-5 w-5 group-hover:translate-x-0.5 transition-transform" />
+            </button>
+          ) : (
+            <>
+              <div className="flex items-center gap-3 overflow-hidden">
+                <div className="h-10 w-10 rounded-xl bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 flex items-center justify-center shadow-sm shrink-0">
+                  <ShieldCheck className="h-5.5 w-5.5" />
                 </div>
-                <span className="font-bold text-white tracking-tight text-lg whitespace-nowrap">Super Admin</span>
-              </motion.div>
-            </AnimatePresence>
-          )}
+                <span className="font-bold text-white tracking-tight text-base truncate">
+                  {isManager ? "Manager Portal" : "Super Admin"}
+                </span>
+              </div>
 
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={toggleSidebar}
-            className={cn(
-              "hover:bg-white/5 text-zinc-500 hover:text-white shrink-0 transition-all",
-              isCollapsed ? "h-12 w-12" : "h-10 w-10"
-            )}
-          >
-            {isCollapsed ? <ChevronRight className="h-6 w-6" /> : <ChevronLeft className="h-4 w-4" />}
-          </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={toggleSidebar}
+                className="h-8 w-8 rounded-lg hover:bg-white/10 text-zinc-400 hover:text-white shrink-0 transition-colors"
+                title="Collapse Sidebar"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+            </>
+          )}
         </div>
 
         {/* Navigation */}
-        <nav className={cn("flex-1 py-6 space-y-2 overflow-y-auto overflow-x-hidden", isCollapsed ? "px-2 scrollbar-hide" : "px-4 custom-scrollbar")}>
+        <nav className={cn("flex-1 py-3 space-y-1 overflow-y-auto overflow-x-hidden", isCollapsed ? "px-2 scrollbar-hide" : "px-3 custom-scrollbar")}>
           {filteredNavItems.map((item) => {
             const tenant = "super-admin";
             const href = getTenantLink(item.href, tenant, pathname);
@@ -206,14 +208,14 @@ export function AdminSidebar({
               <Link key={item.href} href={href} className="block w-full">
                 <div
                   className={cn(
-                    "flex items-center gap-3 transition-all duration-300 group relative overflow-hidden",
+                    "flex items-center gap-3 transition-all duration-200 group relative overflow-hidden",
                     isActive 
-                      ? "bg-gradient-to-r from-primary to-primary/80 text-primary-foreground shadow-[0_8px_20px_-6px_rgba(var(--primary),0.4)]" 
+                      ? "bg-gradient-to-r from-indigo-600 to-violet-600 text-white shadow-[0_4px_16px_rgba(79,70,229,0.35)] font-semibold" 
                       : "hover:bg-white/5 hover:text-white text-zinc-400",
                     isCollapsed ? "justify-center h-10 w-10 mx-auto rounded-xl" : "px-3 py-2.5 rounded-xl"
                   )}
                 >
-                  <Icon className={cn("h-5 w-5 flex-shrink-0 transition-colors", isActive ? "text-primary-foreground" : "group-hover:text-white")} />
+                  <Icon className={cn("h-5 w-5 flex-shrink-0 transition-colors", isActive ? "text-white" : "group-hover:text-white text-zinc-400")} />
                   
                   {!isCollapsed && (
                     <motion.span
@@ -332,8 +334,8 @@ export function AdminSidebar({
         </div>
       </motion.aside>
 
-      {/* Mobile Bottom Navigation */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-[60] bg-zinc-950/95 backdrop-blur-sm border-t border-white/10 pb-safe pb-4 pt-2">
+      {/* Mobile Bottom Navigation (Native App Feeling) */}
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-[60] bg-white/85 dark:bg-zinc-950/90 backdrop-blur-xl border-t border-slate-200/80 dark:border-white/10 pb-[max(env(safe-area-inset-bottom),12px)] pt-2 shadow-[0_-8px_30px_rgba(0,0,0,0.06)] dark:shadow-[0_-8px_30px_rgba(0,0,0,0.3)]">
         <div className="flex items-center justify-around px-2">
           {mainNavItems.map((item) => {
             const tenant = "super-admin";
@@ -343,20 +345,22 @@ export function AdminSidebar({
             return (
               <Link key={item.name} href={href} className="flex flex-col items-center gap-1 w-16">
                 <div className={cn(
-                  "p-2 rounded-xl transition-all duration-300 flex items-center justify-center",
-                  isActive ? "bg-primary text-primary-foreground shadow-[0_4px_12px_-4px_rgba(var(--primary),0.5)]" : "text-zinc-400"
+                  "p-2 rounded-2xl transition-all duration-300 flex items-center justify-center relative",
+                  isActive 
+                    ? "bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 dark:bg-indigo-500/20 shadow-xs" 
+                    : "text-slate-500 hover:text-slate-900 dark:text-zinc-400 dark:hover:text-white"
                 )}>
-                  <item.icon className="h-5 w-5" />
+                  <item.icon className={cn("h-5 w-5 transition-transform duration-200", isActive && "scale-110")} />
                   {item.name === "Franchises" && pendingApplications > 0 && (
-                    <div className="absolute top-1 right-1 w-2.5 h-2.5 bg-amber-500 rounded-full animate-pulse shadow-[0_0_10px_rgba(245,158,11,0.5)] border border-zinc-950"></div>
+                    <div className="absolute top-1 right-1 w-2.5 h-2.5 bg-amber-500 rounded-full animate-pulse shadow-[0_0_10px_rgba(245,158,11,0.5)]"></div>
                   )}
                   {item.name === "Students" && pendingDocumentRequests > 0 && (
-                    <div className="absolute top-1 right-1 w-2.5 h-2.5 bg-blue-500 rounded-full animate-pulse shadow-[0_0_10px_rgba(59,130,246,0.5)] border border-zinc-950"></div>
+                    <div className="absolute top-1 right-1 w-2.5 h-2.5 bg-blue-500 rounded-full animate-pulse shadow-[0_0_10px_rgba(59,130,246,0.5)]"></div>
                   )}
                 </div>
                 <span className={cn(
-                  "text-[10px] font-medium transition-colors text-center w-full truncate px-1",
-                  isActive ? "text-primary" : "text-zinc-500"
+                  "text-[10px] tracking-tight transition-colors text-center w-full truncate px-1",
+                  isActive ? "font-bold text-indigo-600 dark:text-indigo-400" : "font-medium text-slate-500 dark:text-zinc-400"
                 )}>
                   {item.name}
                 </span>
@@ -366,17 +370,17 @@ export function AdminSidebar({
           
           <button onClick={toggleMore} className="flex flex-col items-center gap-1 w-16 relative">
             <div className={cn(
-              "p-2 rounded-xl transition-all duration-300 flex items-center justify-center",
-              isMoreOpen ? "bg-white/10 text-white" : "text-zinc-400"
+              "p-2 rounded-2xl transition-all duration-300 flex items-center justify-center",
+              isMoreOpen ? "bg-slate-100 dark:bg-white/10 text-slate-900 dark:text-white" : "text-slate-500 dark:text-zinc-400"
             )}>
               <MoreHorizontal className="h-5 w-5" />
               {pendingOrders > 0 && (
-                <div className="absolute top-1 right-3 w-2.5 h-2.5 bg-red-500 rounded-full animate-pulse shadow-[0_0_10px_rgba(239,68,68,0.5)] border border-zinc-950"></div>
+                <div className="absolute top-1 right-3 w-2.5 h-2.5 bg-red-500 rounded-full animate-pulse shadow-[0_0_10px_rgba(239,68,68,0.5)]"></div>
               )}
             </div>
             <span className={cn(
               "text-[10px] font-medium transition-colors text-center w-full truncate px-1",
-              isMoreOpen ? "text-white" : "text-zinc-500"
+              isMoreOpen ? "font-bold text-slate-900 dark:text-white" : "text-slate-500 dark:text-zinc-400"
             )}>
               More
             </span>
@@ -384,7 +388,7 @@ export function AdminSidebar({
         </div>
       </div>
 
-      {/* Mobile More Drawer */}
+      {/* Mobile More Drawer (Native Bottom Sheet) */}
       <AnimatePresence>
         {isMoreOpen && (
           <>
@@ -393,17 +397,17 @@ export function AdminSidebar({
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={toggleMore}
-              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[55] lg:hidden"
+              className="fixed inset-0 bg-black/50 backdrop-blur-xs z-[65] lg:hidden"
             />
             <motion.div
               initial={{ y: "100%" }}
               animate={{ y: 0 }}
               exit={{ y: "100%" }}
-              transition={{ type: "spring", stiffness: 300, damping: 30 }}
-              className="fixed bottom-[76px] left-0 right-0 z-[55] bg-zinc-950 border-t border-white/10 rounded-t-3xl overflow-hidden flex flex-col max-h-[70vh] lg:hidden shadow-[0_-10px_40px_rgba(0,0,0,0.5)]"
+              transition={{ type: "spring", stiffness: 320, damping: 32 }}
+              className="fixed bottom-[72px] left-0 right-0 z-[65] bg-white dark:bg-zinc-950 border-t border-slate-200/80 dark:border-white/10 rounded-t-[28px] overflow-hidden flex flex-col max-h-[70vh] lg:hidden shadow-[0_-12px_40px_rgba(0,0,0,0.15)] dark:shadow-[0_-12px_40px_rgba(0,0,0,0.5)]"
             >
-              <div className="w-12 h-1.5 bg-zinc-800 rounded-full mx-auto mt-4 mb-2" />
-              <div className="flex-1 overflow-y-auto p-4 space-y-2 custom-scrollbar">
+              <div className="w-10 h-1.5 bg-slate-300 dark:bg-zinc-700 rounded-full mx-auto mt-3 mb-2" />
+              <div className="flex-1 overflow-y-auto p-4 space-y-1.5 custom-scrollbar">
                 {moreNavItems.map((item) => {
                   const tenant = "super-admin";
                   const href = getTenantLink(item.href, tenant, pathname);
@@ -412,19 +416,21 @@ export function AdminSidebar({
                   return (
                     <Link key={item.name} href={href} className="block w-full">
                       <div className={cn(
-                        "flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-300",
-                        isActive ? "bg-primary text-primary-foreground shadow-md" : "hover:bg-white/5 text-zinc-300"
+                        "flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200",
+                        isActive 
+                          ? "bg-indigo-500/15 text-indigo-700 dark:text-indigo-300 font-semibold" 
+                          : "hover:bg-slate-100 dark:hover:bg-white/5 text-slate-700 dark:text-zinc-300"
                       )}>
-                        <item.icon className="h-5 w-5" />
-                        <span className="font-medium flex-1 flex justify-between items-center">
+                        <item.icon className="h-5 w-5 shrink-0" />
+                        <span className="font-medium text-sm flex-1 flex justify-between items-center">
                           {item.name}
                           {item.name === "Products" && pendingOrders > 0 && (
-                            <span className="h-5 min-w-5 px-1.5 bg-red-500 text-white text-[10px] font-black rounded flex items-center justify-center animate-pulse shadow-[0_0_10px_rgba(239,68,68,0.5)]">
+                            <span className="h-5 min-w-5 px-1.5 bg-red-500 text-white text-[10px] font-black rounded-full flex items-center justify-center animate-pulse shadow-xs">
                               {pendingOrders}
                             </span>
                           )}
                           {item.name === "Students" && pendingDocumentRequests > 0 && (
-                            <span className="h-5 min-w-5 px-1.5 bg-blue-500 text-white text-[10px] font-black rounded flex items-center justify-center animate-pulse shadow-[0_0_10px_rgba(59,130,246,0.5)]">
+                            <span className="h-5 min-w-5 px-1.5 bg-blue-500 text-white text-[10px] font-black rounded-full flex items-center justify-center animate-pulse shadow-xs">
                               {pendingDocumentRequests}
                             </span>
                           )}
@@ -434,7 +440,7 @@ export function AdminSidebar({
                   );
                 })}
               </div>
-              <div className="p-4 border-t border-white/5 bg-zinc-950">
+              <div className="p-4 border-t border-slate-100 dark:border-white/5 bg-slate-50/50 dark:bg-zinc-950/50">
                 <div 
                   onClick={async () => {
                     const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "localhost:3000";
@@ -442,10 +448,10 @@ export function AdminSidebar({
                     await signOut({ redirect: false });
                     window.location.href = `${protocol}://${rootDomain}/`;
                   }}
-                  className="flex items-center gap-3 px-4 py-3.5 rounded-xl hover:bg-red-500/10 bg-red-500/5 text-red-500 transition-all cursor-pointer"
+                  className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-red-500/10 bg-red-500/5 text-red-600 dark:text-red-400 transition-all cursor-pointer font-medium text-sm"
                 >
-                  <LogOut className="h-5 w-5" />
-                  <span className="font-medium">Logout</span>
+                  <LogOut className="h-5 w-5 shrink-0" />
+                  <span>Logout</span>
                 </div>
               </div>
             </motion.div>

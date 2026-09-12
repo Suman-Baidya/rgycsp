@@ -1,10 +1,23 @@
 "use client";
 
-import { useState } from "react";
-import { Plus, Search, LayoutGrid, Calendar, Clock, Trash2, Pencil, X, Save, GraduationCap } from "lucide-react";
+import { useState, useMemo } from "react";
+import { useRouter } from "next/navigation";
+import { 
+  Plus, 
+  Search, 
+  LayoutGrid, 
+  Calendar, 
+  Clock, 
+  Trash2, 
+  Pencil, 
+  GraduationCap, 
+  UserCheck, 
+  Users 
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { 
   Dialog, 
   DialogContent, 
@@ -27,15 +40,17 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
 export default function BatchManagement({ 
   workspaceId, 
-  batches: initialBatches,
-  courses 
+  batches: initialBatches = [],
+  courses = []
 }: { 
   workspaceId: string; 
   batches: any[];
   courses: any[];
 }) {
+  const router = useRouter();
   const [batches, setBatches] = useState(initialBatches);
   const [search, setSearch] = useState("");
+  const [courseFilter, setCourseFilter] = useState("all");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [editingBatch, setEditingBatch] = useState<any>(null);
@@ -54,17 +69,29 @@ export default function BatchManagement({
     endTime: ""
   });
 
-  const filteredBatches = batches.filter(b => 
-    b.name.toLowerCase().includes(search.toLowerCase()) ||
-    b.course?.title?.toLowerCase().includes(search.toLowerCase()) ||
-    b.teacherName?.toLowerCase().includes(search.toLowerCase())
-  );
+  const filteredBatches = useMemo(() => {
+    return batches.filter(b => {
+      const q = search.toLowerCase();
+      const matchesSearch = 
+        !q ||
+        b.name?.toLowerCase().includes(q) ||
+        b.course?.title?.toLowerCase().includes(q) ||
+        b.teacherName?.toLowerCase().includes(q) ||
+        b.schedule?.toLowerCase().includes(q);
+
+      const matchesCourse = 
+        courseFilter === "all" ||
+        (courseFilter === "independent" ? !b.courseId : b.courseId === courseFilter);
+
+      return matchesSearch && matchesCourse;
+    });
+  }, [batches, search, courseFilter]);
 
   const handleOpenModal = (batch?: any) => {
     if (batch) {
       setEditingBatch(batch);
       setFormData({
-        name: batch.name,
+        name: batch.name || "",
         schedule: batch.schedule || "",
         courseId: batch.courseId || "independent",
         capacity: batch.capacity?.toString() || "30",
@@ -92,19 +119,19 @@ export default function BatchManagement({
   };
 
   const handleSave = async () => {
-    if (!formData.name) {
-      toast.error("Please fill in the batch name.");
+    if (!formData.name.trim()) {
+      toast.error("Please enter a batch name.");
       return;
     }
 
     setIsProcessing(true);
     try {
       const payload = {
-        name: formData.name,
-        schedule: formData.schedule,
-        courseId: formData.courseId === "independent" ? undefined : formData.courseId,
+        name: formData.name.trim(),
+        schedule: formData.schedule.trim() || undefined,
+        courseId: formData.courseId === "independent" || !formData.courseId ? undefined : formData.courseId,
         capacity: parseInt(formData.capacity) || 30,
-        teacherName: formData.teacherName,
+        teacherName: formData.teacherName.trim() || undefined,
         startDate: formData.startDate ? new Date(formData.startDate) : undefined,
         endDate: formData.endDate ? new Date(formData.endDate) : undefined,
         startTime: formData.startTime || undefined,
@@ -115,8 +142,14 @@ export default function BatchManagement({
         const res = await updateBatch(editingBatch.id, payload);
         if (res.success) {
           toast.success("Batch updated successfully");
-          setBatches(prev => prev.map(b => b.id === editingBatch.id ? { ...b, ...res.data } : b));
+          const linkedCourse = courses.find(c => c.id === payload.courseId);
+          setBatches(prev => prev.map(b => b.id === editingBatch.id ? { 
+            ...b, 
+            ...res.data, 
+            course: linkedCourse || (payload.courseId ? b.course : null) 
+          } : b));
           setIsModalOpen(false);
+          router.refresh();
         } else {
           toast.error(res.error || "Update failed");
         }
@@ -124,14 +157,21 @@ export default function BatchManagement({
         const res = await createBatch({ ...payload, workspaceId });
         if (res.success) {
           toast.success("Batch created successfully");
-          // In a real app we'd probably revalidate, but for UI feel:
-          window.location.reload(); 
+          const linkedCourse = courses.find(c => c.id === payload.courseId);
+          const newBatch = {
+            ...res.data,
+            course: linkedCourse || null,
+            _count: { students: 0 }
+          };
+          setBatches(prev => [newBatch, ...prev]);
+          setIsModalOpen(false);
+          router.refresh();
         } else {
           toast.error(res.error || "Creation failed");
         }
       }
     } catch (err) {
-      toast.error("An error occurred");
+      toast.error("An unexpected error occurred");
     } finally {
       setIsProcessing(false);
     }
@@ -148,8 +188,9 @@ export default function BatchManagement({
     try {
       const result = await deleteBatch(batchToDelete.id);
       if (result.success) {
-        setBatches(batches.filter((b: any) => b.id !== batchToDelete.id));
+        setBatches(prev => prev.filter((b: any) => b.id !== batchToDelete.id));
         toast.success("Batch deleted successfully");
+        router.refresh();
       } else {
         toast.error(result.error || "Failed to delete batch");
       }
@@ -162,131 +203,233 @@ export default function BatchManagement({
   };
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white dark:bg-slate-900 p-6 rounded-[2rem] border-2 border-slate-100 dark:border-slate-800 shadow-sm">
-        <div className="relative flex-1 max-w-md group">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-primary transition-colors" />
-          <Input 
-            placeholder="Search batches..." 
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="pl-12 h-12 rounded-2xl border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/50 focus:bg-white dark:focus:bg-slate-900 transition-all"
-          />
-        </div>
-        <Button onClick={() => handleOpenModal()} className="h-12 px-8 rounded-2xl font-bold gap-2 shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all">
-          <Plus className="w-5 h-5" /> Create New Batch
-        </Button>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredBatches.map((batch) => (
-          <div key={batch.id} className="group bg-white dark:bg-slate-900 border-2 border-slate-100 dark:border-slate-800 rounded-[2.5rem] p-8 hover:border-primary/30 transition-all hover:shadow-xl hover:shadow-primary/5 relative overflow-hidden">
-            <div className="absolute top-0 right-0 p-4 opacity-0 group-hover:opacity-100 transition-opacity flex gap-2">
-               <Button variant="ghost" size="icon" onClick={() => handleOpenModal(batch)} className="h-10 w-10 rounded-xl bg-slate-50 dark:bg-slate-800 text-slate-600 hover:text-primary">
-                 <Pencil className="w-4 h-4" />
-               </Button>
-               <Button variant="ghost" size="icon" onClick={() => handleDeleteClick(batch)} className="h-10 w-10 rounded-xl bg-red-50 dark:bg-red-900/20 text-red-500 hover:bg-red-500 hover:text-white">
-                 <Trash2 className="w-4 h-4" />
-               </Button>
+    <Card className="border border-slate-200/80 dark:border-slate-800 rounded-xl shadow-sm overflow-hidden bg-white dark:bg-slate-900">
+      {/* Integrated Header / Filter Toolbar */}
+      <CardHeader className="p-3.5 sm:p-4 border-b border-slate-100 dark:border-slate-800">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 sm:gap-3">
+          {/* Search & Course Filter */}
+          <div className="flex flex-1 flex-wrap sm:flex-nowrap items-center gap-2">
+            <div className="relative w-full sm:max-w-[260px] group">
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400 group-focus-within:text-primary transition-colors pointer-events-none" />
+              <Input 
+                placeholder="Search batches, teacher..." 
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="pl-8 pr-3 h-8 sm:h-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700/60 placeholder:text-xs placeholder:text-slate-400 font-normal"
+              />
             </div>
 
-            <div className="space-y-6">
-              <div className="space-y-2">
-                <div className="w-12 h-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mb-4">
-                  <LayoutGrid className="w-6 h-6" />
-                </div>
-                <h4 className="text-xl font-bold text-slate-900 dark:text-white">{batch.name}</h4>
-                {batch.courseId ? (
-                  <div className="flex items-center gap-2 text-xs font-bold text-blue-600 uppercase tracking-widest bg-blue-50 w-fit px-3 py-1 rounded-full">
-                    <GraduationCap className="w-3 h-3" />
-                    {batch.course?.title || "Linked Course"}
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-2 text-xs font-bold text-emerald-600 uppercase tracking-widest bg-emerald-50 w-fit px-3 py-1 rounded-full">
-                    <LayoutGrid className="w-3 h-3" />
-                    Independent Batch
-                  </div>
-                )}
-              </div>
+            <Select value={courseFilter} onValueChange={(val: any) => setCourseFilter(val as string)}>
+              <SelectTrigger className="h-8 sm:h-9 w-full sm:w-[190px] text-xs font-medium rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700/60">
+                <SelectValue placeholder="All Batches" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Batches</SelectItem>
+                <SelectItem value="independent">Independent Batches</SelectItem>
+                {courses.map(c => (
+                  <SelectItem key={c.id} value={c.id}>{c.title}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
 
-              <div className="space-y-3 pt-4 border-t border-slate-50 dark:border-slate-800/50">
-                {batch.teacherName && (
-                  <div className="flex items-center gap-3 text-sm text-slate-500">
-                    <div className="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center">
-                      <GraduationCap className="w-3 h-3 text-slate-400" />
-                    </div>
-                    <span className="font-medium text-slate-700 dark:text-slate-300">Teacher: {batch.teacherName}</span>
-                  </div>
-                )}
-                <div className="flex items-center gap-3 text-sm text-slate-500">
-                  <Clock className="w-4 h-4 text-slate-400" />
-                  <span className="font-medium">
-                    {batch.schedule || "No schedule set"} 
-                    {batch.startTime ? ` (${batch.startTime} - ${batch.endTime})` : ""}
-                  </span>
-                </div>
-                
-                {/* Capacity Progress Bar */}
-                <div className="pt-2 space-y-1.5">
-                  <div className="flex justify-between items-center text-xs font-bold text-slate-400 uppercase tracking-wider">
-                    <span>Capacity</span>
-                    <span className={cn(
-                      batch._count?.students >= (batch.capacity || 30) ? "text-red-500" : "text-primary"
-                    )}>
-                      {batch._count?.students || 0} / {batch.capacity || 30}
-                    </span>
-                  </div>
-                  <div className="h-2 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-                    <div 
-                      className={cn(
-                        "h-full rounded-full transition-all duration-500",
-                        batch._count?.students >= (batch.capacity || 30) ? "bg-red-500" : "bg-primary"
-                      )}
-                      style={{ width: `${Math.min(((batch._count?.students || 0) / (batch.capacity || 30)) * 100, 100)}%` }}
-                    />
-                  </div>
-                </div>
-              </div>
-              
-              <Button variant="outline" className="w-full rounded-xl font-bold h-11 border-slate-200 dark:border-slate-800 group-hover:bg-primary group-hover:text-white group-hover:border-primary transition-all">
-                View Batch Details
-              </Button>
-            </div>
+            <span className="hidden md:inline-flex items-center text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider px-2 py-1 bg-slate-100 dark:bg-slate-800/80 rounded-md">
+              {filteredBatches.length} {filteredBatches.length === 1 ? 'batch' : 'batches'}
+            </span>
           </div>
-        ))}
 
-        {filteredBatches.length === 0 && (
-          <div className="col-span-full py-24 flex flex-col items-center justify-center text-center space-y-4 bg-slate-50/50 dark:bg-slate-800/20 rounded-[3rem] border-2 border-dashed border-slate-200 dark:border-slate-800">
-             <div className="w-20 h-20 rounded-[2rem] bg-slate-100 dark:bg-slate-900 flex items-center justify-center text-slate-300">
-                <LayoutGrid className="w-10 h-10" />
-             </div>
-             <div className="space-y-1">
-                <p className="text-lg font-bold text-slate-900 dark:text-white">No batches found</p>
-                <p className="text-sm text-slate-500">Try adjusting your search or create your first batch.</p>
-             </div>
-             <Button onClick={() => handleOpenModal()} variant="outline" className="rounded-xl font-bold">
-               Create Batch
-             </Button>
+          {/* Primary Action Button */}
+          <div className="flex items-center gap-2 self-end sm:self-auto shrink-0">
+            <Button 
+              onClick={() => handleOpenModal()} 
+              className="h-8 sm:h-9 px-3 sm:px-4 rounded-lg text-xs font-semibold gap-1.5 shadow-xs bg-primary text-primary-foreground"
+            >
+              <Plus className="w-3.5 h-3.5" /> Create New Batch
+            </Button>
+          </div>
+        </div>
+      </CardHeader>
+
+      {/* Content Area */}
+      <CardContent className="p-3.5 sm:p-4">
+        {filteredBatches.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+            {filteredBatches.map((batch) => {
+              const studentCount = batch._count?.students || 0;
+              const capacity = batch.capacity || 30;
+              const percentFull = Math.min(Math.round((studentCount / capacity) * 100), 100);
+              const isFull = studentCount >= capacity;
+              const isNearlyFull = percentFull >= 80 && !isFull;
+
+              return (
+                <div 
+                  key={batch.id} 
+                  className="border border-slate-200/80 dark:border-slate-800 rounded-xl bg-slate-50/40 dark:bg-slate-800/20 hover:bg-white dark:hover:bg-slate-800/60 hover:border-slate-300 dark:hover:border-slate-700 transition-all p-3.5 sm:p-4 flex flex-col justify-between group relative overflow-hidden"
+                >
+                  {/* Top Capacity Accent Line */}
+                  <div className={cn(
+                    "absolute top-0 left-0 right-0 h-1",
+                    isFull ? "bg-red-500" : isNearlyFull ? "bg-amber-500" : "bg-primary"
+                  )} />
+
+                  <div className="space-y-3 pt-0.5">
+                    {/* Header: Name, Course Tag & Action Buttons */}
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="space-y-1 min-w-0 flex-1">
+                        <h4 className="font-semibold text-xs sm:text-sm text-slate-900 dark:text-white truncate" title={batch.name}>
+                          {batch.name}
+                        </h4>
+                        
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          {batch.courseId ? (
+                            <span className="inline-flex items-center gap-1 text-[9px] font-bold text-blue-700 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/50 px-1.5 py-0.5 rounded uppercase tracking-wider">
+                              <GraduationCap className="w-2.5 h-2.5 shrink-0" />
+                              <span className="max-w-[140px] truncate">{batch.course?.title || "Linked Course"}</span>
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 text-[9px] font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50 px-1.5 py-0.5 rounded uppercase tracking-wider">
+                              <LayoutGrid className="w-2.5 h-2.5 shrink-0" />
+                              Independent Batch
+                            </span>
+                          )}
+
+                          {isFull && (
+                            <span className="text-[9px] font-bold text-red-600 bg-red-50 dark:bg-red-950/50 px-1.5 py-0.5 rounded uppercase tracking-wider">
+                              Full
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-0.5 shrink-0">
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          onClick={() => handleOpenModal(batch)} 
+                          className="h-7 w-7 rounded-lg text-slate-400 hover:text-primary hover:bg-primary/5 transition-colors"
+                          title="Edit Batch"
+                        >
+                          <Pencil className="w-3.5 h-3.5" />
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          onClick={() => handleDeleteClick(batch)} 
+                          className="h-7 w-7 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors"
+                          title="Delete Batch"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </Button>
+                      </div>
+                    </div>
+
+                    {/* Metadata: Teacher, Timing, Date Range */}
+                    <div className="space-y-1.5 pt-2 border-t border-slate-100 dark:border-slate-800/60 text-xs">
+                      {batch.teacherName && (
+                        <div className="flex items-center gap-2 text-slate-600 dark:text-slate-300">
+                          <UserCheck className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                          <span className="font-medium truncate text-xs">
+                            Teacher: <span className="font-semibold text-slate-800 dark:text-slate-200">{batch.teacherName}</span>
+                          </span>
+                        </div>
+                      )}
+                      
+                      <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
+                        <Clock className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                        <span className="font-medium truncate text-xs">
+                          {batch.schedule || "Regular schedule"}
+                          {batch.startTime ? ` • ${batch.startTime}${batch.endTime ? ` - ${batch.endTime}` : ''}` : ''}
+                        </span>
+                      </div>
+
+                      {(batch.startDate || batch.endDate) && (
+                        <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
+                          <Calendar className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                          <span className="font-medium truncate text-[11px]">
+                            {batch.startDate ? new Date(batch.startDate).toLocaleDateString("en-IN", { month: "short", day: "numeric", year: "numeric" }) : "Anytime"}
+                            {batch.endDate ? ` to ${new Date(batch.endDate).toLocaleDateString("en-IN", { month: "short", day: "numeric", year: "numeric" })}` : ""}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Capacity Progress Bar at Bottom */}
+                  <div className="pt-3 mt-3 border-t border-slate-100 dark:border-slate-800/60 space-y-1.5">
+                    <div className="flex justify-between items-center text-[10px] font-bold uppercase tracking-wider">
+                      <span className="text-slate-400">Capacity</span>
+                      <span className={cn(
+                        isFull ? "text-red-600 dark:text-red-400" : isNearlyFull ? "text-amber-600 dark:text-amber-400" : "text-slate-600 dark:text-slate-300"
+                      )}>
+                        {studentCount} / {capacity} ({percentFull}%)
+                      </span>
+                    </div>
+                    <div className="h-1.5 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                      <div 
+                        className={cn(
+                          "h-full rounded-full transition-all duration-500",
+                          isFull ? "bg-red-500" : isNearlyFull ? "bg-amber-500" : "bg-primary"
+                        )}
+                        style={{ width: `${percentFull}%` }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          /* Empty State */
+          <div className="py-12 px-4 flex flex-col items-center justify-center text-center space-y-3 bg-slate-50/50 dark:bg-slate-800/20 rounded-xl border border-dashed border-slate-200 dark:border-slate-800">
+            <div className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400">
+              <LayoutGrid className="w-5 h-5" />
+            </div>
+            <div className="space-y-1 max-w-xs">
+              <p className="text-sm font-semibold text-slate-900 dark:text-white">
+                {search || courseFilter !== "all" ? "No matching batches" : "No batches created yet"}
+              </p>
+              <p className="text-xs text-slate-500">
+                {search || courseFilter !== "all" 
+                  ? "Try adjusting your search terms or filters." 
+                  : "Organize students into groups with scheduled timing, capacities, and assigned teachers."}
+              </p>
+            </div>
+            <Button 
+              onClick={() => {
+                setSearch("");
+                setCourseFilter("all");
+                if (batches.length === 0) handleOpenModal();
+              }} 
+              className="h-8 px-3 rounded-lg text-xs font-semibold gap-1.5"
+            >
+              {batches.length === 0 ? (
+                <>
+                  <Plus className="w-3.5 h-3.5" /> Create First Batch
+                </>
+              ) : (
+                "Clear Filters"
+              )}
+            </Button>
           </div>
         )}
-      </div>
+      </CardContent>
 
+      {/* Create / Edit Batch Modal (Strict Rule 7.7) */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="max-w-2xl rounded-[2.5rem] p-8">
-          <DialogHeader className="space-y-3">
-            <DialogTitle className="text-2xl font-bold">
+        <DialogContent className="max-w-md rounded-2xl p-4 sm:p-5">
+          <DialogHeader className="space-y-1 pb-2 border-b border-slate-100 dark:border-slate-800">
+            <DialogTitle className="text-base font-bold text-slate-900 dark:text-white">
               {editingBatch ? "Edit Batch" : "Create New Batch"}
             </DialogTitle>
-            <DialogDescription>
-              Organize your students into groups for better scheduling and attendance tracking.
+            <DialogDescription className="text-xs text-slate-500">
+              Organize students into groups for scheduling and tracking.
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-6 py-6 max-h-[60vh] overflow-y-auto px-2 -mx-2">
-            <div className="space-y-2">
-              <Label className="text-xs font-bold uppercase tracking-widest text-slate-400 ml-1">Associated Course</Label>
-              <Select value={formData.courseId || ""} onValueChange={(v) => setFormData({...formData, courseId: v as string})}>
-                <SelectTrigger className="h-12 rounded-2xl font-bold bg-slate-50/50 dark:bg-slate-900/50">
+          <div className="space-y-3 py-3 max-h-[65vh] overflow-y-auto pr-1">
+            <div className="space-y-1">
+              <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Associated Course</Label>
+              <Select value={formData.courseId || ""} onValueChange={(v: any) => setFormData({...formData, courseId: v as string})}>
+                <SelectTrigger className="h-8 sm:h-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700">
                   <SelectValue placeholder="Independent Batch (No Course)">
                     {formData.courseId === "independent" || !formData.courseId 
                       ? "Independent Batch (No Course)" 
@@ -302,95 +445,96 @@ export default function BatchManagement({
               </Select>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label className="text-xs font-bold uppercase tracking-widest text-slate-400 ml-1">Batch Name *</Label>
+            <div className="grid grid-cols-2 gap-2.5">
+              <div className="space-y-1">
+                <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Batch Name *</Label>
                 <Input 
                   value={formData.name} 
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })} 
                   placeholder="e.g., Morning Batch A" 
-                  className="h-12 rounded-2xl font-bold"
+                  className="h-8 sm:h-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700"
                 />
               </div>
-              <div className="space-y-2">
-                <Label className="text-xs font-bold uppercase tracking-widest text-slate-400 ml-1">Capacity</Label>
+              <div className="space-y-1">
+                <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Capacity</Label>
                 <Input 
                   type="number"
                   value={formData.capacity} 
                   onChange={(e) => setFormData({ ...formData, capacity: e.target.value })} 
-                  className="h-12 rounded-2xl font-bold"
+                  className="h-8 sm:h-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700"
                 />
               </div>
             </div>
 
-            <div className="space-y-2">
-              <Label className="text-xs font-bold uppercase tracking-widest text-slate-400 ml-1">Teacher's Name</Label>
-              <Input 
-                value={formData.teacherName} 
-                onChange={(e) => setFormData({ ...formData, teacherName: e.target.value })} 
-                placeholder="e.g., John Doe" 
-                className="h-12 rounded-2xl font-bold"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label className="text-xs font-bold uppercase tracking-widest text-slate-400 ml-1">Schedule (Days)</Label>
-              <Input 
-                value={formData.schedule} 
-                onChange={(e) => setFormData({ ...formData, schedule: e.target.value })} 
-                placeholder="e.g., Mon, Wed, Fri" 
-                className="h-12 rounded-2xl font-bold"
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label className="text-xs font-bold uppercase tracking-widest text-slate-400 ml-1">Class Start Time (Theory)</Label>
+            <div className="grid grid-cols-2 gap-2.5">
+              <div className="space-y-1">
+                <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Teacher's Name</Label>
                 <Input 
-                  type="time"
+                  value={formData.teacherName} 
+                  onChange={(e) => setFormData({ ...formData, teacherName: e.target.value })} 
+                  placeholder="e.g., John Doe" 
+                  className="h-8 sm:h-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700"
+                />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Schedule (Days)</Label>
+                <Input 
+                  value={formData.schedule} 
+                  onChange={(e) => setFormData({ ...formData, schedule: e.target.value })} 
+                  placeholder="e.g., Mon, Wed, Fri" 
+                  className="h-8 sm:h-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2.5">
+              <div className="space-y-1">
+                <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Start Time</Label>
+                <Input 
+                  type="time" 
                   value={formData.startTime} 
                   onChange={(e) => setFormData({ ...formData, startTime: e.target.value })} 
-                  className="h-12 rounded-2xl font-bold"
+                  className="h-8 sm:h-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700"
                 />
               </div>
-              <div className="space-y-2">
-                <Label className="text-xs font-bold uppercase tracking-widest text-slate-400 ml-1">Class End Time (Theory)</Label>
+              <div className="space-y-1">
+                <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">End Time</Label>
                 <Input 
-                  type="time"
+                  type="time" 
                   value={formData.endTime} 
                   onChange={(e) => setFormData({ ...formData, endTime: e.target.value })} 
-                  className="h-12 rounded-2xl font-bold"
+                  className="h-8 sm:h-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700"
                 />
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label className="text-xs font-bold uppercase tracking-widest text-slate-400 ml-1">Start Date</Label>
+            <div className="grid grid-cols-2 gap-2.5">
+              <div className="space-y-1">
+                <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Start Date</Label>
                 <Input 
-                  type="date"
+                  type="date" 
                   value={formData.startDate} 
                   onChange={(e) => setFormData({ ...formData, startDate: e.target.value })} 
-                  className="h-12 rounded-2xl font-bold"
+                  className="h-8 sm:h-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700"
                 />
               </div>
-              <div className="space-y-2">
-                <Label className="text-xs font-bold uppercase tracking-widest text-slate-400 ml-1">End Date</Label>
+              <div className="space-y-1">
+                <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">End Date</Label>
                 <Input 
-                  type="date"
+                  type="date" 
                   value={formData.endDate} 
                   onChange={(e) => setFormData({ ...formData, endDate: e.target.value })} 
-                  className="h-12 rounded-2xl font-bold"
+                  className="h-8 sm:h-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700"
                 />
               </div>
             </div>
           </div>
 
-          <DialogFooter className="flex-col sm:flex-row gap-3 pt-4 border-t">
-            <Button variant="ghost" onClick={() => setIsModalOpen(false)} className="rounded-xl font-bold flex-1 h-12">
+          <DialogFooter className="flex-row items-center justify-end gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
+            <Button variant="ghost" onClick={() => setIsModalOpen(false)} className="h-8 sm:h-9 px-3 text-xs rounded-lg font-semibold">
               Cancel
             </Button>
-            <Button onClick={handleSave} disabled={isProcessing} className="rounded-xl font-bold flex-1 h-12 shadow-lg shadow-primary/20">
+            <Button onClick={handleSave} disabled={isProcessing} className="h-8 sm:h-9 px-4 text-xs rounded-lg font-semibold bg-primary text-primary-foreground shadow-sm">
               {isProcessing ? "Saving..." : (editingBatch ? "Update Batch" : "Create Batch")}
             </Button>
           </DialogFooter>
@@ -410,6 +554,6 @@ export default function BatchManagement({
         confirmText="Delete"
         destructive={true}
       />
-    </div>
+    </Card>
   );
 }

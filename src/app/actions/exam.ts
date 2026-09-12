@@ -5,6 +5,7 @@ import { revalidateWorkspacePath } from "@/lib/revalidate";
 
 import { db } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { sendWebPushNotification } from "@/app/actions/web-push";
 
 export async function createExam(workspaceId: string, data: { title: string, type: string, date?: Date, courseId?: string, duration?: string, syllabus?: string }) {
   try {
@@ -20,6 +21,15 @@ export async function createExam(workspaceId: string, data: { title: string, typ
       }
     });
     await revalidateWorkspacePath(typeof workspaceId !== 'undefined' ? workspaceId : (typeof data !== 'undefined' ? data.workspaceId : null), "/admin/exam-generator", "page");
+
+    // Trigger Web Push notification to students in this workspace
+    sendWebPushNotification({
+      workspaceId,
+      title: `Exam Scheduled: ${data.title}`,
+      message: `A new exam has been scheduled. Check your portal for exam routine and admit cards.`,
+      url: `/student/exams`,
+    }).catch(err => console.error("Web push dispatch failed:", err));
+
     return { success: true, data: exam };
   } catch (error: any) {
     console.error("Failed to create exam", error);
@@ -45,6 +55,15 @@ export async function createOnlineExam(workspaceId: string, data: { title: strin
       }
     });
     await revalidateWorkspacePath(typeof workspaceId !== 'undefined' ? workspaceId : (typeof data !== 'undefined' ? data.workspaceId : null), "/admin/exam-generator", "page");
+
+    // Trigger Web Push notification to students in this workspace
+    sendWebPushNotification({
+      workspaceId,
+      title: `Online Exam Available: ${data.title}`,
+      message: `A new online test has been published. Log into your student portal to take the exam.`,
+      url: `/student/exams`,
+    }).catch(err => console.error("Web push dispatch failed:", err));
+
     return { success: true, data: exam };
   } catch (error: any) {
     console.error("Failed to create online exam", error);

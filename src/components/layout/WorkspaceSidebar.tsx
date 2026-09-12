@@ -128,43 +128,56 @@ export function WorkspaceSidebar({
       >
         {/* Header */}
         <div className={cn(
-          "h-20 flex items-center border-b border-white/5 transition-all duration-300",
-          isCollapsed ? "justify-center" : "px-8 justify-between"
+          "h-16 flex items-center border-b border-white/10 px-4 transition-all duration-300 shrink-0",
+          isCollapsed ? "justify-center px-2" : "justify-between"
         )}>
-          {!isCollapsed && (
-            <AnimatePresence mode="wait">
-              <motion.div
-                key="full"
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -10 }}
-                className="flex items-center gap-3 overflow-hidden"
-              >
-                <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center shadow-[0_0_15px_rgba(var(--primary),0.5)] shrink-0">
-                  <Building2 className="h-5 w-5 text-primary-foreground" />
+          {isCollapsed ? (
+            <button
+              onClick={toggleSidebar}
+              title="Expand Sidebar"
+              className="h-10 w-10 rounded-xl bg-white/5 hover:bg-white/10 text-zinc-300 hover:text-white border border-white/10 flex items-center justify-center transition-all shadow-sm group"
+            >
+              <ChevronRight className="h-5 w-5 group-hover:translate-x-0.5 transition-transform" />
+            </button>
+          ) : (
+            <>
+              <div className="flex items-center gap-3 overflow-hidden">
+                <div className={cn(
+                  "h-10 w-10 rounded-xl flex items-center justify-center shadow-xs shrink-0 border",
+                  isStateManager
+                    ? "bg-amber-500/20 text-amber-400 border-amber-500/30"
+                    : userRole === "STAFF"
+                    ? "bg-indigo-500/20 text-indigo-400 border-indigo-500/30"
+                    : "bg-sky-500/20 text-sky-400 border-sky-500/30"
+                )}>
+                  {isStateManager ? (
+                    <MapPinned className="h-5.5 w-5.5" />
+                  ) : userRole === "STAFF" ? (
+                    <UserCheck className="h-5.5 w-5.5" />
+                  ) : (
+                    <Building2 className="h-5.5 w-5.5" />
+                  )}
                 </div>
-                <span className="font-bold text-white tracking-tight text-lg whitespace-nowrap capitalize max-w-[160px] truncate">
-                  Franchise Admin
+                <span className="font-bold text-white tracking-tight text-base truncate">
+                  {isStateManager ? "State Manager" : userRole === "STAFF" ? "Staff Portal" : "Franchise Admin"}
                 </span>
-              </motion.div>
-            </AnimatePresence>
-          )}
+              </div>
 
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={toggleSidebar}
-            className={cn(
-              "hover:bg-white/5 text-zinc-500 hover:text-white shrink-0 transition-all",
-              isCollapsed ? "h-12 w-12" : "h-10 w-10"
-            )}
-          >
-            {isCollapsed ? <ChevronRight className="h-6 w-6" /> : <ChevronLeft className="h-4 w-4" />}
-          </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={toggleSidebar}
+                className="h-8 w-8 rounded-lg hover:bg-white/10 text-zinc-400 hover:text-white shrink-0 transition-all"
+                title="Collapse Sidebar"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+            </>
+          )}
         </div>
 
         {/* Navigation */}
-        <nav className={cn("flex-1 py-6 space-y-2 overflow-y-auto overflow-x-hidden", isCollapsed ? "px-2 scrollbar-hide" : "px-4 custom-scrollbar")}>
+        <nav className={cn("flex-1 py-4 space-y-1.5 overflow-y-auto overflow-x-hidden", isCollapsed ? "px-2 scrollbar-hide" : "px-4 custom-scrollbar")}>
           {navItems.map((item) => {
             const isActive = isActivePath(pathname, item.href);
             
@@ -173,9 +186,9 @@ export function WorkspaceSidebar({
                 key={item.name}
                 href={item.href}
                 className={cn(
-                  "relative flex items-center justify-between px-3 py-2.5 rounded-xl transition-all duration-300 group overflow-hidden",
+                  "relative flex items-center justify-between px-3 py-2.5 rounded-xl transition-all duration-200 group overflow-hidden",
                   isActive 
-                    ? "bg-white/10 text-white shadow-sm ring-1 ring-white/20" 
+                    ? "bg-white/10 text-white shadow-sm ring-1 ring-white/20 font-semibold" 
                     : "hover:bg-white/5 hover:text-white",
                   isCollapsed ? "justify-center h-10 w-10 mx-auto" : ""
                 )}
@@ -269,7 +282,8 @@ export function WorkspaceSidebar({
       </motion.aside>
 
       {/* Mobile Bottom Navigation */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-[60] bg-zinc-950/95 backdrop-blur-sm border-t border-white/10 pb-safe pb-4 pt-2">
+      {/* Mobile Bottom Navigation (Native App Feeling) */}
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-[60] bg-white/85 dark:bg-zinc-950/90 backdrop-blur-xl border-t border-slate-200/80 dark:border-white/10 pb-[max(env(safe-area-inset-bottom),12px)] pt-2 shadow-[0_-8px_30px_rgba(0,0,0,0.06)] dark:shadow-[0_-8px_30px_rgba(0,0,0,0.3)]">
         <div className="flex items-center justify-around px-2">
           {mainNavItems.map((item) => {
             const isActive = isActivePath(pathname, item.href);
@@ -277,20 +291,22 @@ export function WorkspaceSidebar({
             return (
               <TenantNavLink key={item.name} href={item.href} className="flex flex-col items-center gap-1 w-16 relative">
                 <div className={cn(
-                  "p-2 rounded-xl transition-all duration-300 flex items-center justify-center",
-                  isActive ? "bg-primary text-primary-foreground shadow-[0_4px_12px_-4px_rgba(var(--primary),0.5)]" : "text-zinc-400"
+                  "p-2 rounded-2xl transition-all duration-300 flex items-center justify-center",
+                  isActive 
+                    ? "bg-sky-500/15 text-sky-600 dark:text-sky-400 dark:bg-sky-500/20 shadow-xs" 
+                    : "text-slate-500 hover:text-slate-900 dark:text-zinc-400 dark:hover:text-white"
                 )}>
-                  <item.icon className="h-5 w-5" />
+                  <item.icon className={cn("h-5 w-5 transition-transform duration-200", isActive && "scale-110")} />
                   
                   {item.name === "Admissions" && admissionsCount > 0 && (
-                    <div className="absolute top-1 right-2 w-4 h-4 bg-red-500 text-white rounded-full text-[9px] font-bold flex items-center justify-center shadow-lg border border-zinc-950">
+                    <div className="absolute top-1 right-2 w-4 h-4 bg-red-500 text-white rounded-full text-[9px] font-bold flex items-center justify-center shadow-xs">
                       {admissionsCount}
                     </div>
                   )}
                 </div>
                 <span className={cn(
-                  "text-[10px] font-medium transition-colors text-center w-full truncate px-1",
-                  isActive ? "text-primary" : "text-zinc-500"
+                  "text-[10px] tracking-tight transition-colors text-center w-full truncate px-1",
+                  isActive ? "font-bold text-sky-600 dark:text-sky-400" : "font-medium text-slate-500 dark:text-zinc-400"
                 )}>
                   {item.name}
                 </span>
@@ -300,14 +316,14 @@ export function WorkspaceSidebar({
           
           <button onClick={toggleMore} className="flex flex-col items-center gap-1 w-16 relative">
             <div className={cn(
-              "p-2 rounded-xl transition-all duration-300 flex items-center justify-center",
-              isMoreOpen ? "bg-white/10 text-white" : "text-zinc-400"
+              "p-2 rounded-2xl transition-all duration-300 flex items-center justify-center",
+              isMoreOpen ? "bg-slate-100 dark:bg-white/10 text-slate-900 dark:text-white" : "text-slate-500 dark:text-zinc-400"
             )}>
               <MoreHorizontal className="h-5 w-5" />
             </div>
             <span className={cn(
               "text-[10px] font-medium transition-colors text-center w-full truncate px-1",
-              isMoreOpen ? "text-white" : "text-zinc-500"
+              isMoreOpen ? "font-bold text-slate-900 dark:text-white" : "text-slate-500 dark:text-zinc-400"
             )}>
               More
             </span>
@@ -315,7 +331,7 @@ export function WorkspaceSidebar({
         </div>
       </div>
 
-      {/* Mobile More Drawer */}
+      {/* Mobile More Drawer (Native Bottom Sheet) */}
       <AnimatePresence>
         {isMoreOpen && (
           <>
@@ -324,33 +340,35 @@ export function WorkspaceSidebar({
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={toggleMore}
-              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[55] lg:hidden"
+              className="fixed inset-0 bg-black/50 backdrop-blur-xs z-[65] lg:hidden"
             />
             <motion.div
               initial={{ y: "100%" }}
               animate={{ y: 0 }}
               exit={{ y: "100%" }}
-              transition={{ type: "spring", stiffness: 300, damping: 30 }}
-              className="fixed bottom-[76px] left-0 right-0 z-[55] bg-zinc-950 border-t border-white/10 rounded-t-3xl overflow-hidden flex flex-col max-h-[70vh] lg:hidden shadow-[0_-10px_40px_rgba(0,0,0,0.5)]"
+              transition={{ type: "spring", stiffness: 320, damping: 32 }}
+              className="fixed bottom-[72px] left-0 right-0 z-[65] bg-white dark:bg-zinc-950 border-t border-slate-200/80 dark:border-white/10 rounded-t-[28px] overflow-hidden flex flex-col max-h-[70vh] lg:hidden shadow-[0_-12px_40px_rgba(0,0,0,0.15)] dark:shadow-[0_-12px_40px_rgba(0,0,0,0.5)]"
             >
-              <div className="w-12 h-1.5 bg-zinc-800 rounded-full mx-auto mt-4 mb-2" />
-              <div className="flex-1 overflow-y-auto p-4 space-y-2 custom-scrollbar">
+              <div className="w-10 h-1.5 bg-slate-300 dark:bg-zinc-700 rounded-full mx-auto mt-3 mb-2" />
+              <div className="flex-1 overflow-y-auto p-4 space-y-1.5 custom-scrollbar">
                 {moreNavItems.map((item) => {
                   const isActive = isActivePath(pathname, item.href);
                   
                   return (
                     <TenantNavLink key={item.name} href={item.href} className="block w-full">
                       <div className={cn(
-                        "flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-300",
-                        isActive ? "bg-primary text-primary-foreground shadow-md" : "hover:bg-white/5 text-zinc-300"
+                        "flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200",
+                        isActive 
+                          ? "bg-sky-500/15 text-sky-700 dark:text-sky-300 font-semibold" 
+                          : "hover:bg-slate-100 dark:hover:bg-white/5 text-slate-700 dark:text-zinc-300"
                       )}>
-                        <item.icon className="h-5 w-5" />
-                        <span className="font-medium">{item.name}</span>
+                        <item.icon className="h-5 w-5 shrink-0" />
+                        <span className="font-medium text-sm">{item.name}</span>
                         
                         {item.name === "Admissions" && admissionsCount > 0 && (
                           <span className={cn(
-                            "ml-auto flex items-center justify-center min-w-[1.25rem] h-5 px-1 rounded-lg text-[10px] font-bold transition-colors shadow-sm",
-                            isActive ? "bg-white text-zinc-950" : "bg-red-500 text-white"
+                            "ml-auto flex items-center justify-center min-w-[1.25rem] h-5 px-1.5 rounded-full text-[10px] font-bold transition-colors shadow-xs",
+                            isActive ? "bg-sky-600 text-white" : "bg-red-500 text-white"
                           )}>
                             {admissionsCount}
                           </span>
@@ -360,7 +378,7 @@ export function WorkspaceSidebar({
                   );
                 })}
               </div>
-              <div className="p-4 border-t border-white/5 bg-zinc-950">
+              <div className="p-4 border-t border-slate-100 dark:border-white/5 bg-slate-50/50 dark:bg-zinc-950/50">
                 <div 
                   onClick={async () => {
                     const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "localhost:3000";
@@ -368,10 +386,10 @@ export function WorkspaceSidebar({
                     await signOut({ redirect: false });
                     window.location.href = `${protocol}://${rootDomain}/`;
                   }}
-                  className="flex items-center gap-3 px-4 py-3.5 rounded-xl hover:bg-red-500/10 bg-red-500/5 text-red-500 transition-all cursor-pointer"
+                  className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-red-500/10 bg-red-500/5 text-red-600 dark:text-red-400 transition-all cursor-pointer font-medium text-sm"
                 >
-                  <LogOut className="h-5 w-5" />
-                  <span className="font-medium">Logout</span>
+                  <LogOut className="h-5 w-5 shrink-0" />
+                  <span>Logout</span>
                 </div>
               </div>
             </motion.div>

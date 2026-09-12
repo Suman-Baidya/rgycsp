@@ -130,6 +130,54 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           return null;
         }
       }
-    })
+    }),
+    Credentials({
+      id: "passkey",
+      name: "Passkey Biometrics",
+      credentials: {
+        userId: { label: "User ID", type: "text" },
+        token: { label: "Token", type: "text" },
+      },
+      async authorize(credentials) {
+        try {
+          if (!credentials?.userId || !credentials?.token) return null;
+          const { cookies } = await import("next/headers");
+          const cookieStore = await cookies();
+          const savedToken = cookieStore.get("webauthn_verified_token")?.value;
+
+          if (!savedToken) {
+            console.error("AUTH_PASSKEY: No verified token cookie found.");
+            return null;
+          }
+
+          const [savedUserId, tokenVal] = savedToken.split(":");
+          if (savedUserId !== credentials.userId || tokenVal !== credentials.token) {
+            console.error("AUTH_PASSKEY: Token or User ID mismatch.");
+            return null;
+          }
+
+          // Consume the one-time token immediately
+          cookieStore.delete("webauthn_verified_token");
+
+          const user = await db.user.findUnique({
+            where: { id: credentials.userId as string },
+          });
+
+          if (!user || !user.isActive) return null;
+
+          return {
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            username: user.username,
+            role: user.role,
+            systemPermissions: (user as any).systemPermissions,
+          };
+        } catch (e) {
+          console.error("AUTH_PASSKEY_ERROR:", e);
+          return null;
+        }
+      },
+    }),
   ],
 });

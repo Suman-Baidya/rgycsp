@@ -1,7 +1,12 @@
 "use client";
 
-import React, { useState } from "react";
-import { Search, ShoppingCart, IndianRupee, Clock, Package, CheckCircle2, Loader2, Trash2, Plus, Minus, MapPin, QrCode, UploadCloud, Settings } from "lucide-react";
+import React, { useState, useMemo } from "react";
+import { 
+  Search, ShoppingCart, IndianRupee, Clock, Package, 
+  CheckCircle2, Loader2, Trash2, Plus, Minus, MapPin, 
+  QrCode, Settings, Eye, Truck, ArrowRight, ExternalLink, 
+  Layers, Tag, Check, AlertCircle, Phone
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -12,8 +17,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { placeOrder } from "@/app/actions/product-order";
@@ -21,6 +24,7 @@ import { updateWorkspaceShippingAddress } from "@/app/actions/workspaces";
 import { getPincodeDetails } from "@/app/actions/pincode";
 import { cn } from "@/lib/utils";
 import { ImageUpload } from "@/components/ui/ImageUpload";
+import { Card, CardContent } from "@/components/ui/card";
 
 export default function FranchiseProductsClient({ 
   workspaceId,
@@ -37,15 +41,22 @@ export default function FranchiseProductsClient({
 }) {
   const [activeTab, setActiveTab] = useState<"store" | "orders" | "config">("store");
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("All");
   
+  // Cart & Checkout State
   const [cart, setCart] = useState<any[]>([]);
   const [cartOpen, setCartOpen] = useState(false);
   const [checkoutStep, setCheckoutStep] = useState<"cart" | "shipping" | "payment">("cart");
   
-  // Product Modal State
+  // Product Selection Modal State
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [modalQuantities, setModalQuantities] = useState<Record<string, number>>({});
 
+  // View Order Details Modal State
+  const [selectedOrder, setSelectedOrder] = useState<any>(null);
+  const [orderDetailsOpen, setOrderDetailsOpen] = useState(false);
+
+  // Address Parsing
   const defaultAddressObj = { phone: "", vill: "", po: "", pin: "", district: "", state: "", landmark: "" };
   const getInitialAddressObj = () => {
     if (!initialShippingAddress) return defaultAddressObj;
@@ -56,11 +67,8 @@ export default function FranchiseProductsClient({
     return { ...defaultAddressObj, landmark: initialShippingAddress }; 
   };
 
-  // Checkout State
   const [orderAddressObj, setOrderAddressObj] = useState<any>(getInitialAddressObj());
   const [paymentProof, setPaymentProof] = useState("");
-  
-  // Config Tab State
   const [savedAddressObj, setSavedAddressObj] = useState<any>(getInitialAddressObj());
   
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -70,24 +78,55 @@ export default function FranchiseProductsClient({
 
   React.useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm, activeTab]);
+  }, [searchTerm, activeTab, selectedCategory]);
 
-  const activeProducts = initialProducts.filter(p => p.isActive && p.variants?.length > 0);
-  const filteredProducts = activeProducts.filter(p => p.title.toLowerCase().includes(searchTerm.toLowerCase()));
-  const filteredOrders = initialOrders.filter(o => o.items?.some((i: any) => i.productVariant?.product?.title.toLowerCase().includes(searchTerm.toLowerCase())));
+  const activeProducts = useMemo(() => {
+    return initialProducts.filter(p => p.isActive && p.variants?.length > 0);
+  }, [initialProducts]);
+
+  const categories = useMemo(() => {
+    const cats = new Set<string>();
+    activeProducts.forEach(p => {
+      if (p.category) cats.add(p.category);
+    });
+    return ["All", ...Array.from(cats)];
+  }, [activeProducts]);
+
+  const filteredProducts = useMemo(() => {
+    return activeProducts.filter(p => {
+      const matchesSearch = p.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
+        (p.description && p.description.toLowerCase().includes(searchTerm.toLowerCase()));
+      const matchesCat = selectedCategory === "All" || p.category === selectedCategory;
+      return matchesSearch && matchesCat;
+    });
+  }, [activeProducts, searchTerm, selectedCategory]);
+
+  const filteredOrders = useMemo(() => {
+    return initialOrders.filter(o => {
+      return (
+        o.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        o.items?.some((i: any) => i.productVariant?.product?.title.toLowerCase().includes(searchTerm.toLowerCase()))
+      );
+    });
+  }, [initialOrders, searchTerm]);
 
   const openProductModal = (product: any) => {
     setSelectedProduct(product);
     setModalQuantities({});
   };
 
+  const openOrderDetails = (order: any) => {
+    setSelectedOrder(order);
+    setOrderDetailsOpen(true);
+  };
+
   const handleAddToCart = () => {
     if (!selectedProduct) return;
     
     let addedCount = 0;
-    let newCart = [...cart];
+    const newCart = [...cart];
     
-    selectedProduct.variants.filter((v:any) => v.isActive).forEach((variant: any) => {
+    selectedProduct.variants.filter((v: any) => v.isActive).forEach((variant: any) => {
       const qty = modalQuantities[variant.id] || 0;
       if (qty > 0) {
         if (qty > variant.stock) {
@@ -98,7 +137,7 @@ export default function FranchiseProductsClient({
         const existingIndex = newCart.findIndex(item => item.variantId === variant.id);
         if (existingIndex >= 0) {
           if (newCart[existingIndex].quantity + qty > variant.stock) {
-            toast.error(`Cannot exceed stock for ${variant.name}`);
+            toast.error(`Cannot exceed available stock for ${variant.name}`);
           } else {
             newCart[existingIndex] = { ...newCart[existingIndex], quantity: newCart[existingIndex].quantity + qty };
             addedCount++;
@@ -112,7 +151,7 @@ export default function FranchiseProductsClient({
 
     if (addedCount > 0) {
       setCart(newCart);
-      toast.success("Added to cart");
+      toast.success("Added items to your cart");
     }
     setSelectedProduct(null);
   };
@@ -143,47 +182,96 @@ export default function FranchiseProductsClient({
       const res = await getPincodeDetails(value);
       if (res.success) {
         setter((prev: any) => ({ ...prev, district: res.district, state: res.state }));
-        toast.success("Location auto-filled from PIN Code!", { id: "pin-fetch" });
+        toast.success("Location auto-filled from PIN code!", { id: "pin-fetch" });
       } else {
-        toast.error("Invalid PIN Code or details not found.", { id: "pin-fetch" });
+        toast.error("Invalid PIN code or details not found.", { id: "pin-fetch" });
       }
     }
   };
 
   const renderAddressForm = (addressObj: any, setter: any) => (
-    <div className="space-y-4">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label className="text-sm font-bold text-slate-700">Phone Number <span className="text-red-500">*</span></Label>
-          <Input required value={addressObj.phone} onChange={e => handleAddressChange(setter, 'phone', e.target.value)} className="h-11 rounded-xl" placeholder="10-digit number" />
+    <div className="space-y-2.5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+        <div className="space-y-1">
+          <Label className="text-[11px] font-semibold text-slate-700 dark:text-slate-300">
+            Contact Phone <span className="text-red-500">*</span>
+          </Label>
+          <Input 
+            required 
+            value={addressObj.phone} 
+            onChange={e => handleAddressChange(setter, 'phone', e.target.value)} 
+            className="h-8 sm:h-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700" 
+            placeholder="10-digit mobile number" 
+          />
         </div>
-        <div className="space-y-2">
-          <Label className="text-sm font-bold text-slate-700">PIN Code <span className="text-red-500">*</span></Label>
-          <Input required value={addressObj.pin} onChange={e => handleAddressChange(setter, 'pin', e.target.value.replace(/\D/g, '').slice(0, 6))} className="h-11 rounded-xl" placeholder="6-digit PIN" />
+        <div className="space-y-1">
+          <Label className="text-[11px] font-semibold text-slate-700 dark:text-slate-300">
+            PIN Code <span className="text-red-500">*</span>
+          </Label>
+          <Input 
+            required 
+            value={addressObj.pin} 
+            onChange={e => handleAddressChange(setter, 'pin', e.target.value.replace(/\D/g, '').slice(0, 6))} 
+            className="h-8 sm:h-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 font-mono" 
+            placeholder="6-digit PIN" 
+          />
         </div>
       </div>
-      <div className="space-y-2">
-        <Label className="text-sm font-bold text-slate-700">Village / Ward / Street <span className="text-red-500">*</span></Label>
-        <Input required value={addressObj.vill} onChange={e => handleAddressChange(setter, 'vill', e.target.value)} className="h-11 rounded-xl" placeholder="Enter Village, Ward, or Street name" />
+      <div className="space-y-1">
+        <Label className="text-[11px] font-semibold text-slate-700 dark:text-slate-300">
+          Street / Village / Building <span className="text-red-500">*</span>
+        </Label>
+        <Input 
+          required 
+          value={addressObj.vill} 
+          onChange={e => handleAddressChange(setter, 'vill', e.target.value)} 
+          className="h-8 sm:h-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700" 
+          placeholder="Premises, Street, or Village" 
+        />
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label className="text-sm font-bold text-slate-700">Post Office (PO) <span className="text-red-500">*</span></Label>
-          <Input required value={addressObj.po} onChange={e => handleAddressChange(setter, 'po', e.target.value)} className="h-11 rounded-xl" placeholder="Post Office" />
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+        <div className="space-y-1">
+          <Label className="text-[11px] font-semibold text-slate-700 dark:text-slate-300">
+            Post Office (PO) <span className="text-red-500">*</span>
+          </Label>
+          <Input 
+            required 
+            value={addressObj.po} 
+            onChange={e => handleAddressChange(setter, 'po', e.target.value)} 
+            className="h-8 sm:h-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700" 
+            placeholder="Post Office name" 
+          />
         </div>
-        <div className="space-y-2">
-          <Label className="text-sm font-bold text-slate-700">Landmark</Label>
-          <Input value={addressObj.landmark} onChange={e => handleAddressChange(setter, 'landmark', e.target.value)} className="h-11 rounded-xl" placeholder="Optional landmark" />
+        <div className="space-y-1">
+          <Label className="text-[11px] font-semibold text-slate-700 dark:text-slate-300">Landmark</Label>
+          <Input 
+            value={addressObj.landmark} 
+            onChange={e => handleAddressChange(setter, 'landmark', e.target.value)} 
+            className="h-8 sm:h-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700" 
+            placeholder="Nearby landmark (optional)" 
+          />
         </div>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label className="text-sm font-bold text-slate-700">District <span className="text-red-500">*</span></Label>
-          <Input required readOnly value={addressObj.district} className="h-11 rounded-xl bg-slate-50 text-slate-500" placeholder="Auto-filled via PIN" />
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+        <div className="space-y-1">
+          <Label className="text-[11px] font-semibold text-slate-700 dark:text-slate-300">District</Label>
+          <Input 
+            required 
+            readOnly 
+            value={addressObj.district} 
+            className="h-8 sm:h-9 text-xs rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 cursor-not-allowed border-slate-200 dark:border-slate-700" 
+            placeholder="Auto-filled via PIN" 
+          />
         </div>
-        <div className="space-y-2">
-          <Label className="text-sm font-bold text-slate-700">State <span className="text-red-500">*</span></Label>
-          <Input required readOnly value={addressObj.state} className="h-11 rounded-xl bg-slate-50 text-slate-500" placeholder="Auto-filled via PIN" />
+        <div className="space-y-1">
+          <Label className="text-[11px] font-semibold text-slate-700 dark:text-slate-300">State</Label>
+          <Input 
+            required 
+            readOnly 
+            value={addressObj.state} 
+            className="h-8 sm:h-9 text-xs rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 cursor-not-allowed border-slate-200 dark:border-slate-700" 
+            placeholder="Auto-filled via PIN" 
+          />
         </div>
       </div>
     </div>
@@ -195,25 +283,23 @@ export default function FranchiseProductsClient({
       return toast.error("Please provide a complete shipping address.");
     }
     if (!paymentProof) {
-      return toast.error("Please upload the payment screenshot.");
+      return toast.error("Please upload the payment screenshot proof.");
     }
 
     setIsSubmitting(true);
-    
     const cartItemsData = cart.map(item => ({ variantId: item.variantId, quantity: item.quantity }));
     const result = await placeOrder(workspaceId, cartItemsData, initialConfig?.shippingCost || 0, JSON.stringify(orderAddressObj), paymentProof);
-    
     setIsSubmitting(false);
 
     if (result.success) {
-      toast.success("Order placed successfully! Head to the Orders tab to track it.");
+      toast.success("Order placed successfully! You can track it under 'My Orders'.");
       setCart([]);
       setCartOpen(false);
       setCheckoutStep("cart");
       setActiveTab("orders");
       router.refresh();
     } else {
-      toast.error(result.error);
+      toast.error(result.error || "Failed to place order.");
     }
   };
 
@@ -230,306 +316,496 @@ export default function FranchiseProductsClient({
       setOrderAddressObj(savedAddressObj);
       router.refresh();
     } else {
-      toast.error(result.error);
+      toast.error(result.error || "Failed to save address.");
     }
   };
 
+  // Metrics
   const totalAvailable = activeProducts.length;
   const activeOrders = initialOrders.filter(o => o.status === "PENDING" || o.status === "APPROVED" || o.status === "SHIPPED").length;
+  const deliveredOrders = initialOrders.filter(o => o.status === "DELIVERED").length;
   const totalSpent = initialOrders.filter(o => o.paymentStatus === "PAID").reduce((sum, o) => sum + (o.totalAmount || 0), 0);
 
   const cartTotal = cart.reduce((sum, item) => sum + item.quantity * item.variant.price, 0);
+  const cartItemsCount = cart.reduce((sum, item) => sum + item.quantity, 0);
   const shippingCost = initialConfig?.shippingCost || 0;
   const finalTotal = cartTotal + (cart.length > 0 ? shippingCost : 0);
 
   return (
-    <div className="space-y-6">
-      {/* Statistic Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm flex items-center gap-4">
-          <div className="h-12 w-12 rounded-xl bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
-            <ShoppingCart className="h-6 w-6" />
-          </div>
-          <div>
-            <p className="text-sm font-bold text-slate-500 dark:text-slate-400">Available Products</p>
-            <p className="text-2xl font-black text-slate-900 dark:text-white">{totalAvailable}</p>
-          </div>
-        </div>
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm flex items-center gap-4">
-          <div className="h-12 w-12 rounded-xl bg-orange-50 dark:bg-orange-500/10 text-orange-600 dark:text-orange-400 flex items-center justify-center shrink-0">
-            <Package className="h-6 w-6" />
-          </div>
-          <div>
-            <p className="text-sm font-bold text-slate-500 dark:text-slate-400">Active Orders</p>
-            <p className="text-2xl font-black text-slate-900 dark:text-white">{activeOrders}</p>
-          </div>
-        </div>
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm flex items-center gap-4">
-          <div className="h-12 w-12 rounded-xl bg-green-50 dark:bg-green-500/10 text-green-600 dark:text-green-400 flex items-center justify-center shrink-0">
-            <IndianRupee className="h-6 w-6" />
-          </div>
-          <div>
-            <p className="text-sm font-bold text-slate-500 dark:text-slate-400">Total Spent</p>
-            <p className="text-2xl font-black text-slate-900 dark:text-white">₹{totalSpent.toFixed(2)}</p>
-          </div>
-        </div>
+    <div className="space-y-4 sm:space-y-5 pb-8 w-full mx-auto">
+      {/* 1. Metric / Stat Cards Grid (Rule 7.2) */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <Card className="border border-slate-100 dark:border-white/5 shadow-xs rounded-xl overflow-hidden bg-white dark:bg-slate-900">
+          <CardContent className="p-3.5 flex items-center gap-3">
+            <div className="p-2.5 rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400 shrink-0">
+              <ShoppingCart className="h-5 w-5" />
+            </div>
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-slate-400 mb-0.5">Catalog Items</p>
+              <p className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">{totalAvailable}</p>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border border-slate-100 dark:border-white/5 shadow-xs rounded-xl overflow-hidden bg-white dark:bg-slate-900">
+          <CardContent className="p-3.5 flex items-center gap-3">
+            <div className="p-2.5 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 shrink-0">
+              <Clock className="h-5 w-5" />
+            </div>
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-slate-400 mb-0.5">Active Orders</p>
+              <p className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">{activeOrders}</p>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border border-slate-100 dark:border-white/5 shadow-xs rounded-xl overflow-hidden bg-white dark:bg-slate-900">
+          <CardContent className="p-3.5 flex items-center gap-3">
+            <div className="p-2.5 rounded-lg bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 shrink-0">
+              <Truck className="h-5 w-5" />
+            </div>
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-slate-400 mb-0.5">Delivered</p>
+              <p className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">{deliveredOrders}</p>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border border-slate-100 dark:border-white/5 shadow-xs rounded-xl overflow-hidden bg-white dark:bg-slate-900">
+          <CardContent className="p-3.5 flex items-center gap-3">
+            <div className="p-2.5 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 shrink-0">
+              <IndianRupee className="h-5 w-5" />
+            </div>
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-slate-400 mb-0.5">Total Store Spent</p>
+              <p className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">₹{totalSpent.toLocaleString()}</p>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
-      {/* Tabs */}
-      <div className="flex flex-nowrap overflow-x-auto no-scrollbar gap-2 p-2 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm max-w-full justify-between items-center">
-        <div className="flex gap-2">
+      {/* 2. Horizontal Navigation Tabs (Rule 7.3) */}
+      <div className="flex flex-wrap items-center justify-between gap-2.5 p-1.5 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs">
+        <div className="flex flex-nowrap overflow-x-auto no-scrollbar gap-1.5">
           <button
             onClick={() => setActiveTab("store")}
             className={cn(
-              "flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 whitespace-nowrap shrink-0",
+              "flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-medium shrink-0 whitespace-nowrap transition-all",
               activeTab === "store"
-                ? "bg-slate-100 dark:bg-slate-800 text-primary shadow-inner"
+                ? "bg-slate-100 dark:bg-slate-800 text-primary dark:text-white font-semibold shadow-inner"
                 : "text-slate-500 hover:text-slate-900 hover:bg-slate-50 dark:hover:text-white dark:hover:bg-slate-800/50"
             )}
           >
-            <ShoppingCart className="w-4 h-4" />
-            Available Products
+            <ShoppingCart className="w-3.5 h-3.5" />
+            <span>Store Products</span>
           </button>
           <button
             onClick={() => setActiveTab("orders")}
             className={cn(
-              "flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 whitespace-nowrap shrink-0",
+              "flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-medium shrink-0 whitespace-nowrap transition-all",
               activeTab === "orders"
-                ? "bg-slate-100 dark:bg-slate-800 text-primary shadow-inner"
+                ? "bg-slate-100 dark:bg-slate-800 text-primary dark:text-white font-semibold shadow-inner"
                 : "text-slate-500 hover:text-slate-900 hover:bg-slate-50 dark:hover:text-white dark:hover:bg-slate-800/50"
             )}
           >
-            <Package className="w-4 h-4" />
-            My Orders
+            <Package className="w-3.5 h-3.5" />
+            <span>My Orders</span>
+            {initialOrders.length > 0 && (
+              <span className="ml-1 text-[10px] px-1.5 py-0.2 rounded-full bg-slate-200 dark:bg-slate-700 font-bold">
+                {initialOrders.length}
+              </span>
+            )}
           </button>
           <button
             onClick={() => setActiveTab("config")}
             className={cn(
-              "flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 whitespace-nowrap shrink-0",
+              "flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-medium shrink-0 whitespace-nowrap transition-all",
               activeTab === "config"
-                ? "bg-slate-100 dark:bg-slate-800 text-primary shadow-inner"
+                ? "bg-slate-100 dark:bg-slate-800 text-primary dark:text-white font-semibold shadow-inner"
                 : "text-slate-500 hover:text-slate-900 hover:bg-slate-50 dark:hover:text-white dark:hover:bg-slate-800/50"
             )}
           >
-            <Settings className="w-4 h-4" />
-            Order Config
+            <Settings className="w-3.5 h-3.5" />
+            <span>Default Shipping Address</span>
           </button>
         </div>
-        
+
+        {/* Quick Cart Action Button */}
+        <Button 
+          onClick={() => { setCartOpen(true); setCheckoutStep("cart"); }} 
+          className="h-8 sm:h-9 rounded-lg px-3 sm:px-4 text-xs font-semibold bg-primary hover:bg-primary/90 text-primary-foreground shadow-xs flex items-center gap-2"
+        >
+          <ShoppingCart className="w-3.5 h-3.5" />
+          <span>Cart</span>
+          {cartItemsCount > 0 && (
+            <span className="bg-white text-primary dark:bg-slate-900 dark:text-white text-[10px] font-black px-1.5 py-0.2 rounded-full shadow-xs">
+              {cartItemsCount}
+            </span>
+          )}
+          {cartTotal > 0 && (
+            <span className="text-[11px] font-semibold border-l border-white/20 pl-1.5 hidden sm:inline">
+              ₹{cartTotal.toLocaleString()}
+            </span>
+          )}
+        </Button>
+      </div>
+
+      {/* 3. Filter Toolbar (Rule 7.4) */}
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
+          <div className="relative w-full sm:w-64 group">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400 pointer-events-none" />
+            <Input 
+              placeholder={activeTab === "store" ? "Search uniforms, books, bags..." : "Search orders..."} 
+              className="h-8 sm:h-9 pl-8 pr-3 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 rounded-lg text-xs placeholder:text-slate-400"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+
+          {activeTab === "store" && categories.length > 1 && (
+            <select
+              value={selectedCategory}
+              onChange={(e) => setSelectedCategory(e.target.value)}
+              className="h-8 sm:h-9 px-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg text-xs font-medium text-slate-700 dark:text-slate-300 cursor-pointer"
+            >
+              {categories.map(cat => (
+                <option key={cat} value={cat}>Category: {cat}</option>
+              ))}
+            </select>
+          )}
+        </div>
+
         {activeTab === "store" && (
-          <Button onClick={() => { setCartOpen(true); setCheckoutStep("cart"); }} className="h-10 rounded-xl px-5 font-bold shadow-md shadow-primary/20">
-            <ShoppingCart className="w-4 h-4 mr-2" />
-            Cart ({cart.length})
-          </Button>
+          <div className="text-xs text-slate-400 font-medium">
+            Showing <span className="font-bold text-slate-700 dark:text-slate-300">{filteredProducts.length}</span> items
+          </div>
         )}
       </div>
 
-      <div className="relative w-full max-w-md">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-        <Input 
-          placeholder={activeTab === "store" ? "Search for uniforms, books, bags..." : "Search your orders..."} 
-          className="pl-9 h-11 rounded-xl bg-white border-slate-200"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-        />
-      </div>
-
+      {/* ========================================================= */}
+      {/* STORE PRODUCTS TAB                                        */}
+      {/* ========================================================= */}
       {activeTab === "store" && (
-        <div className="bg-slate-50/50 dark:bg-slate-950/50 rounded-[2.5rem] border-2 border-slate-100 dark:border-slate-800/50 p-8 shadow-inner">
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+        <div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
             {filteredProducts.map(product => {
               const activeVariants = product.variants?.filter((v: any) => v.isActive) || [];
-              if (activeVariants.length === 0) return null; // Don't show products with no active variants
+              if (activeVariants.length === 0) return null;
+              
               const totalStock = activeVariants.reduce((acc: number, v: any) => acc + v.stock, 0);
+              const prices = activeVariants.map((v: any) => v.price);
+              const minPrice = Math.min(...prices);
+              const maxPrice = Math.max(...prices);
 
               return (
-                <div key={product.id} className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800/60 rounded-3xl hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between group overflow-hidden relative cursor-pointer" onClick={() => openProductModal(product)}>
-                  <div className="absolute top-4 right-4 z-10">
-                    <Badge className="rounded-lg px-3 py-1 text-[10px] font-bold tracking-wider uppercase shadow-sm bg-black/60 text-white backdrop-blur-md border-0">{product.category}</Badge>
+                <div 
+                  key={product.id} 
+                  onClick={() => openProductModal(product)}
+                  className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-xl hover:shadow-md hover:border-primary/40 transition-all duration-200 flex flex-col justify-between group overflow-hidden relative cursor-pointer"
+                >
+                  {/* Top Badges */}
+                  <div className="absolute top-2.5 left-2.5 right-2.5 z-10 flex items-center justify-between pointer-events-none">
+                    {product.category ? (
+                      <span className="rounded-md px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider bg-slate-900/80 text-white backdrop-blur-md">
+                        {product.category}
+                      </span>
+                    ) : <span />}
+
+                    <span className={cn(
+                      "rounded-md px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider backdrop-blur-md",
+                      totalStock > 10 
+                        ? "bg-emerald-500/90 text-white" 
+                        : totalStock > 0 
+                        ? "bg-amber-500/90 text-white" 
+                        : "bg-rose-500/90 text-white"
+                    )}>
+                      {totalStock > 0 ? `${totalStock} In Stock` : "Out of Stock"}
+                    </span>
                   </div>
+
                   <div>
-                    <div className="relative h-48 w-full bg-slate-50 dark:bg-slate-800/50 flex items-center justify-center overflow-hidden">
+                    {/* Image Area */}
+                    <div className="relative h-44 w-full bg-slate-50 dark:bg-slate-800/40 flex items-center justify-center overflow-hidden">
                       {product.image ? (
-                        <img src={product.image} alt={product.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                        <img 
+                          src={product.image} 
+                          alt={product.title} 
+                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" 
+                        />
                       ) : (
-                        <Package className="h-10 w-10 text-slate-300 dark:text-slate-600 transition-transform duration-700 group-hover:scale-110" />
+                        <Package className="h-10 w-10 text-slate-300 dark:text-slate-600 transition-transform duration-500 group-hover:scale-110" />
                       )}
-                      <div className="absolute inset-0 bg-gradient-to-t from-slate-900/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                     </div>
-                    <div className="p-5">
-                      <div className="flex justify-between items-start mb-2 gap-2">
-                        <h3 className="font-bold text-lg text-slate-800 dark:text-white leading-tight line-clamp-2">{product.title}</h3>
-                        <div className={cn("shrink-0 px-2.5 py-1 rounded-md text-[10px] font-black border uppercase tracking-wide", 
-                          totalStock > 10 ? "bg-emerald-50 text-emerald-600 border-emerald-200 dark:bg-emerald-500/10 dark:border-emerald-500/20" : 
-                          totalStock > 0 ? "bg-amber-50 text-amber-600 border-amber-200 dark:bg-amber-500/10 dark:border-amber-500/20" : 
-                          "bg-rose-50 text-rose-600 border-rose-200 dark:bg-rose-500/10 dark:border-rose-500/20"
-                        )}>
-                          {totalStock > 0 ? "In Stock" : "Out of Stock"}
-                        </div>
+
+                    {/* Content */}
+                    <div className="p-3.5 space-y-2">
+                      <div>
+                        <h3 className="font-bold text-xs sm:text-sm text-slate-900 dark:text-white leading-snug line-clamp-1 group-hover:text-primary transition-colors">
+                          {product.title}
+                        </h3>
+                        <p className="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-2 mt-1 leading-relaxed">
+                          {product.description || "Official study materials, uniforms, or accessories."}
+                        </p>
                       </div>
-                      <p className="text-sm text-slate-500 dark:text-slate-400 line-clamp-2">{product.description || "No description available for this item."}</p>
+
+                      {/* Price & Variant Pill */}
+                      <div className="pt-2 border-t border-slate-100 dark:border-slate-800/80 flex items-baseline justify-between">
+                        <div>
+                          <span className="text-[10px] text-slate-400 uppercase font-bold tracking-wider block">Price</span>
+                          <span className="text-sm font-bold text-slate-900 dark:text-white">
+                            {minPrice === maxPrice ? `₹${minPrice}` : `₹${minPrice} - ₹${maxPrice}`}
+                          </span>
+                        </div>
+                        <span className="text-[10px] font-semibold text-slate-400">
+                          {activeVariants.length} {activeVariants.length === 1 ? "Option" : "Options"}
+                        </span>
+                      </div>
                     </div>
                   </div>
-                  <div className="p-5 pt-0 mt-auto">
-                    <Button className="w-full h-11 rounded-xl font-bold bg-black text-white hover:bg-black/80 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-200">Select Variant</Button>
+
+                  {/* Card Button */}
+                  <div className="p-3.5 pt-0">
+                    <Button 
+                      className="w-full h-8 rounded-lg text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 hover:bg-primary hover:text-white transition-all"
+                    >
+                      <span>Select & Add</span>
+                      <ArrowRight className="w-3 h-3 ml-1" />
+                    </Button>
                   </div>
                 </div>
               );
             })}
+
             {filteredProducts.length === 0 && (
-              <div className="col-span-full py-16 text-center text-slate-500 font-medium bg-white dark:bg-slate-900 rounded-3xl border-2 border-dashed border-slate-200 dark:border-slate-800">
-                No products found matching your search.
+              <div className="col-span-full py-16 text-center text-slate-500 font-medium bg-white dark:bg-slate-900 rounded-xl border border-dashed border-slate-200 dark:border-slate-800">
+                <Package className="h-8 w-8 mx-auto mb-2 text-slate-300 dark:text-slate-600" />
+                <p className="text-xs font-bold text-slate-700 dark:text-slate-300">No products found</p>
+                <p className="text-[11px] text-slate-400 mt-0.5">Try searching with different keywords or reset the category filter.</p>
               </div>
             )}
           </div>
         </div>
       )}
 
+      {/* ========================================================= */}
+      {/* MY ORDERS TAB                                             */}
+      {/* ========================================================= */}
       {activeTab === "orders" && (
-        <div className="bg-slate-50/50 dark:bg-slate-950/50 rounded-[2.5rem] border-2 border-slate-100 dark:border-slate-800/50 p-8 shadow-inner">
-          <div className="bg-white dark:bg-slate-900 border-2 border-slate-100 dark:border-slate-800/60 rounded-[2.5rem] overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse min-w-[800px]">
-                <thead>
-                  <tr className="bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 text-xs uppercase tracking-wider font-bold">
-                    <th className="p-5 pl-8 w-16">Sl.</th>
-                    <th className="p-5">Order ID & Date</th>
-                    <th className="p-5">Items</th>
-                    <th className="p-5">Amount</th>
-                    <th className="p-5">Payment</th>
-                    <th className="p-5 pr-8 text-right">Status</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
-                  {filteredOrders.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).map((order, index) => (
-                    <tr key={order.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors">
-                      <td className="p-5 pl-8 font-bold text-slate-500 dark:text-slate-400">
+        <div className="rounded-xl border border-slate-200/80 dark:border-slate-800 overflow-hidden bg-white dark:bg-slate-900 shadow-xs">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse min-w-[700px]">
+              <thead>
+                <tr className="bg-slate-50/70 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 text-[10px] uppercase tracking-wider font-bold border-b border-slate-100 dark:border-slate-800 h-9">
+                  <th className="px-3.5 py-2 w-12 text-slate-400">#</th>
+                  <th className="px-3.5 py-2">Order ID & Date</th>
+                  <th className="px-3.5 py-2">Items Summary</th>
+                  <th className="px-3.5 py-2">Amount</th>
+                  <th className="px-3.5 py-2">Payment</th>
+                  <th className="px-3.5 py-2">Status</th>
+                  <th className="px-3.5 py-2 pr-4 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-50 dark:divide-slate-800/50">
+                {filteredOrders.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).map((order, index) => {
+                  const itemsCount = order.items?.reduce((sum: number, i: any) => sum + i.quantity, 0) || 0;
+                  return (
+                    <tr key={order.id} className="hover:bg-slate-50/60 dark:hover:bg-slate-800/30 transition-colors group">
+                      <td className="px-3.5 py-2.5 text-xs text-slate-400 font-medium">
                         {(currentPage - 1) * itemsPerPage + index + 1}
                       </td>
-                      <td className="p-5">
-                        <div className="font-mono text-xs font-bold text-slate-700 dark:text-slate-300">#{order.id.slice(-6).toUpperCase()}</div>
-                        <div className="text-[10px] font-medium text-slate-400 dark:text-slate-500 mt-1">{new Date(order.createdAt).toLocaleDateString()}</div>
-                      </td>
-                      <td className="p-5">
-                        <div className="font-bold text-slate-800 dark:text-slate-200">{order.items?.length || 0} Items</div>
-                        <div className="text-xs font-medium text-slate-500 dark:text-slate-400 mt-1 line-clamp-2">
-                          {order.items?.map((item: any) => `${item.productVariant?.product?.title} (${item.productVariant?.name}) x${item.quantity}`).join(', ')}
+                      <td className="px-3.5 py-2.5">
+                        <div className="font-mono text-xs font-bold text-slate-900 dark:text-white">
+                          #{order.id.slice(-6).toUpperCase()}
+                        </div>
+                        <div className="text-[10px] font-medium text-slate-400 mt-0.5">
+                          {new Date(order.createdAt).toLocaleDateString()}
                         </div>
                       </td>
-                      <td className="p-5 font-black text-slate-800 dark:text-slate-200 flex items-center mt-2.5">
-                        <IndianRupee className="h-3 w-3 mr-0.5" />{order.totalAmount}
+                      <td className="px-3.5 py-2.5">
+                        <div className="font-semibold text-xs text-slate-900 dark:text-white">
+                          {itemsCount} {itemsCount === 1 ? "Item" : "Items"}
+                        </div>
+                        <div className="text-[11px] font-normal text-slate-500 mt-0.5 line-clamp-1 max-w-xs">
+                          {order.items?.map((item: any) => `${item.productVariant?.product?.title} (${item.productVariant?.name}) ×${item.quantity}`).join(', ')}
+                        </div>
                       </td>
-                      <td className="p-5">
+                      <td className="px-3.5 py-2.5">
+                        <span className="font-bold text-xs text-slate-900 dark:text-white flex items-center">
+                          ₹{Number(order.totalAmount || 0).toLocaleString()}
+                        </span>
+                      </td>
+                      <td className="px-3.5 py-2.5">
                         {order.paymentStatus === "PAID" ? (
-                          <span className="inline-flex items-center gap-1 text-[10px] font-bold text-green-700 bg-green-100 dark:bg-green-500/10 dark:text-green-500 px-2 py-1 rounded-md uppercase">
-                            <CheckCircle2 className="h-3 w-3" /> Paid
+                          <span className="inline-flex items-center gap-1 text-[9px] font-bold text-emerald-600 bg-emerald-500/10 px-1.5 py-0.5 rounded uppercase">
+                            <CheckCircle2 className="h-2.5 w-2.5" /> Paid
                           </span>
                         ) : (
-                          <span className="inline-flex items-center gap-1 text-[10px] font-bold text-orange-700 bg-orange-100 dark:bg-orange-500/10 dark:text-orange-500 px-2 py-1 rounded-md uppercase">
-                            <Clock className="h-3 w-3" /> Unpaid
+                          <span className="inline-flex items-center gap-1 text-[9px] font-bold text-amber-600 bg-amber-500/10 px-1.5 py-0.5 rounded uppercase">
+                            <Clock className="h-2.5 w-2.5" /> Unverified
                           </span>
                         )}
                       </td>
-                      <td className="p-5 pr-8 text-right">
+                      <td className="px-3.5 py-2.5">
                         <Badge className={cn(
-                          "font-bold text-[10px] uppercase rounded-md px-2 py-0.5 shadow-none",
-                          order.status === "PENDING" ? "bg-orange-100 text-orange-700 dark:bg-orange-500/10 dark:text-orange-500" :
-                          order.status === "APPROVED" ? "bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-500" :
-                          order.status === "SHIPPED" ? "bg-purple-100 text-purple-700 dark:bg-purple-500/10 dark:text-purple-500" :
-                          order.status === "DELIVERED" ? "bg-green-100 text-green-700 dark:bg-green-500/10 dark:text-green-500" :
+                          "font-bold text-[9px] uppercase rounded px-1.5 py-0.5 shadow-none border-none",
+                          order.status === "PENDING" ? "bg-amber-500/10 text-amber-600" :
+                          order.status === "APPROVED" ? "bg-blue-500/10 text-blue-600" :
+                          order.status === "SHIPPED" ? "bg-purple-500/10 text-purple-600" :
+                          order.status === "DELIVERED" ? "bg-emerald-500/10 text-emerald-600" :
                           "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300"
                         )}>
                           {order.status}
                         </Badge>
                       </td>
+                      <td className="px-3.5 py-2.5 pr-4 text-right">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          title="View Order Details"
+                          onClick={() => openOrderDetails(order)}
+                          className="h-7 w-7 rounded-lg text-slate-500 hover:text-primary hover:bg-primary/10 transition-colors"
+                        >
+                          <Eye className="w-3.5 h-3.5" />
+                        </Button>
+                      </td>
                     </tr>
-                  ))}
-                  {filteredOrders.length === 0 && (
-                    <tr>
-                      <td colSpan={6} className="p-16 text-center text-slate-500 dark:text-slate-400 font-medium">You haven't placed any orders yet.</td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-            
-            {/* Pagination Controls */}
-            {filteredOrders.length > 0 && (
-              <div className="p-5 border-t border-slate-100 dark:border-slate-800/60 bg-slate-50 dark:bg-slate-900 flex items-center justify-between">
-                <div className="text-sm font-medium text-slate-500 dark:text-slate-400">
-                  Showing <span className="font-bold text-slate-800 dark:text-slate-200">{(currentPage - 1) * itemsPerPage + 1}</span> to <span className="font-bold text-slate-800 dark:text-slate-200">{Math.min(currentPage * itemsPerPage, filteredOrders.length)}</span> of <span className="font-bold text-slate-800 dark:text-slate-200">{filteredOrders.length}</span> orders
-                </div>
-                <div className="flex gap-2">
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    disabled={currentPage === 1}
-                    onClick={() => setCurrentPage((prev: any) => Math.max(1, prev - 1))}
-                    className="rounded-lg font-bold"
-                  >
-                    Previous
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    disabled={currentPage >= Math.ceil(filteredOrders.length / itemsPerPage)}
-                    onClick={() => setCurrentPage((prev: any) => prev + 1)}
-                    className="rounded-lg font-bold"
-                  >
-                    Next
-                  </Button>
-                </div>
-              </div>
-            )}
+                  );
+                })}
+                {filteredOrders.length === 0 && (
+                  <tr>
+                    <td colSpan={7} className="py-12 text-center text-xs text-slate-500 font-medium">
+                      You haven't placed any orders yet. Browse the store catalog to place your first order.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
           </div>
+          
+          {/* Pagination Controls (Rule 7.6) */}
+          {filteredOrders.length > itemsPerPage && (
+            <div className="flex items-center justify-between px-4 py-2.5 border-t border-slate-100 dark:border-slate-800/50 bg-slate-50/50 dark:bg-slate-800/20">
+              <div className="text-xs font-medium text-slate-500">
+                Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, filteredOrders.length)} of {filteredOrders.length}
+              </div>
+              <div className="flex gap-1.5">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  disabled={currentPage === 1}
+                  onClick={() => setCurrentPage((prev: any) => Math.max(1, prev - 1))}
+                  className="h-7 px-2 rounded-md border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-xs text-xs font-medium"
+                >
+                  Previous
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  disabled={currentPage >= Math.ceil(filteredOrders.length / itemsPerPage)}
+                  onClick={() => setCurrentPage((prev: any) => prev + 1)}
+                  className="h-7 px-2 rounded-md border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-xs text-xs font-medium"
+                >
+                  Next
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
+      {/* ========================================================= */}
+      {/* DEFAULT SHIPPING CONFIG TAB                               */}
+      {/* ========================================================= */}
       {activeTab === "config" && (
-        <div className="bg-slate-50/50 dark:bg-slate-950/50 rounded-[2.5rem] border-2 border-slate-100 dark:border-slate-800/50 p-8 shadow-inner max-w-2xl">
-          <h2 className="text-2xl font-bold mb-6 text-slate-900">Order Configuration</h2>
-          <form onSubmit={handleSaveAddress} className="bg-white dark:bg-slate-900 border border-slate-200 rounded-2xl p-6 shadow-sm space-y-6">
-            <div className="space-y-2">
-              <Label className="text-sm font-bold text-slate-700">Default Shipping Address</Label>
-              <p className="text-xs text-slate-500 mb-4">This address will be auto-filled when you place a new product order.</p>
-              {renderAddressForm(savedAddressObj, setSavedAddressObj)}
+        <div className="rounded-xl border border-slate-200/80 dark:border-slate-800 p-4 sm:p-5 bg-white dark:bg-slate-900 shadow-xs max-w-2xl space-y-4">
+          <div>
+            <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white">
+              Default Shipping Address
+            </h3>
+            <p className="text-xs text-slate-500">
+              Save your franchise delivery address so it automatically pre-fills during store checkout.
+            </p>
+          </div>
+
+          <form onSubmit={handleSaveAddress} className="space-y-4 pt-1">
+            {renderAddressForm(savedAddressObj, setSavedAddressObj)}
+            <div className="pt-2">
+              <Button 
+                type="submit" 
+                disabled={isSubmitting} 
+                className="h-8 sm:h-9 px-4 rounded-lg font-semibold text-xs bg-primary hover:bg-primary/90 text-primary-foreground shadow-xs"
+              >
+                {isSubmitting && <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />}
+                <span>Save Default Shipping Address</span>
+              </Button>
             </div>
-            <Button type="submit" disabled={isSubmitting} className="w-full h-12 rounded-xl font-bold text-base shadow-md shadow-primary/20">
-              {isSubmitting ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : "Save Default Address"}
-            </Button>
           </form>
         </div>
       )}
 
-      {/* Product Selection Modal */}
+      {/* ========================================================= */}
+      {/* MODAL 1: PRODUCT VARIANT SELECTION (Rule 7.7)             */}
+      {/* ========================================================= */}
       <Dialog open={!!selectedProduct} onOpenChange={(open) => !open && setSelectedProduct(null)}>
-        <DialogContent className="sm:max-w-md rounded-[2.5rem] p-0 overflow-hidden">
+        <DialogContent className="max-w-md rounded-2xl p-0 overflow-hidden border border-slate-200 dark:border-slate-800 shadow-xl bg-white dark:bg-slate-900">
           {selectedProduct && (
             <>
-              <div className="relative h-48 w-full bg-slate-100 flex items-center justify-center">
+              {/* Product Top Header */}
+              <div className="relative h-40 w-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center overflow-hidden">
                 {selectedProduct.image ? (
                   <img src={selectedProduct.image} alt={selectedProduct.title} className="w-full h-full object-cover" />
                 ) : (
-                  <Package className="h-12 w-12 text-slate-300" />
+                  <Package className="h-10 w-10 text-slate-300 dark:text-slate-600" />
+                )}
+                {selectedProduct.category && (
+                  <span className="absolute top-2.5 left-2.5 text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-black/70 text-white backdrop-blur-md">
+                    {selectedProduct.category}
+                  </span>
                 )}
               </div>
-              <div className="p-6 space-y-6 bg-white">
+
+              <div className="p-4 sm:p-5 space-y-4">
                 <div>
-                  <h3 className="font-bold text-2xl text-slate-900 leading-tight mb-2">{selectedProduct.title}</h3>
-                  <p className="text-sm text-slate-500 line-clamp-3">{selectedProduct.description || "No description available."}</p>
+                  <h3 className="font-bold text-sm sm:text-base text-slate-900 dark:text-white leading-snug">
+                    {selectedProduct.title}
+                  </h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 line-clamp-2">
+                    {selectedProduct.description || "Select options and quantity to add to your order."}
+                  </p>
                 </div>
-                <div className="space-y-3 pt-4 border-t border-slate-100 max-h-[40vh] overflow-y-auto custom-scrollbar">
-                  {selectedProduct.variants?.filter((v:any) => v.isActive).map((variant: any) => {
+
+                {/* Variant List */}
+                <div className="space-y-2 max-h-[35vh] overflow-y-auto pr-1">
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
+                    Available Variants / Sizes
+                  </span>
+                  {selectedProduct.variants?.filter((v: any) => v.isActive).map((variant: any) => {
                     const currentQty = modalQuantities[variant.id] || 0;
                     return (
-                      <div key={variant.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-100">
+                      <div 
+                        key={variant.id} 
+                        className="flex items-center justify-between p-2.5 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700/60"
+                      >
                         <div>
-                          <p className="font-bold text-sm text-slate-900">{variant.name}</p>
-                          <p className="text-xs text-slate-500 mt-0.5">₹{variant.price} • {variant.stock > 0 ? <span className="text-emerald-600 font-semibold">{variant.stock} in stock</span> : <span className="text-red-500 font-semibold">Out of Stock</span>}</p>
+                          <p className="font-semibold text-xs text-slate-900 dark:text-white">{variant.name}</p>
+                          <p className="text-[10px] text-slate-500 mt-0.5">
+                            ₹{variant.price} • {variant.stock > 0 ? (
+                              <span className="text-emerald-600 font-semibold">{variant.stock} in stock</span>
+                            ) : (
+                              <span className="text-red-500 font-semibold">Out of Stock</span>
+                            )}
+                          </p>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <Button type="button" variant="outline" disabled={variant.stock <= 0 || currentQty <= 0} className="h-9 w-9 rounded-lg p-0 shrink-0" onClick={() => setModalQuantities(prev => ({...prev, [variant.id]: Math.max(0, currentQty - 1)}))}>
-                            <Minus className="h-4 w-4" />
+                        <div className="flex items-center gap-1.5">
+                          <Button 
+                            type="button" 
+                            variant="outline" 
+                            disabled={variant.stock <= 0 || currentQty <= 0} 
+                            className="h-7 w-7 rounded-md p-0 shrink-0" 
+                            onClick={() => setModalQuantities(prev => ({ ...prev, [variant.id]: Math.max(0, currentQty - 1) }))}
+                          >
+                            <Minus className="h-3 w-3" />
                           </Button>
                           <Input 
                             type="number" 
@@ -541,24 +817,32 @@ export default function FranchiseProductsClient({
                               let val = parseInt(e.target.value) || 0;
                               if (val > variant.stock) val = variant.stock;
                               if (val < 0) val = 0;
-                              setModalQuantities(prev => ({...prev, [variant.id]: val}));
+                              setModalQuantities(prev => ({ ...prev, [variant.id]: val }));
                             }}
-                            className="h-9 w-14 text-center font-bold rounded-lg px-1 [&::-webkit-inner-spin-button]:appearance-none [appearance:textfield]"
+                            className="h-7 w-12 text-center text-xs font-semibold rounded-md px-1 [&::-webkit-inner-spin-button]:appearance-none [appearance:textfield]"
                           />
-                          <Button type="button" variant="outline" disabled={variant.stock <= 0 || currentQty >= variant.stock} className="h-9 w-9 rounded-lg p-0 shrink-0" onClick={() => setModalQuantities(prev => ({...prev, [variant.id]: Math.min(variant.stock, currentQty + 1)}))}>
-                            <Plus className="h-4 w-4" />
+                          <Button 
+                            type="button" 
+                            variant="outline" 
+                            disabled={variant.stock <= 0 || currentQty >= variant.stock} 
+                            className="h-7 w-7 rounded-md p-0 shrink-0" 
+                            onClick={() => setModalQuantities(prev => ({ ...prev, [variant.id]: Math.min(variant.stock, currentQty + 1) }))}
+                          >
+                            <Plus className="h-3 w-3" />
                           </Button>
                         </div>
                       </div>
                     );
                   })}
                 </div>
+
                 <Button 
                   onClick={handleAddToCart}
                   disabled={Object.values(modalQuantities).every(qty => qty === 0)}
-                  className="w-full h-12 rounded-xl font-bold text-base shadow-md shadow-primary/20 bg-black text-white hover:bg-black/80"
+                  className="w-full h-8 sm:h-9 rounded-lg font-semibold text-xs bg-primary hover:bg-primary/90 text-primary-foreground shadow-xs flex items-center justify-center gap-1.5"
                 >
-                  <ShoppingCart className="h-5 w-5 mr-2" /> Add to Cart
+                  <ShoppingCart className="h-3.5 w-3.5" />
+                  <span>Add Selected Items to Cart</span>
                 </Button>
               </div>
             </>
@@ -566,81 +850,94 @@ export default function FranchiseProductsClient({
         </DialogContent>
       </Dialog>
 
-      {/* Cart & Checkout Modal */}
+      {/* ========================================================= */}
+      {/* MODAL 2: CART & CHECKOUT (Rule 7.7)                       */}
+      {/* ========================================================= */}
       <Dialog open={cartOpen} onOpenChange={setCartOpen}>
-        <DialogContent className="sm:max-w-xl rounded-[2.5rem] p-0 overflow-hidden">
-          <DialogHeader className="p-6 pb-4 border-b dark:border-slate-800 bg-slate-50 dark:bg-slate-900">
-            <DialogTitle className="text-xl font-bold dark:text-white flex items-center gap-2">
-              {checkoutStep === "cart" && <><ShoppingCart className="h-5 w-5 text-primary" /> Shopping Cart</>}
-              {checkoutStep === "shipping" && <><MapPin className="h-5 w-5 text-primary" /> Shipping Address</>}
-              {checkoutStep === "payment" && <><QrCode className="h-5 w-5 text-primary" /> Payment & Verification</>}
-            </DialogTitle>
+        <DialogContent className="max-w-lg rounded-2xl p-0 overflow-hidden border border-slate-200 dark:border-slate-800 shadow-xl bg-white dark:bg-slate-900">
+          <DialogHeader className="p-3.5 sm:p-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40">
+            <div className="flex items-center justify-between">
+              <DialogTitle className="text-sm sm:text-base font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                {checkoutStep === "cart" && <><ShoppingCart className="h-4 w-4 text-primary" /> Review Shopping Cart</>}
+                {checkoutStep === "shipping" && <><MapPin className="h-4 w-4 text-primary" /> Delivery Address</>}
+                {checkoutStep === "payment" && <><QrCode className="h-4 w-4 text-primary" /> Payment & Verification</>}
+              </DialogTitle>
+              {/* Step indicator */}
+              <div className="flex items-center gap-1 text-[10px] font-bold text-slate-400">
+                <span className={cn(checkoutStep === "cart" && "text-primary font-black")}>1. Cart</span>
+                <span>→</span>
+                <span className={cn(checkoutStep === "shipping" && "text-primary font-black")}>2. Shipping</span>
+                <span>→</span>
+                <span className={cn(checkoutStep === "payment" && "text-primary font-black")}>3. Pay</span>
+              </div>
+            </div>
           </DialogHeader>
-          <div className="p-6 bg-white dark:bg-slate-950 max-h-[75vh] overflow-y-auto custom-scrollbar">
+
+          <div className="p-4 sm:p-5 max-h-[70vh] overflow-y-auto">
             {checkoutStep === "cart" && (
               <>
                 {cart.length === 0 ? (
-                  <div className="text-center py-12 text-slate-500 font-medium">
-                    <Package className="h-12 w-12 mx-auto mb-3 opacity-20" />
-                    Your cart is empty.
+                  <div className="text-center py-10 text-xs text-slate-500 font-medium space-y-2">
+                    <Package className="h-8 w-8 mx-auto text-slate-300 dark:text-slate-600" />
+                    <p className="font-bold text-slate-700 dark:text-slate-300">Your cart is empty</p>
+                    <p className="text-[11px] text-slate-400">Add products from the catalog to start an order.</p>
                   </div>
                 ) : (
-                  <div className="space-y-4">
+                  <div className="space-y-3">
                     {cart.map((item, idx) => (
-                      <div key={idx} className="flex flex-col bg-slate-50 dark:bg-slate-900 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 gap-3">
-                        <div className="flex justify-between items-start gap-4">
+                      <div key={idx} className="flex flex-col bg-slate-50 dark:bg-slate-800/40 p-3 rounded-xl border border-slate-100 dark:border-slate-800 gap-2">
+                        <div className="flex justify-between items-start gap-3">
                           <div>
-                            <span className="font-bold text-sm text-slate-900 dark:text-white line-clamp-2 leading-tight">{item.product.title}</span>
-                            <span className="block text-xs text-slate-500 dark:text-slate-400 mt-1">Variant: {item.variant.name}</span>
+                            <span className="font-semibold text-xs text-slate-900 dark:text-white line-clamp-1">{item.product.title}</span>
+                            <span className="block text-[10px] text-slate-500 mt-0.5">Option: {item.variant.name}</span>
                           </div>
-                          <span className="font-black text-sm text-slate-900 dark:text-white flex items-center shrink-0">
-                            <IndianRupee className="h-3 w-3 mr-0.5" />{item.quantity * item.variant.price}
+                          <span className="font-bold text-xs text-slate-900 dark:text-white flex items-center shrink-0">
+                            ₹{(item.quantity * item.variant.price).toLocaleString()}
                           </span>
                         </div>
-                        <div className="flex justify-between items-center border-t border-slate-200/60 dark:border-slate-700/60 pt-3 mt-1">
-                          <span className="text-xs font-medium text-slate-600 dark:text-slate-300">₹{item.variant.price} x {item.quantity}</span>
-                          <div className="flex items-center gap-2">
-                            <div className="flex items-center gap-1 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-lg p-0.5 shadow-sm">
-                              <Button type="button" variant="ghost" className="h-7 w-7 rounded-md p-0 hover:bg-slate-100 dark:hover:bg-slate-800" onClick={() => handleUpdateCartQuantity(item.variantId, item.quantity - 1)}>
+                        <div className="flex justify-between items-center border-t border-slate-200/60 dark:border-slate-800 pt-2">
+                          <span className="text-[11px] font-medium text-slate-500">₹{item.variant.price} × {item.quantity}</span>
+                          <div className="flex items-center gap-1.5">
+                            <div className="flex items-center gap-0.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg p-0.5 shadow-xs">
+                              <Button type="button" variant="ghost" className="h-6 w-6 rounded p-0 hover:bg-slate-100 dark:hover:bg-slate-800" onClick={() => handleUpdateCartQuantity(item.variantId, item.quantity - 1)}>
                                 <Minus className="h-3 w-3" />
                               </Button>
-                              <span className="w-6 text-center font-bold text-xs">{item.quantity}</span>
-                              <Button type="button" variant="ghost" disabled={item.quantity >= item.variant.stock} className="h-7 w-7 rounded-md p-0 hover:bg-slate-100 dark:hover:bg-slate-800" onClick={() => handleUpdateCartQuantity(item.variantId, item.quantity + 1)}>
+                              <span className="w-5 text-center font-bold text-xs">{item.quantity}</span>
+                              <Button type="button" variant="ghost" disabled={item.quantity >= item.variant.stock} className="h-6 w-6 rounded p-0 hover:bg-slate-100 dark:hover:bg-slate-800" onClick={() => handleUpdateCartQuantity(item.variantId, item.quantity + 1)}>
                                 <Plus className="h-3 w-3" />
                               </Button>
                             </div>
-                            <Button type="button" variant="ghost" size="sm" onClick={() => handleRemoveFromCart(item.variantId)} className="text-red-500 hover:bg-red-50 hover:text-red-600 rounded-lg h-8 w-8 p-0 ml-1">
-                              <Trash2 className="h-4 w-4" />
+                            <Button type="button" variant="ghost" size="sm" onClick={() => handleRemoveFromCart(item.variantId)} className="text-red-500 hover:bg-red-50 hover:text-red-600 rounded-lg h-7 w-7 p-0 ml-0.5">
+                              <Trash2 className="h-3.5 w-3.5" />
                             </Button>
                           </div>
                         </div>
                       </div>
                     ))}
 
-                    <div className="sticky -bottom-6 -mx-6 bg-white/95 dark:bg-slate-950/95 backdrop-blur-sm px-6 pb-6 pt-4 border-t border-slate-100 dark:border-slate-800 z-10 shadow-[0_-15px_30px_-15px_rgba(0,0,0,0.1)] dark:shadow-[0_-15px_30px_-15px_rgba(0,0,0,0.5)]">
-                      <div className="space-y-2 mb-4">
-                        <div className="flex justify-between text-sm font-medium text-slate-500">
-                          <span>Subtotal</span>
-                          <span className="flex items-center"><IndianRupee className="h-3 w-3 mr-0.5" />{cartTotal}</span>
-                        </div>
-                        <div className="flex justify-between text-sm font-medium text-slate-500">
-                          <span>Shipping</span>
-                          <span className="flex items-center"><IndianRupee className="h-3 w-3 mr-0.5" />{shippingCost}</span>
-                        </div>
-                        <div className="flex justify-between text-lg font-black text-slate-900 dark:text-white pt-2 border-t border-slate-100 dark:border-slate-800">
-                          <span>Total Amount</span>
-                          <span className="flex items-center text-primary"><IndianRupee className="h-4 w-4 mr-0.5" />{finalTotal}</span>
-                        </div>
+                    {/* Price Summary */}
+                    <div className="space-y-1.5 pt-3 border-t border-slate-100 dark:border-slate-800 text-xs">
+                      <div className="flex justify-between text-slate-500">
+                        <span>Items Subtotal</span>
+                        <span>₹{cartTotal.toLocaleString()}</span>
                       </div>
+                      <div className="flex justify-between text-slate-500">
+                        <span>Standard Shipping</span>
+                        <span>₹{shippingCost.toLocaleString()}</span>
+                      </div>
+                      <div className="flex justify-between text-sm font-bold text-slate-900 dark:text-white pt-1.5 border-t border-slate-100 dark:border-slate-800">
+                        <span>Total Payable</span>
+                        <span className="text-primary font-black">₹{finalTotal.toLocaleString()}</span>
+                      </div>
+                    </div>
 
-                      <div className="flex gap-3">
-                        <Button variant="outline" onClick={() => setCartOpen(false)} className="flex-1 h-11 rounded-xl font-bold text-sm border-slate-200 bg-white dark:bg-slate-900">
-                          Add More Items
-                        </Button>
-                        <Button onClick={() => setCheckoutStep("shipping")} className="flex-1 h-11 rounded-xl font-bold text-sm shadow-md shadow-primary/20 bg-black text-white hover:bg-black/80 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-200">
-                          Checkout
-                        </Button>
-                      </div>
+                    <div className="flex gap-2 pt-2">
+                      <Button variant="outline" onClick={() => setCartOpen(false)} className="flex-1 h-8 sm:h-9 rounded-lg text-xs font-semibold">
+                        Add More Items
+                      </Button>
+                      <Button onClick={() => setCheckoutStep("shipping")} className="flex-1 h-8 sm:h-9 rounded-lg font-semibold text-xs bg-primary hover:bg-primary/90 text-primary-foreground shadow-xs">
+                        Proceed to Shipping
+                      </Button>
                     </div>
                   </div>
                 )}
@@ -648,64 +945,211 @@ export default function FranchiseProductsClient({
             )}
 
             {checkoutStep === "shipping" && (
-              <div className="space-y-6">
-                <div className="space-y-2">
-                  <Label className="text-sm font-bold text-slate-700">Delivery Address</Label>
-                  <p className="text-xs text-slate-500 mb-4">Please provide a complete address for smooth delivery.</p>
+              <div className="space-y-4">
+                <div className="space-y-1">
+                  <p className="text-xs text-slate-500 mb-2">Confirm the delivery address for this shipment.</p>
                   {renderAddressForm(orderAddressObj, setOrderAddressObj)}
                 </div>
-                <div className="flex gap-3">
-                  <Button variant="outline" onClick={() => setCheckoutStep("cart")} className="flex-1 h-11 rounded-xl font-bold text-sm">Back</Button>
-                  <Button onClick={() => setCheckoutStep("payment")} disabled={!orderAddressObj.phone || !orderAddressObj.vill || !orderAddressObj.pin} className="flex-1 h-11 rounded-xl font-bold text-sm shadow-md shadow-primary/20">Continue to Payment</Button>
+                <div className="flex gap-2 pt-2">
+                  <Button variant="outline" onClick={() => setCheckoutStep("cart")} className="flex-1 h-8 sm:h-9 rounded-lg text-xs font-semibold">
+                    Back to Cart
+                  </Button>
+                  <Button 
+                    onClick={() => setCheckoutStep("payment")} 
+                    disabled={!orderAddressObj.phone || !orderAddressObj.vill || !orderAddressObj.pin} 
+                    className="flex-1 h-8 sm:h-9 rounded-lg font-semibold text-xs bg-primary hover:bg-primary/90 text-primary-foreground shadow-xs"
+                  >
+                    Proceed to Payment
+                  </Button>
                 </div>
               </div>
             )}
 
             {checkoutStep === "payment" && (
-              <div className="space-y-6">
-                <div className="bg-blue-50 border border-blue-100 rounded-2xl p-4 text-center">
-                  <p className="text-sm font-bold text-blue-900 mb-1">Total Amount Payable</p>
-                  <p className="text-3xl font-black text-blue-600 flex items-center justify-center"><IndianRupee className="h-6 w-6 mr-1" />{finalTotal}</p>
+              <div className="space-y-4">
+                <div className="bg-primary/10 border border-primary/20 rounded-xl p-3 text-center">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-primary mb-0.5">Total Amount Payable</p>
+                  <p className="text-xl font-bold text-primary flex items-center justify-center">
+                    ₹{finalTotal.toLocaleString()}
+                  </p>
                 </div>
 
                 {initialConfig?.paymentQrCode ? (
-                  <div className="flex flex-col items-center p-4 border border-slate-200 rounded-2xl bg-slate-50">
-                    <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Scan to Pay</p>
-                    <img src={initialConfig.paymentQrCode} alt="Payment QR Code" className="w-48 h-48 rounded-xl object-contain bg-white p-2 shadow-sm" />
+                  <div className="flex flex-col items-center p-3 border border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50 dark:bg-slate-800/40">
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Headquarters Payment QR</p>
+                    <img src={initialConfig.paymentQrCode} alt="Payment QR Code" className="w-36 h-36 rounded-lg object-contain bg-white p-1.5 shadow-xs border border-slate-200" />
                   </div>
                 ) : (
-                  <div className="p-4 border border-amber-200 rounded-2xl bg-amber-50 text-amber-800 text-sm font-medium text-center">
-                    No QR code available. Please use the bank details below.
+                  <div className="p-3 border border-amber-500/20 rounded-xl bg-amber-500/10 text-amber-600 text-xs font-medium text-center">
+                    Scan code not configured. Please use direct bank transfer details below.
                   </div>
                 )}
 
                 {initialConfig?.paymentDetails && (
-                  <div className="p-4 border border-slate-200 rounded-2xl bg-white space-y-2">
-                    <Label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Bank / UPI Details</Label>
-                    <p className="text-sm font-medium text-slate-700 whitespace-pre-wrap">{initialConfig.paymentDetails}</p>
+                  <div className="p-3 border border-slate-200 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900 space-y-1">
+                    <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Bank & Transfer Details</Label>
+                    <p className="text-xs font-medium text-slate-700 dark:text-slate-300 whitespace-pre-wrap">{initialConfig.paymentDetails}</p>
                   </div>
                 )}
 
-                <div className="space-y-3 pt-2 border-t border-slate-100">
-                  <Label className="text-sm font-bold text-slate-700">Upload Payment Screenshot <span className="text-red-500">*</span></Label>
+                <div className="space-y-1.5 pt-1 border-t border-slate-100 dark:border-slate-800">
+                  <Label className="text-xs font-semibold">Upload Payment Receipt Proof <span className="text-red-500">*</span></Label>
                   <ImageUpload
                     value={paymentProof}
                     onChange={(url) => setPaymentProof(url)}
                     folder="RGYCSP/PaymentProofs"
                     label="Upload Screenshot"
                   />
-                  <p className="text-xs text-slate-500">Your order will be marked as paid and processed once the admin manually verifies this screenshot.</p>
+                  <p className="text-[10px] text-slate-400">Headquarters will verify payment before dispatching items.</p>
                 </div>
 
-                <div className="flex gap-3 pt-4">
-                  <Button variant="outline" onClick={() => setCheckoutStep("shipping")} disabled={isSubmitting} className="flex-1 h-11 rounded-xl font-bold text-sm">Back</Button>
-                  <Button onClick={handleCheckout} disabled={isSubmitting || !paymentProof} className="flex-1 h-11 rounded-xl font-bold text-sm shadow-md shadow-primary/20 bg-green-600 hover:bg-green-700 text-white">
-                    {isSubmitting ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : <CheckCircle2 className="h-5 w-5 mr-2" />}
-                    Place Order
+                <div className="flex gap-2 pt-2">
+                  <Button variant="outline" onClick={() => setCheckoutStep("shipping")} disabled={isSubmitting} className="flex-1 h-8 sm:h-9 rounded-lg text-xs font-semibold">
+                    Back
+                  </Button>
+                  <Button 
+                    onClick={handleCheckout} 
+                    disabled={isSubmitting || !paymentProof} 
+                    className="flex-1 h-8 sm:h-9 rounded-lg font-semibold text-xs bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs"
+                  >
+                    {isSubmitting ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" /> : <CheckCircle2 className="h-3.5 w-3.5 mr-1.5" />}
+                    Confirm & Place Order
                   </Button>
                 </div>
               </div>
             )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* ========================================================= */}
+      {/* MODAL 3: ORDER DETAILS MODAL (Rule 7.7)                   */}
+      {/* ========================================================= */}
+      <Dialog open={orderDetailsOpen} onOpenChange={setOrderDetailsOpen}>
+        <DialogContent className="max-w-lg rounded-2xl p-4 sm:p-5 border border-slate-200 dark:border-slate-800 shadow-xl bg-white dark:bg-slate-900">
+          <DialogHeader className="space-y-1 pb-3 border-b border-slate-100 dark:border-slate-800">
+            <div className="flex items-center justify-between">
+              <DialogTitle className="text-sm sm:text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                <span>Order #{selectedOrder?.id.slice(-6).toUpperCase()}</span>
+                <Badge className={cn(
+                  "font-bold text-[9px] uppercase rounded px-1.5 py-0.5 border-none",
+                  selectedOrder?.status === "PENDING" ? "bg-amber-500/10 text-amber-600" :
+                  selectedOrder?.status === "APPROVED" ? "bg-blue-500/10 text-blue-600" :
+                  selectedOrder?.status === "SHIPPED" ? "bg-purple-500/10 text-purple-600" :
+                  selectedOrder?.status === "DELIVERED" ? "bg-emerald-500/10 text-emerald-600" :
+                  "bg-slate-100 text-slate-700"
+                )}>
+                  {selectedOrder?.status}
+                </Badge>
+              </DialogTitle>
+              <span className="text-[11px] text-slate-400 font-mono">
+                {selectedOrder && new Date(selectedOrder.createdAt).toLocaleDateString()}
+              </span>
+            </div>
+          </DialogHeader>
+
+          {selectedOrder && (
+            <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-1">
+              {/* Shipping / Tracking Info */}
+              {selectedOrder.trackingNumber && (
+                <div className="p-3 rounded-xl bg-purple-50 dark:bg-purple-950/30 border border-purple-100 dark:border-purple-900/40 text-xs">
+                  <div className="flex items-center gap-1.5 text-purple-700 dark:text-purple-300 font-bold mb-1">
+                    <Truck className="w-3.5 h-3.5" /> Shipment Tracking Number
+                  </div>
+                  <p className="font-mono font-bold text-slate-900 dark:text-white">{selectedOrder.trackingNumber}</p>
+                </div>
+              )}
+
+              {/* Itemized Products */}
+              <div className="space-y-2">
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Ordered Items</span>
+                <div className="space-y-2">
+                  {selectedOrder.items?.map((item: any) => (
+                    <div key={item.id} className="flex items-center justify-between p-2.5 rounded-lg bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800 text-xs">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-8 h-8 rounded-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 flex items-center justify-center overflow-hidden shrink-0">
+                          {item.productVariant?.product?.image ? (
+                            <img src={item.productVariant.product.image} alt="" className="w-full h-full object-cover" />
+                          ) : (
+                            <Package className="w-4 h-4 text-slate-400" />
+                          )}
+                        </div>
+                        <div>
+                          <p className="font-semibold text-slate-900 dark:text-white">{item.productVariant?.product?.title}</p>
+                          <p className="text-[10px] text-slate-400">{item.productVariant?.name} × {item.quantity}</p>
+                        </div>
+                      </div>
+                      <span className="font-bold text-slate-900 dark:text-white">
+                        ₹{(item.price * item.quantity).toLocaleString()}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Cost Summary */}
+              <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800 space-y-1.5 text-xs">
+                <div className="flex justify-between text-slate-500">
+                  <span>Shipping Fee</span>
+                  <span>₹{Number(selectedOrder.shippingCost || 0).toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between font-bold text-slate-900 dark:text-white pt-1 border-t border-slate-200/60 dark:border-slate-700">
+                  <span>Total Order Amount</span>
+                  <span className="text-primary font-black">₹{Number(selectedOrder.totalAmount || 0).toLocaleString()}</span>
+                </div>
+              </div>
+
+              {/* Delivery Address Details */}
+              {selectedOrder.shippingAddress && (
+                <div className="space-y-1 text-xs">
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Shipping Address</span>
+                  <div className="p-2.5 rounded-lg bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800 text-slate-600 dark:text-slate-300 leading-relaxed">
+                    {(() => {
+                      try {
+                        const parsed = JSON.parse(selectedOrder.shippingAddress);
+                        return (
+                          <div>
+                            <p className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                              <Phone className="w-3 h-3 text-slate-400" /> {parsed.phone}
+                            </p>
+                            <p className="mt-0.5">{parsed.vill}, PO: {parsed.po}{parsed.landmark ? `, Near: ${parsed.landmark}` : ""}</p>
+                            <p className="text-[11px] text-slate-500">{parsed.district}, {parsed.state} - {parsed.pin}</p>
+                          </div>
+                        );
+                      } catch {
+                        return <p>{selectedOrder.shippingAddress}</p>;
+                      }
+                    })()}
+                  </div>
+                </div>
+              )}
+
+              {/* Payment Proof Preview */}
+              {selectedOrder.paymentProof && (
+                <div className="space-y-1 text-xs">
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Payment Proof</span>
+                  <a 
+                    href={selectedOrder.paymentProof} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline"
+                  >
+                    <span>View Full Receipt Screenshot</span>
+                    <ExternalLink className="w-3 h-3" />
+                  </a>
+                </div>
+              )}
+            </div>
+          )}
+
+          <div className="flex justify-end pt-3 border-t border-slate-100 dark:border-slate-800">
+            <Button 
+              variant="outline" 
+              onClick={() => setOrderDetailsOpen(false)}
+              className="h-8 px-3.5 rounded-lg text-xs font-semibold"
+            >
+              Close
+            </Button>
           </div>
         </DialogContent>
       </Dialog>

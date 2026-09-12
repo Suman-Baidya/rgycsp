@@ -215,174 +215,177 @@ export default function OfflineExamTab({ workspaceId, workspace, superAdminName,
 
   return (
     <>
-      <div className="space-y-10 mt-6 print:hidden">
-        <div className="flex justify-end px-2">
+      <div className="space-y-4 print:hidden">
+        {/* Toolbar & Action Header (Rule 7.4) */}
+        <div className="border border-slate-200/80 dark:border-slate-800 rounded-xl p-3 sm:p-3.5 bg-white dark:bg-slate-900 shadow-xs flex flex-row items-center justify-between">
+          <div className="space-y-0.5">
+            <h3 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">Scheduled Offline Exams</h3>
+            <p className="text-[11px] text-slate-500">Configure physical exam dates, shifts, print attendance sheets, and issue admit cards.</p>
+          </div>
           <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
-            <DialogTrigger className="inline-flex items-center justify-center whitespace-nowrap text-sm h-12 px-6 rounded-2xl font-bold bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-500/30 transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950 disabled:pointer-events-none disabled:opacity-50" onClick={() => {
-              setEditExamId(null);
-              setFormData({ title: "", courseId: "", date: "", duration: "180", syllabus: "", semesterNumber: "" });
-              setShifts([{ name: "Morning Shift", startTime: "10:00 AM", endTime: "01:00 PM", capacity: 50 }]);
-            }}>
-              <Plus className="w-5 h-5 mr-2" /> Create Offline Exam
+            <DialogTrigger render={<Button className="h-8 sm:h-9 px-3.5 rounded-lg text-xs font-semibold bg-primary hover:bg-primary/90 text-primary-foreground shadow-xs flex items-center gap-1.5 shrink-0" />}>
+              <Plus className="w-3.5 h-3.5" />
+              <span>Create Offline Exam</span>
             </DialogTrigger>
-            <DialogContent className="max-w-4xl p-0 border-0 bg-transparent">
-              <Card className="border-0 rounded-[2rem] bg-white dark:bg-slate-900 shadow-xl w-full max-h-[90vh] flex flex-col overflow-hidden">
-                <CardHeader className="bg-slate-50/50 dark:bg-slate-800/50 border-b p-8 rounded-t-[2rem] shrink-0">
+            <DialogContent className="max-w-2xl rounded-2xl p-0 overflow-hidden border border-slate-200 dark:border-slate-800 shadow-xl bg-white dark:bg-slate-900 max-h-[85vh] flex flex-col">
+              <div className="p-4 sm:p-5 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30 flex items-center justify-between shrink-0">
+                <div className="flex items-center gap-2">
+                  <div className="p-2 rounded-lg bg-indigo-500/10 text-indigo-600 dark:text-indigo-400">
+                    <CalendarDays className="w-4 h-4" />
+                  </div>
+                  <DialogTitle className="text-sm sm:text-base font-bold text-slate-900 dark:text-white">{editExamId ? "Edit Offline Exam" : "Create Offline Exam"}</DialogTitle>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button variant="ghost" size="sm" onClick={() => setIsFormOpen(false)} className="h-8 px-3 rounded-lg text-xs font-semibold text-slate-500 hover:text-slate-900">
+                    Cancel
+                  </Button>
+                  <Button size="sm" onClick={handleSaveExam} disabled={isCreating} className="h-8 px-3 rounded-lg text-xs font-semibold bg-primary hover:bg-primary/90 text-primary-foreground">
+                    <Save className="w-3.5 h-3.5 mr-1.5" /> Save Exam
+                  </Button>
+                </div>
+              </div>
+
+              <div className="p-4 sm:p-5 space-y-4 overflow-y-auto max-h-[65vh]">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="space-y-1 sm:col-span-2">
+                    <Label className="text-[11px] font-semibold text-slate-700 dark:text-slate-300">Exam Title *</Label>
+                    <Input value={formData.title} onChange={e => setFormData({ ...formData, title: e.target.value })} placeholder="e.g. Annual Offline Examination 2026" className="h-8 sm:h-9 text-xs rounded-lg" />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-[11px] font-semibold text-slate-700 dark:text-slate-300">Select Course</Label>
+                    <Select value={formData.courseId} onValueChange={(v: any) => setFormData({ ...formData, courseId: v as string })}>
+                      <SelectTrigger className="h-8 sm:h-9 text-xs rounded-lg">
+                        <span className="truncate text-left block w-full pr-1">{formData.courseId ? courses.find(c => c.id === formData.courseId)?.title : "All Courses / General"}</span>
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Courses / General</SelectItem>
+                        {courses.map(c => <SelectItem key={c.id} value={c.id}>{c.title}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-[11px] font-semibold text-slate-700 dark:text-slate-300">Exam Date</Label>
+                    <Input type="date" value={formData.date} onChange={e => setFormData({ ...formData, date: e.target.value })} className="h-8 sm:h-9 text-xs rounded-lg" />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-[11px] font-semibold text-slate-700 dark:text-slate-300">Duration (Minutes)</Label>
+                    <Input type="number" value={formData.duration} onChange={e => setFormData({ ...formData, duration: e.target.value })} className="h-8 sm:h-9 text-xs rounded-lg" />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-[11px] font-semibold text-slate-700 dark:text-slate-300">Semester Number (Optional)</Label>
+                    <Input type="number" value={formData.semesterNumber} onChange={e => setFormData({ ...formData, semesterNumber: e.target.value })} placeholder="1" className="h-8 sm:h-9 text-xs rounded-lg" />
+                  </div>
+                  <div className="sm:col-span-2 space-y-1">
+                    <Label className="text-[11px] font-semibold text-slate-700 dark:text-slate-300">Syllabus</Label>
+                    <Textarea value={formData.syllabus} onChange={e => setFormData({ ...formData, syllabus: e.target.value })} placeholder="e.g. Modules 1 to 4, Practical Lab" className="min-h-[70px] text-xs rounded-lg resize-none" />
+                  </div>
+                </div>
+
+                <div className="space-y-3 pt-3 border-t border-slate-100 dark:border-slate-800">
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-400 to-purple-600 text-white flex items-center justify-center shadow-lg shadow-indigo-500/30">
-                        <CalendarDays className="w-5 h-5" />
-                      </div>
-                      <CardTitle className="text-xl font-bold">{editExamId ? "Edit Offline Exam" : "Create Offline Exam"}</CardTitle>
-                    </div>
-                    <div className="flex gap-3">
-                      <Button variant="ghost" onClick={() => setIsFormOpen(false)} className="rounded-xl font-bold text-slate-500 hover:text-slate-900 hover:bg-slate-100">
-                        Cancel
-                      </Button>
-                      <Button onClick={handleSaveExam} disabled={isCreating} className="rounded-xl font-bold bg-indigo-600 hover:bg-indigo-700 text-white">
-                        <Save className="w-4 h-4 mr-2" /> Save Exam
-                      </Button>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="p-8 space-y-8 overflow-y-auto [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-slate-200 dark:[&::-webkit-scrollbar-thumb]:bg-slate-700 [&::-webkit-scrollbar-thumb]:rounded-full">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                      <Label className="text-xs font-black uppercase tracking-widest text-slate-400 ml-1">Exam Title *</Label>
-                      <Input value={formData.title} onChange={e => setFormData({ ...formData, title: e.target.value })} placeholder="e.g. Final Semester Exam" className="h-12 rounded-2xl font-bold" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-xs font-black uppercase tracking-widest text-slate-400 ml-1">Select Course</Label>
-                      <Select value={formData.courseId} onValueChange={(v: any) => setFormData({ ...formData, courseId: v as string })}>
-                        <SelectTrigger className="h-12 rounded-2xl font-bold">
-                          <SelectValue placeholder="All Courses / General">
-                            {formData.courseId ? courses.find(c => c.id === formData.courseId)?.title : "All Courses / General"}
-                          </SelectValue>
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="">All Courses / General</SelectItem>
-                          {courses.map(c => <SelectItem key={c.id} value={c.id}>{c.title}</SelectItem>)}
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label className="text-xs font-black uppercase tracking-widest text-slate-400 ml-1">Exam Date</Label>
-                      <Input type="date" value={formData.date} onChange={e => setFormData({ ...formData, date: e.target.value })} className="h-12 rounded-2xl font-bold" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-xs font-black uppercase tracking-widest text-slate-400 ml-1">Duration (Minutes)</Label>
-                      <Input type="number" value={formData.duration} onChange={e => setFormData({ ...formData, duration: e.target.value })} className="h-12 rounded-2xl font-bold" />
-                    </div>
-                    <div className="col-span-full space-y-2">
-                      <Label className="text-xs font-black uppercase tracking-widest text-slate-400 ml-1">Syllabus</Label>
-                      <Textarea value={formData.syllabus} onChange={e => setFormData({ ...formData, syllabus: e.target.value })} placeholder="e.g. Units 1-5" className="min-h-[120px] rounded-2xl font-bold p-4" />
-                    </div>
+                    <h4 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">Exam Shifts</h4>
+                    <Button variant="outline" size="sm" onClick={() => setShifts([...shifts, { name: `Shift ${shifts.length + 1}`, startTime: "", endTime: "", capacity: 50 }])} className="h-7 px-2.5 rounded-lg text-xs font-semibold">
+                      <Plus className="w-3.5 h-3.5 mr-1" /> Add Shift
+                    </Button>
                   </div>
 
-                  <div className="space-y-4 pt-6 border-t border-slate-100 dark:border-slate-800">
-                    <div className="flex items-center justify-between">
-                      <h3 className="text-lg font-bold">Exam Shifts</h3>
-                      <Button variant="outline" size="sm" onClick={() => setShifts([...shifts, { name: `Shift ${shifts.length + 1}`, startTime: "", endTime: "", capacity: 50 }])} className="rounded-xl font-bold">
-                        <Plus className="w-4 h-4 mr-2" /> Add Shift
-                      </Button>
-                    </div>
-
-                    <div className="space-y-4">
-                      {shifts.map((shift, idx) => (
-                        <div key={idx} className="flex gap-4 items-end bg-slate-50 dark:bg-slate-800/50 p-4 rounded-[1.5rem]">
-                          <div className="flex-1 space-y-2">
-                            <Label className="text-xs font-bold text-slate-500">Shift Name</Label>
-                            <Input value={shift.name} onChange={e => { const s = [...shifts]; s[idx].name = e.target.value; setShifts(s); }} className="h-11 rounded-xl" />
-                          </div>
-                          <div className="flex-1 space-y-2">
-                            <Label className="text-xs font-bold text-slate-500">Start Time</Label>
-                            <Input value={shift.startTime} onChange={e => { const s = [...shifts]; s[idx].startTime = e.target.value; setShifts(s); }} className="h-11 rounded-xl" placeholder="10:00 AM" />
-                          </div>
-                          <div className="flex-1 space-y-2">
-                            <Label className="text-xs font-bold text-slate-500">End Time</Label>
-                            <Input value={shift.endTime} onChange={e => { const s = [...shifts]; s[idx].endTime = e.target.value; setShifts(s); }} className="h-11 rounded-xl" placeholder="01:00 PM" />
-                          </div>
-                          <div className="flex-1 space-y-2">
-                            <Label className="text-xs font-bold text-slate-500">Student Capacity</Label>
-                            <Input type="number" value={shift.capacity} onChange={e => { const s = [...shifts]; s[idx].capacity = parseInt(e.target.value) || 0; setShifts(s); }} className="h-11 rounded-xl" />
-                          </div>
-                          <Button variant="ghost" className="h-11 rounded-xl text-red-500 hover:text-red-600 hover:bg-red-50" onClick={() => setShifts(shifts.filter((_, i) => i !== idx))}>
-                            Remove
-                          </Button>
+                  <div className="space-y-2">
+                    {shifts.map((shift, idx) => (
+                      <div key={idx} className="grid grid-cols-1 sm:grid-cols-4 gap-2 bg-slate-50 dark:bg-slate-800/40 p-2.5 rounded-xl border border-slate-100 dark:border-slate-800">
+                        <div className="space-y-0.5">
+                          <Label className="text-[9px] font-bold text-slate-400 uppercase">Shift Name</Label>
+                          <Input value={shift.name} onChange={e => { const s = [...shifts]; s[idx].name = e.target.value; setShifts(s); }} className="h-7 sm:h-8 text-xs rounded-md" />
                         </div>
-                      ))}
-                    </div>
+                        <div className="space-y-0.5">
+                          <Label className="text-[9px] font-bold text-slate-400 uppercase">Start Time</Label>
+                          <Input value={shift.startTime} onChange={e => { const s = [...shifts]; s[idx].startTime = e.target.value; setShifts(s); }} className="h-7 sm:h-8 text-xs rounded-md" placeholder="10:00 AM" />
+                        </div>
+                        <div className="space-y-0.5">
+                          <Label className="text-[9px] font-bold text-slate-400 uppercase">End Time</Label>
+                          <Input value={shift.endTime} onChange={e => { const s = [...shifts]; s[idx].endTime = e.target.value; setShifts(s); }} className="h-7 sm:h-8 text-xs rounded-md" placeholder="01:00 PM" />
+                        </div>
+                        <div className="space-y-0.5 flex items-end gap-1.5">
+                          <div className="flex-1">
+                            <Label className="text-[9px] font-bold text-slate-400 uppercase">Capacity</Label>
+                            <Input type="number" value={shift.capacity} onChange={e => { const s = [...shifts]; s[idx].capacity = parseInt(e.target.value) || 0; setShifts(s); }} className="h-7 sm:h-8 text-xs rounded-md" />
+                          </div>
+                          {shifts.length > 1 && (
+                            <Button variant="ghost" size="sm" className="h-7 sm:h-8 px-2 text-xs font-semibold text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-md" onClick={() => setShifts(shifts.filter((_, i) => i !== idx))}>
+                              Remove
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                </CardContent>
-              </Card>
+                </div>
+              </div>
             </DialogContent>
           </Dialog>
         </div>
 
-        <div className="space-y-6">
-          <h3 className="text-xl font-bold px-2">Scheduled Offline Exams</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {exams.filter(e => e.type === "OFFLINE").map((exam) => {
-              const now = new Date();
-              now.setHours(0, 0, 0, 0);
-              const isAutoCompleted = exam.date && new Date(exam.date) < now && !exam.forceUncomplete;
-              const isCurrentlyCompleted = exam.isCompleted || isAutoCompleted;
+        {/* Scheduled Offline Exams Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
+          {exams.filter(e => e.type === "OFFLINE").map((exam) => {
+            const now = new Date();
+            now.setHours(0, 0, 0, 0);
+            const isAutoCompleted = exam.date && new Date(exam.date) < now && !exam.forceUncomplete;
+            const isCurrentlyCompleted = exam.isCompleted || isAutoCompleted;
 
-              return (
-              <Card key={exam.id} className="relative group border-2 border-slate-100 dark:border-slate-800 rounded-[2rem] bg-white dark:bg-slate-900 shadow-lg shadow-slate-200/40 dark:shadow-none overflow-hidden transition-all hover:shadow-xl hover:-translate-y-1">
-                <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500"></div>
-
-                <div className="p-6 border-b border-slate-100 dark:border-slate-800 space-y-2">
-                  <div className="flex justify-between items-start gap-4">
-                    <div className="space-y-1">
-                      <h4 className="text-xl font-bold text-slate-800 dark:text-slate-100">{exam.title}</h4>
-                      <div className="flex items-center gap-4 text-sm font-semibold text-slate-500">
-                        <span className="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-full"><CalendarDays className="w-4 h-4 text-indigo-500" /> {exam.date ? new Date(exam.date).toLocaleDateString() : "TBD"}</span>
-                        <span className="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-full"><Clock className="w-4 h-4 text-orange-500" /> {exam.shifts.length} Shifts</span>
-                        {isCurrentlyCompleted && <span className="flex items-center gap-1.5 bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 px-3 py-1 rounded-full"><CheckCircle className="w-4 h-4" /> Completed</span>}
+            return (
+              <Card key={exam.id} className="relative group border border-slate-200/80 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900 shadow-xs overflow-hidden flex flex-col justify-between">
+                <CardHeader className="p-3.5 sm:p-4 pb-3 border-b border-slate-100 dark:border-slate-800">
+                  <div className="flex justify-between items-start gap-2.5">
+                    <div className="space-y-1 min-w-0 flex-1">
+                      <h4 className="text-sm font-bold text-slate-900 dark:text-white truncate" title={exam.title}>{exam.title}</h4>
+                      <div className="flex flex-wrap items-center gap-2 text-[10px] font-semibold text-slate-500">
+                        <span className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-md"><CalendarDays className="w-3 h-3 text-indigo-500" /> {exam.date ? new Date(exam.date).toLocaleDateString() : "TBD"}</span>
+                        <span className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-md"><Clock className="w-3 h-3 text-orange-500" /> {exam.shifts.length} Shifts</span>
+                        {isCurrentlyCompleted && <span className="flex items-center gap-1 bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 px-2 py-0.5 rounded-md"><CheckCircle className="w-3 h-3" /> Completed</span>}
                       </div>
                     </div>
-                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl text-blue-500 hover:bg-blue-50 hover:text-blue-600" onClick={() => handleEditExam(exam)}>
-                        <Edit className="w-4 h-4" />
+                    <div className="flex items-center gap-1 shrink-0">
+                      <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg text-slate-500 hover:text-primary hover:bg-primary/5" onClick={() => handleEditExam(exam)} title="Edit Exam">
+                        <Edit className="w-3.5 h-3.5" />
                       </Button>
-                      <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl text-red-500 hover:bg-red-50 hover:text-red-600" onClick={() => setExamToDelete({ id: exam.id, title: exam.title })}>
-                        <Trash2 className="w-4 h-4" />
+                      <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg text-slate-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30" onClick={() => setExamToDelete({ id: exam.id, title: exam.title })} title="Delete Exam">
+                        <Trash2 className="w-3.5 h-3.5" />
                       </Button>
                     </div>
                   </div>
-                </div>
+                </CardHeader>
 
-                <div className="p-6 space-y-4 bg-slate-50/50 dark:bg-slate-800/20 flex-1 flex flex-col justify-between">
+                <CardContent className="p-3.5 space-y-3 bg-slate-50/50 dark:bg-slate-800/20 flex-1 flex flex-col justify-between">
                   <div className="flex items-center justify-between">
-                    <h5 className="text-xs font-black uppercase tracking-widest text-slate-400">Shifts & Signature Lists</h5>
-                    <div className="flex gap-2">
-                      <div className="flex items-center gap-2 mr-4">
+                    <span className="text-[9px] font-bold uppercase tracking-wider text-slate-400">Shifts & Signature Lists</span>
+                    <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-1.5">
                         <Switch 
                           checked={isCurrentlyCompleted} 
                           onCheckedChange={() => handleToggleCompletion(exam.id, isCurrentlyCompleted)}
                           disabled={isProcessingToggle === exam.id}
+                          className="scale-75 data-[state=checked]:bg-emerald-600"
                         />
-                        <span className="text-xs font-bold text-slate-500">Completed</span>
+                        <span className="text-[10px] font-bold text-slate-500">{isCurrentlyCompleted ? "Completed" : "Active"}</span>
                       </div>
                       
                       {exam.shifts.length > 0 && !isCurrentlyCompleted && (
-                        <Button variant="outline" size="sm" onClick={() => handleBulkIssueAdmitCards(exam.id)} className="rounded-xl h-8 text-xs font-bold gap-2 text-indigo-600 border-indigo-200 hover:bg-indigo-50 dark:border-indigo-900/50 dark:hover:bg-indigo-900/20 shadow-sm">
-                          <Send className="w-3.5 h-3.5" /> Issue Admit Cards
+                        <Button variant="outline" size="sm" onClick={() => handleBulkIssueAdmitCards(exam.id)} className="h-7 px-2 text-[10px] font-semibold gap-1 text-indigo-600 border-indigo-200 hover:bg-indigo-50 dark:border-indigo-900/50 dark:hover:bg-indigo-900/20 shadow-xs">
+                          <Send className="w-3 h-3" /> Admit Cards
                         </Button>
                       )}
 
                       {exam.shifts.length > 0 && (
-                        <Button variant="outline" size="sm" onClick={() => handlePrintAll(exam.id)} className="rounded-xl h-8 text-xs font-bold gap-2 text-slate-500 hover:text-slate-900 shadow-sm">
-                          <Printer className="w-3.5 h-3.5" /> Print All
+                        <Button variant="outline" size="sm" onClick={() => handlePrintAll(exam.id)} className="h-7 px-2 text-[10px] font-semibold gap-1 text-slate-600 hover:text-slate-900 shadow-xs">
+                          <Printer className="w-3 h-3" /> Print All
                         </Button>
                       )}
                     </div>
                   </div>
-                  <div className="space-y-3">
+
+                  <div className="space-y-2">
                     {exam.shifts.length === 0 ? (
-                      <p className="text-sm text-slate-500 italic">No shifts configured.</p>
+                      <p className="text-xs text-slate-400 italic">No shifts configured.</p>
                     ) : (
                       exam.shifts.map((shift: any, index: number) => {
                         const enrolled = shift._count?.enrollments || 0;
@@ -391,60 +394,60 @@ export default function OfflineExamTab({ workspaceId, workspace, superAdminName,
                         const shiftName = `Shift ${shiftNumbers[index] || index + 1}`;
 
                         return (
-                          <div key={shift.id} className="group/shift flex items-center justify-between bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 hover:border-indigo-200 dark:hover:border-indigo-900 transition-colors shadow-sm">
-                            <div>
+                          <div key={shift.id} className="flex items-center justify-between bg-white dark:bg-slate-900 p-2.5 rounded-lg border border-slate-100 dark:border-slate-800 shadow-xs">
+                            <div className="min-w-0 flex-1 mr-2">
                               <div className="flex items-center gap-2">
-                                <p className="font-bold text-slate-700 dark:text-slate-200">{shiftName}</p>
-                                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${available > 0 ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400'}`}>
+                                <p className="font-semibold text-xs text-slate-800 dark:text-slate-200">{shiftName}</p>
+                                <span className={`text-[9px] font-bold px-1.5 py-0.2 rounded-full ${available > 0 ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400'}`}>
                                   {available} left
                                 </span>
                               </div>
-                              <p className="text-xs font-medium text-slate-500 flex items-center gap-2 mt-1.5">
+                              <p className="text-[10px] text-slate-500 flex items-center gap-2 mt-0.5">
                                 <span className="flex items-center gap-1"><Clock className="w-3 h-3" />{shift.startTime} - {shift.endTime}</span>
                                 <span className="w-1 h-1 rounded-full bg-slate-300"></span>
-                                <span className="flex items-center gap-1"><Users className="w-3 h-3" />Assigned: {enrolled} / {shift.capacity}</span>
+                                <span className="flex items-center gap-1"><Users className="w-3 h-3" />{enrolled} / {shift.capacity}</span>
                               </p>
                             </div>
-                            <Button variant="outline" size="sm" onClick={() => handlePrintSignatureList(exam.id, shift)} className="rounded-xl gap-2 font-bold text-indigo-600 border-indigo-100 hover:bg-indigo-600 hover:text-white dark:border-slate-700 dark:text-indigo-400 dark:hover:bg-indigo-600 dark:hover:text-white transition-all shadow-sm">
-                              <Printer className="w-4 h-4" /> Print Sheet
+                            <Button variant="outline" size="sm" onClick={() => handlePrintSignatureList(exam.id, shift)} className="h-7 px-2 text-[10px] font-semibold gap-1 text-indigo-600 border-indigo-100 hover:bg-indigo-50 dark:border-slate-700 dark:text-indigo-400 shrink-0">
+                              <Printer className="w-3 h-3" /> Sheet
                             </Button>
                           </div>
                         );
                       })
                     )}
                   </div>
-                </div>
+                </CardContent>
               </Card>
-            )})}
+            );
+          })}
 
-            {exams.filter(e => e.type === "OFFLINE").length === 0 && (
-              <div className="col-span-full py-12 flex flex-col items-center justify-center text-center border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-[2.5rem] bg-slate-50/50 dark:bg-slate-900/50">
-                <div className="w-16 h-16 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center mb-4 text-slate-400">
-                  <CalendarDays className="w-8 h-8" />
-                </div>
-                <h4 className="text-lg font-bold text-slate-700 dark:text-slate-300">No Exams Scheduled</h4>
-                <p className="text-slate-500 font-medium max-w-sm mt-1">Click the "Create Offline Exam" button above to schedule your first offline examination.</p>
+          {exams.filter(e => e.type === "OFFLINE").length === 0 && (
+            <div className="col-span-full py-12 flex flex-col items-center justify-center text-center border border-dashed border-slate-200 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900">
+              <div className="w-12 h-12 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center mb-3 text-slate-400">
+                <CalendarDays className="w-6 h-6" />
               </div>
-            )}
-          </div>
+              <h4 className="text-sm font-bold text-slate-800 dark:text-slate-200">No Offline Exams Scheduled</h4>
+              <p className="text-xs text-slate-500 max-w-sm mt-1">Click the &quot;Create Offline Exam&quot; button above to schedule your examination shifts.</p>
+            </div>
+          )}
         </div>
 
         {/* Delete Confirmation Dialog */}
         <Dialog open={!!examToDelete} onOpenChange={(open) => !open && setExamToDelete(null)}>
-          <DialogContent className="max-w-md p-6 rounded-[2rem] border-0 shadow-2xl bg-white dark:bg-slate-900">
-            <div className="flex flex-col items-center text-center space-y-4 pt-4">
-              <div className="w-16 h-16 rounded-full bg-red-50 dark:bg-red-900/20 flex items-center justify-center text-red-500 mb-2">
-                <AlertTriangle className="w-8 h-8" />
+          <DialogContent className="max-w-md p-4 sm:p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xl bg-white dark:bg-slate-900">
+            <div className="flex flex-col items-center text-center space-y-3 pt-2">
+              <div className="w-12 h-12 rounded-full bg-red-50 dark:bg-red-900/20 flex items-center justify-center text-red-500">
+                <AlertTriangle className="w-6 h-6" />
               </div>
-              <DialogTitle className="text-2xl font-bold">Delete Exam?</DialogTitle>
-              <DialogDescription className="text-slate-500 text-base">
+              <DialogTitle className="text-base font-bold text-slate-900 dark:text-white">Delete Exam?</DialogTitle>
+              <DialogDescription className="text-xs text-slate-500">
                 Are you sure you want to delete <strong>{examToDelete?.title}</strong>? This action cannot be undone and will remove all associated shifts and enrollments.
               </DialogDescription>
-              <div className="flex w-full gap-3 pt-6">
-                <Button variant="outline" className="flex-1 h-12 rounded-xl font-bold border-2" onClick={() => setExamToDelete(null)} disabled={isDeleting}>
+              <div className="flex w-full gap-2 pt-3">
+                <Button variant="outline" size="sm" className="flex-1 h-8 rounded-lg text-xs font-semibold" onClick={() => setExamToDelete(null)} disabled={isDeleting}>
                   Cancel
                 </Button>
-                <Button variant="destructive" className="flex-1 h-12 rounded-xl font-bold bg-red-500 hover:bg-red-600" onClick={confirmDelete} disabled={isDeleting}>
+                <Button variant="destructive" size="sm" className="flex-1 h-8 rounded-lg text-xs font-semibold bg-red-600 hover:bg-red-700" onClick={confirmDelete} disabled={isDeleting}>
                   {isDeleting ? "Deleting..." : "Yes, Delete"}
                 </Button>
               </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { 
@@ -18,29 +18,37 @@ import {
   DialogFooter
 } from "@/components/ui/dialog";
 import { 
-  MoreHorizontal, 
   Eye, 
   CheckCircle, 
   XCircle, 
-  Search,
-  Filter,
-  FileText,
-  ChevronLeft,
-  ChevronRight
+  Search, 
+  FileText, 
+  ChevronLeft, 
+  ChevronRight,
+  Clock,
+  BookOpen,
+  AlertCircle,
+  CheckCircle2,
+  Calendar
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { updateApplicationStatus } from "@/app/actions/admission";
-import Link from "next/link";
-import { useParams, usePathname } from "next/navigation";
 import Image from "next/image";
 import { ApplicationDetailsModal } from "./ApplicationDetailsModal";
 
-export function AdminApplicationsClient({ workspaceId, initialData, batches = [], courses = [], onEditOnlineApp }: any) {
+export function AdminApplicationsClient({ 
+  workspaceId, 
+  initialData = [], 
+  batches = [], 
+  courses = [], 
+  onEditOnlineApp 
+}: any) {
   const [data, setData] = useState(initialData);
   const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState<"ALL" | "PENDING" | "APPROVED" | "REJECTED">("PENDING");
+  const [statusFilter, setStatusFilter] = useState<"ALL" | "PENDING" | "APPROVED" | "REJECTED">("ALL");
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedApp, setSelectedApp] = useState<any>(null);
   
@@ -51,35 +59,29 @@ export function AdminApplicationsClient({ workspaceId, initialData, batches = []
   const [selectedBatchId, setSelectedBatchId] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
 
-  const itemsPerPage = 10;
-  
-  const params = useParams();
-  const pathname = usePathname();
-  
-  const getTenant = () => {
-    if (params?.tenant) return params.tenant as string;
-    if (pathname.startsWith('/app/')) return pathname.split('/')[2];
-    return "";
-  };
+  const itemsPerPage = 12;
 
-  const tenant = getTenant();
-  const isSubdirectoryMode = pathname.startsWith('/app/');
-  const workspaceBase = isSubdirectoryMode ? `/app/${tenant}` : '';
-  const adminBase = `${workspaceBase}/admin/students`;
+  const filteredData = useMemo(() => {
+    return data.filter((app: any) => {
+      const matchStatus = statusFilter === "ALL" || app.status === statusFilter;
+      if (!matchStatus) return false;
+      if (!searchTerm.trim()) return true;
+      const q = searchTerm.toLowerCase();
+      return (
+        app.fullName?.toLowerCase().includes(q) ||
+        app.applicationNo?.toLowerCase().includes(q) ||
+        app.appliedCourse?.toLowerCase().includes(q)
+      );
+    });
+  }, [data, statusFilter, searchTerm]);
 
-  const filteredData = data.filter((app: any) => 
-    (statusFilter === "ALL" || app.status === statusFilter) && (
-      app.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      app.applicationNo.toLowerCase().includes(searchTerm.toLowerCase())
-    )
-  );
-
-  const totalPages = Math.ceil(filteredData.length / itemsPerPage);
-  const paginatedData = filteredData.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
-
+  const totalPages = Math.max(1, Math.ceil(filteredData.length / itemsPerPage));
+  const paginatedData = useMemo(() => {
+    return filteredData.slice(
+      (currentPage - 1) * itemsPerPage,
+      currentPage * itemsPerPage
+    );
+  }, [filteredData, currentPage, itemsPerPage]);
 
   const handleStatusUpdate = async () => {
     if (!actionApp || !actionType) return;
@@ -98,279 +100,328 @@ export function AdminApplicationsClient({ workspaceId, initialData, batches = []
     const status = actionType === "APPROVE" ? "APPROVED" : "REJECTED";
 
     try {
-      let res;
-      if (status === "APPROVED") {
-         const { finalEnrollApplication } = await import("@/app/actions/admissions");
-         res = await finalEnrollApplication(workspaceId, actionApp.id, { batchId: selectedBatchId });
-      } else {
-         res = await updateApplicationStatus(actionApp.id, status, reason, selectedBatchId);
-      }
+      const res = await updateApplicationStatus(
+        actionApp.id, 
+        status, 
+        actionType === "REJECT" ? reason : undefined, 
+        actionType === "APPROVE" ? selectedBatchId : undefined
+      );
 
       if (res.success) {
-        toast.success(`Application ${status.toLowerCase()} successfully`);
-        // Remove from list if approved (since they move to unregistered) or update it
-        if (status === "APPROVED") {
-          setData(data.filter((a: any) => a.id !== actionApp.id));
-        } else {
-          setData(data.map((a: any) => a.id === actionApp.id ? { ...a, status, rejectionReason: reason } : a));
-        }
-        setActionApp(null);
+        toast.success(`Application ${status.toLowerCase()} successfully.`);
+        setData((prev: any[]) => prev.map(a => a.id === actionApp.id ? { ...a, status } : a));
         setActionType(null);
+        setActionApp(null);
         setReason("");
         setSelectedBatchId("");
       } else {
-        toast.error((res as any).error || "Failed to update status");
+        toast.error(res.error || "Failed to update status.");
       }
-    } catch (err) {
-      toast.error("Something went wrong");
+    } catch (e) {
+      toast.error("An error occurred.");
     } finally {
       setIsProcessing(false);
     }
   };
-  
+
   const totalApps = data.length;
   const pendingApps = data.filter((a: any) => a.status === "PENDING").length;
   const approvedApps = data.filter((a: any) => a.status === "APPROVED").length;
   const rejectedApps = data.filter((a: any) => a.status === "REJECTED").length;
 
+  const getPageNumbers = () => {
+    if (totalPages <= 7) {
+      return Array.from({ length: totalPages }, (_, i) => i + 1);
+    }
+    if (currentPage <= 4) {
+      return [1, 2, 3, 4, 5, "...", totalPages];
+    }
+    if (currentPage >= totalPages - 3) {
+      return [1, "...", totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages];
+    }
+    return [1, "...", currentPage - 1, currentPage, currentPage + 1, "...", totalPages];
+  };
+
   return (
-    <div className="space-y-6">
-      {/* Interactive Stats Summary Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <button 
-          onClick={() => { setStatusFilter("ALL"); setCurrentPage(1); }}
-          className={cn(
-            "text-left bg-white dark:bg-slate-900 border p-5 rounded-2xl shadow-sm flex items-center justify-between transition-all hover:-translate-y-0.5",
-            statusFilter === "ALL" ? "border-blue-500 ring-2 ring-blue-500/20" : "border-slate-100 dark:border-slate-800 hover:border-blue-200 dark:hover:border-blue-900/50"
-          )}
-        >
-          <div>
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Total Apps</p>
-            <p className="text-2xl font-black text-slate-900 dark:text-white">{totalApps}</p>
-          </div>
-          <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-600 shrink-0">
-            <FileText className="w-5 h-5" />
-          </div>
-        </button>
-        
-        <button 
-          onClick={() => { setStatusFilter("PENDING"); setCurrentPage(1); }}
-          className={cn(
-            "text-left bg-white dark:bg-slate-900 border p-5 rounded-2xl shadow-sm flex items-center justify-between transition-all hover:-translate-y-0.5",
-            statusFilter === "PENDING" ? "border-amber-500 ring-2 ring-amber-500/20 shadow-amber-500/10" : "border-amber-100 dark:border-amber-900/30 shadow-amber-500/5 hover:border-amber-300 dark:hover:border-amber-700/50"
-          )}
-        >
-          <div>
-            <p className="text-[10px] font-bold text-amber-500/80 dark:text-amber-500/60 uppercase tracking-wider mb-1">Pending</p>
-            <p className="text-2xl font-black text-amber-600 dark:text-amber-500">{pendingApps}</p>
-          </div>
-          <div className="w-10 h-10 rounded-full bg-amber-500/10 flex items-center justify-center text-amber-600 dark:text-amber-500 shrink-0">
-            <Search className="w-5 h-5" />
-          </div>
-        </button>
+    <div className="space-y-4 animate-in fade-in duration-300">
+      {/* Main Content Card & Filter Toolbar (Rule 7.4) */}
+      <Card className="border border-slate-200/80 dark:border-slate-800 rounded-xl shadow-sm overflow-hidden bg-white dark:bg-slate-900">
+        <CardHeader className="p-3.5 sm:p-4 border-b border-slate-100 dark:border-slate-800">
+          <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-3">
+            <div>
+              <h3 className="font-bold text-sm text-slate-900 dark:text-white flex items-center gap-2">
+                <FileText className="w-4 h-4 text-primary" /> Online Admission Applications
+              </h3>
+              <p className="text-xs text-slate-500 mt-0.5">
+                Review submitted admission forms, assign batches, and finalize enrollments.
+              </p>
+            </div>
 
-        <button 
-          onClick={() => { setStatusFilter("APPROVED"); setCurrentPage(1); }}
-          className={cn(
-            "text-left bg-white dark:bg-slate-900 border p-5 rounded-2xl shadow-sm flex items-center justify-between transition-all hover:-translate-y-0.5",
-            statusFilter === "APPROVED" ? "border-emerald-500 ring-2 ring-emerald-500/20 shadow-emerald-500/10" : "border-emerald-100 dark:border-emerald-900/30 shadow-emerald-500/5 hover:border-emerald-300 dark:hover:border-emerald-700/50"
-          )}
-        >
-          <div>
-            <p className="text-[10px] font-bold text-emerald-500/80 dark:text-emerald-500/60 uppercase tracking-wider mb-1">Approved</p>
-            <p className="text-2xl font-black text-emerald-600 dark:text-emerald-500">{approvedApps}</p>
-          </div>
-          <div className="w-10 h-10 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-600 dark:text-emerald-500 shrink-0">
-            <CheckCircle className="w-5 h-5" />
-          </div>
-        </button>
-
-        <button 
-          onClick={() => { setStatusFilter("REJECTED"); setCurrentPage(1); }}
-          className={cn(
-            "text-left bg-white dark:bg-slate-900 border p-5 rounded-2xl shadow-sm flex items-center justify-between transition-all hover:-translate-y-0.5",
-            statusFilter === "REJECTED" ? "border-red-500 ring-2 ring-red-500/20 shadow-red-500/10" : "border-red-100 dark:border-red-900/30 shadow-red-500/5 hover:border-red-300 dark:hover:border-red-700/50"
-          )}
-        >
-          <div>
-            <p className="text-[10px] font-bold text-red-500/80 dark:text-red-500/60 uppercase tracking-wider mb-1">Rejected</p>
-            <p className="text-2xl font-black text-red-600 dark:text-red-500">{rejectedApps}</p>
-          </div>
-          <div className="w-10 h-10 rounded-full bg-red-500/10 flex items-center justify-center text-red-600 dark:text-red-500 shrink-0">
-            <XCircle className="w-5 h-5" />
-          </div>
-        </button>
-      </div>
-
-      <div className="flex flex-col md:flex-row items-center justify-between gap-4 bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm">
-        <div className="relative flex-1 max-w-sm w-full">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input 
-            placeholder="Search pending applications..." 
-            className="pl-10 rounded-xl border-slate-200 font-medium"
-            value={searchTerm}
-            onChange={(e) => {
-              setSearchTerm(e.target.value);
-              setCurrentPage(1);
-            }}
-          />
-        </div>
-        
-        <div className="flex items-center gap-4 w-full md:w-auto justify-between">
-           {/* Pagination Controls */}
-           <div className="flex items-center gap-2">
-              <span className="text-xs font-bold text-slate-500 hidden sm:inline">
-                Page {currentPage} of {totalPages || 1}
-              </span>
-              <div className="flex items-center gap-1 bg-slate-50 dark:bg-slate-800 p-1 rounded-xl border border-slate-200 dark:border-slate-700 shadow-inner">
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  className="h-8 w-8 rounded-lg"
-                  disabled={currentPage === 1}
-                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                >
-                  <ChevronLeft className="w-4 h-4" />
-                </Button>
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  className="h-8 w-8 rounded-lg"
-                  disabled={currentPage === totalPages || totalPages === 0}
-                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                >
-                  <ChevronRight className="w-4 h-4" />
-                </Button>
+            <div className="flex flex-wrap items-center gap-2 w-full lg:w-auto">
+              {/* Search Box */}
+              <div className="relative w-full sm:w-64 group">
+                <Search className="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none h-3.5 w-3.5 text-slate-400 my-auto" />
+                <Input 
+                  value={searchTerm}
+                  onChange={(e) => {
+                    setSearchTerm(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                  placeholder="Search by student name, app #..."
+                  className="h-8 sm:h-9 pl-8 pr-3 bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700/60 rounded-lg font-normal text-xs placeholder:text-xs placeholder:text-slate-400"
+                />
               </div>
-           </div>
 
-           <Button variant="outline" className="rounded-xl font-bold border-slate-200 dark:border-slate-700">
-             <Filter className="w-4 h-4 mr-2" /> Filter
-           </Button>
-        </div>
-      </div>
+              {/* Status Filter Pills */}
+              <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800/60 p-1 rounded-lg border border-slate-200 dark:border-slate-700/60 overflow-x-auto no-scrollbar">
+                <button
+                  type="button"
+                  onClick={() => { setStatusFilter("ALL"); setCurrentPage(1); }}
+                  className={cn(
+                    "px-2.5 py-1 rounded-md text-xs font-semibold transition-all shrink-0",
+                    statusFilter === "ALL" 
+                      ? "bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-xs" 
+                      : "text-slate-500 hover:text-slate-900 dark:hover:text-white"
+                  )}
+                >
+                  All ({totalApps})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setStatusFilter("PENDING"); setCurrentPage(1); }}
+                  className={cn(
+                    "px-2.5 py-1 rounded-md text-xs font-semibold transition-all shrink-0",
+                    statusFilter === "PENDING" 
+                      ? "bg-amber-500 text-white shadow-xs" 
+                      : "text-amber-600 dark:text-amber-400 hover:text-amber-700"
+                  )}
+                >
+                  Pending ({pendingApps})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setStatusFilter("APPROVED"); setCurrentPage(1); }}
+                  className={cn(
+                    "px-2.5 py-1 rounded-md text-xs font-semibold transition-all shrink-0",
+                    statusFilter === "APPROVED" 
+                      ? "bg-emerald-600 text-white shadow-xs" 
+                      : "text-emerald-600 dark:text-emerald-400 hover:text-emerald-700"
+                  )}
+                >
+                  Approved ({approvedApps})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setStatusFilter("REJECTED"); setCurrentPage(1); }}
+                  className={cn(
+                    "px-2.5 py-1 rounded-md text-xs font-semibold transition-all shrink-0",
+                    statusFilter === "REJECTED" 
+                      ? "bg-red-600 text-white shadow-xs" 
+                      : "text-red-600 dark:text-red-400 hover:text-red-700"
+                  )}
+                >
+                  Rejected ({rejectedApps})
+                </button>
+              </div>
+            </div>
+          </div>
+        </CardHeader>
 
-      <div className="grid grid-cols-1 gap-4">
-        {paginatedData.length > 0 ? (
-          paginatedData.map((app: any) => (
-            <div key={app.id} className="group relative bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 p-5 hover:shadow-2xl hover:shadow-slate-200/50 dark:hover:shadow-primary/5 hover:border-primary/20 transition-all duration-300">
-               <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-                  {/* Left Side: Applicant Info */}
-                  <div className="flex items-center gap-5">
-                     <div className="relative w-16 h-16 rounded-2xl overflow-hidden bg-slate-50 dark:bg-slate-800 border-2 border-slate-50 dark:border-slate-800 shadow-sm group-hover:scale-105 transition-transform duration-300">
+        {/* List Rows (Rule 7.5) */}
+        <CardContent className="p-0">
+          {filteredData.length === 0 ? (
+            <div className="py-12 px-4 text-center">
+              <FileText className="w-10 h-10 text-slate-300 dark:text-slate-600 mx-auto mb-2" />
+              <p className="text-xs font-semibold text-slate-900 dark:text-white">No applications found</p>
+              <p className="text-[11px] text-slate-500 mt-0.5">Try adjusting your search query or filter.</p>
+            </div>
+          ) : (
+            <div className="divide-y divide-slate-50 dark:divide-slate-800/50">
+              {paginatedData.map((app: any) => {
+                const isPending = app.status === "PENDING";
+                const isApproved = app.status === "APPROVED";
+                const statusBorder = isPending ? "border-amber-500" : isApproved ? "border-emerald-500" : "border-red-500";
+
+                return (
+                  <div 
+                    key={app.id} 
+                    className={cn(
+                      "flex flex-col lg:flex-row items-start lg:items-center justify-between p-3 sm:p-3.5 bg-white dark:bg-slate-900 hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-all gap-3 sm:gap-4 group border-l-[3px]",
+                      statusBorder
+                    )}
+                  >
+                    {/* Applicant Profile */}
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="relative w-10 h-10 rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shrink-0">
                         {app.photoUrl ? (
-                          <Image src={app.photoUrl} alt={app.fullName} fill sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw" className="object-cover" />
+                          <Image src={app.photoUrl} alt={app.fullName} fill sizes="40px" className="object-cover" />
                         ) : (
-                          <div className="w-full h-full flex items-center justify-center bg-slate-100 dark:bg-slate-800 text-slate-300">
-                            <FileText className="w-6 h-6" />
+                          <div className="w-full h-full flex items-center justify-center font-bold text-xs text-slate-500">
+                            {app.fullName ? app.fullName.charAt(0).toUpperCase() : <FileText className="w-4 h-4" />}
                           </div>
                         )}
-                     </div>
-                     <div>
-                        <div className="flex items-center gap-3 mb-1">
-                           <h3 className="text-lg font-bold text-slate-900 dark:text-white tracking-tight">{app.fullName}</h3>
-                           <Badge variant="outline" className={cn(
-                              "rounded-full px-3 py-0.5 text-[9px] font-bold border-none shadow-sm",
-                              app.status === "APPROVED" ? "bg-emerald-500/10 text-emerald-600" : 
-                              app.status === "REJECTED" ? "bg-red-500/10 text-red-600" : 
-                              "bg-amber-500/10 text-amber-600"
-                            )}>
-                              {app.status}
-                           </Badge>
-                        </div>
-                        <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
-                           <span className="text-xs font-bold text-slate-500 flex items-center gap-1.5">
-                             <span className="w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-slate-700" /> {app.applicationNo}
-                           </span>
-                           <span className="text-xs font-bold text-slate-400 flex items-center gap-1.5" suppressHydrationWarning>
-                             <span className="w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-slate-700" /> {new Date(app.createdAt).toLocaleDateString('en-GB')}
-                           </span>
-                        </div>
-                     </div>
-                  </div>
+                      </div>
 
-                  {/* Middle: Course Details */}
-                  <div className="flex flex-col md:items-center">
-                     <p className="text-[10px] font-bold text-slate-400 mb-1">Applied For</p>
-                     <p className="text-sm font-bold text-primary bg-primary/5 dark:bg-primary/10 px-4 py-1.5 rounded-xl border border-primary/10">
-                        {app.appliedCourse}
-                     </p>
-                  </div>
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="font-semibold text-xs sm:text-sm text-slate-900 dark:text-white truncate">
+                            {app.fullName}
+                          </span>
+                          <Badge variant="outline" className={cn(
+                            "text-[9px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider border-none",
+                            isApproved ? "bg-emerald-500/10 text-emerald-600" : 
+                            isPending ? "bg-amber-500/10 text-amber-600" : 
+                            "bg-red-500/10 text-red-600"
+                          )}>
+                            {app.status}
+                          </Badge>
+                        </div>
+                        <div className="flex items-center gap-2 text-[10px] text-slate-500 font-mono mt-0.5">
+                          <span>App #: {app.applicationNo}</span>
+                          <span>•</span>
+                          <span className="font-sans flex items-center gap-1 text-slate-600 dark:text-slate-400">
+                            <Calendar className="w-3 h-3 text-slate-400" />
+                            {new Date(app.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
 
-                  {/* Right: Actions */}
-                  <div className="flex items-center gap-3 self-end md:self-center">
-                     <Button 
-                        variant="outline" 
-                        size="sm" 
-                        className="rounded-xl font-bold border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 dark:text-white"
-                        onClick={() => setSelectedApp(app)}
-                     >
-                        <Eye className="w-4 h-4 mr-2" /> Details
-                     </Button>
-                     
-                     {app.status === "PENDING" ? (
-                       <Button 
-                         size="sm" 
-                         className="rounded-xl font-bold bg-primary hover:bg-primary/90 text-white shadow-sm"
-                         onClick={() => onEditOnlineApp && onEditOnlineApp(app)}
-                       >
-                         <CheckCircle className="w-4 h-4 mr-2" /> Review & Approve
-                       </Button>
-                     ) : (
-                       <DropdownMenu>
-                          <DropdownMenuTrigger className="inline-flex h-9 items-center justify-center rounded-xl bg-slate-900 text-white hover:bg-slate-800 font-bold px-4 text-sm cursor-pointer shadow-sm transition-all active:scale-95 outline-none">
-                                Update Status
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="rounded-2xl p-2 min-w-[160px] shadow-2xl border-none ring-1 ring-slate-100 dark:ring-slate-800 bg-white dark:bg-slate-900">
-                             <DropdownMenuItem onClick={() => { setActionApp(app); setActionType("REJECT"); }} className="text-red-600">
-                               <XCircle className="w-4 h-4 mr-2" />
-                               Reject
-                             </DropdownMenuItem>
-                          </DropdownMenuContent>
-                       </DropdownMenu>
-                     )}
+                    {/* Metadata & Actions */}
+                    <div className="flex flex-wrap lg:flex-nowrap items-center gap-3 sm:gap-4 w-full lg:w-auto justify-between lg:justify-end text-xs">
+                      {/* Applied Course */}
+                      <div className="text-left lg:text-right shrink-0">
+                        <span className="inline-flex items-center gap-1 font-semibold text-xs text-primary px-2 py-0.5 rounded-md bg-primary/5">
+                          <BookOpen className="w-3 h-3" /> {app.appliedCourse || "N/A"}
+                        </span>
+                        <p className="text-[8px] font-bold text-slate-400 uppercase tracking-wider mt-0.5">
+                          Applied Course
+                        </p>
+                      </div>
+
+                      {/* Actions */}
+                      <div className="flex items-center gap-1.5 shrink-0 ml-auto lg:ml-0">
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={() => setSelectedApp(app)}
+                          className="h-7 sm:h-8 px-2.5 rounded-lg text-xs font-semibold gap-1 text-slate-600 dark:text-slate-300"
+                        >
+                          <Eye className="w-3.5 h-3.5" /> Details
+                        </Button>
+                        
+                        {isPending ? (
+                          <Button 
+                            size="sm" 
+                            onClick={() => onEditOnlineApp && onEditOnlineApp(app)}
+                            className="h-7 sm:h-8 px-2.5 rounded-lg text-xs font-semibold gap-1 bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm"
+                          >
+                            <CheckCircle className="w-3.5 h-3.5" /> Review & Approve
+                          </Button>
+                        ) : (
+                          <DropdownMenu>
+                            <DropdownMenuTrigger className="inline-flex items-center justify-center h-7 sm:h-8 px-2 text-xs font-semibold text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg outline-none cursor-pointer">
+                              Options
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="rounded-xl p-1 min-w-[140px] text-xs">
+                              <DropdownMenuItem 
+                                onClick={() => { setActionApp(app); setActionType("REJECT"); }} 
+                                className="text-red-600 focus:text-red-600 text-xs py-1.5 cursor-pointer"
+                              >
+                                <XCircle className="w-3.5 h-3.5 mr-1.5" />
+                                Reject Application
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        )}
+                      </div>
+                    </div>
                   </div>
-               </div>
+                );
+              })}
             </div>
-          ))
-        ) : (
-          <div className="text-center py-20 bg-slate-50 dark:bg-slate-900/50 rounded-3xl border-2 border-dashed border-slate-200 dark:border-slate-800">
-             <div className="w-16 h-16 bg-white dark:bg-slate-900 rounded-2xl shadow-sm flex items-center justify-center mx-auto mb-4">
-                <Search className="w-8 h-8 text-slate-300" />
-             </div>
-             <h3 className="text-lg font-bold text-slate-900 dark:text-white">No applications found</h3>
-             <p className="text-slate-400 font-bold text-xs mt-1">Try adjusting your search terms</p>
+          )}
+        </CardContent>
+
+        {/* Standardized Pagination Bar (Rule 7.6) */}
+        {filteredData.length > 0 && (
+          <div className="flex items-center justify-between px-4 py-2.5 border-t border-slate-100 dark:border-slate-800/50 bg-slate-50/50 dark:bg-slate-800/20">
+            <span className="text-xs font-medium text-slate-500">
+              Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, filteredData.length)} of {filteredData.length}
+            </span>
+
+            <div className="flex items-center gap-1">
+              <Button
+                variant="outline"
+                size="icon"
+                disabled={currentPage === 1}
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                className="h-7 w-7 rounded-md border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-sm"
+              >
+                <ChevronLeft className="h-3.5 w-3.5" />
+              </Button>
+
+              {getPageNumbers().map((p, idx) => (
+                p === "..." ? (
+                  <span key={`dots-${idx}`} className="px-1 text-slate-400 text-xs select-none">...</span>
+                ) : (
+                  <Button
+                    key={`page-${p}`}
+                    variant={currentPage === p ? "default" : "ghost"}
+                    size="icon"
+                    onClick={() => setCurrentPage(Number(p))}
+                    className="h-7 w-7 rounded-md font-semibold text-xs"
+                  >
+                    {p}
+                  </Button>
+                )
+              ))}
+
+              <Button
+                variant="outline"
+                size="icon"
+                disabled={currentPage >= totalPages}
+                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                className="h-7 w-7 rounded-md border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-sm"
+              >
+                <ChevronRight className="h-3.5 w-3.5" />
+              </Button>
+            </div>
           </div>
         )}
-      </div>
+      </Card>
 
+      {/* Application Details Modal */}
       <ApplicationDetailsModal
         isOpen={!!selectedApp}
         onClose={() => setSelectedApp(null)}
         app={selectedApp}
-        onUpdateStatus={(id, status) => {
+        onUpdateStatus={(id: string, status: string) => {
           setSelectedApp(null);
           setActionApp(selectedApp);
           setActionType(status as "APPROVE" | "REJECT");
         }}
       />
 
-      {/* Approve Modal */}
+      {/* Approve Modal (Rule 7.7) */}
       <Dialog open={actionType === "APPROVE" && !!actionApp} onOpenChange={() => { setActionType(null); setActionApp(null); }}>
-        <DialogContent className="sm:max-w-md rounded-3xl">
-          <DialogHeader>
-            <DialogTitle>Approve Student Admission</DialogTitle>
-            <DialogDescription>
-              Assign <strong>{actionApp?.fullName}</strong> to a batch to complete enrollment.
+        <DialogContent className="sm:max-w-md rounded-2xl p-4 sm:p-5 border border-slate-200 dark:border-slate-800 shadow-xl">
+          <DialogHeader className="mb-2">
+            <DialogTitle className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+              <CheckCircle2 className="w-4 h-4 text-emerald-600" /> Approve Admission
+            </DialogTitle>
+            <DialogDescription className="text-xs text-slate-500">
+              Assign <strong>{actionApp?.fullName}</strong> to a batch to finalize enrollment.
             </DialogDescription>
           </DialogHeader>
-          <div className="py-4 space-y-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Select Batch *</label>
+
+          <div className="space-y-3 py-2">
+            <div className="space-y-1">
+              <label className="text-xs font-medium text-slate-700 dark:text-slate-300">Select Batch *</label>
               <select
                 value={selectedBatchId}
                 onChange={(e) => setSelectedBatchId(e.target.value)}
-                className="w-full flex h-10 rounded-xl border border-input bg-background px-3 py-2 text-sm focus:border-emerald-500 transition-all outline-none"
+                className="w-full h-8 sm:h-9 px-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs font-medium outline-none"
               >
                 <option value="">-- Choose a batch --</option>
                 {batches.filter((b: any) => !b.courseId || b.courseId === actionApp?.courseId).map((batch: any) => (
@@ -378,39 +429,56 @@ export function AdminApplicationsClient({ workspaceId, initialData, batches = []
                 ))}
               </select>
               {batches.filter((b: any) => !b.courseId || b.courseId === actionApp?.courseId).length === 0 && (
-                <p className="text-xs text-red-500 mt-1">No batches available for this course. Please create a batch first.</p>
+                <p className="text-[11px] text-red-500 mt-1">No batches available for this course. Please create a batch first.</p>
               )}
             </div>
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setActionType(null)} className="rounded-xl">Cancel</Button>
-            <Button onClick={handleStatusUpdate} disabled={isProcessing || !selectedBatchId} className="rounded-xl bg-emerald-600 hover:bg-emerald-700">
+
+          <DialogFooter className="gap-2 pt-2">
+            <Button variant="outline" onClick={() => setActionType(null)} className="h-8 sm:h-9 text-xs rounded-lg">
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleStatusUpdate} 
+              disabled={isProcessing || !selectedBatchId} 
+              className="h-8 sm:h-9 text-xs font-semibold rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white"
+            >
               {isProcessing ? "Approving..." : "Confirm & Approve"}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Reject Modal */}
+      {/* Reject Modal (Rule 7.7) */}
       <Dialog open={actionType === "REJECT" && !!actionApp} onOpenChange={() => { setActionType(null); setActionApp(null); }}>
-        <DialogContent className="sm:max-w-md rounded-3xl">
-          <DialogHeader>
-            <DialogTitle className="text-red-600">Reject Application</DialogTitle>
-            <DialogDescription>
+        <DialogContent className="sm:max-w-md rounded-2xl p-4 sm:p-5 border border-slate-200 dark:border-slate-800 shadow-xl">
+          <DialogHeader className="mb-2">
+            <DialogTitle className="text-base font-bold text-red-600 flex items-center gap-1.5">
+              <XCircle className="w-4 h-4 text-red-600" /> Reject Application
+            </DialogTitle>
+            <DialogDescription className="text-xs text-slate-500">
               Provide a reason for rejecting <strong>{actionApp?.fullName}</strong>.
             </DialogDescription>
           </DialogHeader>
-          <div className="py-4">
+
+          <div className="py-2">
             <textarea
-              className="w-full rounded-xl border p-3 text-sm focus:border-red-500 outline-none transition-all resize-none h-24"
-              placeholder="e.g., Documents are blurry, missing marksheet..."
+              className="w-full rounded-lg border border-slate-200 dark:border-slate-700 p-2.5 text-xs bg-white dark:bg-slate-900 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-red-500 h-20 resize-none"
+              placeholder="e.g. Uploaded documents are blurry, incomplete marksheet..."
               value={reason}
               onChange={(e) => setReason(e.target.value)}
             />
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setActionType(null)} className="rounded-xl">Cancel</Button>
-            <Button onClick={handleStatusUpdate} disabled={isProcessing || !reason.trim()} variant="destructive" className="rounded-xl">
+
+          <DialogFooter className="gap-2 pt-2">
+            <Button variant="outline" onClick={() => setActionType(null)} className="h-8 sm:h-9 text-xs rounded-lg">
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleStatusUpdate} 
+              disabled={isProcessing || !reason.trim()} 
+              className="h-8 sm:h-9 text-xs font-semibold rounded-lg bg-red-600 hover:bg-red-700 text-white"
+            >
               {isProcessing ? "Rejecting..." : "Confirm Rejection"}
             </Button>
           </DialogFooter>

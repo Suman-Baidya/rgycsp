@@ -52,6 +52,7 @@ export default async function StudentProfilePage({
       profile={profile}
       settings={workspaceSettings}
       tenant={tenant}
+      workspace={workspace}
     />
   );
 }

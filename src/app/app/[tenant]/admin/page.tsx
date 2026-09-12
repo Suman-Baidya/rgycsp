@@ -6,6 +6,7 @@ import { Users, BookOpen, UserCheck, Wallet, Sparkles, Plus, ShieldAlert } from 
 import Link from "next/link";
 import { getServerTenantLink } from "@/lib/routing-server";
 import { auth } from "@/auth";
+import { StatCard } from "@/components/dashboard/StatCard";
 
 export default async function WorkspaceAdminDashboard({
   params
@@ -112,21 +113,21 @@ export default async function WorkspaceAdminDashboard({
   const studentLink = await getServerTenantLink("/admin/students", tenant);
 
   return (
-    <div className="p-4 lg:px-10 lg:py-10 max-w-7xl w-full mx-auto space-y-10">
+    <div className="space-y-4 sm:space-y-5 pb-8 w-full mx-auto">
       <AdminPageHeader 
         title="Institute Insights" 
         description={`Welcome back to ${workspace.name}. Here's what's happening in your institute today.`}
       >
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           {hasAccess("wallet") && (
-            <Button variant="outline" className="rounded-xl font-bold h-11 border-2">
-              <Wallet className="w-4 h-4 mr-2" /> Buy Tokens
+            <Button variant="outline" className="h-8 sm:h-9 px-3 rounded-lg text-xs font-semibold gap-1.5 border-slate-200 dark:border-slate-700">
+              <Wallet className="w-3.5 h-3.5" /> Buy Tokens
             </Button>
           )}
           {hasAccess("students") && (
             <Link href={studentLink}>
-              <Button className="rounded-xl font-bold h-11 shadow-lg shadow-primary/20">
-                <Plus className="w-4 h-4 mr-2" /> New Student
+              <Button className="h-8 sm:h-9 px-3.5 rounded-lg text-xs font-semibold gap-1.5 shadow-xs bg-primary text-primary-foreground">
+                <Plus className="w-3.5 h-3.5" /> New Student
               </Button>
             </Link>
           )}
@@ -134,18 +135,14 @@ export default async function WorkspaceAdminDashboard({
       </AdminPageHeader>
 
       {/* Modern Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         {stats.map((stat, i) => (
-          <div key={i} className="group p-8 bg-white dark:bg-slate-900 border-2 border-slate-100/50 dark:border-slate-800/50 rounded-3xl shadow-sm hover:shadow-xl hover:shadow-primary/5 transition-all duration-300">
-            <div className="flex items-center justify-between mb-4">
-              <div className={`p-3 rounded-2xl ${stat.bg} dark:bg-slate-800 transition-colors`}>
-                <stat.icon className={`w-6 h-6 ${stat.color}`} />
-              </div>
-              <div className="h-1.5 w-1.5 rounded-full bg-slate-200 dark:bg-slate-800 group-hover:bg-primary transition-colors" />
-            </div>
-            <p className="text-[10px] font-bold text-slate-400 tracking-widest">{stat.label}</p>
-            <p className="text-4xl font-bold text-slate-900 dark:text-white mt-1 leading-none">{stat.value}</p>
-          </div>
+          <StatCard
+            key={i}
+            label={stat.label}
+            value={stat.value}
+            icon={<stat.icon className={`w-5 h-5 ${stat.color}`} />}
+          />
         ))}
       </div>
 
@@ -153,35 +150,35 @@ export default async function WorkspaceAdminDashboard({
       {hasAccess("students") || hasAccess("admissions") ? (
         <AdminDashboardCharts admissionData={admissionTrend} studentDistData={studentDistData} />
       ) : (
-        <div className="p-12 text-center border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-3xl bg-slate-50/50 dark:bg-slate-900/50">
-          <ShieldAlert className="w-12 h-12 text-slate-300 mx-auto mb-4" />
-          <h3 className="text-lg font-bold text-slate-900 dark:text-white">Restricted View</h3>
-          <p className="text-sm font-medium text-slate-500 mt-1 max-w-sm mx-auto">
+        <div className="p-4 sm:p-5 text-center border border-dashed border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50/50 dark:bg-slate-900/50">
+          <ShieldAlert className="w-6 h-6 text-slate-400 mx-auto mb-1.5" />
+          <h3 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">Restricted View</h3>
+          <p className="text-xs font-medium text-slate-500 mt-1 max-w-sm mx-auto leading-normal">
             You do not have permission to view detailed analytics and student charts. Please contact your administrator if you need access.
           </p>
         </div>
       )}
 
       {/* Quick Actions / Welcome Card */}
-      <div className="relative overflow-hidden rounded-[2.5rem] bg-slate-900 p-10 lg:p-16 text-white shadow-2xl">
-        <div className="absolute top-0 right-0 p-10 opacity-10 rotate-12">
-           <Sparkles className="w-64 h-64" />
+      <div className="relative overflow-hidden rounded-xl bg-slate-900 p-4 sm:p-5 text-white shadow-sm border border-slate-800">
+        <div className="absolute top-0 right-0 p-4 opacity-10 rotate-12 pointer-events-none">
+           <Sparkles className="w-32 h-32" />
         </div>
         <div className="relative z-10 max-w-2xl">
-          <h2 className="text-3xl lg:text-4xl font-bold mb-4 tracking-tight">Your Institute is Growing!</h2>
-          <p className="text-slate-400 text-lg font-medium leading-relaxed mb-8">
+          <h2 className="text-base sm:text-lg font-bold mb-1 tracking-tight">Your Institute is Growing!</h2>
+          <p className="text-slate-400 text-xs font-medium leading-normal mb-3">
             You currently have {workspace._count.studentProfiles} students enrolled across {workspace._count.courses} active courses. 
             Keep building your landing page or manage your staff members to optimize operations.
           </p>
-          <div className="flex flex-wrap gap-4">
+          <div className="flex flex-wrap gap-2">
             {hasAccess("settings") && (
-              <Button size="lg" className="rounded-2xl font-bold bg-white text-slate-900 hover:bg-slate-100 h-14 px-10">
+              <Button className="rounded-lg font-semibold bg-white text-slate-900 hover:bg-slate-100 h-8 sm:h-9 px-3 text-xs">
                 Launch Setup Guide
               </Button>
             )}
             {hasAccess("settings") && (
               <Link href={await getServerTenantLink("/admin/settings", tenant)}>
-                <Button size="lg" variant="outline" className="rounded-2xl font-bold border-white/20 bg-transparent text-white hover:bg-white/10 hover:text-white h-14 px-10">
+                <Button variant="outline" className="rounded-lg font-semibold border-white/20 bg-transparent text-white hover:bg-white/10 hover:text-white h-8 sm:h-9 px-3 text-xs">
                   Landing Page Settings
                 </Button>
               </Link>

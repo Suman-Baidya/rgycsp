@@ -49,16 +49,16 @@ export function StateManagerDashboardClient({
     const totalPages = Math.ceil(totalItems / itemsPerPageCount);
     if (totalPages <= 1) return null;
     return (
-      <div className="flex items-center justify-between px-6 py-4 border-t border-slate-50 dark:border-slate-800/50 bg-slate-50/50 dark:bg-slate-800/20">
-        <div className="text-sm font-medium text-slate-500">
+      <div className="flex items-center justify-between px-4 py-2.5 border-t border-slate-100 dark:border-slate-800/50 bg-slate-50/50 dark:bg-slate-800/20">
+        <div className="text-xs font-medium text-slate-500">
           Page {currentPage} of {totalPages}
         </div>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={() => setPage(Math.max(1, currentPage - 1))} disabled={currentPage === 1} className="h-9 px-3 rounded-xl border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-sm">
-            <ChevronLeft className="h-4 w-4" />
+        <div className="flex items-center gap-1.5">
+          <Button variant="outline" size="sm" onClick={() => setPage(Math.max(1, currentPage - 1))} disabled={currentPage === 1} className="h-7 px-2 rounded-md border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-sm text-xs">
+            <ChevronLeft className="h-3.5 w-3.5" />
           </Button>
-          <Button variant="outline" size="sm" onClick={() => setPage(Math.min(totalPages, currentPage + 1))} disabled={currentPage === totalPages} className="h-9 px-3 rounded-xl border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-sm">
-            <ChevronRight className="h-4 w-4" />
+          <Button variant="outline" size="sm" onClick={() => setPage(Math.min(totalPages, currentPage + 1))} disabled={currentPage === totalPages} className="h-7 px-2 rounded-md border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-sm text-xs">
+            <ChevronRight className="h-3.5 w-3.5" />
           </Button>
         </div>
       </div>
@@ -144,92 +144,100 @@ export function StateManagerDashboardClient({
   };
 
   return (
-    <div className="space-y-10">
-      {/* Overview Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card className="border-2 border-slate-100 dark:border-slate-800 rounded-[2rem] shadow-sm overflow-hidden hover:shadow-md transition-shadow bg-blue-50/30 dark:bg-blue-950/20">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Available Balance</CardTitle>
-            <div className="p-2 bg-blue-500/10 rounded-xl">
-              <Wallet className="h-4 w-4 text-blue-500" />
+    <div className="space-y-4 sm:space-y-5 pb-8 w-full mx-auto">
+      {/* Metric / Stat Cards Grid (Rule 7.2) */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <Card className="border border-slate-100 dark:border-white/5 shadow-sm rounded-xl overflow-hidden bg-white dark:bg-slate-900">
+          <CardContent className="p-3.5 flex flex-col justify-between h-full">
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-slate-400">Available Balance</p>
+                <div className="p-2 rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400">
+                  <Wallet className="h-4 w-4" />
+                </div>
+              </div>
+              <div className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center mb-2">
+                <IndianRupee className="h-4 w-4 mr-0.5 text-slate-400" />
+                {config.commissionBalance.toFixed(2)}
+              </div>
             </div>
-          </CardHeader>
-          <CardContent className="pt-4">
-            <div className="text-3xl font-black text-blue-600 dark:text-blue-400 flex items-center">
-              <IndianRupee className="h-6 w-6 mr-1" />
-              {config.commissionBalance.toFixed(2)}
-            </div>
-            <div className="flex gap-2 mt-4">
-              <Button size="sm" onClick={() => setIsWithdrawOpen(true)} className="flex-1 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-[10px] font-bold h-8">
+            <div className="flex gap-1.5 pt-1 border-t border-slate-100 dark:border-slate-800">
+              <Button size="sm" onClick={() => setIsWithdrawOpen(true)} className="flex-1 rounded-lg text-xs font-semibold h-7">
                 Withdraw
               </Button>
-              <Button size="sm" variant="outline" onClick={() => setIsTransferOpen(true)} className="flex-1 border-blue-200 text-blue-600 hover:bg-blue-50 dark:border-blue-800 dark:text-blue-400 rounded-xl text-[10px] font-bold h-8">
+              <Button size="sm" variant="outline" onClick={() => setIsTransferOpen(true)} className="flex-1 rounded-lg text-xs font-semibold h-7">
                 To Wallet
               </Button>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="border-2 border-slate-100 dark:border-slate-800 rounded-[2rem] shadow-sm overflow-hidden hover:shadow-md transition-shadow bg-emerald-50/30 dark:bg-emerald-950/20">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Total Earned</CardTitle>
-            <div className="p-2 bg-emerald-500/10 rounded-xl">
-              <IndianRupee className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
-            </div>
-          </CardHeader>
-          <CardContent className="pt-4">
-            <div className="text-3xl font-black text-emerald-600 dark:text-emerald-400 flex items-center">
-              <IndianRupee className="h-6 w-6 mr-1" />
-              {stats.totalEarned.toFixed(2)}
-            </div>
-            <p className="text-[10px] font-bold text-slate-500 mt-2">Lifetime earnings</p>
-          </CardContent>
-        </Card>
-
-        <Card className="border-2 border-slate-100 dark:border-slate-800 rounded-[2rem] shadow-sm overflow-hidden hover:shadow-md transition-shadow bg-amber-50/30 dark:bg-amber-950/20">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Pending Release</CardTitle>
-            <div className="p-2 bg-amber-500/10 rounded-xl">
-              <Clock className="h-4 w-4 text-amber-600 dark:text-amber-400" />
-            </div>
-          </CardHeader>
-          <CardContent className="pt-4">
-            <div className="text-3xl font-black text-amber-600 dark:text-amber-400 flex items-center">
-              <IndianRupee className="h-6 w-6 mr-1" />
-              {stats.totalPending.toFixed(2)}
-            </div>
-            <p className="text-[10px] font-bold text-slate-500 mt-2">Processing</p>
-          </CardContent>
-        </Card>
-
-        <Card className="border-2 border-slate-100 dark:border-slate-800 rounded-[2rem] shadow-sm overflow-hidden hover:shadow-md transition-shadow bg-slate-50/50 dark:bg-slate-900/50">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Referral Info</CardTitle>
-            <div className="p-2 bg-indigo-500/10 rounded-xl">
-              <Building2 className="h-4 w-4 text-indigo-500" />
-            </div>
-          </CardHeader>
-          <CardContent className="pt-4">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="text-2xl font-black font-mono tracking-widest text-slate-900 dark:text-white truncate">
-                {config.referralId || "Not Set"}
+        <Card className="border border-slate-100 dark:border-white/5 shadow-sm rounded-xl overflow-hidden bg-white dark:bg-slate-900">
+          <CardContent className="p-3.5 flex flex-col justify-between h-full">
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-slate-400">Total Earned</p>
+                <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+                  <IndianRupee className="h-4 w-4" />
+                </div>
               </div>
-              <Button size="icon" variant="ghost" onClick={copyReferralId} className="h-8 w-8 text-slate-400 hover:text-slate-900 dark:hover:text-white">
-                <Copy className="h-4 w-4" />
-              </Button>
+              <div className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center mb-1">
+                <IndianRupee className="h-4 w-4 mr-0.5 text-slate-400" />
+                {stats.totalEarned.toFixed(2)}
+              </div>
             </div>
-            <div className="flex items-center gap-2 text-[10px] font-bold text-slate-500 mt-2">
-              <Badge variant="outline" className="text-[10px] font-bold text-purple-600 dark:text-purple-400 border-purple-200 dark:border-purple-800 bg-purple-50 dark:bg-purple-900/20">
-                <Percent className="w-3 h-3 mr-1" /> {config.commission}% Rate
+            <p className="text-[10px] font-medium text-slate-400 pt-1">Lifetime earnings</p>
+          </CardContent>
+        </Card>
+
+        <Card className="border border-slate-100 dark:border-white/5 shadow-sm rounded-xl overflow-hidden bg-white dark:bg-slate-900">
+          <CardContent className="p-3.5 flex flex-col justify-between h-full">
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-slate-400">Pending Release</p>
+                <div className="p-2 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400">
+                  <Clock className="h-4 w-4" />
+                </div>
+              </div>
+              <div className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center mb-1">
+                <IndianRupee className="h-4 w-4 mr-0.5 text-slate-400" />
+                {stats.totalPending.toFixed(2)}
+              </div>
+            </div>
+            <p className="text-[10px] font-medium text-slate-400 pt-1">Processing release</p>
+          </CardContent>
+        </Card>
+
+        <Card className="border border-slate-100 dark:border-white/5 shadow-sm rounded-xl overflow-hidden bg-white dark:bg-slate-900">
+          <CardContent className="p-3.5 flex flex-col justify-between h-full">
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-slate-400">Referral Info</p>
+                <div className="p-2 rounded-lg bg-indigo-500/10 text-indigo-600 dark:text-indigo-400">
+                  <Building2 className="h-4 w-4" />
+                </div>
+              </div>
+              <div className="flex items-center gap-1.5 mb-1">
+                <div className="text-base sm:text-lg font-bold font-mono tracking-wider text-slate-900 dark:text-white truncate">
+                  {config.referralId || "Not Set"}
+                </div>
+                <Button size="icon" variant="ghost" onClick={copyReferralId} className="h-6 w-6 text-slate-400 hover:text-slate-900 dark:hover:text-white shrink-0">
+                  <Copy className="h-3 w-3" />
+                </Button>
+              </div>
+            </div>
+            <div className="flex items-center gap-1.5 text-[10px] font-medium text-slate-400 pt-1">
+              <Badge variant="outline" className="text-[9px] font-bold text-purple-600 dark:text-purple-400 border-none bg-purple-500/10 px-1 py-0">
+                <Percent className="w-2.5 h-2.5 mr-0.5" /> {config.commission}%
               </Badge>
-              <span>Total Referrals: {referredWorkspaces.length}</span>
+              <span>{referredWorkspaces.length} Referrals</span>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Tabs */}
-      <div className="flex flex-nowrap overflow-x-auto no-scrollbar gap-2 p-2 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm max-w-full">
+      {/* Tabs Pill Container (Rule 7.3) */}
+      <div className="flex flex-nowrap overflow-x-auto no-scrollbar gap-1.5 p-1.5 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm max-w-full">
         {[
           { id: "referred", label: "Referred Franchises", icon: Users },
           { id: "commissions", label: "Commission History", icon: Receipt },
@@ -238,66 +246,66 @@ export function StateManagerDashboardClient({
             key={tab.id}
             onClick={() => setActiveTab(tab.id as any)}
             className={cn(
-              "flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 whitespace-nowrap shrink-0",
+              "flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-medium shrink-0 whitespace-nowrap transition-all",
               activeTab === tab.id
-                ? "bg-slate-100 dark:bg-slate-800 text-primary shadow-inner"
+                ? "bg-slate-100 dark:bg-slate-800 text-primary dark:text-white font-semibold shadow-inner"
                 : "text-slate-500 hover:text-slate-900 hover:bg-slate-50 dark:hover:text-white dark:hover:bg-slate-800/50"
             )}
           >
-            <tab.icon className="w-4 h-4" />
+            <tab.icon className="w-3.5 h-3.5" />
             {tab.label}
           </button>
         ))}
       </div>
 
-      <div className="mt-6">
+      <div className="mt-4">
         {activeTab === "referred" && (
-          <Card className="border-none shadow-xl shadow-slate-200/50 dark:shadow-none bg-white dark:bg-slate-900 rounded-[2.5rem] overflow-hidden">
-            <CardHeader className="p-6 md:p-8 border-b border-slate-50 dark:border-slate-800/50">
-              <CardTitle className="text-xl font-bold tracking-tight flex items-center gap-2">
-                <Users className="w-5 h-5 text-primary" />
+          <Card className="border border-slate-200/80 dark:border-slate-800 rounded-xl shadow-sm overflow-hidden bg-white dark:bg-slate-900">
+            <CardHeader className="p-3.5 sm:p-4 border-b border-slate-100 dark:border-slate-800">
+              <CardTitle className="text-xs sm:text-sm font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-1.5">
+                <Users className="w-4 h-4 text-primary" />
                 Referred Franchises ({referredWorkspaces.length})
               </CardTitle>
-              <CardDescription className="text-xs font-medium text-slate-500">Institutes registered using your Referral ID.</CardDescription>
+              <CardDescription className="text-xs text-slate-500">Institutes registered using your Referral ID.</CardDescription>
             </CardHeader>
             <CardContent className="p-0">
               {referredWorkspaces.length === 0 ? (
-                <div className="text-center py-16 font-bold text-slate-500">
+                <div className="text-center py-12 text-xs font-medium text-slate-500">
                   No franchises have used your referral ID yet.
                 </div>
               ) : (
                 <Table>
-                  <TableHeader className="bg-slate-50 dark:bg-slate-800/50">
-                    <TableRow className="border-slate-100 dark:border-slate-800">
-                      <TableHead className="px-8 font-bold text-slate-500 w-20">SL No</TableHead>
-                      <TableHead className="font-bold text-slate-500">Institute Name</TableHead>
-                      <TableHead className="font-bold text-slate-500">Total Earned</TableHead>
-                      <TableHead className="font-bold text-slate-500">Opening Date</TableHead>
-                      <TableHead className="text-right px-8 font-bold text-slate-500">Actions</TableHead>
+                  <TableHeader className="bg-slate-50/70 dark:bg-slate-800/50">
+                    <TableRow className="border-slate-100 dark:border-slate-800 h-9">
+                      <TableHead className="px-3.5 py-2 text-xs font-semibold text-slate-500 w-16">SL No</TableHead>
+                      <TableHead className="px-3.5 py-2 text-xs font-semibold text-slate-500">Institute Name</TableHead>
+                      <TableHead className="px-3.5 py-2 text-xs font-semibold text-slate-500">Total Earned</TableHead>
+                      <TableHead className="px-3.5 py-2 text-xs font-semibold text-slate-500">Opening Date</TableHead>
+                      <TableHead className="text-right px-3.5 py-2 text-xs font-semibold text-slate-500">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
-                  <TableBody>
+                  <TableBody className="divide-y divide-slate-100 dark:divide-slate-800">
                     {paginate(referredWorkspaces, currentPageReferred, itemsPerPageReferred).map((rw: any, idx: number) => (
-                      <TableRow key={rw.id} className="border-slate-50 dark:border-slate-800 hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors">
-                        <TableCell className="px-8 py-4 font-bold text-sm text-slate-500 dark:text-slate-400">
+                      <TableRow key={rw.id} className="border-slate-100 dark:border-slate-800 hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors">
+                        <TableCell className="px-3.5 py-2.5 font-medium text-xs text-slate-500">
                           #{(currentPageReferred - 1) * itemsPerPageReferred + idx + 1}
                         </TableCell>
-                        <TableCell className="py-4">
-                          <div className="font-black text-sm text-slate-900 dark:text-white">{rw.name}</div>
-                          <div className="text-xs font-medium text-slate-500 flex items-center gap-1 mt-1">
+                        <TableCell className="px-3.5 py-2.5">
+                          <div className="font-semibold text-xs sm:text-sm text-slate-900 dark:text-white">{rw.name}</div>
+                          <div className="text-[11px] text-slate-500 flex items-center gap-1 mt-0.5">
                             <Users className="w-3 h-3" /> {rw.ownerName}
                           </div>
                         </TableCell>
-                        <TableCell className="font-black text-emerald-600 dark:text-emerald-400">
+                        <TableCell className="px-3.5 py-2.5 font-bold text-xs text-emerald-600 dark:text-emerald-400">
                           <div className="flex items-center gap-0.5">
-                            <IndianRupee className="w-4 h-4" />{(rw.totalEarned || 0).toFixed(2)}
+                            <IndianRupee className="w-3.5 h-3.5" />{(rw.totalEarned || 0).toFixed(2)}
                           </div>
                         </TableCell>
-                        <TableCell className="font-medium text-slate-500">
+                        <TableCell className="px-3.5 py-2.5 text-xs text-slate-500">
                           {formatDate(rw.createdAt)}
                         </TableCell>
-                        <TableCell className="text-right px-8">
-                          <Button variant="outline" size="sm" onClick={() => handleViewRecharges(rw.id)} className="h-8 rounded-lg text-xs font-bold border-blue-200 text-blue-600 hover:bg-blue-50 dark:border-blue-800 dark:text-blue-400 dark:hover:bg-blue-900/20 shadow-sm">
+                        <TableCell className="text-right px-3.5 py-2.5">
+                          <Button variant="outline" size="sm" onClick={() => handleViewRecharges(rw.id)} className="h-7 px-2.5 rounded-lg text-xs font-semibold">
                             <Receipt className="w-3 h-3 mr-1" /> View Recharges
                           </Button>
                         </TableCell>
@@ -312,49 +320,49 @@ export function StateManagerDashboardClient({
         )}
 
         {activeTab === "commissions" && (
-          <Card className="border-none shadow-xl shadow-slate-200/50 dark:shadow-none bg-white dark:bg-slate-900 rounded-[2.5rem] overflow-hidden">
-            <CardHeader className="p-6 md:p-8 border-b border-slate-50 dark:border-slate-800/50">
-              <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4">
+          <Card className="border border-slate-200/80 dark:border-slate-800 rounded-xl shadow-sm overflow-hidden bg-white dark:bg-slate-900">
+            <CardHeader className="p-3.5 sm:p-4 border-b border-slate-100 dark:border-slate-800">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div>
-                  <CardTitle className="text-xl font-bold tracking-tight flex items-center gap-2">
-                    <Receipt className="w-5 h-5 text-primary" />
+                  <CardTitle className="text-xs sm:text-sm font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-1.5">
+                    <Receipt className="w-4 h-4 text-primary" />
                     Transaction History
                   </CardTitle>
-                  <CardDescription className="text-xs font-medium text-slate-500 mt-1">
+                  <CardDescription className="text-xs text-slate-500">
                     All commissions, withdrawals, and transfers.
                   </CardDescription>
                 </div>
                 
                 <div className="flex flex-wrap items-center gap-2">
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                  <div className="relative w-full sm:w-[180px] group">
+                    <Search className="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none h-3.5 w-3.5 text-slate-400" />
                     <Input 
-                      placeholder="Search transactions..." 
+                      placeholder="Search..." 
                       value={txSearchQuery}
                       onChange={(e) => { setTxSearchQuery(e.target.value); setCurrentPageCommissions(1); }}
-                      className="pl-9 h-10 w-full sm:w-[220px] rounded-xl bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800 font-medium text-sm"
+                      className="h-8 sm:h-9 pl-8 pr-3 bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700/60 rounded-lg text-xs placeholder:text-xs placeholder:text-slate-400"
                     />
                   </div>
                   
                   <Select value={txTypeFilter} onValueChange={(v) => { setTxTypeFilter(v as string); setCurrentPageCommissions(1); }}>
-                    <SelectTrigger className="h-10 w-full sm:w-[150px] rounded-xl bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800 font-bold text-slate-600 dark:text-slate-300">
-                      <div className="flex items-center gap-2"><Filter className="w-3.5 h-3.5 text-slate-400"/> <SelectValue /></div>
+                    <SelectTrigger className="h-8 sm:h-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700/60 w-[120px]">
+                      <div className="flex items-center gap-1.5 truncate"><Filter className="w-3 h-3 text-slate-400 shrink-0"/> <SelectValue /></div>
                     </SelectTrigger>
-                    <SelectContent className="rounded-xl">
-                      <SelectItem value="ALL" className="font-medium">All Types</SelectItem>
-                      <SelectItem value="EARNINGS" className="font-medium text-emerald-600">Earnings</SelectItem>
-                      <SelectItem value="WITHDRAWALS" className="font-medium text-red-600">Withdrawals</SelectItem>
-                      <SelectItem value="TRANSFERS" className="font-medium text-blue-600">Transfers</SelectItem>
+                    <SelectContent className="rounded-xl text-xs">
+                      <SelectItem value="ALL">All Types</SelectItem>
+                      <SelectItem value="EARNINGS" className="text-emerald-600">Earnings</SelectItem>
+                      <SelectItem value="WITHDRAWALS" className="text-red-600">Withdrawals</SelectItem>
+                      <SelectItem value="TRANSFERS" className="text-blue-600">Transfers</SelectItem>
                     </SelectContent>
                   </Select>
 
                   <Select value={txSortOrder} onValueChange={(v) => { setTxSortOrder(v as string); setCurrentPageCommissions(1); }}>
-                    <SelectTrigger className="h-10 w-full sm:w-[150px] rounded-xl bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800 font-bold text-slate-600 dark:text-slate-300">
-                      <div className="flex items-center gap-2"><CalendarIcon className="w-3.5 h-3.5 text-slate-400"/> <SelectValue /></div>
+                    <SelectTrigger className="h-8 sm:h-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700/60 w-[120px]">
+                      <div className="flex items-center gap-1.5 truncate"><CalendarIcon className="w-3 h-3 text-slate-400 shrink-0"/> <SelectValue /></div>
                     </SelectTrigger>
-                    <SelectContent className="rounded-xl">
-                      <SelectItem value="NEWEST" className="font-medium">Newest First</SelectItem>
-                      <SelectItem value="OLDEST" className="font-medium">Oldest First</SelectItem>
+                    <SelectContent className="rounded-xl text-xs">
+                      <SelectItem value="NEWEST">Newest</SelectItem>
+                      <SelectItem value="OLDEST">Oldest</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -362,44 +370,44 @@ export function StateManagerDashboardClient({
             </CardHeader>
             <CardContent className="p-0">
               {filteredCommissions.length === 0 ? (
-                <div className="text-center py-16 font-bold text-slate-500">
+                <div className="text-center py-12 text-xs font-medium text-slate-500">
                   No commission transactions found.
                 </div>
               ) : (
                 <Table>
-                  <TableHeader className="bg-slate-50 dark:bg-slate-800/50">
-                    <TableRow className="border-slate-100 dark:border-slate-800">
-                      <TableHead className="px-8 font-bold text-slate-500 w-20">SL No</TableHead>
-                      <TableHead className="font-bold text-slate-500">Description</TableHead>
-                      <TableHead className="font-bold text-slate-500">Date</TableHead>
-                      <TableHead className="font-bold text-slate-500">Status</TableHead>
-                      <TableHead className="text-right px-8 font-bold text-slate-500">Amount</TableHead>
+                  <TableHeader className="bg-slate-50/70 dark:bg-slate-800/50">
+                    <TableRow className="border-slate-100 dark:border-slate-800 h-9">
+                      <TableHead className="px-3.5 py-2 text-xs font-semibold text-slate-500 w-16">SL No</TableHead>
+                      <TableHead className="px-3.5 py-2 text-xs font-semibold text-slate-500">Description</TableHead>
+                      <TableHead className="px-3.5 py-2 text-xs font-semibold text-slate-500">Date</TableHead>
+                      <TableHead className="px-3.5 py-2 text-xs font-semibold text-slate-500">Status</TableHead>
+                      <TableHead className="text-right px-3.5 py-2 text-xs font-semibold text-slate-500">Amount</TableHead>
                     </TableRow>
                   </TableHeader>
-                  <TableBody>
+                  <TableBody className="divide-y divide-slate-100 dark:divide-slate-800">
                     {paginate(filteredCommissions, currentPageCommissions, itemsPerPageCommissions).map((comm: any, idx: number) => (
-                      <TableRow key={comm.id} className="border-slate-50 dark:border-slate-800">
-                        <TableCell className="px-8 py-4 font-bold text-sm text-slate-500 dark:text-slate-400">
+                      <TableRow key={comm.id} className="border-slate-100 dark:border-slate-800 hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors">
+                        <TableCell className="px-3.5 py-2.5 font-medium text-xs text-slate-500">
                           #{(currentPageCommissions - 1) * itemsPerPageCommissions + idx + 1}
                         </TableCell>
-                        <TableCell className="py-4 font-bold text-sm text-slate-900 dark:text-white">
-                          <span className="flex items-center gap-2">
-                            {comm.type === 'DEBIT' && comm.isCommissionWithdrawal && <ArrowDownToLine className="w-4 h-4 text-blue-500" />}
-                            {comm.type === 'DEBIT' && comm.isCommissionTransfer && <ArrowRightLeft className="w-4 h-4 text-purple-500" />}
-                            {comm.type === 'CREDIT' && <Wallet className="w-4 h-4 text-emerald-500" />}
+                        <TableCell className="px-3.5 py-2.5 font-medium text-xs text-slate-900 dark:text-white">
+                          <span className="flex items-center gap-1.5">
+                            {comm.type === 'DEBIT' && comm.isCommissionWithdrawal && <ArrowDownToLine className="w-3.5 h-3.5 text-blue-500" />}
+                            {comm.type === 'DEBIT' && comm.isCommissionTransfer && <ArrowRightLeft className="w-3.5 h-3.5 text-purple-500" />}
+                            {comm.type === 'CREDIT' && <Wallet className="w-3.5 h-3.5 text-emerald-500" />}
                             {comm.description}
                           </span>
                         </TableCell>
-                        <TableCell className="font-medium text-slate-500 whitespace-nowrap">
+                        <TableCell className="px-3.5 py-2.5 text-xs text-slate-500 whitespace-nowrap">
                           {formatDate(comm.createdAt)}
                         </TableCell>
-                        <TableCell>
-                          <Badge variant="outline" className={cn("font-bold border-0 shadow-none px-2.5 py-0.5", comm.status === 'APPROVED' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400' : 'bg-red-100 text-red-700 dark:bg-red-500/10 dark:text-red-400')}>
+                        <TableCell className="px-3.5 py-2.5">
+                          <Badge variant="outline" className={cn("text-[9px] font-bold uppercase tracking-wider border-none px-1.5 py-0.5", comm.status === 'APPROVED' ? 'bg-emerald-500/10 text-emerald-600' : 'bg-red-500/10 text-red-600')}>
                             {comm.status}
                           </Badge>
                         </TableCell>
-                        <TableCell className={`text-right px-8 font-black flex justify-end items-center mt-2.5 ${comm.type === 'DEBIT' ? 'text-slate-900 dark:text-white' : 'text-emerald-600 dark:text-emerald-400'}`}>
-                          {comm.type === 'DEBIT' ? '-' : '+'}<IndianRupee className="w-4 h-4" />{comm.amount.toFixed(2)}
+                        <TableCell className={`text-right px-3.5 py-2.5 font-bold text-xs ${comm.type === 'DEBIT' ? 'text-slate-900 dark:text-white' : 'text-emerald-600 dark:text-emerald-400'}`}>
+                          {comm.type === 'DEBIT' ? '-' : '+'}<span className="inline-flex items-center"><IndianRupee className="w-3 h-3 mr-0.5" />{comm.amount.toFixed(2)}</span>
                         </TableCell>
                       </TableRow>
                     ))}
@@ -412,128 +420,128 @@ export function StateManagerDashboardClient({
         )}
       </div>
 
-      {/* Withdraw Dialog */}
+      {/* Withdraw Dialog (Rule 7.7) */}
       <Dialog open={isWithdrawOpen} onOpenChange={setIsWithdrawOpen}>
-        <DialogContent className="rounded-[2rem] p-8 max-w-md border-none shadow-2xl">
-          <div className="space-y-6">
-            <div className="text-center">
-              <div className="w-16 h-16 bg-blue-50 dark:bg-blue-900/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                <ArrowDownToLine className="w-8 h-8 text-blue-600 dark:text-blue-400" />
+        <DialogContent className="sm:max-w-md rounded-2xl p-4 sm:p-5 border border-slate-200 dark:border-slate-800 shadow-xl">
+          <div className="space-y-4">
+            <div className="text-center pb-2 border-b border-slate-100 dark:border-slate-800">
+              <div className="w-10 h-10 bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-xl flex items-center justify-center mx-auto mb-2">
+                <ArrowDownToLine className="w-5 h-5" />
               </div>
-              <h2 className="text-2xl font-black text-slate-900 dark:text-white">Request Withdrawal</h2>
-              <p className="text-sm text-slate-500 font-medium mt-1">Available balance: ₹{config.commissionBalance.toFixed(2)}</p>
+              <h2 className="text-base font-bold text-slate-900 dark:text-white">Request Withdrawal</h2>
+              <p className="text-xs text-slate-500 mt-0.5">Available balance: ₹{config.commissionBalance.toFixed(2)}</p>
             </div>
             
-            <div className="space-y-3 bg-slate-50 dark:bg-slate-900/50 p-6 rounded-3xl border border-slate-100 dark:border-slate-800">
-              <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block text-center">Amount to Withdraw</label>
+            <div className="space-y-2 bg-slate-50 dark:bg-slate-800/50 p-3 rounded-xl border border-slate-200 dark:border-slate-700/60">
+              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block text-center">Amount to Withdraw</label>
               <div className="relative flex items-center justify-center">
-                <IndianRupee className="absolute left-4 w-6 h-6 text-slate-400" />
+                <IndianRupee className="absolute left-3 w-4 h-4 text-slate-400" />
                 <Input 
                   type="number" 
                   value={withdrawAmount} 
                   onChange={(e) => setWithdrawAmount(e.target.value)} 
                   placeholder="0.00" 
-                  className="h-16 pl-12 pr-4 font-black text-3xl rounded-2xl text-center border-slate-200 dark:border-slate-700 shadow-sm focus-visible:ring-blue-500" 
+                  className="h-9 pl-9 pr-3 font-bold text-base rounded-lg text-center bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700" 
                 />
               </div>
-              <div className="flex justify-center gap-2 pt-2">
-                <Button variant="outline" size="sm" onClick={() => setWithdrawAmount((config.commissionBalance * 0.25).toFixed(0))} className="h-7 text-[10px] rounded-lg">25%</Button>
-                <Button variant="outline" size="sm" onClick={() => setWithdrawAmount((config.commissionBalance * 0.50).toFixed(0))} className="h-7 text-[10px] rounded-lg">50%</Button>
-                <Button variant="outline" size="sm" onClick={() => setWithdrawAmount(config.commissionBalance.toFixed(0))} className="h-7 text-[10px] rounded-lg border-blue-200 text-blue-600 dark:border-blue-800 dark:text-blue-400">Max</Button>
+              <div className="flex justify-center gap-1.5 pt-1">
+                <Button variant="outline" size="sm" onClick={() => setWithdrawAmount((config.commissionBalance * 0.25).toFixed(0))} className="h-6 text-[10px] px-2 rounded">25%</Button>
+                <Button variant="outline" size="sm" onClick={() => setWithdrawAmount((config.commissionBalance * 0.50).toFixed(0))} className="h-6 text-[10px] px-2 rounded">50%</Button>
+                <Button variant="outline" size="sm" onClick={() => setWithdrawAmount(config.commissionBalance.toFixed(0))} className="h-6 text-[10px] px-2 rounded">Max</Button>
               </div>
             </div>
 
-            <div className="bg-blue-50 dark:bg-blue-900/20 text-blue-800 dark:text-blue-300 p-4 rounded-xl text-xs font-medium flex items-start gap-3">
-              <Clock className="w-5 h-5 shrink-0 mt-0.5 opacity-70" />
-              <p>Withdrawal requests are processed offline by the Super Admin. You will receive the funds in your designated bank account.</p>
+            <div className="bg-blue-500/10 text-blue-700 dark:text-blue-300 p-2.5 rounded-lg text-[11px] font-medium flex items-start gap-2">
+              <Clock className="w-4 h-4 shrink-0 mt-0.5" />
+              <p>Withdrawal requests are processed offline by the Super Admin into your designated bank account.</p>
             </div>
 
-            <div className="flex gap-3 pt-2">
-              <Button variant="outline" onClick={() => setIsWithdrawOpen(false)} className="flex-1 rounded-2xl h-12 font-bold border-slate-200 dark:border-slate-700">Cancel</Button>
-              <Button onClick={handleWithdraw} className="flex-1 rounded-2xl h-12 font-bold bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-500/25">Submit Request</Button>
+            <div className="flex gap-2 pt-1">
+              <Button variant="outline" onClick={() => setIsWithdrawOpen(false)} className="flex-1 rounded-lg h-8 sm:h-9 text-xs">Cancel</Button>
+              <Button onClick={handleWithdraw} className="flex-1 rounded-lg h-8 sm:h-9 text-xs font-semibold bg-blue-600 hover:bg-blue-700 text-white">Submit Request</Button>
             </div>
           </div>
         </DialogContent>
       </Dialog>
 
-      {/* Transfer Dialog */}
+      {/* Transfer Dialog (Rule 7.7) */}
       <Dialog open={isTransferOpen} onOpenChange={setIsTransferOpen}>
-        <DialogContent className="rounded-[2rem] p-8 max-w-md border-none shadow-2xl">
-          <div className="space-y-6">
-            <div className="text-center">
-              <div className="w-16 h-16 bg-purple-50 dark:bg-purple-900/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                <ArrowRightLeft className="w-8 h-8 text-purple-600 dark:text-purple-400" />
+        <DialogContent className="sm:max-w-md rounded-2xl p-4 sm:p-5 border border-slate-200 dark:border-slate-800 shadow-xl">
+          <div className="space-y-4">
+            <div className="text-center pb-2 border-b border-slate-100 dark:border-slate-800">
+              <div className="w-10 h-10 bg-purple-500/10 text-purple-600 dark:text-purple-400 rounded-xl flex items-center justify-center mx-auto mb-2">
+                <ArrowRightLeft className="w-5 h-5" />
               </div>
-              <h2 className="text-2xl font-black text-slate-900 dark:text-white">Transfer to Wallet</h2>
-              <p className="text-sm text-slate-500 font-medium mt-1">Available balance: ₹{config.commissionBalance.toFixed(2)}</p>
+              <h2 className="text-base font-bold text-slate-900 dark:text-white">Transfer to Wallet</h2>
+              <p className="text-xs text-slate-500 mt-0.5">Available balance: ₹{config.commissionBalance.toFixed(2)}</p>
             </div>
             
-            <div className="space-y-3 bg-slate-50 dark:bg-slate-900/50 p-6 rounded-3xl border border-slate-100 dark:border-slate-800">
-              <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block text-center">Amount to Transfer</label>
+            <div className="space-y-2 bg-slate-50 dark:bg-slate-800/50 p-3 rounded-xl border border-slate-200 dark:border-slate-700/60">
+              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block text-center">Amount to Transfer</label>
               <div className="relative flex items-center justify-center">
-                <IndianRupee className="absolute left-4 w-6 h-6 text-slate-400" />
+                <IndianRupee className="absolute left-3 w-4 h-4 text-slate-400" />
                 <Input 
                   type="number" 
                   value={transferAmount} 
                   onChange={(e) => setTransferAmount(e.target.value)} 
                   placeholder="0.00" 
-                  className="h-16 pl-12 pr-4 font-black text-3xl rounded-2xl text-center border-slate-200 dark:border-slate-700 shadow-sm focus-visible:ring-purple-500" 
+                  className="h-9 pl-9 pr-3 font-bold text-base rounded-lg text-center bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700" 
                 />
               </div>
-              <div className="flex justify-center gap-2 pt-2">
-                <Button variant="outline" size="sm" onClick={() => setTransferAmount((config.commissionBalance * 0.25).toFixed(0))} className="h-7 text-[10px] rounded-lg">25%</Button>
-                <Button variant="outline" size="sm" onClick={() => setTransferAmount((config.commissionBalance * 0.50).toFixed(0))} className="h-7 text-[10px] rounded-lg">50%</Button>
-                <Button variant="outline" size="sm" onClick={() => setTransferAmount(config.commissionBalance.toFixed(0))} className="h-7 text-[10px] rounded-lg border-purple-200 text-purple-600 dark:border-purple-800 dark:text-purple-400">Max</Button>
+              <div className="flex justify-center gap-1.5 pt-1">
+                <Button variant="outline" size="sm" onClick={() => setTransferAmount((config.commissionBalance * 0.25).toFixed(0))} className="h-6 text-[10px] px-2 rounded">25%</Button>
+                <Button variant="outline" size="sm" onClick={() => setTransferAmount((config.commissionBalance * 0.50).toFixed(0))} className="h-6 text-[10px] px-2 rounded">50%</Button>
+                <Button variant="outline" size="sm" onClick={() => setTransferAmount(config.commissionBalance.toFixed(0))} className="h-6 text-[10px] px-2 rounded">Max</Button>
               </div>
             </div>
 
-            <div className="bg-purple-50 dark:bg-purple-900/20 text-purple-800 dark:text-purple-300 p-4 rounded-xl text-xs font-medium flex items-start gap-3">
-              <Wallet className="w-5 h-5 shrink-0 mt-0.5 opacity-70" />
-              <p>Transferred funds will be instantly added to your main franchise wallet, which can be used to purchase tokens, exams, and courses.</p>
+            <div className="bg-purple-500/10 text-purple-700 dark:text-purple-300 p-2.5 rounded-lg text-[11px] font-medium flex items-start gap-2">
+              <Wallet className="w-4 h-4 shrink-0 mt-0.5" />
+              <p>Transferred funds will be instantly added to your main franchise wallet to purchase tokens and student items.</p>
             </div>
 
-            <div className="flex gap-3 pt-2">
-              <Button variant="outline" onClick={() => setIsTransferOpen(false)} className="flex-1 rounded-2xl h-12 font-bold border-slate-200 dark:border-slate-700">Cancel</Button>
-              <Button onClick={handleTransfer} className="flex-1 rounded-2xl h-12 font-bold bg-purple-600 hover:bg-purple-700 text-white shadow-lg shadow-purple-500/25">Transfer Now</Button>
+            <div className="flex gap-2 pt-1">
+              <Button variant="outline" onClick={() => setIsTransferOpen(false)} className="flex-1 rounded-lg h-8 sm:h-9 text-xs">Cancel</Button>
+              <Button onClick={handleTransfer} className="flex-1 rounded-lg h-8 sm:h-9 text-xs font-semibold bg-purple-600 hover:bg-purple-700 text-white">Transfer Now</Button>
             </div>
           </div>
         </DialogContent>
       </Dialog>
 
-      {/* Recharge History Dialog */}
+      {/* Recharge History Dialog (Rule 7.7) */}
       <Dialog open={isRechargeModalOpen} onOpenChange={(open) => {
         setIsRechargeModalOpen(open);
         if (!open) setTimeout(() => setSelectedFranchiseRecharges(null), 300);
       }}>
-        <DialogContent className="rounded-[2rem] p-8 max-w-2xl border-none shadow-2xl bg-white dark:bg-slate-900 overflow-hidden flex flex-col max-h-[85vh]">
-          <div className="text-center mb-6 shrink-0">
-            <div className="w-16 h-16 bg-emerald-50 dark:bg-emerald-900/20 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Receipt className="w-8 h-8 text-emerald-600 dark:text-emerald-400" />
+        <DialogContent className="sm:max-w-xl rounded-2xl p-4 sm:p-5 border border-slate-200 dark:border-slate-800 shadow-xl overflow-hidden flex flex-col max-h-[85vh]">
+          <div className="text-center mb-3 shrink-0 pb-2 border-b border-slate-100 dark:border-slate-800">
+            <div className="w-10 h-10 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-xl flex items-center justify-center mx-auto mb-2">
+              <Receipt className="w-5 h-5" />
             </div>
-            <h2 className="text-2xl font-black text-slate-900 dark:text-white">Recharge History</h2>
-            <p className="text-sm text-slate-500 font-medium mt-1">
+            <h2 className="text-base font-bold text-slate-900 dark:text-white">Recharge History</h2>
+            <p className="text-xs text-slate-500 mt-0.5">
               {isLoadingRecharges ? "Loading..." : selectedFranchiseRecharges ? `For ${selectedFranchiseRecharges.franchiseName}` : ""}
             </p>
           </div>
 
-          <div className="flex-1 overflow-y-auto pr-2 no-scrollbar">
+          <div className="flex-1 overflow-y-auto pr-1 no-scrollbar space-y-2">
             {isLoadingRecharges ? (
-              <div className="text-center py-12 text-slate-500 font-bold animate-pulse">Fetching transactions...</div>
+              <div className="text-center py-8 text-xs text-slate-500 font-medium animate-pulse">Fetching transactions...</div>
             ) : selectedFranchiseRecharges ? (
               selectedFranchiseRecharges.recharges.length === 0 ? (
-                <div className="text-center py-12 text-slate-500 font-bold bg-slate-50 dark:bg-slate-800/50 rounded-3xl border border-slate-100 dark:border-slate-800">
+                <div className="text-center py-8 text-xs text-slate-500 font-medium">
                   No recharges found for this franchise during your referral period.
                 </div>
               ) : (
-                <div className="space-y-3">
+                <div className="space-y-2">
                   {selectedFranchiseRecharges.recharges.map((tx: any) => (
-                    <div key={tx.id} className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-800 hover:border-emerald-200 dark:hover:border-emerald-800 transition-colors">
+                    <div key={tx.id} className="flex items-center justify-between p-2.5 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700/60">
                       <div>
-                        <div className="font-bold text-sm text-slate-900 dark:text-white">{tx.description || "Wallet Recharge"}</div>
-                        <div className="text-xs font-medium text-slate-500 mt-1">{formatDate(tx.createdAt)}</div>
+                        <div className="font-semibold text-xs text-slate-900 dark:text-white">{tx.description || "Wallet Recharge"}</div>
+                        <div className="text-[10px] text-slate-400 mt-0.5">{formatDate(tx.createdAt)}</div>
                       </div>
-                      <div className="text-emerald-600 dark:text-emerald-400 font-black flex items-center gap-1">
-                        +<IndianRupee className="w-4 h-4" />{tx.amount.toFixed(2)}
+                      <div className="text-emerald-600 dark:text-emerald-400 font-bold text-xs flex items-center">
+                        +<IndianRupee className="w-3.5 h-3.5 mr-0.5" />{tx.amount.toFixed(2)}
                       </div>
                     </div>
                   ))}
@@ -542,8 +550,8 @@ export function StateManagerDashboardClient({
             ) : null}
           </div>
 
-          <div className="pt-6 shrink-0 mt-auto">
-            <Button variant="outline" onClick={() => setIsRechargeModalOpen(false)} className="w-full rounded-2xl h-12 font-bold border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800">
+          <div className="pt-3 shrink-0 mt-auto border-t border-slate-100 dark:border-slate-800">
+            <Button variant="outline" onClick={() => setIsRechargeModalOpen(false)} className="w-full rounded-lg h-8 sm:h-9 text-xs font-semibold">
               Close
             </Button>
           </div>

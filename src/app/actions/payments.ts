@@ -160,6 +160,18 @@ export async function generateStudentPaymentStructure(studentProfileId: string, 
       newInvoices.map(inv => db.invoice.create({ data: inv as any }))
     );
 
+    // Notify student via web push
+    if (student.userId) {
+      import("@/app/actions/web-push").then(({ sendWebPushNotification }) => {
+        sendWebPushNotification({
+          userIds: [student.userId],
+          title: "New Fee Invoices Generated",
+          message: "Your payment structure and fee schedule have been published. Check your fees portal.",
+          url: "/student/dashboard/fees",
+        }).catch(err => console.error("Push notification error:", err));
+      });
+    }
+
     await revalidateWorkspacePath(typeof workspaceId !== 'undefined' ? workspaceId : (typeof data !== 'undefined' ? data.workspaceId : null), "/admin/students");
     return { success: true, message: "Payment structure generated successfully" };
   } catch (error: any) {
@@ -177,8 +189,23 @@ export async function recordManualOfflinePayment(invoiceId: string, paymentMetho
         paidDate: new Date(),
         paymentMethod,
         notes: notes ? notes : undefined
+      },
+      include: {
+        student: { select: { userId: true } }
       }
     });
+
+    // Notify student of payment acknowledgment
+    if (invoice.student?.userId) {
+      import("@/app/actions/web-push").then(({ sendWebPushNotification }) => {
+        sendWebPushNotification({
+          userIds: [invoice.student.userId],
+          title: "Payment Receipt Acknowledged",
+          message: `Payment of ₹${invoice.amount} has been marked as PAID. Thank you!`,
+          url: "/student/dashboard/fees",
+        }).catch(err => console.error("Push notification error:", err));
+      });
+    }
 
     await revalidateWorkspacePath(typeof workspaceId !== 'undefined' ? workspaceId : (typeof data !== 'undefined' ? data.workspaceId : null), "/admin/students");
     return { success: true, data: invoice };

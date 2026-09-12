@@ -3,32 +3,18 @@
 import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, GraduationCap, Printer, CheckSquare, Building2, FileText, CheckCircle, ChevronDown, Check, Eye, Download } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
+import { Search, GraduationCap, Printer, CheckSquare, Building2, ChevronLeft, ChevronRight, Eye, Download } from "lucide-react";
 import { enrollStudentsToExam } from "@/app/actions/exam";
 import { toast } from "sonner";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { useParams, usePathname, useRouter } from "next/navigation";
-import { getTenantLink } from "@/lib/routing";
 import { DocumentRenderer, DocumentRendererRef } from "@/components/documents/DocumentRenderer";
 import type { jsPDF } from "jspdf";
+
 export default function AdmitCardTab({ students, courses, batches, exams }: { students: any[], courses: any[], batches: any[], exams: any[] }) {
-  const router = useRouter();
-  const params = useParams();
-  const pathname = usePathname();
-  const tenant = params.tenant as string;
-  
   const [search, setSearch] = useState("");
   const [selectedExamId, setSelectedExamId] = useState<string>("");
   const [filterExamId, setFilterExamId] = useState<string>("all");
@@ -77,6 +63,19 @@ export default function AdmitCardTab({ students, courses, batches, exams }: { st
   const totalPages = Math.ceil(filteredStudents.length / itemsPerPage);
   const paginatedStudents = filteredStudents.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
+  const getPageNumbers = () => {
+    if (totalPages <= 7) {
+      return Array.from({ length: totalPages }, (_, i) => i + 1);
+    }
+    if (currentPage <= 4) {
+      return [1, 2, 3, 4, 5, "...", totalPages];
+    }
+    if (currentPage >= totalPages - 3) {
+      return [1, "...", totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages];
+    }
+    return [1, "...", currentPage - 1, currentPage, currentPage + 1, "...", totalPages];
+  };
+
   const toggleStudent = (id: string) => {
     const newSet = new Set(selectedStudents);
     if (newSet.has(id)) newSet.delete(id);
@@ -116,7 +115,6 @@ export default function AdmitCardTab({ students, courses, batches, exams }: { st
       });
       if (res.success) {
         toast.success(res.message);
-        // Deselect all
         setSelectedStudents(new Set());
       } else {
         toast.error(res.error || "Failed to enroll students");
@@ -129,7 +127,7 @@ export default function AdmitCardTab({ students, courses, batches, exams }: { st
   };
 
   const handleIssueSingle = async (studentId: string) => {
-    if (!selectedExamId) return toast.error("Please select an Target Exam first.");
+    if (!selectedExamId) return toast.error("Please select a Target Exam first.");
 
     let strategy: 'sequential' | 'equal' = 'sequential';
     let shiftId = undefined;
@@ -181,11 +179,9 @@ export default function AdmitCardTab({ students, courses, batches, exams }: { st
 
   useEffect(() => {
     if (bulkState.isActive && bulkState.currentIndex < bulkState.queue.length) {
-      // Trigger render for current student
       const studentId = bulkState.queue[bulkState.currentIndex];
-      handlePrintTrigger(studentId, false, true); // true = isBulk mode, so don't show preview
+      handlePrintTrigger(studentId, false, true);
     } else if (bulkState.isActive && bulkState.currentIndex === bulkState.queue.length && bulkState.queue.length > 0) {
-      // Finished
       if (pdfRef.current) {
         pdfRef.current.save(`Bulk_Admit_Cards.pdf`);
         toast.success(`Successfully generated ${bulkState.queue.length} admit cards!`, { id: "bulk-print" });
@@ -238,7 +234,6 @@ export default function AdmitCardTab({ students, courses, batches, exams }: { st
       toast.info("Preparing rendering engine...");
     }
     
-    // We pass `autoDownload` false because bulk uses its own pipeline, preview uses preview.
     setPrintData({ student: mappedStudent, examData, autoDownload: isBulk ? false : autoDownload, timestamp: Date.now() });
   };
 
@@ -246,7 +241,6 @@ export default function AdmitCardTab({ students, courses, batches, exams }: { st
     if (!rendererRef.current || !printData) return;
 
     if (!rendererRef.current.hasTemplate()) {
-      // Template missing or failed to load. The DocumentRenderer already toasted an error.
       if (bulkState.isActive) {
         setBulkState({ isActive: false, queue: [], currentIndex: 0, examId: "" });
         pdfRef.current = null;
@@ -272,7 +266,6 @@ export default function AdmitCardTab({ students, courses, batches, exams }: { st
         pdfRef.current.addImage(imgData, "JPEG", 0, 0, dims.width, dims.height);
       }
       
-      // Move to next student
       setBulkState(prev => ({ ...prev, currentIndex: prev.currentIndex + 1 }));
     } else {
       if (printData.autoDownload) {
@@ -287,97 +280,91 @@ export default function AdmitCardTab({ students, courses, batches, exams }: { st
   const totalCapacity = selectedExam?.shifts?.reduce((acc: number, shift: any) => acc + shift.capacity - (shift._count?.enrollments || 0), 0) || 0;
 
   return (
-    <div className="space-y-8 mt-6">
-      {/* Configuration Header */}
-      <Card className="border-2 border-slate-100 dark:border-slate-800 rounded-[2.5rem] bg-white dark:bg-slate-900 shadow-xl shadow-slate-200/20 dark:shadow-none">
-        <CardHeader className="bg-slate-50/50 dark:bg-slate-800/50 border-b p-8">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-400 to-teal-600 text-white flex items-center justify-center shadow-lg shadow-emerald-500/30">
-              <GraduationCap className="w-5 h-5" />
+    <div className="space-y-4">
+      {/* 1. Assignment Toolbar Card (Rule 7.4) */}
+      <Card className="border border-slate-200/80 dark:border-slate-800 rounded-xl shadow-xs overflow-hidden bg-white dark:bg-slate-900">
+        <div className="p-3 sm:p-3.5 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/20 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div className="flex items-center gap-2.5">
+            <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 shrink-0">
+              <GraduationCap className="h-4 w-4" />
             </div>
-            <CardTitle className="text-xl font-bold">Generate Admit Cards</CardTitle>
+            <div>
+              <h3 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white leading-tight">
+                Batch Admit Card Assignment
+              </h3>
+              <p className="text-[11px] font-medium text-slate-500">
+                Assign selected students to offline exam shifts and issue roll numbers
+              </p>
+            </div>
           </div>
-        </CardHeader>
-        <CardContent className="p-8">
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 items-start">
-            <div className="flex flex-col gap-2 lg:col-span-2">
-              <label className="text-xs font-bold uppercase tracking-widest text-slate-400 ml-1">1. Select Target Exam</label>
+          {selectedExam && (
+            <Badge variant="outline" className="text-[10px] font-bold px-2 py-0.5 rounded-md border-emerald-500/20 bg-emerald-500/10 text-emerald-600 self-start sm:self-auto">
+              Total Capacity: {totalCapacity} Seats
+            </Badge>
+          )}
+        </div>
+
+        <CardContent className="p-3 sm:p-3.5">
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-2.5 items-end">
+            <div className="flex flex-col gap-1 md:col-span-5">
+              <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">1. Target Offline Exam</label>
               <Select value={selectedExamId} onValueChange={(val) => {
                 setSelectedExamId(val as string);
-                setSelectedShiftId("all");
+                setSelectedShiftId("auto_sequential");
               }}>
-                <SelectTrigger className="h-14 rounded-2xl font-bold bg-slate-50 dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-800 text-left px-4">
+                <SelectTrigger className="h-8 sm:h-9 text-xs font-medium rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700/60">
                   {selectedExam ? (
-                    <div className="flex flex-col items-start leading-tight overflow-hidden">
-                      <span className="font-bold truncate w-full">{selectedExam.title}</span>
-                      <span className="text-[10px] text-slate-500 font-medium">
-                        {selectedExam.date ? new Date(selectedExam.date).toLocaleDateString('en-GB') : 'No date'} • {selectedExam.shifts?.length || 0} shifts
-                      </span>
-                    </div>
+                    <span className="truncate block text-left font-semibold text-slate-900 dark:text-white">
+                      {selectedExam.title} <span className="font-normal text-slate-400">({selectedExam.date ? new Date(selectedExam.date).toLocaleDateString('en-GB') : 'No date'} • {selectedExam.shifts?.length || 0} shifts)</span>
+                    </span>
                   ) : (
-                    <span className="text-slate-500">Select an offline exam...</span>
+                    <span className="text-slate-400 text-xs">Select an offline exam...</span>
                   )}
                 </SelectTrigger>
                 <SelectContent>
                   {exams.filter(e => e.type === "OFFLINE").map(e => (
-                    <SelectItem key={e.id} value={e.id}>
-                      <div className="flex flex-col py-1">
-                         <span className="font-bold">{e.title}</span>
-                         <span className="text-xs text-slate-500 mt-0.5">
-                           {e.date ? new Date(e.date).toLocaleDateString('en-GB') : 'No date'} • {e.shifts?.length || 0} shifts
-                         </span>
-                       </div>
+                    <SelectItem key={e.id} value={e.id} className="text-xs">
+                      <div className="flex flex-col py-0.5">
+                        <span className="font-semibold">{e.title}</span>
+                        <span className="text-[10px] text-slate-400">
+                          {e.date ? new Date(e.date).toLocaleDateString('en-GB') : 'No date'} • {e.shifts?.length || 0} shifts
+                        </span>
+                      </div>
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
-              {selectedExam && (
-                <p className="text-[11px] font-bold text-emerald-600 pl-2">
-                  Total Capacity: {totalCapacity} Students
-                </p>
-              )}
             </div>
-            
-            <div className="flex flex-col gap-2 lg:col-span-1">
-              <label className="text-xs font-bold uppercase tracking-widest text-slate-400 ml-1">2. Target Shift</label>
+
+            <div className="flex flex-col gap-1 md:col-span-4">
+              <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">2. Target Shift</label>
               <Select value={selectedShiftId} onValueChange={(val) => setSelectedShiftId(val as string)} disabled={!selectedExamId}>
-                <SelectTrigger className="h-14 rounded-2xl font-bold bg-slate-50 dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-800 text-sm text-left px-4">
-                  {selectedShiftId === "auto_sequential" ? (
-                    <span className="text-slate-700 dark:text-slate-300">Auto-Assign (Sequential)</span>
-                  ) : selectedShiftId === "auto_equal" ? (
-                    <span className="text-slate-700 dark:text-slate-300">Auto-Assign (Equal)</span>
-                  ) : (
-                    <div className="flex flex-col items-start leading-tight overflow-hidden">
-                      <span className="font-bold truncate w-full">{selectedExam?.shifts?.find((s: any) => s.id === selectedShiftId)?.title || "Selected Shift"}</span>
-                      <span className="text-[10px] text-emerald-600 font-medium">Selected Shift</span>
-                    </div>
-                  )}
+                <SelectTrigger className="h-8 sm:h-9 text-xs font-medium rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700/60">
+                  <span className="truncate block text-left font-medium">
+                    {selectedShiftId === "auto_sequential" 
+                      ? "Auto-Assign: Sequential" 
+                      : selectedShiftId === "auto_equal" 
+                        ? "Auto-Assign: Equal Distribution" 
+                        : selectedExam?.shifts?.find((s: any) => s.id === selectedShiftId)?.title || "Selected Shift"}
+                  </span>
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="auto_sequential">
-                    <div className="flex flex-col py-1">
-                      <span className="font-bold">Auto-Assign: Sequential</span>
-                      <span className="text-[10px] text-slate-500 mt-0.5">Fill shifts one by one</span>
-                    </div>
+                  <SelectItem value="auto_sequential" className="text-xs font-medium">
+                    Auto-Assign: Sequential (Fill shifts one by one)
                   </SelectItem>
-                  <SelectItem value="auto_equal">
-                    <div className="flex flex-col py-1">
-                      <span className="font-bold">Auto-Assign: Equal Distribution</span>
-                      <span className="text-[10px] text-slate-500 mt-0.5">Distribute evenly across all shifts</span>
-                    </div>
+                  <SelectItem value="auto_equal" className="text-xs font-medium">
+                    Auto-Assign: Equal (Distribute evenly)
                   </SelectItem>
                   {selectedExam?.shifts?.map((shift: any, index: number) => {
                     const available = shift.capacity - (shift._count?.enrollments || 0);
                     const shiftNumbers = ["One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten"];
                     const shiftName = `Shift ${shiftNumbers[index] || index + 1}`;
                     return (
-                      <SelectItem key={shift.id} value={shift.id} disabled={available <= 0}>
-                        <div className="flex flex-col py-1">
-                           <span className="font-bold">{shiftName}</span>
-                           <span className={`text-xs mt-0.5 ${available > 0 ? 'text-emerald-600' : 'text-rose-500'}`}>
-                             {shift.startTime} - {shift.endTime} • {available} seats left
-                           </span>
-                        </div>
+                      <SelectItem key={shift.id} value={shift.id} disabled={available <= 0} className="text-xs">
+                        <span className="font-semibold">{shiftName}</span>
+                        <span className={`ml-2 text-[10px] ${available > 0 ? 'text-emerald-600' : 'text-rose-500'}`}>
+                          ({shift.startTime} - {shift.endTime} • {available} seats left)
+                        </span>
                       </SelectItem>
                     );
                   })}
@@ -385,221 +372,255 @@ export default function AdmitCardTab({ students, courses, batches, exams }: { st
               </Select>
             </div>
 
-            <div className="flex flex-col gap-2 lg:col-span-1">
-              <label className="text-xs font-bold uppercase tracking-widest text-transparent select-none hidden lg:block">Action</label>
+            <div className="md:col-span-3">
               <Button 
                 onClick={handleGenerateAdmitCards} 
                 disabled={isProcessing || !selectedExamId || selectedStudents.size === 0}
-                className="h-14 rounded-2xl font-bold text-sm bg-emerald-600 hover:bg-emerald-700 text-white w-full shadow-lg shadow-emerald-600/20 px-2"
+                className="h-8 sm:h-9 px-3 rounded-lg text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white w-full gap-1.5 shadow-xs"
               >
-                <CheckSquare className="w-4 h-4 mr-1.5 shrink-0" /> Assign ({selectedStudents.size})
+                <CheckSquare className="w-3.5 h-3.5 shrink-0" />
+                Assign Selected ({selectedStudents.size})
               </Button>
             </div>
           </div>
         </CardContent>
       </Card>
 
-      <div className="flex flex-col md:flex-row gap-4 bg-white dark:bg-slate-900 p-6 rounded-[2rem] border-2 border-slate-100 dark:border-slate-800">
-        <div className="relative flex-1">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+      {/* 2. Filter Toolbar (Rule 7.4) */}
+      <div className="border border-slate-200/80 dark:border-slate-800 rounded-xl p-3 sm:p-3.5 bg-white dark:bg-slate-900 shadow-xs flex flex-col md:flex-row gap-2.5 items-stretch md:items-center justify-between">
+        <div className="relative flex-1 md:max-w-[300px] group">
+          <Search className="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none h-3.5 w-3.5 text-slate-400" />
           <Input 
             placeholder="Search students..." 
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="pl-12 h-12 rounded-2xl bg-slate-50 dark:bg-slate-800"
+            className="h-8 sm:h-9 pl-8 pr-3 bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700/60 rounded-lg font-normal text-[11px] sm:text-xs placeholder:text-[11px] sm:placeholder:text-xs placeholder:text-slate-400"
           />
         </div>
-        
-        <Select value={filterExamId} onValueChange={(val) => { setFilterExamId(val as string); setFilterShiftId("all"); }}>
-          <SelectTrigger className="w-full md:w-[200px] h-12 rounded-2xl font-semibold capitalize px-4 text-left overflow-hidden">
-            {filterExamId === "all" ? (
-              <span className="text-slate-500">All Exams</span>
-            ) : (
-              <span className="truncate w-full block">{exams.find(e => e.id === filterExamId)?.title}</span>
-            )}
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all" className="font-semibold capitalize">All Exams</SelectItem>
-            {exams.filter(e => e.type === "OFFLINE").map(e => (
-              <SelectItem key={e.id} value={e.id} className="font-semibold capitalize">{e.title}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
 
-        <Select value={filterShiftId} onValueChange={(val) => setFilterShiftId(val as string)} disabled={filterExamId === "all"}>
-          <SelectTrigger className="w-full md:w-[200px] h-12 rounded-2xl font-semibold capitalize px-4 text-left overflow-hidden">
-            {filterShiftId === "all" ? (
-              <span className="text-slate-500">All Shifts</span>
-            ) : (
-              <span className="truncate w-full block">
-                {(() => {
+        <div className="flex flex-wrap sm:flex-nowrap gap-2 items-center">
+          <Select value={filterExamId} onValueChange={(val) => { setFilterExamId(val as string); setFilterShiftId("all"); }}>
+            <SelectTrigger className="w-full sm:w-[170px] h-8 sm:h-9 text-xs font-medium rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700/60">
+              <span className="truncate text-left block w-full pr-1">
+                {filterExamId === "all" ? "All Exams" : exams.find(e => e.id === filterExamId)?.title || "All Exams"}
+              </span>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all" className="text-xs">All Exams</SelectItem>
+              {exams.filter(e => e.type === "OFFLINE").map(e => (
+                <SelectItem key={e.id} value={e.id} className="text-xs">{e.title}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Select value={filterShiftId} onValueChange={(val) => setFilterShiftId(val as string)} disabled={filterExamId === "all"}>
+            <SelectTrigger className="w-full sm:w-[150px] h-8 sm:h-9 text-xs font-medium rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700/60">
+              <span className="truncate text-left block w-full pr-1">
+                {filterShiftId === "all" ? "All Shifts" : (() => {
                   const shiftIndex = exams.find(e => e.id === filterExamId)?.shifts?.findIndex((s: any) => s.id === filterShiftId);
                   if (shiftIndex === undefined || shiftIndex === -1) return "Selected Shift";
                   const shiftNumbers = ["One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten"];
                   return `Shift ${shiftNumbers[shiftIndex] || shiftIndex + 1}`;
                 })()}
               </span>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all" className="text-xs">All Shifts</SelectItem>
+              {filterExamId !== "all" && exams.find(e => e.id === filterExamId)?.shifts?.map((shift: any, index: number) => {
+                const shiftNumbers = ["One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten"];
+                const shiftName = `Shift ${shiftNumbers[index] || index + 1}`;
+                return <SelectItem key={shift.id} value={shift.id} className="text-xs">{shiftName}</SelectItem>;
+              })}
+            </SelectContent>
+          </Select>
+
+          <Button 
+            onClick={handlePrintAdmitCards} 
+            variant="outline" 
+            size="sm"
+            className="h-8 sm:h-9 px-3 text-xs font-semibold rounded-lg border-slate-200 dark:border-slate-700 gap-1.5 shrink-0"
+          >
+            <Printer className="w-3.5 h-3.5 text-slate-500" />
+            <span>Print Admits</span>
+            {selectedStudents.size > 0 && (
+              <Badge variant="secondary" className="text-[9px] px-1 py-0 h-4 font-bold">
+                {selectedStudents.size}
+              </Badge>
             )}
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all" className="font-semibold capitalize">All Shifts</SelectItem>
-            {filterExamId !== "all" && exams.find(e => e.id === filterExamId)?.shifts?.map((shift: any, index: number) => {
-              const shiftNumbers = ["One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten"];
-              const shiftName = `Shift ${shiftNumbers[index] || index + 1}`;
-              return <SelectItem key={shift.id} value={shift.id} className="font-semibold capitalize">{shiftName}</SelectItem>;
-            })}
-          </SelectContent>
-        </Select>
-        
-        <Button onClick={handlePrintAdmitCards} variant="outline" className="h-12 rounded-2xl font-bold gap-2">
-           <Printer className="w-4 h-4" /> Print Admits
-        </Button>
+          </Button>
+        </div>
       </div>
 
-      <Card className="border-2 border-slate-100 dark:border-slate-800 rounded-[2rem] bg-white dark:bg-slate-900 overflow-hidden">
-        {/* Bulk Actions Header */}
-        <div className="flex items-center justify-between p-4 bg-slate-50/50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800">
-          <div className="flex items-center gap-3 pl-4">
+      {/* 3. Main Student List Card (Rule 7.4 & 7.5) */}
+      <Card className="border border-slate-200/80 dark:border-slate-800 rounded-xl shadow-xs overflow-hidden bg-white dark:bg-slate-900">
+        {/* Selection Bar */}
+        <div className="flex items-center justify-between px-3.5 sm:px-4 py-2 bg-slate-50/60 dark:bg-slate-800/40 border-b border-slate-100 dark:border-slate-800">
+          <div className="flex items-center gap-2.5">
             <Checkbox 
-              checked={selectedStudents.size === filteredStudents.length && filteredStudents.length > 0} 
+              checked={filteredStudents.length > 0 && selectedStudents.size === filteredStudents.length} 
               onCheckedChange={toggleAll}
-              className="h-5 w-5 rounded-[6px]"
+              className="h-4 w-4 rounded"
             />
-            <span className="text-sm font-bold text-slate-700 dark:text-slate-300">
+            <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
               Select All ({filteredStudents.length})
             </span>
           </div>
+          {selectedStudents.size > 0 && (
+            <span className="text-[11px] font-medium text-emerald-600 dark:text-emerald-400">
+              {selectedStudents.size} student{selectedStudents.size > 1 ? "s" : ""} selected
+            </span>
+          )}
         </div>
 
         <CardContent className="p-0">
           <div className="divide-y divide-slate-50 dark:divide-slate-800/50">
-            {paginatedStudents.map(student => (
-              <div 
-                key={student.id} 
-                className="flex flex-col lg:flex-row items-start lg:items-center justify-between p-6 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-all gap-6 group border-l-4 border-slate-900 dark:border-slate-100 cursor-pointer"
-                onClick={() => toggleStudent(student.id)}
-              >
-                <div className="flex items-center gap-4">
-                  <div className="flex items-center justify-center shrink-0 w-8" onClick={(e) => e.stopPropagation()}>
-                    <Checkbox 
-                      checked={selectedStudents.has(student.id)} 
-                      onCheckedChange={() => toggleStudent(student.id)}
-                      className="h-5 w-5 rounded-[6px]"
-                    />
-                  </div>
-                  <Avatar className="h-14 w-14 rounded-2xl border border-slate-200/50 dark:border-slate-700/50 shrink-0 shadow-sm">
-                    <AvatarImage src={student.photoUrl || student.admissionApp?.photoUrl || student.user?.image || ""} className="object-cover" />
-                    <AvatarFallback className="bg-primary/5 text-primary font-bold rounded-2xl">
-                      {student.user?.name?.charAt(0)}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <div className="flex flex-col items-start gap-1">
-                      <div className="flex items-center gap-2">
-                        <p className="font-bold text-sm text-slate-900 dark:text-white">{student.user?.name}</p>
-                        <Badge variant="outline" className="text-[10px] font-bold px-1.5 py-0 rounded uppercase tracking-widest border-none bg-emerald-500/10 text-emerald-600">
+            {paginatedStudents.map(student => {
+              const isSelected = selectedStudents.has(student.id);
+              const studentName = student.user?.name || student.fullName || "Student";
+              return (
+                <div 
+                  key={student.id} 
+                  className="flex flex-col lg:flex-row items-start lg:items-center justify-between p-3 sm:p-3.5 bg-white dark:bg-slate-900 hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-all gap-3 sm:gap-4 group border-l-[3px] border-emerald-500 cursor-pointer"
+                  onClick={() => toggleStudent(student.id)}
+                >
+                  {/* Primary Info */}
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="flex items-center justify-center shrink-0" onClick={(e) => e.stopPropagation()}>
+                      <Checkbox 
+                        checked={isSelected} 
+                        onCheckedChange={() => toggleStudent(student.id)}
+                        className="h-4 w-4 rounded"
+                      />
+                    </div>
+                    <Avatar className="h-10 w-10 sm:h-11 sm:w-11 rounded-xl border border-slate-200/60 dark:border-slate-700/60 shrink-0">
+                      <AvatarImage src={student.photoUrl || student.admissionApp?.photoUrl || student.user?.image || ""} className="object-cover" />
+                      <AvatarFallback className="bg-primary/5 text-primary font-bold text-xs rounded-xl">
+                        {studentName.charAt(0)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="min-w-0 space-y-0.5">
+                      <div className="flex items-center gap-1.5">
+                        <p className="font-semibold text-xs sm:text-sm text-slate-900 dark:text-white truncate">
+                          {studentName}
+                        </p>
+                        <Badge variant="outline" className="text-[9px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider border-none bg-emerald-500/10 text-emerald-600">
                           {student.semesters?.length > 0 ? student.semesters[student.semesters.length - 1].name : "Student"}
                         </Badge>
                       </div>
-                      <div className="flex items-center gap-3 mt-0.5">
-                        <p className="text-[10px] font-medium text-slate-500 flex items-center gap-1.5">
-                          <Building2 className="h-3 w-3 text-slate-400 shrink-0" /> {student.enrollmentNo || "No Reg No"}
-                        </p>
+                      <p className="text-[10px] font-medium text-slate-500 flex items-center gap-1.5">
+                        <Building2 className="h-3 w-3 text-slate-400 shrink-0" />
+                        <span>{student.enrollmentNo || "No Reg No"}</span>
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Metadata and Actions Group */}
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between lg:justify-end gap-3 w-full lg:w-auto pl-7 lg:pl-0">
+                    {/* Metadata columns */}
+                    <div className="flex flex-wrap md:flex-nowrap items-center gap-3 sm:gap-4 md:gap-5 w-full md:w-auto bg-slate-50/70 dark:bg-slate-800/30 lg:bg-transparent p-2 md:p-0 rounded-lg text-xs">
+                      <div className="text-left shrink-0">
+                        <span className="font-semibold text-xs text-indigo-600 dark:text-indigo-400 font-mono block">
+                          {student.batch?.name || "Unassigned"}
+                        </span>
+                        <span className="text-[8px] font-bold text-slate-400 uppercase tracking-wider mt-0.5 block">Batch</span>
+                      </div>
+
+                      <div className="text-left shrink-0 max-w-[130px] sm:max-w-[150px] min-w-0">
+                        <span className="font-medium text-xs text-slate-900 dark:text-white truncate block" title={student.course?.title}>
+                          {student.course?.title || "No Course"}
+                        </span>
+                        <span className="text-[8px] font-bold text-slate-400 uppercase tracking-wider mt-0.5 block">Course</span>
                       </div>
                     </div>
+
+                    {/* Action Buttons */}
+                    <div className="flex items-center gap-1.5 shrink-0" onClick={(e) => e.stopPropagation()}>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => handleIssueSingle(student.id)} 
+                        disabled={isProcessing}
+                        className="h-7 sm:h-8 px-2.5 rounded-lg text-xs font-semibold bg-emerald-50 text-emerald-600 hover:bg-emerald-100 hover:text-emerald-700 border-none dark:bg-emerald-950/30 dark:text-emerald-400 gap-1"
+                      >
+                        <CheckSquare className="w-3.5 h-3.5" />
+                        <span>Issue</span>
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => handlePrintTrigger(student.id, false)} 
+                        className="h-7 sm:h-8 px-2.5 rounded-lg text-xs font-semibold border-slate-200 dark:border-slate-700 gap-1"
+                      >
+                        <Eye className="w-3.5 h-3.5 text-slate-500" />
+                        <span>View</span>
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => handlePrintTrigger(student.id, true)} 
+                        className="h-7 sm:h-8 px-2.5 rounded-lg text-xs font-semibold border-slate-200 dark:border-slate-700 gap-1"
+                      >
+                        <Download className="w-3.5 h-3.5 text-slate-500" />
+                        <span>Download</span>
+                      </Button>
+                    </div>
                   </div>
                 </div>
-
-                <div className="flex flex-col md:flex-row items-start md:items-center gap-6 w-full lg:w-auto pl-12 lg:pl-0">
-                  <div className="flex flex-wrap md:flex-nowrap gap-4 md:gap-8 w-full md:w-auto bg-slate-50 dark:bg-slate-800/40 lg:bg-transparent p-4 lg:p-0 rounded-xl">
-                    <div className="text-left md:text-right w-1/2 md:w-auto">
-                      <p className="font-bold font-mono text-sm text-indigo-600 dark:text-indigo-400">
-                        {student.batch?.name || "Unassigned"}
-                      </p>
-                      <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mt-1">Batch</p>
-                    </div>
-                    <div className="text-left md:text-right w-1/2 md:w-auto">
-                      <span className="font-medium text-sm text-slate-900 dark:text-white flex items-start md:items-center gap-1 justify-start md:justify-end" title={student.course?.title}>
-                        <FileText className="h-3.5 w-3.5 text-slate-400 shrink-0 mt-0.5 md:mt-0" />
-                        <span className="text-left md:text-right break-words">{student.course?.shortName || student.course?.title?.split(' ').map((w: string) => w[0]).join('').substring(0, 4).toUpperCase() || "No Course"}</span>
-                      </span>
-                      <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mt-1">Course</p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-2 w-full lg:w-auto mt-2 lg:mt-0 bg-slate-50 dark:bg-slate-800/40 lg:bg-transparent rounded-xl p-1 lg:p-0">
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      onClick={(e) => { e.stopPropagation(); handleIssueSingle(student.id); }} 
-                      disabled={isProcessing}
-                      className="h-8 text-xs font-bold gap-1 rounded-xl bg-emerald-50 text-emerald-600 hover:bg-emerald-100 border-none dark:bg-emerald-900/20"
-                    >
-                      <CheckSquare className="w-3 h-3" /> Issue
-                    </Button>
-                    <Button variant="outline" size="sm" onClick={(e) => { 
-                      e.stopPropagation(); 
-                      handlePrintTrigger(student.id, false);
-                    }} className="h-8 text-xs font-bold gap-1 rounded-xl">
-                      <Eye className="w-3 h-3" /> View
-                    </Button>
-                    <Button variant="outline" size="sm" onClick={(e) => { 
-                      e.stopPropagation(); 
-                      handlePrintTrigger(student.id, true);
-                    }} className="h-8 text-xs font-bold gap-1 rounded-xl">
-                      <Download className="w-3 h-3" /> Download
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           {filteredStudents.length === 0 && (
-            <div className="text-center py-20">
-              <div className="inline-flex h-20 w-20 items-center justify-center rounded-full bg-slate-50 dark:bg-slate-800 mb-4">
-                <Search className="h-10 w-10 text-slate-400" />
+            <div className="py-12 flex flex-col items-center justify-center text-center space-y-2">
+              <div className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400">
+                <Search className="w-5 h-5" />
               </div>
-              <h3 className="text-lg font-bold text-slate-900 dark:text-white">No Students Found</h3>
-              <p className="text-sm font-medium text-slate-500 mt-1">Try adjusting your search criteria or changing tabs.</p>
+              <p className="text-xs font-bold text-slate-800 dark:text-slate-200">No students found</p>
+              <p className="text-[11px] text-slate-400">Try adjusting your search criteria or target exam filter.</p>
             </div>
           )}
-          {filteredStudents.length > 0 && totalPages > 1 && (
-            <div className="flex flex-col sm:flex-row items-center justify-between p-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/20 gap-4">
-              <p className="text-sm text-slate-500 font-medium">
-                Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, filteredStudents.length)} of {filteredStudents.length} entries
-              </p>
-              <div className="flex items-center gap-2">
+
+          {/* Pagination Footer (Rule 7.6) */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between px-4 py-2.5 border-t border-slate-100 dark:border-slate-800/50 bg-slate-50/50 dark:bg-slate-800/20">
+              <div className="text-xs font-medium text-slate-500">
+                Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, filteredStudents.length)} of {filteredStudents.length} students
+              </div>
+              <div className="flex items-center gap-1">
                 <Button 
                   variant="outline" 
                   size="sm" 
                   onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                   disabled={currentPage === 1}
-                  className="rounded-xl font-bold"
+                  className="h-7 px-2 rounded-md border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-xs text-xs font-semibold"
                 >
-                  Previous
+                  <ChevronLeft className="h-3.5 w-3.5 mr-1" /> Prev
                 </Button>
                 <div className="flex items-center gap-1">
-                  {Array.from({ length: totalPages }).map((_, i) => (
-                    <Button
-                      key={i + 1}
-                      variant={currentPage === i + 1 ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => setCurrentPage(i + 1)}
-                      className={`w-8 h-8 p-0 rounded-xl font-bold ${currentPage === i + 1 ? 'bg-indigo-600 hover:bg-indigo-700 text-white' : 'text-slate-600'}`}
-                    >
-                      {i + 1}
-                    </Button>
-                  ))}
+                  {getPageNumbers().map((p, i) => 
+                    p === "..." ? (
+                      <span key={`ellipsis-${i}`} className="px-1 text-slate-400 text-xs select-none">...</span>
+                    ) : (
+                      <Button
+                        key={p}
+                        variant={currentPage === p ? "default" : "ghost"}
+                        size="sm"
+                        onClick={() => setCurrentPage(p as number)}
+                        className="h-7 w-7 rounded-md font-semibold text-xs p-0"
+                      >
+                        {p}
+                      </Button>
+                    )
+                  )}
                 </div>
                 <Button 
                   variant="outline" 
                   size="sm" 
                   onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                   disabled={currentPage === totalPages}
-                  className="rounded-xl font-bold"
+                  className="h-7 px-2 rounded-md border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-xs text-xs font-semibold"
                 >
-                  Next
+                  Next <ChevronRight className="h-3.5 w-3.5 ml-1" />
                 </Button>
               </div>
             </div>

@@ -536,19 +536,19 @@ export default function FranchiseApplicationsClient({
   const renderPagination = (borderClass: string) => {
     if (wsTotalPages <= 1) return null;
     return (
-      <div className={cn("p-6 flex flex-col sm:flex-row items-center justify-between gap-4 bg-slate-50/20 dark:bg-slate-800/10", borderClass)}>
-        <p className="text-xs font-bold uppercase tracking-widest text-slate-400">
-          Showing <span className="text-slate-900 dark:text-white">{((wsCurrentPage - 1) * wsItemsPerPage) + 1}</span> to <span className="text-slate-900 dark:text-white">{Math.min(wsCurrentPage * wsItemsPerPage, filteredWorkspaces.length)}</span> of <span className="text-slate-900 dark:text-white">{filteredWorkspaces.length}</span> centers
+      <div className={cn("px-4 py-3 flex flex-col sm:flex-row items-center justify-between gap-3 bg-slate-50/20 dark:bg-slate-800/10", borderClass)}>
+        <p className="text-xs font-medium text-slate-400">
+          Showing <span className="text-slate-900 dark:text-white font-semibold">{((wsCurrentPage - 1) * wsItemsPerPage) + 1}</span> to <span className="text-slate-900 dark:text-white font-semibold">{Math.min(wsCurrentPage * wsItemsPerPage, filteredWorkspaces.length)}</span> of <span className="text-slate-900 dark:text-white font-semibold">{filteredWorkspaces.length}</span> centers
         </p>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5">
           <Button 
             variant="outline" 
             size="icon" 
             disabled={wsCurrentPage === 1}
             onClick={() => setWsCurrentPage(prev => prev - 1)}
-            className="h-10 w-10 rounded-xl"
+            className="h-7 w-7 rounded-md"
           >
-            <ChevronLeft className="h-4 w-4" />
+            <ChevronLeft className="h-3.5 w-3.5" />
           </Button>
           
           <div className="flex items-center gap-1">
@@ -558,8 +558,8 @@ export default function FranchiseApplicationsClient({
                 variant={wsCurrentPage === i + 1 ? "default" : "ghost"}
                 onClick={() => setWsCurrentPage(i + 1)}
                 className={cn(
-                  "h-10 w-10 rounded-xl font-bold",
-                  wsCurrentPage === i + 1 ? "shadow-lg shadow-primary/20" : ""
+                  "h-7 w-7 rounded-md text-xs font-semibold",
+                  wsCurrentPage === i + 1 ? "shadow-sm" : ""
                 )}
               >
                 {i + 1}
@@ -572,9 +572,9 @@ export default function FranchiseApplicationsClient({
             size="icon" 
             disabled={wsCurrentPage === wsTotalPages}
             onClick={() => setWsCurrentPage(prev => prev + 1)}
-            className="h-10 w-10 rounded-xl"
+            className="h-7 w-7 rounded-md"
           >
-            <ChevronRight className="h-4 w-4" />
+            <ChevronRight className="h-3.5 w-3.5" />
           </Button>
         </div>
       </div>
@@ -584,19 +584,19 @@ export default function FranchiseApplicationsClient({
   const renderAppPagination = (borderClass: string) => {
     if (appTotalPages <= 1) return null;
     return (
-      <div className={cn("p-6 flex flex-col sm:flex-row items-center justify-between gap-4 bg-slate-50/20 dark:bg-slate-800/10", borderClass)}>
-        <p className="text-xs font-bold uppercase tracking-widest text-slate-400">
-          Showing <span className="text-slate-900 dark:text-white">{((appCurrentPage - 1) * appItemsPerPage) + 1}</span> to <span className="text-slate-900 dark:text-white">{Math.min(appCurrentPage * appItemsPerPage, filteredApps.length)}</span> of <span className="text-slate-900 dark:text-white">{filteredApps.length}</span> applications
+      <div className={cn("px-4 py-3 flex flex-col sm:flex-row items-center justify-between gap-3 bg-slate-50/20 dark:bg-slate-800/10", borderClass)}>
+        <p className="text-xs font-medium text-slate-400">
+          Showing <span className="text-slate-900 dark:text-white font-semibold">{((appCurrentPage - 1) * appItemsPerPage) + 1}</span> to <span className="text-slate-900 dark:text-white font-semibold">{Math.min(appCurrentPage * appItemsPerPage, filteredApps.length)}</span> of <span className="text-slate-900 dark:text-white font-semibold">{filteredApps.length}</span> applications
         </p>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5">
           <Button 
             variant="outline" 
             size="icon" 
             disabled={appCurrentPage === 1}
             onClick={() => setAppCurrentPage(prev => prev - 1)}
-            className="h-10 w-10 rounded-xl"
+            className="h-7 w-7 rounded-md"
           >
-            <ChevronLeft className="h-4 w-4" />
+            <ChevronLeft className="h-3.5 w-3.5" />
           </Button>
           
           <div className="flex items-center gap-1">
@@ -606,8 +606,8 @@ export default function FranchiseApplicationsClient({
                 variant={appCurrentPage === i + 1 ? "default" : "ghost"}
                 onClick={() => setAppCurrentPage(i + 1)}
                 className={cn(
-                  "h-10 w-10 rounded-xl font-bold",
-                  appCurrentPage === i + 1 ? "shadow-lg shadow-primary/20" : ""
+                  "h-7 w-7 rounded-md text-xs font-semibold",
+                  appCurrentPage === i + 1 ? "shadow-sm" : ""
                 )}
               >
                 {i + 1}
@@ -620,9 +620,9 @@ export default function FranchiseApplicationsClient({
             size="icon" 
             disabled={appCurrentPage === appTotalPages}
             onClick={() => setAppCurrentPage(prev => prev + 1)}
-            className="h-10 w-10 rounded-xl"
+            className="h-7 w-7 rounded-md"
           >
-            <ChevronRight className="h-4 w-4" />
+            <ChevronRight className="h-3.5 w-3.5" />
           </Button>
         </div>
       </div>
@@ -632,12 +632,12 @@ export default function FranchiseApplicationsClient({
   if (!mounted) return null;
 
   return (
-    <div className="space-y-10 pb-12 w-full mx-auto">
+    <div className="space-y-6 pb-8 w-full mx-auto">
       <AdminPageHeader 
         title="Franchise Management" 
         description="Monitor and manage active computer center workspaces and process online franchise requests."
       >
-        <div className="flex gap-3">
+        <div className="flex gap-2">
           <Dialog open={csvOpen} onOpenChange={(open) => {
             if(!open) {
               setCsvFile(null);
@@ -648,8 +648,8 @@ export default function FranchiseApplicationsClient({
           }}>
             <DialogTrigger 
               render={
-                <Button variant="outline" className="h-11 px-6 rounded-xl gap-2 font-bold shadow-sm bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
-                  <FileText className="h-4 w-4" />
+                <Button variant="outline" className="h-8 px-3 rounded-lg gap-1.5 text-xs font-semibold shadow-sm bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
+                  <FileText className="h-3.5 w-3.5" />
                   Import CSV
                 </Button>
               }
@@ -798,8 +798,8 @@ export default function FranchiseApplicationsClient({
           <Dialog open={wsOpen} onOpenChange={(open) => { setWsOpen(open); if (!open) setActiveWsStep(0); }}>
             <DialogTrigger 
               render={
-                <Button className="h-11 px-6 rounded-xl gap-2 shadow-lg shadow-primary/20 bg-primary font-bold text-primary-foreground hover:scale-[1.02] active:scale-95 transition-all">
-                  <Plus className="h-4 w-4" />
+                <Button className="h-8 px-3 rounded-lg gap-1.5 text-xs font-semibold shadow-sm bg-primary text-primary-foreground transition-all">
+                  <Plus className="h-3.5 w-3.5" />
                   Provision Center
                 </Button>
               }
@@ -1506,22 +1506,22 @@ export default function FranchiseApplicationsClient({
       </AdminPageHeader>
 
       {/* Sync platform statistics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
         {[
           { label: "Total Franchises", value: totalFranchises, icon: Building2, color: "text-blue-500", bg: "bg-blue-500/10" },
           { label: "Active Centers", value: activeFranchises, icon: CheckCircle, color: "text-green-500", bg: "bg-green-500/10" },
           { label: "Pending Applications", value: pendingApplications, icon: Clock, color: "text-amber-500", bg: "bg-amber-500/10" },
           { label: "Platform Students", value: totalPlatformStudents, icon: Users, color: "text-purple-500", bg: "bg-purple-500/10" },
         ].map((stat, i) => (
-          <Card key={i} className="border-none shadow-sm rounded-[2rem] overflow-hidden bg-white dark:bg-slate-900">
-            <CardContent className="p-6">
-              <div className="flex items-center gap-4">
-                <div className={cn("p-3.5 rounded-2xl", stat.bg)}>
-                  <stat.icon className={cn("h-6 w-6", stat.color)} />
+          <Card key={i} className="border border-slate-100 dark:border-white/5 shadow-sm rounded-xl overflow-hidden bg-white dark:bg-slate-900">
+            <CardContent className="p-3.5">
+              <div className="flex items-center gap-3">
+                <div className={cn("p-2.5 rounded-lg", stat.bg)}>
+                  <stat.icon className={cn("h-5 w-5", stat.color)} />
                 </div>
                 <div>
-                  <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-slate-400 mb-0.5">{stat.label}</p>
-                  <p className="text-3xl font-bold tracking-tight">{stat.value.toLocaleString()}</p>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-slate-400 mb-0.5">{stat.label}</p>
+                  <p className="text-2xl font-bold tracking-tight">{stat.value.toLocaleString()}</p>
                 </div>
               </div>
             </CardContent>
@@ -1530,12 +1530,12 @@ export default function FranchiseApplicationsClient({
       </div>
 
       {/* Tabs */}
-      <div className="flex items-center justify-start mt-2">
-        <div className="flex p-1 bg-slate-100 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700/50 w-fit">
+      <div className="flex items-center justify-start">
+        <div className="flex p-0.5 bg-slate-100 dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700/50 w-fit">
           <button
             onClick={() => setActiveTab("centers")}
             className={cn(
-              "px-5 py-2 rounded-lg text-sm font-bold transition-all",
+              "px-3.5 py-1.5 rounded-md text-xs font-semibold transition-all",
               activeTab === "centers"
                 ? "bg-white dark:bg-slate-700 text-primary dark:text-white shadow-sm"
                 : "text-slate-500 hover:text-slate-900 dark:hover:text-white"
@@ -1546,7 +1546,7 @@ export default function FranchiseApplicationsClient({
           <button
             onClick={() => setActiveTab("applications")}
             className={cn(
-              "px-5 py-2 rounded-lg text-sm font-bold transition-all flex items-center gap-2",
+              "px-3.5 py-1.5 rounded-md text-xs font-semibold transition-all flex items-center gap-1.5",
               activeTab === "applications"
                 ? "bg-white dark:bg-slate-700 text-primary dark:text-white shadow-sm"
                 : "text-slate-500 hover:text-slate-900 dark:hover:text-white"
@@ -1554,7 +1554,7 @@ export default function FranchiseApplicationsClient({
           >
             Applications
             {pendingApplications > 0 && (
-              <span className="h-5 min-w-5 px-1.5 bg-amber-500 text-white text-[10px] font-black rounded flex items-center justify-center">
+              <span className="h-4 min-w-4 px-1 bg-amber-500 text-white text-[9px] font-bold rounded flex items-center justify-center">
                 {pendingApplications}
               </span>
             )}
@@ -1565,38 +1565,38 @@ export default function FranchiseApplicationsClient({
       {/* TABS WORKSPACE vs APPLICATION */}
       {activeTab === "centers" ? (
         /* ACTIVE FRANCHISE CENTERS TAB CONTENT */
-        <Card className="border-none shadow-xl shadow-slate-200/50 dark:shadow-none bg-white dark:bg-slate-900 rounded-[2.5rem] overflow-hidden transition-all duration-500">
-          <CardHeader className="p-8 border-b border-slate-50 dark:border-slate-800/50">
-            <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-6">
-              <div className="relative w-full max-w-[450px] group">
-                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                  <Search className="h-4 w-4 text-slate-400" />
+        <Card className="border border-slate-100 dark:border-white/5 shadow-sm bg-white dark:bg-slate-900 rounded-xl overflow-hidden">
+          <CardHeader className="px-4 py-3 border-b border-slate-50 dark:border-slate-800/50">
+            <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-3">
+              <div className="relative w-full max-w-sm group">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Search className="h-3.5 w-3.5 text-slate-400" />
                 </div>
                 <Input 
                   placeholder="Search by center code, institute, domain or owner..." 
                   value={searchWorkspace}
                   onChange={(e) => setSearchWorkspace(e.target.value)}
-                  className="pl-11 pr-4 bg-slate-50 dark:bg-slate-800/40 border-none rounded-2xl h-14 font-bold text-sm transition-all focus-visible:ring-2 focus-visible:ring-primary/20 placeholder:text-slate-400 placeholder:font-medium" 
+                  className="pl-9 pr-4 bg-slate-50 dark:bg-slate-800/40 border-slate-200 dark:border-slate-700 rounded-lg h-8 text-xs font-medium transition-all focus-visible:ring-2 focus-visible:ring-primary/20 placeholder:text-slate-400 placeholder:text-xs" 
                 />
               </div>
               
-              <div className="flex flex-wrap items-center gap-4">
+              <div className="flex flex-wrap items-center gap-2">
                 <Select value={statusFilter} onValueChange={(val) => setStatusFilter(val as string)}>
-                  <SelectTrigger className="w-[180px] h-14 rounded-2xl border-none bg-slate-50 dark:bg-slate-800/40 font-bold px-5 focus:ring-primary/20">
-                    <div className="flex items-center gap-2">
-                      <Filter className="h-4 w-4 text-slate-400" />
+                  <SelectTrigger className="w-[140px] h-8 rounded-lg border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/40 text-xs font-semibold px-3 focus:ring-primary/20">
+                    <div className="flex items-center gap-1.5">
+                      <Filter className="h-3.5 w-3.5 text-slate-400" />
                       <SelectValue placeholder="Status" />
                     </div>
                   </SelectTrigger>
-                  <SelectContent className="rounded-2xl border-none shadow-2xl p-2 bg-white dark:bg-slate-800">
-                    <SelectItem value="All" className="rounded-xl font-bold py-3">All Centers</SelectItem>
-                    <SelectItem value="active" className="rounded-xl font-bold py-3">Active Only</SelectItem>
-                    <SelectItem value="inactive" className="rounded-xl font-bold py-3">Inactive Only</SelectItem>
+                  <SelectContent className="rounded-lg border-none shadow-xl p-1.5 bg-white dark:bg-slate-800">
+                    <SelectItem value="All" className="rounded-md text-xs font-semibold py-1.5">All Centers</SelectItem>
+                    <SelectItem value="active" className="rounded-md text-xs font-semibold py-1.5">Active Only</SelectItem>
+                    <SelectItem value="inactive" className="rounded-md text-xs font-semibold py-1.5">Inactive Only</SelectItem>
                   </SelectContent>
                 </Select>
                 
-                <div className="flex items-center gap-2 bg-slate-50 dark:bg-slate-800/40 px-5 py-3.5 rounded-2xl h-14">
-                  <Activity className="h-4 w-4 text-primary" />
+                <div className="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-800/40 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 h-8">
+                  <Activity className="h-3.5 w-3.5 text-primary" />
                   <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
                     Total: <span className="text-slate-900 dark:text-white">{filteredWorkspaces.length}</span>
                   </span>
@@ -1611,12 +1611,12 @@ export default function FranchiseApplicationsClient({
             <Table>
               <TableHeader className="bg-slate-50/30 dark:bg-slate-800/20">
                 <TableRow className="border-b border-slate-50 dark:border-slate-800 hover:bg-transparent">
-                  <TableHead className="w-[300px] px-8 py-6 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">Center Identity</TableHead>
-                  <TableHead className="py-6 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">Center Code</TableHead>
-                  <TableHead className="w-[250px] py-6 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">Owner Details</TableHead>
-                  <TableHead className="py-6 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">Capacity</TableHead>
-                  <TableHead className="py-6 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">Created At</TableHead>
-                  <TableHead className="text-right py-6 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 px-8">Action</TableHead>
+                  <TableHead className="w-[260px] px-4 py-2.5 text-[10px] font-bold uppercase tracking-[0.15em] text-slate-400">Center Identity</TableHead>
+                  <TableHead className="py-2.5 text-[10px] font-bold uppercase tracking-[0.15em] text-slate-400">Center Code</TableHead>
+                  <TableHead className="w-[220px] py-2.5 text-[10px] font-bold uppercase tracking-[0.15em] text-slate-400">Owner Details</TableHead>
+                  <TableHead className="py-2.5 text-[10px] font-bold uppercase tracking-[0.15em] text-slate-400">Capacity</TableHead>
+                  <TableHead className="py-2.5 text-[10px] font-bold uppercase tracking-[0.15em] text-slate-400">Created At</TableHead>
+                  <TableHead className="text-right py-2.5 text-[10px] font-bold uppercase tracking-[0.15em] text-slate-400 px-4">Action</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -1627,25 +1627,25 @@ export default function FranchiseApplicationsClient({
                     
                     return (
                       <TableRow key={ws.id} className="group hover:bg-slate-50/50 dark:hover:bg-slate-800/20 transition-all border-b border-slate-50 dark:border-slate-800 last:border-none">
-                        <TableCell className="px-8 py-6">
-                          <div className="flex items-center gap-5">
+                        <TableCell className="px-4 py-3">
+                          <div className="flex items-center gap-3">
                             <div className="relative">
-                              <Avatar className="h-14 w-14 shadow rounded-2xl group- transition-transform duration-500">
+                              <Avatar className="h-9 w-9 shadow rounded-lg">
                                 <AvatarImage src={ws.logoUrl} />
-                                <AvatarFallback className="bg-primary/10 text-primary font-bold text-xl rounded-2xl">
+                                <AvatarFallback className="bg-primary/10 text-primary font-bold text-sm rounded-lg">
                                   {ws.name.charAt(0)}
                                 </AvatarFallback>
                               </Avatar>
                               <div className={cn(
-                                "absolute -bottom-1 -right-1 w-5 h-5 rounded-full border-4 border-white dark:border-slate-900",
+                                "absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-white dark:border-slate-900",
                                 isActive ? "bg-green-500" : "bg-red-500"
                               )}></div>
                             </div>
-                            <div className="flex flex-col gap-1 overflow-hidden">
-                              <span className="font-bold text-base text-slate-900 dark:text-white leading-tight truncate max-w-[220px]" title={ws.name}>{ws.name}</span>
-                              <div className="flex items-center gap-2">
+                            <div className="flex flex-col gap-0.5 overflow-hidden">
+                              <span className="font-semibold text-sm text-slate-900 dark:text-white leading-tight truncate max-w-[200px]" title={ws.name}>{ws.name}</span>
+                              <div className="flex items-center gap-1.5">
                                 <Globe className="h-3 w-3 text-slate-400 shrink-0" />
-                                <span className="text-xs font-bold text-slate-500 tracking-tight truncate max-w-[220px]" title={`${ws.subdomain}.${rootDomain}`}>
+                                <span className="text-xs font-medium text-slate-500 tracking-tight truncate max-w-[200px]" title={`${ws.subdomain}.${rootDomain}`}>
                                   {ws.subdomain}.{rootDomain}
                                 </span>
                               </div>
@@ -1654,36 +1654,36 @@ export default function FranchiseApplicationsClient({
                         </TableCell>
 
                         <TableCell>
-                          <Badge variant="outline" className="text-xs font-bold px-3 py-1 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+                          <Badge variant="outline" className="text-xs font-semibold px-2 py-0.5 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
                             {ws.centerCode || owner?.username || "N/A"}
                           </Badge>
                         </TableCell>
 
                         <TableCell>
-                          <div className="flex items-center gap-4">
-                            <Avatar className="h-10 w-10 border shrink-0">
+                          <div className="flex items-center gap-2.5">
+                            <Avatar className="h-7 w-7 border shrink-0">
                               <AvatarImage src={owner?.image} />
-                              <AvatarFallback className="bg-slate-100 text-slate-400 font-bold text-xs">
+                              <AvatarFallback className="bg-slate-100 text-slate-400 font-bold text-[10px]">
                                 {owner?.name?.charAt(0) || "U"}
                               </AvatarFallback>
                             </Avatar>
                             <div className="flex flex-col overflow-hidden">
-                              <span className="text-sm font-bold text-slate-800 dark:text-slate-200 truncate max-w-[180px]" title={owner?.name || "Unassigned"}>{owner?.name || "Unassigned"}</span>
-                              <span className="text-xs font-medium text-slate-400 lowercase truncate max-w-[180px]" title={owner?.email || "n/a"}>{owner?.email || "n/a"}</span>
+                              <span className="text-xs font-semibold text-slate-800 dark:text-slate-200 truncate max-w-[160px]" title={owner?.name || "Unassigned"}>{owner?.name || "Unassigned"}</span>
+                              <span className="text-[10px] font-medium text-slate-400 lowercase truncate max-w-[160px]" title={owner?.email || "n/a"}>{owner?.email || "n/a"}</span>
                             </div>
                           </div>
                         </TableCell>
 
                         <TableCell>
-                          <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-blue-50 dark:bg-blue-500/5 text-blue-600 border border-blue-500/10 w-fit">
-                            <Users className="h-3.5 w-3.5" />
-                            <span className="text-xs font-bold">{ws._count?.studentProfiles || 0} Students</span>
+                          <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-blue-50 dark:bg-blue-500/5 text-blue-600 border border-blue-500/10 w-fit">
+                            <Users className="h-3 w-3" />
+                            <span className="text-xs font-semibold">{ws._count?.studentProfiles || 0} Students</span>
                           </div>
                         </TableCell>
 
                         <TableCell>
                           <div className="flex flex-col gap-0.5 text-slate-500 dark:text-slate-400">
-                            <span className="text-xs font-bold text-slate-900 dark:text-slate-100">
+                            <span className="text-xs font-semibold text-slate-900 dark:text-slate-100">
                               {new Date(ws.createdAt).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}
                             </span>
                             <span className="text-[10px] font-medium">
@@ -1692,82 +1692,82 @@ export default function FranchiseApplicationsClient({
                           </div>
                         </TableCell>
 
-                        <TableCell className="text-right px-8">
-                          <div className="flex items-center justify-end gap-2">
+                        <TableCell className="text-right px-4">
+                          <div className="flex items-center justify-end gap-1.5">
                             <Button 
                               variant="ghost" 
                               size="icon" 
-                              className="h-10 w-10 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800"
+                              className="h-7 w-7 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800"
                               onClick={() => {
                                 const url = getExternalTenantUrl(ws.subdomain, "");
                                 window.open(url, "_blank");
                               }}
                             >
-                              <ExternalLink className="h-4 w-4 text-slate-400" />
+                              <ExternalLink className="h-3.5 w-3.5 text-slate-400" />
                             </Button>
                             
                             <DropdownMenu>
                               <DropdownMenuTrigger 
                                 render={
-                                  <Button variant="ghost" size="icon" className="h-10 w-10 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800">
-                                    <MoreVertical className="h-4 w-4 text-slate-400" />
+                                  <Button variant="ghost" size="icon" className="h-7 w-7 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800">
+                                    <MoreVertical className="h-3.5 w-3.5 text-slate-400" />
                                   </Button>
                                 }
                               />
-                              <DropdownMenuContent align="end" className="w-[240px] rounded-2xl border-none shadow-2xl p-2 bg-white dark:bg-slate-900">
-                                <DropdownMenuLabel className="px-3 py-2 text-[10px] font-bold uppercase tracking-[0.15em] text-slate-400">Administrative Tools</DropdownMenuLabel>
+                              <DropdownMenuContent align="end" className="w-[200px] rounded-lg border-none shadow-xl p-1.5 bg-white dark:bg-slate-900">
+                                <DropdownMenuLabel className="px-2 py-1.5 text-[10px] font-bold uppercase tracking-[0.12em] text-slate-400">Administrative Tools</DropdownMenuLabel>
                                 <DropdownMenuItem 
-                                  className="gap-3 rounded-xl py-3 font-bold cursor-pointer"
+                                  className="gap-2 rounded-md py-2 text-xs font-semibold cursor-pointer"
                                   onClick={() => {
                                     const url = getExternalTenantUrl(ws.subdomain, "/admin");
                                     window.open(url, "_blank");
                                   }}
                                 >
-                                  <ExternalLink className="h-4 w-4 text-slate-400" /> Open Center Admin
+                                  <ExternalLink className="h-3.5 w-3.5 text-slate-400" /> Open Center Admin
                                 </DropdownMenuItem>
-                                <DropdownMenuItem className="gap-3 rounded-xl py-3 font-bold cursor-pointer">
-                                  <Activity className="h-4 w-4 text-slate-400" /> Analytics Report
+                                <DropdownMenuItem className="gap-2 rounded-md py-2 text-xs font-semibold cursor-pointer">
+                                  <Activity className="h-3.5 w-3.5 text-slate-400" /> Analytics Report
                                 </DropdownMenuItem>
                                 <DropdownMenuItem 
-                                  className="gap-3 rounded-xl py-3 font-bold cursor-pointer"
+                                  className="gap-2 rounded-md py-2 text-xs font-semibold cursor-pointer"
                                   onClick={() => handleOpenEditConfig(ws)}
                                 >
-                                  <Settings className="h-4 w-4 text-slate-400" /> Center Config
+                                  <Settings className="h-3.5 w-3.5 text-slate-400" /> Center Config
                                 </DropdownMenuItem>
-                                <DropdownMenuSeparator className="my-2 bg-slate-50 dark:bg-slate-800" />
+                                <DropdownMenuSeparator className="my-1 bg-slate-50 dark:bg-slate-800" />
                                 <DropdownMenuItem 
                                   className={cn(
-                                    "gap-3 rounded-xl py-3 font-bold cursor-pointer",
+                                    "gap-2 rounded-md py-2 text-xs font-semibold cursor-pointer",
                                     isActive ? "text-amber-600 bg-amber-500/5" : "text-green-600 bg-green-500/5"
                                   )}
                                   onClick={() => confirmToggleWorkspaceStatus(ws.id, isActive)}
                                 >
                                   {isActive ? (
-                                    <><ShieldOff className="h-4 w-4" /> Suspend Instance</>
+                                    <><ShieldOff className="h-3.5 w-3.5" /> Suspend Instance</>
                                   ) : (
-                                    <><Shield className="h-4 w-4" /> Re-Activate System</>
+                                    <><Shield className="h-3.5 w-3.5" /> Re-Activate System</>
                                   )}
                                 </DropdownMenuItem>
-                                <DropdownMenuSeparator className="my-2 bg-slate-50 dark:bg-slate-800" />
+                                <DropdownMenuSeparator className="my-1 bg-slate-50 dark:bg-slate-800" />
                                 <DropdownMenuItem 
                                   className={cn(
-                                    "gap-3 rounded-xl py-3 font-bold cursor-pointer",
+                                    "gap-2 rounded-md py-2 text-xs font-semibold cursor-pointer",
                                     ws.hasDocumentAuthority ? "text-amber-600 bg-amber-500/5" : "text-emerald-600 bg-emerald-500/5"
                                   )}
                                   onClick={() => confirmToggleAuthority(ws.id, !!ws.hasDocumentAuthority)}
                                 >
                                   {ws.hasDocumentAuthority ? (
-                                    <><ShieldOff className="h-4 w-4" /> Revoke Authority Power</>
+                                    <><ShieldOff className="h-3.5 w-3.5" /> Revoke Authority Power</>
                                   ) : (
-                                    <><Shield className="h-4 w-4" /> Grant Authority Power</>
+                                    <><Shield className="h-3.5 w-3.5" /> Grant Authority Power</>
                                   )}
                                 </DropdownMenuItem>
-                                <DropdownMenuSeparator className="my-2 bg-slate-50 dark:bg-slate-800" />
+                                <DropdownMenuSeparator className="my-1 bg-slate-50 dark:bg-slate-800" />
                                 <DropdownMenuItem 
-                                  className="gap-3 rounded-xl py-3 font-bold cursor-pointer text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10"
+                                  className="gap-2 rounded-md py-2 text-xs font-semibold cursor-pointer text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10"
                                   onClick={() => confirmDeleteWorkspace(ws.id)}
                                 >
-                                  <Trash2 className="h-4 w-4" /> Terminate Data
+                                  <Trash2 className="h-3.5 w-3.5" /> Terminate Data
                                 </DropdownMenuItem>
                               </DropdownMenuContent>
                             </DropdownMenu>
@@ -1792,24 +1792,24 @@ export default function FranchiseApplicationsClient({
         </Card>
       ) : (
         /* FRANCHISE REGISTRATION APPLICATIONS TAB CONTENT */
-        <div className="space-y-6">
-          <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
+        <div className="space-y-3">
+          <div className="flex flex-col sm:flex-row gap-3 items-center justify-between">
             <div className="relative w-full max-w-sm">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
               <Input 
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 placeholder="Search center, director, code..." 
-                className="pl-11 pr-4 bg-slate-50 dark:bg-slate-800/40 border-none rounded-2xl h-14 font-bold text-sm transition-all focus-visible:ring-2 focus-visible:ring-primary/20 placeholder:text-slate-400 placeholder:font-medium" 
+                className="pl-9 pr-4 bg-slate-50 dark:bg-slate-800/40 border-slate-200 dark:border-slate-700 rounded-lg h-8 text-xs font-medium transition-all focus-visible:ring-2 focus-visible:ring-primary/20 placeholder:text-slate-400 placeholder:text-xs" 
               />
             </div>
 
-            <div className="flex p-1 bg-slate-100 dark:bg-slate-800 rounded-2xl border">
+            <div className="flex p-0.5 bg-slate-100 dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700">
               {["ALL", "PENDING", "APPROVED", "REJECTED"].map(status => (
                 <button
                   key={status}
                   onClick={() => setFilterStatus(status)}
-                  className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+                  className={`px-3 py-1.5 rounded-md text-[10px] font-semibold transition-all ${
                     filterStatus === status
                       ? "bg-white dark:bg-slate-700 text-primary dark:text-white shadow-sm"
                       : "text-slate-500 hover:text-slate-900 dark:hover:text-white"
@@ -1821,76 +1821,76 @@ export default function FranchiseApplicationsClient({
             </div>
           </div>
 
-          <Card className="border-none shadow-xl shadow-slate-200/50 dark:shadow-none bg-white dark:bg-slate-900 rounded-[2.5rem] overflow-hidden transition-all duration-500">
+          <Card className="border border-slate-100 dark:border-white/5 shadow-sm bg-white dark:bg-slate-900 rounded-xl overflow-hidden">
             {renderAppPagination("border-b border-slate-50 dark:border-slate-800/50")}
             <CardContent className="p-0 overflow-x-auto custom-scrollbar">
               <Table>
                 <TableHeader className="bg-slate-50/30 dark:bg-slate-800/20">
                   <TableRow className="border-b border-slate-50 dark:border-slate-800 hover:bg-transparent">
-                    <TableHead className="w-[250px] px-8 py-6 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">Center Name</TableHead>
-                    <TableHead className="w-[200px] py-6 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">Owner</TableHead>
-                    <TableHead className="w-[150px] py-6 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">Location</TableHead>
-                    <TableHead className="w-[180px] py-6 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">Contact</TableHead>
-                    <TableHead className="w-[150px] py-6 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">Timing</TableHead>
-                    <TableHead className="w-[120px] py-6 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">Status</TableHead>
-                    <TableHead className="text-right py-6 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 px-8">Actions</TableHead>
+                    <TableHead className="w-[220px] px-4 py-2.5 text-[10px] font-bold uppercase tracking-[0.15em] text-slate-400">Center Name</TableHead>
+                    <TableHead className="w-[180px] py-2.5 text-[10px] font-bold uppercase tracking-[0.15em] text-slate-400">Owner</TableHead>
+                    <TableHead className="w-[130px] py-2.5 text-[10px] font-bold uppercase tracking-[0.15em] text-slate-400">Location</TableHead>
+                    <TableHead className="w-[160px] py-2.5 text-[10px] font-bold uppercase tracking-[0.15em] text-slate-400">Contact</TableHead>
+                    <TableHead className="w-[130px] py-2.5 text-[10px] font-bold uppercase tracking-[0.15em] text-slate-400">Timing</TableHead>
+                    <TableHead className="w-[110px] py-2.5 text-[10px] font-bold uppercase tracking-[0.15em] text-slate-400">Status</TableHead>
+                    <TableHead className="text-right py-2.5 text-[10px] font-bold uppercase tracking-[0.15em] text-slate-400 px-4">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {paginatedApps.map((app: any) => (
                     <TableRow key={app.id} className="group hover:bg-slate-50/50 dark:hover:bg-slate-800/20 transition-all border-b border-slate-50 dark:border-slate-800 last:border-none">
-                      <TableCell className="px-8 py-6">
+                      <TableCell className="px-4 py-3">
                         <div className="flex flex-col">
-                          <span className="font-bold text-slate-900 dark:text-white truncate max-w-[200px]" title={app.centerName}>{app.centerName}</span>
+                          <span className="font-semibold text-sm text-slate-900 dark:text-white truncate max-w-[180px]" title={app.centerName}>{app.centerName}</span>
                           {app.username ? (
-                            <span className="text-[10px] text-primary font-black uppercase tracking-wider">{app.username}</span>
+                            <span className="text-[10px] text-primary font-bold uppercase tracking-wider">{app.username}</span>
                           ) : (
                             <span className="text-[10px] text-slate-400 font-medium">No Code</span>
                           )}
                         </div>
                       </TableCell>
                       <TableCell>
-                        <span className="font-medium text-sm truncate max-w-[150px] block" title={app.fullName}>{app.fullName}</span>
+                        <span className="font-medium text-xs truncate max-w-[140px] block" title={app.fullName}>{app.fullName}</span>
                       </TableCell>
                       <TableCell>
                         <div className="flex flex-col text-xs">
-                          <span className="truncate max-w-[120px]" title={app.district}>{app.district}</span>
-                          <span className="text-[10px] text-muted-foreground truncate max-w-[120px]" title={app.state}>{app.state}</span>
+                          <span className="truncate max-w-[110px]" title={app.district}>{app.district}</span>
+                          <span className="text-[10px] text-muted-foreground truncate max-w-[110px]" title={app.state}>{app.state}</span>
                         </div>
                       </TableCell>
                       <TableCell>
                         <div className="flex flex-col text-xs">
                           <span className="font-medium">{app.mobile}</span>
-                          <span className="text-[10px] text-muted-foreground truncate max-w-[150px]" title={app.email}>{app.email}</span>
+                          <span className="text-[10px] text-muted-foreground truncate max-w-[140px]" title={app.email}>{app.email}</span>
                         </div>
                       </TableCell>
                       <TableCell>
                         <div className="flex flex-col text-xs">
-                          <span className="font-bold">{new Date(app.createdAt).toLocaleDateString('en-GB')}</span>
+                          <span className="font-semibold">{new Date(app.createdAt).toLocaleDateString('en-GB')}</span>
                           <span className="text-[10px] text-muted-foreground">{new Date(app.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
                         </div>
                       </TableCell>
                       <TableCell>
-                        {app.status === "PENDING" && <Badge variant="outline" className="bg-amber-500/10 text-amber-600 border-amber-500/20 font-bold uppercase text-[9px]"><Clock className="w-3 h-3 mr-1" /> Pending</Badge>}
-                        {app.status === "APPROVED" && <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20 font-bold uppercase text-[9px]"><CheckCircle className="w-3 h-3 mr-1" /> Approved</Badge>}
-                        {app.status === "REJECTED" && <Badge variant="outline" className="bg-red-500/10 text-red-600 border-red-500/20 font-bold uppercase text-[9px]"><XCircle className="w-3 h-3 mr-1" /> Rejected</Badge>}
+                        {app.status === "PENDING" && <Badge variant="outline" className="bg-amber-500/10 text-amber-600 border-amber-500/20 font-semibold uppercase text-[9px]"><Clock className="w-3 h-3 mr-1" /> Pending</Badge>}
+                        {app.status === "APPROVED" && <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20 font-semibold uppercase text-[9px]"><CheckCircle className="w-3 h-3 mr-1" /> Approved</Badge>}
+                        {app.status === "REJECTED" && <Badge variant="outline" className="bg-red-500/10 text-red-600 border-red-500/20 font-semibold uppercase text-[9px]"><XCircle className="w-3 h-3 mr-1" /> Rejected</Badge>}
                       </TableCell>
-                      <TableCell className="text-right px-8">
-                        <div className="flex items-center justify-end gap-2">
+                      <TableCell className="text-right px-4">
+                        <div className="flex items-center justify-end gap-1.5">
                           <Button 
                             onClick={() => handleOpenDetails(app)}
                             variant="ghost" 
                             size="icon" 
-                            className="h-10 w-10 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                            className="h-7 w-7 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
                           >
-                            <Eye className="w-5 h-5 text-slate-400" />
+                            <Eye className="w-3.5 h-3.5 text-slate-400" />
                           </Button>
                           <Button 
                             variant="ghost" 
                             size="icon" 
-                            className="h-10 w-10 rounded-xl hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors group/delete"
+                            className="h-7 w-7 rounded-md hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors group/delete"
                           >
-                            <Trash2 className="w-4 h-4 text-slate-400 group-hover/delete:text-red-500" />
+                            <Trash2 className="w-3.5 h-3.5 text-slate-400 group-hover/delete:text-red-500" />
                           </Button>
                         </div>
                       </TableCell>

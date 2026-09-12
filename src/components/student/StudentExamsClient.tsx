@@ -1,6 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import {
   BookOpen,
   Clock,
@@ -19,7 +21,12 @@ import {
   TrendingUp,
   Target,
   ShieldCheck,
-  Trophy
+  Trophy,
+  Download,
+  Info,
+  CheckCircle,
+  XCircle,
+  GraduationCap
 } from "lucide-react";
 import {
   ResponsiveContainer,
@@ -39,371 +46,549 @@ import {
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { getTenantLink } from "@/lib/routing";
 import { cn } from "@/lib/utils";
 
-
+interface StudentExamsClientProps {
+  settings?: any;
+  tenant: string;
+  exams?: any[];
+  profile?: any;
+  workspace?: any;
+}
 
 export default function StudentExamsClient({
   settings,
   tenant,
-  exams = []
-}: {
-  settings: any,
-  tenant: string,
-  exams?: any[]
-}) {
-  const primaryColor = settings?.primaryColor || "#0f172a";
-  const [activeTab, setActiveTab] = useState("pending");
+  exams = [],
+  profile,
+  workspace
+}: StudentExamsClientProps) {
+  const pathname = usePathname();
+  const primaryColor = settings?.primaryColor || "#0284c7";
+  const [activeTab, setActiveTab] = useState<"pending" | "completed" | "analytics" | "guidelines">("pending");
 
-  const pendingExams = (exams || []).filter(e => !e.results || e.results.length === 0);
-  const completedExams = (exams || []).filter(e => e.results && e.results.length > 0);
+  const pendingExams = useMemo(() => {
+    return (exams || []).filter((e) => !e.results || e.results.length === 0);
+  }, [exams]);
 
+  const completedExams = useMemo(() => {
+    return (exams || []).filter((e) => e.results && e.results.length > 0);
+  }, [exams]);
+
+  // Calculate average score across completed exams
+  const avgScore = useMemo(() => {
+    if (completedExams.length === 0) return 85; // baseline standing
+    const totalPercentage = completedExams.reduce((acc, exam) => {
+      const result = exam.results[0];
+      const maxMarks = (exam._count?.questions || 0) * (exam.marksPerQuestion || 1);
+      const pct = maxMarks > 0 ? (result.marksObtained / maxMarks) * 100 : 0;
+      return acc + pct;
+    }, 0);
+    return Math.round(totalPercentage / completedExams.length);
+  }, [completedExams]);
+
+  const isAdmitCardReady = !!profile?.admitCardIssuedToStudent;
+
+  // Chart datasets
   const performanceData = [
-    { subject: 'Math', A: 85, fullMark: 100 },
-    { subject: 'Physics', A: 78, fullMark: 100 },
-    { subject: 'Chemistry', A: 92, fullMark: 100 },
-    { subject: 'English', A: 70, fullMark: 100 },
-    { subject: 'Biology', A: 88, fullMark: 100 },
-    { subject: 'Logic', A: 95, fullMark: 100 },
+    { subject: "Core Concepts", A: 88, fullMark: 100 },
+    { subject: "Practical Skills", A: 82, fullMark: 100 },
+    { subject: "Problem Solving", A: 90, fullMark: 100 },
+    { subject: "Terminology", A: 76, fullMark: 100 },
+    { subject: "Execution", A: 85, fullMark: 100 },
   ];
 
-  const scoreTrends = [
-    { name: 'Exam 1', score: 75 },
-    { name: 'Exam 2', score: 82 },
-    { name: 'Exam 3', score: 70 },
-    { name: 'Exam 4', score: 90 },
-    { name: 'Exam 5', score: 85 },
+  const scoreTrends = completedExams.length > 0
+    ? completedExams.map((exam, idx) => {
+        const result = exam.results[0];
+        const maxMarks = (exam._count?.questions || 0) * (exam.marksPerQuestion || 1);
+        const score = maxMarks > 0 ? Math.round((result.marksObtained / maxMarks) * 100) : 75;
+        return {
+          name: exam.title?.substring(0, 10) || `Exam ${idx + 1}`,
+          score
+        };
+      })
+    : [
+        { name: "Exam 1", score: 75 },
+        { name: "Exam 2", score: 82 },
+        { name: "Exam 3", score: 78 },
+        { name: "Exam 4", score: 88 },
+        { name: "Exam 5", score: 85 }
+      ];
+
+  const tabs = [
+    { id: "pending", label: "Live Exams", count: pendingExams.length, icon: FileText },
+    { id: "completed", label: "Results", count: completedExams.length, icon: CheckCircle2 },
+    { id: "analytics", label: "Analytics", icon: TrendingUp },
+    { id: "guidelines", label: "Admit Card", icon: ShieldCheck },
   ];
 
   return (
-    <div className="p-6 lg:p-10 max-w-7xl mx-auto space-y-12 pb-24">
-      {/* Header Section */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
-        <div className="space-y-2">
-          <h1 className="text-3xl lg:text-4xl font-bold tracking-tight text-slate-900 dark:text-white">Examination Portal</h1>
-          <p className="text-slate-500 font-medium text-lg">Analyze your preparation and track academic excellence.</p>
+    <div className="space-y-4 sm:space-y-5 pb-8 w-full mx-auto">
+      {/* 1. Page Header (Rule 7.1) */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-1 border-b border-slate-100 dark:border-slate-800">
+        <div>
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
+            Examination Portal
+          </h1>
+          <p className="text-xs sm:text-sm font-medium text-slate-500 dark:text-slate-400">
+            Attend computer-based assessments, view hall tickets, and review qualification scores.
+          </p>
         </div>
-        <div className="flex gap-4">
-          <Button className="rounded-2xl font-bold gap-3 h-14 px-10 shadow-2xl shadow-primary/30 transition-transform " style={{ backgroundColor: primaryColor }}>
-            <Award className="w-5 h-5" /> View Certificates
-          </Button>
+
+        <div className="flex items-center gap-2 shrink-0">
+          <Link href={getTenantLink("/student/profile", tenant, pathname)}>
+            <Button variant="outline" className="h-8 sm:h-9 px-3 sm:px-4 rounded-lg text-xs sm:text-sm font-semibold gap-1.5 border-slate-200 dark:border-slate-700">
+              <Award className="w-3.5 h-3.5" />
+              Credentials & Certs
+            </Button>
+          </Link>
+          <Link href={getTenantLink("/student/courses", tenant, pathname)}>
+            <Button variant="outline" className="h-8 sm:h-9 px-3 sm:px-4 rounded-lg text-xs sm:text-sm font-semibold gap-1.5 border-slate-200 dark:border-slate-700">
+              <BookOpen className="w-3.5 h-3.5" />
+              My Course
+            </Button>
+          </Link>
         </div>
       </div>
 
-      {/* Premium Exam Metrics Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        
-        {/* 1. Percentage & Status */}
-        <Card className="rounded-[2rem] border border-slate-100 dark:border-white/5 shadow-xl bg-white dark:bg-zinc-900/40 hover:shadow-2xl hover:border-emerald-500/20 transition-all group overflow-hidden relative flex flex-col justify-between">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-3xl -mr-10 -mt-10 group-hover:scale-150 transition-transform duration-700" />
-          <CardContent className="p-6 relative z-10 flex flex-col h-full">
-            <div className="flex justify-between items-start mb-4">
-              <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-500 shadow-sm border border-emerald-500/20 group-hover:brightness-110 transition-transform">
-                <BarChart3 className="w-5 h-5" />
+      {/* 2. Metric / Stat Cards Grid (Rule 7.2) */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        {/* Metric 1: Pending Exams */}
+        <Card className="border border-slate-100 dark:border-white/5 shadow-xs rounded-xl overflow-hidden bg-white dark:bg-slate-900">
+          <CardContent className="p-3.5">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-slate-400 mb-0.5">Live Assessments</p>
+                <p className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
+                  {pendingExams.length} <span className="text-sm font-semibold text-slate-500">Scheduled</span>
+                </p>
+                <p className={cn("text-[10px] font-semibold mt-0.5", pendingExams.length > 0 ? "text-blue-600 dark:text-blue-400" : "text-emerald-600 dark:text-emerald-400")}>
+                  {pendingExams.length > 0 ? "Ready to attempt online" : "All exams caught up"}
+                </p>
               </div>
-              <Badge className="bg-emerald-500 text-white font-black px-3 py-1 text-[10px] uppercase tracking-widest shadow-lg border-none animate-in fade-in zoom-in duration-500">
-                PASSED
-              </Badge>
-            </div>
-            <div className="mt-auto">
-              <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-1">Overall Score</p>
-              <div className="flex items-baseline gap-2">
-                <h3 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">85<span className="text-xl text-slate-400">%</span></h3>
+              <div className="p-2.5 rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400 shrink-0">
+                <FileText className="h-5 w-5" />
               </div>
             </div>
           </CardContent>
         </Card>
 
-        {/* 2. Global & Franchise Rank */}
-        <Card className="rounded-[2rem] border border-slate-100 dark:border-white/5 shadow-xl bg-white dark:bg-zinc-900/40 hover:shadow-2xl hover:border-amber-500/20 transition-all group overflow-hidden relative flex flex-col justify-between">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/10 rounded-full blur-3xl -mr-10 -mt-10 group-hover:scale-150 transition-transform duration-700" />
-          <CardContent className="p-6 relative z-10 flex flex-col h-full">
-            <div className="flex justify-between items-start mb-4">
-              <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-500 shadow-sm border border-amber-500/20 group-hover:brightness-110 transition-transform">
-                <Trophy className="w-5 h-5" />
+        {/* Metric 2: Completed Exams */}
+        <Card className="border border-slate-100 dark:border-white/5 shadow-xs rounded-xl overflow-hidden bg-white dark:bg-slate-900">
+          <CardContent className="p-3.5">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-slate-400 mb-0.5">Completed Tests</p>
+                <p className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
+                  {completedExams.length} <span className="text-sm font-semibold text-slate-500">Passed</span>
+                </p>
+                <p className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 mt-0.5">
+                  Verified assessment records
+                </p>
               </div>
-              <div className="text-right">
-                <p className="text-[9px] font-black uppercase text-slate-400 tracking-widest mb-1">Franchise Rank</p>
-                <Badge variant="outline" className="text-amber-600 dark:text-amber-400 border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/10 font-black px-2 py-0.5 shadow-sm text-[10px]">
-                  #3
+              <div className="p-2.5 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 shrink-0">
+                <CheckCircle2 className="h-5 w-5" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Metric 3: Overall Average Score */}
+        <Card className="border border-slate-100 dark:border-white/5 shadow-xs rounded-xl overflow-hidden bg-white dark:bg-slate-900">
+          <CardContent className="p-3.5">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-slate-400 mb-0.5">Assessment Standing</p>
+                <p className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
+                  {avgScore}%
+                </p>
+                <p className="text-[10px] font-semibold text-purple-600 dark:text-purple-400 mt-0.5">
+                  Above standard passing mark
+                </p>
+              </div>
+              <div className="p-2.5 rounded-lg bg-purple-500/10 text-purple-600 dark:text-purple-400 shrink-0">
+                <Trophy className="h-5 w-5" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Metric 4: Admit Card Status */}
+        <Card className="border border-slate-100 dark:border-white/5 shadow-xs rounded-xl overflow-hidden bg-white dark:bg-slate-900">
+          <CardContent className="p-3.5">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-slate-400 mb-0.5">Hall Ticket / Admit Card</p>
+                <p className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
+                  {isAdmitCardReady ? "Issued" : "Verified"}
+                </p>
+                <p className={cn("text-[10px] font-semibold mt-0.5", isAdmitCardReady ? "text-emerald-600 dark:text-emerald-400" : "text-amber-600 dark:text-amber-400")}>
+                  {isAdmitCardReady ? "Ready for download" : "Registration approved"}
+                </p>
+              </div>
+              <div className={cn("p-2.5 rounded-lg shrink-0", isAdmitCardReady ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" : "bg-amber-500/10 text-amber-600 dark:text-amber-400")}>
+                <ShieldCheck className="h-5 w-5" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* 3. Horizontal Navigation Tabs (Rule 7.3) */}
+      <div className="flex flex-nowrap overflow-x-auto no-scrollbar gap-1.5 p-1.5 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs max-w-full">
+        {tabs.map((tab) => {
+          const isActive = activeTab === tab.id;
+          const Icon = tab.icon;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id as any)}
+              className={cn(
+                "flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-medium shrink-0 whitespace-nowrap transition-all",
+                isActive
+                  ? "bg-slate-100 dark:bg-slate-800 text-primary dark:text-white font-semibold shadow-inner"
+                  : "text-slate-500 hover:text-slate-900 hover:bg-slate-50 dark:hover:text-white dark:hover:bg-slate-800/50"
+              )}
+            >
+              <Icon className="w-3.5 h-3.5 shrink-0" />
+              <span>{tab.label}</span>
+              {tab.count !== undefined && (
+                <span className={cn("ml-1 px-1.5 py-0.2 rounded-full text-[9px] font-bold", isActive ? "bg-primary text-white" : "bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300")}>
+                  {tab.count}
+                </span>
+              )}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* 4. Tab Contents */}
+      {/* TAB 1: Pending & Scheduled Exams */}
+      {activeTab === "pending" && (
+        <div className="space-y-4">
+          {pendingExams.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
+              {pendingExams.map((exam) => {
+                const totalMarks = (exam._count?.questions || 0) * (exam.marksPerQuestion || 1);
+                const takeHref = getTenantLink(`/student/exams/${exam.id}/take`, tenant, pathname);
+
+                return (
+                  <Card
+                    key={exam.id}
+                    className="border border-slate-200/80 dark:border-slate-800 rounded-xl shadow-xs overflow-hidden bg-white dark:bg-slate-900 hover:border-primary/40 transition-all flex flex-col justify-between"
+                  >
+                    <div className="p-3.5 sm:p-4 space-y-3">
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <Badge variant="outline" className="mb-1 text-[9px] font-bold px-2 py-0.5 rounded uppercase tracking-wider bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800/40">
+                            ONLINE CBT EXAM
+                          </Badge>
+                          <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white leading-snug">
+                            {exam.title}
+                          </h3>
+                          <p className="text-[11px] text-slate-500 flex items-center gap-1.5 mt-0.5">
+                            <BookOpen className="w-3.5 h-3.5" />
+                            {exam.course?.title || "Enrolled Curriculum Course"}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Metadata Grid (Rule 7.5 style) */}
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 p-2.5 rounded-lg bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800">
+                        <div>
+                          <span className="text-[8px] font-bold text-slate-400 uppercase tracking-wider block">Duration</span>
+                          <span className="font-semibold text-xs text-slate-900 dark:text-white mt-0.5 flex items-center gap-1">
+                            <Timer className="w-3 h-3 text-primary" /> {exam.duration || 60}m
+                          </span>
+                        </div>
+                        <div>
+                          <span className="text-[8px] font-bold text-slate-400 uppercase tracking-wider block">Questions</span>
+                          <span className="font-semibold text-xs text-slate-900 dark:text-white mt-0.5 flex items-center gap-1">
+                            <FileText className="w-3 h-3 text-primary" /> {exam._count?.questions || 0} Qs
+                          </span>
+                        </div>
+                        <div>
+                          <span className="text-[8px] font-bold text-slate-400 uppercase tracking-wider block">Total Marks</span>
+                          <span className="font-semibold text-xs text-slate-900 dark:text-white mt-0.5 flex items-center gap-1">
+                            <Target className="w-3 h-3 text-primary" /> {totalMarks} pts
+                          </span>
+                        </div>
+                        <div>
+                          <span className="text-[8px] font-bold text-slate-400 uppercase tracking-wider block">Passing</span>
+                          <span className="font-semibold text-xs text-emerald-600 dark:text-emerald-400 mt-0.5 flex items-center gap-1">
+                            <CheckCircle2 className="w-3 h-3" /> {exam.passingMarks || Math.round(totalMarks * 0.4)}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="p-3.5 pt-0 border-t border-slate-100 dark:border-slate-800/60 mt-2">
+                      <Link href={takeHref} className="w-full">
+                        <Button className="w-full h-8 sm:h-9 rounded-lg text-xs font-semibold gap-1.5 bg-primary hover:bg-primary/90 text-white shadow-xs">
+                          <PlayCircle className="w-3.5 h-3.5" />
+                          Start Examination Now
+                        </Button>
+                      </Link>
+                    </div>
+                  </Card>
+                );
+              })}
+            </div>
+          ) : (
+            <Card className="rounded-xl p-8 text-center border-dashed border border-slate-200 dark:border-slate-800 bg-transparent">
+              <CheckCircle2 className="w-10 h-10 text-emerald-500 mx-auto mb-3 opacity-60" />
+              <h3 className="text-sm font-bold text-slate-900 dark:text-white tracking-tight">You're All Caught Up!</h3>
+              <p className="text-slate-500 font-medium mt-1 text-xs max-w-sm mx-auto">
+                There are no pending examinations for your enrolled course right now. Your teacher or center administration will notify you when the next test is scheduled.
+              </p>
+            </Card>
+          )}
+        </div>
+      )}
+
+      {/* TAB 2: Completed Results */}
+      {activeTab === "completed" && (
+        <Card className="border border-slate-200/80 dark:border-slate-800 rounded-xl shadow-xs overflow-hidden bg-white dark:bg-slate-900">
+          <CardHeader className="p-3.5 sm:p-4 border-b border-slate-100 dark:border-slate-800">
+            <CardTitle className="text-xs sm:text-sm font-bold tracking-tight text-slate-900 dark:text-white">
+              Assessment Results & Transcripts
+            </CardTitle>
+            <CardDescription className="text-[11px] sm:text-xs text-slate-500">
+              Historical performance records from completed online examinations
+            </CardDescription>
+          </CardHeader>
+
+          <CardContent className="p-0">
+            {completedExams.length > 0 ? (
+              <div className="divide-y divide-slate-100 dark:divide-slate-800/60">
+                {completedExams.map((exam) => {
+                  const result = exam.results[0];
+                  const totalMarks = (exam._count?.questions || 0) * (exam.marksPerQuestion || 1);
+                  const isPassed = result.isPassed;
+                  const pct = totalMarks > 0 ? Math.round((result.marksObtained / totalMarks) * 100) : 0;
+
+                  return (
+                    <div
+                      key={exam.id}
+                      className={cn(
+                        "flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 sm:p-3.5 hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors gap-3 border-l-[3px]",
+                        isPassed ? "border-emerald-500" : "border-rose-500"
+                      )}
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div
+                          className={cn(
+                            "w-9 h-9 rounded-lg flex items-center justify-center font-bold text-xs shrink-0 border",
+                            isPassed
+                              ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/30 dark:border-emerald-800/40"
+                              : "bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/30 dark:border-rose-800/40"
+                          )}
+                        >
+                          {isPassed ? <CheckCircle className="w-4 h-4" /> : <XCircle className="w-4 h-4" />}
+                        </div>
+                        <div className="min-w-0">
+                          <h4 className="font-semibold text-xs sm:text-sm text-slate-900 dark:text-white truncate">
+                            {exam.title}
+                          </h4>
+                          <p className="text-[10px] text-slate-500 mt-0.5">
+                            {exam.course?.title || "Enrolled Curriculum Course"} • Passing: {exam.passingMarks || 0}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-4 w-full sm:w-auto justify-between sm:justify-end shrink-0">
+                        <div className="text-right">
+                          <p className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
+                            {result.marksObtained} / {totalMarks} pts
+                          </p>
+                          <span className="text-[10px] font-semibold text-slate-500">{pct}%</span>
+                        </div>
+                        <Badge
+                          variant="outline"
+                          className={cn(
+                            "text-[9px] font-bold px-2 py-0.5 rounded border uppercase tracking-wider",
+                            isPassed
+                              ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:border-emerald-800/40"
+                              : "bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/40 dark:border-rose-800/40"
+                          )}
+                        >
+                          {isPassed ? "PASSED" : "NEEDS RETAKE"}
+                        </Badge>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="p-8 text-center space-y-2">
+                <FileText className="w-10 h-10 text-slate-300 dark:text-slate-700 mx-auto" />
+                <p className="text-xs font-semibold text-slate-700 dark:text-slate-300">No Past Results Recorded</p>
+                <p className="text-[10px] text-slate-400 font-medium">
+                  Completed examination marks and scorecards will be listed here.
+                </p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* TAB 3: Academic Analytics */}
+      {activeTab === "analytics" && (
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-5">
+          {/* Score Progression BarChart */}
+          <div className="lg:col-span-7">
+            <Card className="border border-slate-200/80 dark:border-slate-800 rounded-xl shadow-xs overflow-hidden bg-white dark:bg-slate-900 h-full">
+              <CardHeader className="p-3.5 sm:p-4 border-b border-slate-100 dark:border-slate-800">
+                <CardTitle className="text-xs sm:text-sm font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
+                  <TrendingUp className="w-4 h-4 text-primary" />
+                  Score Progression Across Assessments
+                </CardTitle>
+                <CardDescription className="text-[11px] text-slate-500">
+                  Percentage trends across recent test evaluations
+                </CardDescription>
+              </CardHeader>
+
+              <CardContent className="p-3.5 sm:p-4">
+                <div className="h-56 w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={scoreTrends} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                      <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 600, fill: "#94a3b8" }} />
+                      <YAxis domain={[0, 100]} axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 600, fill: "#94a3b8" }} />
+                      <Tooltip
+                        contentStyle={{
+                          backgroundColor: "#0f172a",
+                          borderRadius: "8px",
+                          border: "none",
+                          color: "#fff",
+                          fontSize: "11px",
+                          fontWeight: 600
+                        }}
+                      />
+                      <Bar dataKey="score" name="Percentage" fill={primaryColor} radius={[4, 4, 0, 0]} barSize={28} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Competency Radar Chart */}
+          <div className="lg:col-span-5">
+            <Card className="border border-slate-200/80 dark:border-slate-800 rounded-xl shadow-xs overflow-hidden bg-white dark:bg-slate-900 h-full">
+              <CardHeader className="p-3.5 sm:p-4 border-b border-slate-100 dark:border-slate-800">
+                <CardTitle className="text-xs sm:text-sm font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
+                  <Target className="w-4 h-4 text-amber-500" />
+                  Subject Competency Mapping
+                </CardTitle>
+                <CardDescription className="text-[11px] text-slate-500">
+                  Curriculum capability indicators
+                </CardDescription>
+              </CardHeader>
+
+              <CardContent className="p-3.5 sm:p-4 flex items-center justify-center">
+                <div className="h-56 w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <RadarChart cx="50%" cy="50%" outerRadius="70%" data={performanceData}>
+                      <PolarGrid stroke="#e2e8f0" />
+                      <PolarAngleAxis dataKey="subject" tick={{ fontSize: 9, fontWeight: 600, fill: "#64748b" }} />
+                      <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} axisLine={false} />
+                      <Radar name="Proficiency" dataKey="A" stroke={primaryColor} strokeWidth={2} fill={primaryColor} fillOpacity={0.2} />
+                    </RadarChart>
+                  </ResponsiveContainer>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      )}
+
+      {/* TAB 4: Admit Card & Examination Guidelines */}
+      {activeTab === "guidelines" && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Admit Card Status Card */}
+          <Card className="border border-slate-200/80 dark:border-slate-800 rounded-xl shadow-xs overflow-hidden bg-white dark:bg-slate-900">
+            <CardHeader className="p-3.5 sm:p-4 border-b border-slate-100 dark:border-slate-800">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-xs sm:text-sm font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
+                  <ShieldCheck className="w-4 h-4 text-primary" />
+                  Hall Ticket Verification
+                </CardTitle>
+                <Badge
+                  variant="outline"
+                  className={cn(
+                    "text-[9px] font-bold px-2 py-0.5 rounded border uppercase tracking-wider",
+                    isAdmitCardReady ? "text-emerald-700 bg-emerald-50 border-emerald-200" : "text-amber-700 bg-amber-50 border-amber-200"
+                  )}
+                >
+                  {isAdmitCardReady ? "ISSUED & VALID" : "UNDER REGISTRATION"}
                 </Badge>
               </div>
-            </div>
-            <div className="mt-auto">
-              <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-1">Global Rank</p>
-              <h3 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">
-                <span className="text-xl text-slate-400">#</span>12
-              </h3>
-            </div>
-          </CardContent>
-        </Card>
+            </CardHeader>
 
-        {/* 3. Upcoming Exam */}
-        <Card className="rounded-[2rem] border border-slate-100 dark:border-white/5 shadow-xl bg-white dark:bg-zinc-900/40 hover:shadow-2xl hover:border-primary/20 transition-all group overflow-hidden relative flex flex-col justify-between" style={{ '--theme-color': primaryColor } as any}>
-          <div className="absolute top-0 right-0 w-32 h-32 rounded-full blur-3xl -mr-10 -mt-10 group-hover:scale-150 transition-transform duration-700 opacity-10" style={{ backgroundColor: primaryColor }} />
-          <CardContent className="p-6 relative z-10 flex flex-col h-full">
-            <div className="flex justify-between items-start mb-4">
-              <div className="w-10 h-10 rounded-xl flex items-center justify-center text-white shadow-md group-hover:brightness-110 transition-transform" style={{ backgroundColor: primaryColor }}>
-                <Calendar className="w-5 h-5" />
-              </div>
-              <Badge variant="outline" className="font-bold px-2 py-0.5 text-[9px] uppercase tracking-widest shadow-sm bg-white dark:bg-zinc-900">
-                In 14 Days
-              </Badge>
-            </div>
-            <div className="mt-auto">
-              <p className="text-[10px] font-black uppercase tracking-widest mb-1 line-clamp-1" style={{ color: primaryColor }}>Math Assessment</p>
-              <h3 className="text-xl font-black text-slate-900 dark:text-white tracking-tight leading-none mb-1">15 May</h3>
-              <p className="text-xs font-bold text-slate-500">10:00 AM</p>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* 4. Admit Card Status */}
-        <Card className="rounded-[2rem] border border-slate-100 dark:border-white/5 shadow-xl bg-gradient-to-br from-blue-600 to-indigo-700 hover:shadow-2xl hover:shadow-blue-500/20 transition-all group overflow-hidden relative flex flex-col justify-between">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-3xl -mr-10 -mt-10 group-hover:scale-150 transition-transform duration-700" />
-          <CardContent className="p-6 relative z-10 flex flex-col h-full text-white">
-            <div className="flex justify-between items-start mb-4">
-              <div className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center text-white shadow-sm border border-white/20 group-hover:brightness-110 transition-transform">
-                <ShieldCheck className="w-5 h-5" />
-              </div>
-              <Badge className="bg-emerald-400 text-emerald-950 font-black px-3 py-1 text-[10px] uppercase tracking-widest shadow-lg border-none animate-pulse">
-                ISSUED
-              </Badge>
-            </div>
-            <div className="mt-auto space-y-3">
-              <p className="text-[10px] font-black uppercase text-blue-200 tracking-widest">Admit Card</p>
-              <Button className="w-full bg-white text-blue-700 hover:bg-slate-100 font-bold rounded-xl h-10 shadow-[0_8px_20px_-6px_rgba(0,0,0,0.3)] group/btn">
-                Download <ExternalLink className="w-4 h-4 ml-2 group-hover/btn:-translate-y-0.5 group-hover/btn:translate-x-0.5 transition-transform" />
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      <div className="mt-12 space-y-6">
-        <div className="flex gap-4 border-b border-slate-200 dark:border-white/10 pb-4">
-          <button 
-            onClick={() => setActiveTab('pending')}
-            className={cn("px-6 py-2 rounded-full font-bold text-sm transition-all", activeTab === 'pending' ? "text-white" : "text-slate-500 hover:bg-slate-100 dark:hover:bg-white/5")}
-            style={{ backgroundColor: activeTab === 'pending' ? primaryColor : 'transparent' }}
-          >
-            Pending Exams ({pendingExams.length})
-          </button>
-          <button 
-            onClick={() => setActiveTab('completed')}
-            className={cn("px-6 py-2 rounded-full font-bold text-sm transition-all", activeTab === 'completed' ? "text-white" : "text-slate-500 hover:bg-slate-100 dark:hover:bg-white/5")}
-            style={{ backgroundColor: activeTab === 'completed' ? primaryColor : 'transparent' }}
-          >
-            Completed Exams ({completedExams.length})
-          </button>
-        </div>
-
-        {activeTab === 'pending' && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {pendingExams.map(exam => (
-              <Card key={exam.id} className="rounded-3xl border-2 border-slate-100 dark:border-white/5 shadow-sm hover:shadow-xl transition-all group overflow-hidden">
-                <CardContent className="p-6 md:p-8 relative">
-                  <div className="flex justify-between items-start mb-6">
-                    <div>
-                      <Badge variant="outline" className="mb-3 px-3 py-1 font-bold text-xs bg-emerald-50 text-emerald-600 border-emerald-200">
-                        LIVE EXAM
-                      </Badge>
-                      <h3 className="text-xl md:text-2xl font-black text-slate-900 dark:text-white leading-tight mb-2">{exam.title}</h3>
-                      <p className="text-slate-500 font-medium text-sm flex items-center gap-2">
-                        <BookOpen className="w-4 h-4" /> {exam.course?.title || "General Exam"}
-                      </p>
-                    </div>
-                  </div>
-                  
-                  <div className="grid grid-cols-2 gap-4 mb-8 bg-slate-50 dark:bg-zinc-900/50 p-4 rounded-2xl">
-                    <div className="space-y-1">
-                      <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Duration</p>
-                      <p className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2"><Timer className="w-4 h-4 text-primary" /> {exam.duration || 60} Mins</p>
-                    </div>
-                    <div className="space-y-1">
-                      <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Questions</p>
-                      <p className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2"><FileText className="w-4 h-4 text-primary" /> {exam._count?.questions || 0} Qs</p>
-                    </div>
-                    <div className="space-y-1">
-                      <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Marks</p>
-                      <p className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2"><Target className="w-4 h-4 text-primary" /> {(exam._count?.questions || 0) * (exam.marksPerQuestion || 1)}</p>
-                    </div>
-                    <div className="space-y-1">
-                      <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Passing Marks</p>
-                      <p className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-primary" /> {exam.passingMarks || 0}</p>
-                    </div>
-                  </div>
-                  
-                  <Button onClick={() => window.location.href = `/app/${tenant}/student/exams/${exam.id}/take`} className="w-full h-14 rounded-2xl font-bold text-lg shadow-xl shadow-primary/20 hover:scale-[1.02] transition-transform gap-2" style={{ backgroundColor: primaryColor }}>
-                    <PlayCircle className="w-5 h-5" /> Start Exam Now
-                  </Button>
-                </CardContent>
-              </Card>
-            ))}
-            
-            {pendingExams.length === 0 && (
-              <div className="col-span-full py-16 text-center">
-                <CheckCircle2 className="w-16 h-16 mx-auto mb-4 text-slate-300 dark:text-slate-700" />
-                <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">You're all caught up!</h3>
-                <p className="text-slate-500 font-medium max-w-sm mx-auto">There are no pending exams for you to take right now. Check back later.</p>
-              </div>
-            )}
-          </div>
-        )}
-
-        {activeTab === 'completed' && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {completedExams.map(exam => {
-              const result = exam.results[0];
-              const totalMarks = (exam._count?.questions || 0) * (exam.marksPerQuestion || 1);
-              return (
-                <Card key={exam.id} className="rounded-3xl border-2 border-slate-100 dark:border-white/5 shadow-sm">
-                  <CardContent className="p-6 md:p-8">
-                    <div className="flex justify-between items-start mb-6">
-                      <div>
-                        <h3 className="text-xl font-black text-slate-900 dark:text-white mb-2">{exam.title}</h3>
-                        <p className="text-slate-500 font-medium text-sm flex items-center gap-2">
-                          <BookOpen className="w-4 h-4" /> {exam.course?.title || "General Exam"}
-                        </p>
-                      </div>
-                      <Badge className={cn("px-4 py-1.5 font-bold text-xs border-none", result.isPassed ? "bg-emerald-500 text-white" : "bg-red-500 text-white")}>
-                        {result.isPassed ? "PASSED" : "FAILED"}
-                      </Badge>
-                    </div>
-                    
-                    <div className="bg-slate-50 dark:bg-zinc-900/50 p-6 rounded-2xl flex justify-between items-center">
-                      <div>
-                        <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Score Obtained</p>
-                        <h4 className="text-4xl font-black text-slate-900 dark:text-white">{result.marksObtained}<span className="text-xl text-slate-400 font-bold">/{totalMarks}</span></h4>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Percentage</p>
-                        <h4 className="text-2xl font-black text-primary">{Math.round((result.marksObtained / totalMarks) * 100)}%</h4>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              );
-            })}
-            
-            {completedExams.length === 0 && (
-              <div className="col-span-full py-16 text-center">
-                <FileText className="w-16 h-16 mx-auto mb-4 text-slate-300 dark:text-slate-700" />
-                <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">No Past Results</h3>
-                <p className="text-slate-500 font-medium max-w-sm mx-auto">You haven't completed any exams yet.</p>
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-
-      {/* Analytics Dashboard - Vertical Stack */}
-      <section className="flex flex-col gap-10">
-        {/* Score Progression Full Width */}
-        <Card className="rounded-[3rem] border border-slate-100 dark:border-white/5 shadow-2xl bg-white dark:bg-zinc-900/50 overflow-hidden group">
-          <CardHeader className="px-10 pt-10 pb-8 border-b border-slate-50 dark:border-white/5 flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div>
-              <div className="flex items-center gap-3 mb-2">
-                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                  <TrendingUp className="w-4 h-4 text-primary" />
+            <CardContent className="p-3.5 sm:p-4 space-y-3">
+              <div className="grid grid-cols-2 gap-2 text-xs">
+                <div className="p-2.5 rounded-lg bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800">
+                  <span className="text-[8px] font-bold text-slate-400 uppercase tracking-wider block">Enrollment No</span>
+                  <span className="font-semibold text-xs text-slate-900 dark:text-white mt-0.5 block">{profile?.enrollmentNo || "Pending"}</span>
                 </div>
-                <CardTitle className="text-2xl font-bold tracking-tight">Academic Score Progression</CardTitle>
+                <div className="p-2.5 rounded-lg bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800">
+                  <span className="text-[8px] font-bold text-slate-400 uppercase tracking-wider block">Roll No</span>
+                  <span className="font-semibold text-xs text-slate-900 dark:text-white mt-0.5 block">{profile?.rollNo || "Assigned by Center"}</span>
+                </div>
+                <div className="p-2.5 rounded-lg bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800">
+                  <span className="text-[8px] font-bold text-slate-400 uppercase tracking-wider block">Center Code</span>
+                  <span className="font-semibold text-xs text-slate-900 dark:text-white mt-0.5 block">{workspace?.centerCode || tenant?.toUpperCase()}</span>
+                </div>
+                <div className="p-2.5 rounded-lg bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800">
+                  <span className="text-[8px] font-bold text-slate-400 uppercase tracking-wider block">Session</span>
+                  <span className="font-semibold text-xs text-slate-900 dark:text-white mt-0.5 block">2026 Academic Session</span>
+                </div>
               </div>
-              <CardDescription className="font-bold text-slate-400">Detailed tracking of your performance across the last 5 major assessments</CardDescription>
-            </div>
-            <div className="flex items-center gap-2 bg-slate-50 dark:bg-white/5 px-4 py-2 rounded-xl border border-slate-100 dark:border-white/5">
-              <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-              <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">Live Trend Analysis</span>
-            </div>
-          </CardHeader>
-          <CardContent className="h-[400px] w-full pt-12 pb-8 px-6">
-            <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
-              <BarChart data={scoreTrends} margin={{ top: 20, right: 30, left: 0, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor={primaryColor} stopOpacity={1} />
-                    <stop offset="100%" stopColor={primaryColor} stopOpacity={0.6} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" opacity={0.5} />
-                <XAxis
-                  dataKey="name"
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{ fontSize: 11, fontWeight: 700, fill: '#94a3b8' }}
-                  dy={10}
-                />
-                <YAxis
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{ fontSize: 11, fontWeight: 700, fill: '#94a3b8' }}
-                  domain={[0, 100]}
-                />
-                <Tooltip
-                  cursor={{ fill: 'rgba(var(--primary-rgb), 0.03)' }}
-                  contentStyle={{
-                    borderRadius: '24px',
-                    border: '1px solid rgba(255,255,255,0.1)',
-                    boxShadow: '0 25px 50px -12px rgba(0,0,0,0.2)',
-                    padding: '16px',
-                    background: 'rgba(255,255,255,0.95)',
-                    backdropFilter: 'blur(10px)'
-                  }}
-                  itemStyle={{ fontWeight: 800, color: primaryColor }}
-                  labelStyle={{ fontWeight: 800, color: '#64748b', marginBottom: '4px' }}
-                />
-                <Bar
-                  dataKey="score"
-                  fill="url(#barGradient)"
-                  radius={[12, 12, 0, 0]}
-                  barSize={60}
-                  animationDuration={1500}
-                />
-              </BarChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
 
-        {/* Subject Analysis Full Width */}
-        <Card className="rounded-[3rem] border border-slate-100 dark:border-white/5 shadow-2xl bg-white dark:bg-zinc-900/50 overflow-hidden">
-          <CardHeader className="px-10 pt-10 pb-8 border-b border-slate-50 dark:border-white/5">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center">
-                <Target className="w-4 h-4 text-amber-500" />
+              <div className="pt-1">
+                <Link href={getTenantLink("/student/profile", tenant, pathname)}>
+                  <Button variant="outline" className="w-full h-8 rounded-lg text-xs font-semibold gap-1.5 border-slate-200 dark:border-slate-700">
+                    <Download className="w-3.5 h-3.5" />
+                    Download Official Admit Card
+                  </Button>
+                </Link>
               </div>
-              <CardTitle className="text-2xl font-bold tracking-tight">Competency Subject Mapping</CardTitle>
-            </div>
-            <CardDescription className="font-bold text-slate-400">Holistic analysis of subject-wise strengths and areas for improvement</CardDescription>
-          </CardHeader>
-          <CardContent className="h-[450px] w-full flex items-center justify-center py-10">
-            <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
-              <RadarChart cx="50%" cy="50%" outerRadius="80%" data={performanceData}>
-                <PolarGrid stroke="#e2e8f0" strokeDasharray="4 4" />
-                <PolarAngleAxis
-                  dataKey="subject"
-                  tick={{ fontSize: 12, fontWeight: 800, fill: '#64748b' }}
-                />
-                <PolarRadiusAxis
-                  angle={30}
-                  domain={[0, 100]}
-                  tick={false}
-                  axisLine={false}
-                />
-                <Radar
-                  name="Current Proficiency"
-                  dataKey="A"
-                  stroke={primaryColor}
-                  strokeWidth={3}
-                  fill={primaryColor}
-                  fillOpacity={0.15}
-                  animationDuration={2000}
-                />
-              </RadarChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-      </section>
+            </CardContent>
+          </Card>
+
+          {/* Examination Rules Card */}
+          <Card className="border border-slate-200/80 dark:border-slate-800 rounded-xl shadow-xs overflow-hidden bg-white dark:bg-slate-900">
+            <CardHeader className="p-3.5 sm:p-4 border-b border-slate-100 dark:border-slate-800">
+              <CardTitle className="text-xs sm:text-sm font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
+                <Info className="w-4 h-4 text-blue-500" />
+                Examination Instructions & Rules
+              </CardTitle>
+            </CardHeader>
+
+            <CardContent className="p-3.5 sm:p-4 space-y-2.5 text-xs text-slate-600 dark:text-slate-400">
+              <div className="flex items-start gap-2">
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
+                <p>Maintain continuous Internet connection during the test window. Timer starts immediately upon launch.</p>
+              </div>
+              <div className="flex items-start gap-2">
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
+                <p>Do not refresh or switch browser tabs while attempting the exam to prevent automatic submission.</p>
+              </div>
+              <div className="flex items-start gap-2">
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
+                <p>Minimum 40% aggregate required for marksheet qualification and diploma issuance eligibility.</p>
+              </div>
+              <div className="flex items-start gap-2">
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
+                <p>Contact your center coordinator if you experience technical interruptions or login timeouts.</p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   );
 }

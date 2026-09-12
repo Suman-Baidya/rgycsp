@@ -1,68 +1,11 @@
-import { db } from "@/lib/prisma";
-import { notFound, redirect } from "next/navigation";
+import { redirect } from "next/navigation";
 import { getServerTenantLink } from "@/lib/routing-server";
-import { auth } from "@/auth";
-import StudentFeesClient from "./StudentFeesClient";
-import { getStudentInvoices, getFranchisePaymentConfig } from "@/app/actions/payments";
 
-export default async function StudentFeesPage({
+export default async function StudentDashboardFeesPage({
   params
 }: {
   params: Promise<{ tenant: string }>;
 }) {
   const { tenant } = await params;
-  const normalizedTenant = tenant?.toLowerCase();
-
-  const workspace = await db.workspace.findUnique({
-    where: { subdomain: normalizedTenant }
-  });
-
-  if (!workspace) notFound();
-
-  const session = await auth();
-  if (!session || !session.user) {
-    redirect(await getServerTenantLink("/login", normalizedTenant));
-  }
-
-  const studentProfile = await db.studentProfile.findUnique({
-    where: { userId: session.user.id },
-    include: { course: true, batch: true }
-  });
-
-  if (!studentProfile) {
-    notFound();
-  }
-
-  const invoicesRes = await getStudentInvoices(studentProfile.id);
-  const configRes = await getFranchisePaymentConfig(workspace.id);
-
-  const siteSettings = await db.siteSettings.findUnique({
-    where: { workspaceId: workspace.id }
-  });
-
-  const globalSiteSettings = await db.siteSettings.findFirst({
-    where: { workspaceId: null }
-  });
-
-  const workspaceInfo = {
-    name: siteSettings?.siteName || workspace.name,
-    phone: siteSettings?.contactPhone || "",
-    email: siteSettings?.contactEmail || "",
-    address: siteSettings?.address || workspace.ownerAddress || "",
-    logoUrl: siteSettings?.logoUrl || workspace.logoUrl || "",
-    globalLogoUrl: globalSiteSettings?.logoUrl || "",
-    globalSiteName: globalSiteSettings?.siteName || "RGYCSP",
-    centerCode: workspace.centerCode || "",
-    primaryColor: siteSettings?.primaryColor || "#0f766e"
-  };
-
-  return (
-    <StudentFeesClient 
-      workspaceId={workspace.id}
-      student={studentProfile}
-      invoices={invoicesRes.data || []}
-      paymentConfig={configRes.data || null}
-      workspaceInfo={workspaceInfo}
-    />
-  );
+  redirect(await getServerTenantLink("/student/fees", tenant));
 }

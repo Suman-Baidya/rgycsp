@@ -1,7 +1,8 @@
 "use client";
+
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Home, ArrowLeft, Globe, Zap, Navigation } from "lucide-react";
+import { Home, ArrowLeft, Navigation, HelpCircle } from "lucide-react";
 
 export default function GlobalNotFound() {
   return (
@@ -13,45 +14,55 @@ export default function GlobalNotFound() {
       {/* Grid Pattern */}
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:32px_32px] pointer-events-none" />
 
-      <div className="relative z-10 w-full max-w-4xl space-y-12">
-        {/* Animated 404 Display */}
+      <div className="relative z-10 w-full max-w-4xl space-y-8 sm:space-y-10">
+        {/* Animated 404 Display (Preserved exactly as requested) */}
         <div className="relative flex items-center justify-center">
-          <div className="text-[14rem] md:text-[20rem] font-black leading-none tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-slate-200 to-slate-50 dark:from-zinc-800 dark:to-zinc-950 drop-shadow-2xl select-none">
+          <div className="text-[12rem] sm:text-[14rem] md:text-[20rem] font-black leading-none tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-slate-200 to-slate-50 dark:from-zinc-800 dark:to-zinc-950 drop-shadow-2xl select-none">
             404
           </div>
           <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <div className="w-20 h-20 md:w-24 md:h-24 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 shadow-2xl rounded-[2rem] flex items-center justify-center mb-6 transform -translate-y-4 animate-bounce">
-              <Navigation className="w-10 h-10 md:w-12 md:h-12 text-primary" />
+            <div className="w-16 h-16 md:w-20 md:h-20 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 shadow-xl rounded-2xl flex items-center justify-center mb-4 transform -translate-y-2 animate-bounce">
+              <Navigation className="w-8 h-8 md:w-10 md:h-10 text-primary" />
             </div>
-            <h1 className="text-4xl md:text-6xl font-black tracking-tight text-slate-900 dark:text-white bg-clip-text">
+            <h1 className="text-3xl sm:text-4xl md:text-6xl font-black tracking-tight text-slate-900 dark:text-white bg-clip-text">
               Lost in <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-indigo-600">Space?</span>
             </h1>
           </div>
         </div>
 
-        <div className="space-y-4 max-w-2xl mx-auto pt-4">
-          <p className="text-[24px] text-slate-600 dark:text-slate-400 font-medium leading-relaxed">
-            The global page you're searching for seems to have vanished into the void. Let's get you back to familiar territory.
+        {/* Redesigned Description */}
+        <div className="max-w-sm mx-auto">
+          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 font-medium leading-relaxed">
+            This page doesn't exist or has moved.<br className="hidden sm:inline" />
+            Please check the link or return home.
           </p>
         </div>
 
-        {/* Action Buttons */}
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-5 pt-8">
-          <Link href="/" className="w-full sm:w-60 group">
-            <Button className="relative w-full h-16 rounded-[2rem] font-bold bg-gradient-to-r from-primary to-primary/90 text-white text-[18px] shadow-[0_8px_30px_rgba(0,0,0,0.15)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.25)] transition-all duration-300 hover:-translate-y-1 border border-white/20 overflow-hidden">
-              <div className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-              <Home className="w-5 h-5 mr-3 relative z-10" /> 
-              <span className="relative z-10">Homepage</span>
+        {/* Redesigned Action Buttons */}
+        <div className="flex flex-wrap items-center justify-center gap-2.5 sm:gap-3 pt-2">
+          <Link href="/">
+            <Button className="h-9 sm:h-10 px-4 sm:px-5 rounded-xl text-xs sm:text-sm font-semibold bg-primary text-primary-foreground shadow-xs hover:bg-primary/90 transition-all flex items-center gap-2">
+              <Home className="w-4 h-4" /> 
+              <span>Return to Home</span>
             </Button>
           </Link>
           <Button 
             variant="outline" 
             onClick={() => window.history.back()} 
-            className="w-full sm:w-60 h-16 rounded-[2rem] font-bold border-2 border-slate-200 dark:border-zinc-800 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-sm hover:bg-slate-50 dark:hover:bg-zinc-800 text-[18px] transition-all duration-300 hover:-translate-y-1 shadow-lg shadow-black/5"
+            className="h-9 sm:h-10 px-4 sm:px-5 rounded-xl text-xs sm:text-sm font-semibold border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 shadow-xs transition-all flex items-center gap-2"
           >
-             <ArrowLeft className="w-5 h-5 mr-3" /> 
-             Go Back
+            <ArrowLeft className="w-4 h-4" /> 
+            <span>Go Back</span>
           </Button>
+          <Link href="/support">
+            <Button 
+              variant="ghost" 
+              className="h-9 sm:h-10 px-3.5 rounded-xl text-xs font-medium text-slate-500 hover:text-slate-900 dark:hover:text-white transition-all flex items-center gap-1.5"
+            >
+              <HelpCircle className="w-3.5 h-3.5 text-slate-400" />
+              <span>Help Center</span>
+            </Button>
+          </Link>
         </div>
       </div>
     </div>

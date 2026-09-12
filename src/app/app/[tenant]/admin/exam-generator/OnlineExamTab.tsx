@@ -219,14 +219,14 @@ export default function OnlineExamTab({ exams = [], workspaceId }: { exams?: any
 
   if (localExams.length === 0) {
     return (
-      <Card className="border-2 border-slate-100 dark:border-slate-800 rounded-[2.5rem] overflow-hidden bg-white dark:bg-slate-900 mt-6">
-        <CardContent className="p-24 flex flex-col items-center justify-center text-center space-y-6">
-          <div className="w-24 h-24 rounded-full bg-primary/10 flex items-center justify-center text-primary">
-            <Globe className="w-12 h-12" />
+      <Card className="border border-slate-200/80 dark:border-slate-800 rounded-xl overflow-hidden bg-white dark:bg-slate-900 mt-4">
+        <CardContent className="p-12 flex flex-col items-center justify-center text-center space-y-3">
+          <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+            <Globe className="w-6 h-6" />
           </div>
-          <div className="space-y-2">
-            <h2 className="text-3xl font-bold">No Online Exams</h2>
-            <p className="text-slate-500 max-w-md mx-auto">Create an online exam from the Question Papers tab by selecting your questions.</p>
+          <div className="space-y-1">
+            <h2 className="text-base font-bold text-slate-900 dark:text-white">No Online Exams Created</h2>
+            <p className="text-xs text-slate-500 max-w-sm">Create an online exam from the Question Papers tab by selecting questions and clicking &quot;Create Exam&quot;.</p>
           </div>
         </CardContent>
       </Card>
@@ -234,105 +234,97 @@ export default function OnlineExamTab({ exams = [], workspaceId }: { exams?: any
   }
 
   return (
-    <div className="mt-8 space-y-8">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+    <div className="space-y-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
         {localExams.map(exam => (
-          <Card key={exam.id} className="group relative flex flex-col border border-slate-200/50 dark:border-slate-800/50 rounded-[2rem] overflow-hidden bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl shadow-lg hover:shadow-2xl transition-all duration-500 hover:-translate-y-2">
-            {/* Gradient accent top border */}
-            <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 opacity-80 group-hover:opacity-100 transition-opacity" />
-            
-            <CardHeader className="relative p-6 pb-4 border-b border-slate-100/50 dark:border-slate-800/50 z-10">
-              <div className="flex justify-between items-start gap-4">
-                <div className="space-y-1">
-                  <CardTitle className="text-xl font-black leading-tight text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+          <Card key={exam.id} className="group relative flex flex-col border border-slate-200/80 dark:border-slate-800 rounded-xl overflow-hidden bg-white dark:bg-slate-900 shadow-xs hover:shadow-md transition-all">
+            <CardHeader className="p-3.5 sm:p-4 pb-3 border-b border-slate-100 dark:border-slate-800">
+              <div className="flex justify-between items-start gap-2.5">
+                <div className="space-y-0.5 min-w-0 flex-1">
+                  <CardTitle className="text-sm font-bold leading-snug text-slate-900 dark:text-white truncate" title={exam.title}>
                     {exam.title}
                   </CardTitle>
-                  <p className="text-sm text-slate-500 dark:text-slate-400 font-semibold uppercase tracking-wider">
+                  <p className="text-[11px] text-slate-500 truncate" title={exam.course?.title || "General Exam"}>
                     {exam.course?.title || "General Exam"}
                   </p>
                 </div>
-                <div className="flex flex-col items-end gap-3">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger className="h-8 w-8 inline-flex shrink-0 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-indigo-100 hover:text-indigo-600 dark:hover:bg-indigo-500/20 dark:hover:text-indigo-300 transition-colors focus-visible:outline-none">
-                      <MoreVertical className="h-4 w-4" />
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-56 rounded-2xl shadow-xl border-slate-200/50 dark:border-slate-800/50 p-2">
-                      <DropdownMenuItem className="rounded-xl focus:bg-indigo-50 dark:focus:bg-indigo-500/10 transition-colors cursor-pointer" onClick={() => handleDownloadPdf(exam.id, false)}>
-                        <div className="w-8 h-8 rounded-lg bg-indigo-100 dark:bg-indigo-500/20 flex items-center justify-center mr-3 text-indigo-600 dark:text-indigo-400">
-                          <Download className="h-4 w-4" />
-                        </div>
-                        <span className="font-semibold">Download Questions</span>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem className="rounded-xl focus:bg-pink-50 dark:focus:bg-pink-500/10 transition-colors cursor-pointer mt-1" onClick={() => handleDownloadPdf(exam.id, true)}>
-                        <div className="w-8 h-8 rounded-lg bg-pink-100 dark:bg-pink-500/20 flex items-center justify-center mr-3 text-pink-600 dark:text-pink-400">
-                          <BookOpen className="h-4 w-4" />
-                        </div>
-                        <span className="font-semibold">Download Answers</span>
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                  <div className="flex items-center gap-2 bg-slate-50 dark:bg-slate-800/50 rounded-full px-1 py-1 pr-3 border border-slate-100 dark:border-slate-800">
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <div className="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-800/60 rounded-lg px-2 py-0.5 border border-slate-200/60 dark:border-slate-700/60">
                     <Switch 
                       checked={exam.isActive} 
                       onCheckedChange={() => handleToggleActive(exam.id, exam.isActive ?? true)}
-                      className="scale-75 data-[state=checked]:bg-green-500"
+                      className="scale-75 data-[state=checked]:bg-emerald-600"
                     />
-                    <span className={`text-[10px] font-bold uppercase tracking-widest ${exam.isActive ? 'text-green-600 dark:text-green-400' : 'text-slate-400'}`}>
+                    <span className={`text-[9px] font-bold uppercase tracking-wider ${exam.isActive ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400'}`}>
                       {exam.isActive ? 'Live' : 'Draft'}
                     </span>
                   </div>
+
+                  <DropdownMenu>
+                    <DropdownMenuTrigger className="h-7 w-7 inline-flex shrink-0 items-center justify-center rounded-lg text-slate-500 hover:text-primary hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors focus-visible:outline-none">
+                      <MoreVertical className="h-3.5 w-3.5" />
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-52 rounded-xl shadow-lg border-slate-200 dark:border-slate-800 p-1.5">
+                      <DropdownMenuItem className="rounded-lg text-xs font-semibold focus:bg-slate-100 dark:focus:bg-slate-800 transition-colors cursor-pointer py-1.5" onClick={() => handleDownloadPdf(exam.id, false)}>
+                        <Download className="h-3.5 w-3.5 mr-2 text-blue-600 dark:text-blue-400" />
+                        <span>Download Questions</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem className="rounded-lg text-xs font-semibold focus:bg-slate-100 dark:focus:bg-slate-800 transition-colors cursor-pointer py-1.5" onClick={() => handleDownloadPdf(exam.id, true)}>
+                        <BookOpen className="h-3.5 w-3.5 mr-2 text-emerald-600 dark:text-emerald-400" />
+                        <span>Download Answers</span>
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
               </div>
             </CardHeader>
-            <CardContent className="relative p-6 space-y-6 flex-grow z-10">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="bg-slate-50/80 dark:bg-slate-800/40 rounded-2xl p-4 border border-slate-100 dark:border-slate-800 flex items-center gap-3 transition-colors group-hover:bg-indigo-50/50 dark:group-hover:bg-indigo-900/20 group-hover:border-indigo-100 dark:group-hover:border-indigo-800/50">
-                  <div className="w-10 h-10 rounded-xl bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-blue-400">
-                    <Clock className="w-5 h-5"/>
+            <CardContent className="p-3.5 space-y-3 flex-grow">
+              <div className="grid grid-cols-2 gap-2">
+                <div className="bg-slate-50 dark:bg-slate-800/40 rounded-lg p-2.5 border border-slate-100 dark:border-slate-800/80 flex items-center gap-2">
+                  <div className="w-7 h-7 rounded-md bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
+                    <Clock className="w-3.5 h-3.5"/>
                   </div>
                   <div>
-                    <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Duration</div>
-                    <div className="font-black text-slate-900 dark:text-white leading-tight">{exam.duration || 60}m</div>
+                    <div className="text-[8px] font-bold uppercase tracking-wider text-slate-400">Duration</div>
+                    <div className="font-bold text-xs text-slate-800 dark:text-slate-200">{exam.duration || 60}m</div>
                   </div>
                 </div>
-                <div className="bg-slate-50/80 dark:bg-slate-800/40 rounded-2xl p-4 border border-slate-100 dark:border-slate-800 flex items-center gap-3 transition-colors group-hover:bg-purple-50/50 dark:group-hover:bg-purple-900/20 group-hover:border-purple-100 dark:group-hover:border-purple-800/50">
-                  <div className="w-10 h-10 rounded-xl bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center text-purple-600 dark:text-purple-400">
-                    <FileText className="w-5 h-5"/>
+                <div className="bg-slate-50 dark:bg-slate-800/40 rounded-lg p-2.5 border border-slate-100 dark:border-slate-800/80 flex items-center gap-2">
+                  <div className="w-7 h-7 rounded-md bg-purple-500/10 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0">
+                    <FileText className="w-3.5 h-3.5"/>
                   </div>
                   <div>
-                    <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Marks/Q</div>
-                    <div className="font-black text-slate-900 dark:text-white leading-tight">{exam.marksPerQuestion || 2}</div>
+                    <div className="text-[8px] font-bold uppercase tracking-wider text-slate-400">Marks/Q</div>
+                    <div className="font-bold text-xs text-slate-800 dark:text-slate-200">{exam.marksPerQuestion || 2}</div>
                   </div>
                 </div>
-                <div className="bg-slate-50/80 dark:bg-slate-800/40 rounded-2xl p-4 border border-slate-100 dark:border-slate-800 flex items-center gap-3 transition-colors group-hover:bg-emerald-50/50 dark:group-hover:bg-emerald-900/20 group-hover:border-emerald-100 dark:group-hover:border-emerald-800/50">
-                  <div className="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
-                    <CheckCircle2 className="w-5 h-5"/>
+                <div className="bg-slate-50 dark:bg-slate-800/40 rounded-lg p-2.5 border border-slate-100 dark:border-slate-800/80 flex items-center gap-2">
+                  <div className="w-7 h-7 rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+                    <CheckCircle2 className="w-3.5 h-3.5"/>
                   </div>
                   <div>
-                    <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Passing</div>
-                    <div className="font-black text-slate-900 dark:text-white leading-tight">{exam.passingMarks || 40}</div>
+                    <div className="text-[8px] font-bold uppercase tracking-wider text-slate-400">Passing</div>
+                    <div className="font-bold text-xs text-slate-800 dark:text-slate-200">{exam.passingMarks || 40}</div>
                   </div>
                 </div>
-                <div className="bg-slate-50/80 dark:bg-slate-800/40 rounded-2xl p-4 border border-slate-100 dark:border-slate-800 flex items-center gap-3 transition-colors group-hover:bg-pink-50/50 dark:group-hover:bg-pink-900/20 group-hover:border-pink-100 dark:group-hover:border-pink-800/50">
-                  <div className="w-10 h-10 rounded-xl bg-pink-100 dark:bg-pink-900/30 flex items-center justify-center text-pink-600 dark:text-pink-400">
-                    <Globe className="w-5 h-5"/>
+                <div className="bg-slate-50 dark:bg-slate-800/40 rounded-lg p-2.5 border border-slate-100 dark:border-slate-800/80 flex items-center gap-2">
+                  <div className="w-7 h-7 rounded-md bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
+                    <Globe className="w-3.5 h-3.5"/>
                   </div>
                   <div>
-                    <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Created</div>
-                    <div className="font-black text-slate-900 dark:text-white leading-tight text-sm">{new Date(exam.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}</div>
+                    <div className="text-[8px] font-bold uppercase tracking-wider text-slate-400">Questions</div>
+                    <div className="font-bold text-xs text-slate-800 dark:text-slate-200">{exam.questions?.length || 0} Qs</div>
                   </div>
                 </div>
               </div>
             </CardContent>
-            <CardFooter className="relative p-6 pt-0 z-10">
+            <CardFooter className="p-3.5 pt-0">
               <Link 
                 href={getTenantLink(`/admin/exam-generator/${exam.id}`, workspaceId, pathname)}
-                className="inline-flex justify-center items-center w-full h-14 rounded-2xl bg-slate-900 hover:bg-slate-800 dark:bg-white dark:hover:bg-slate-200 text-white dark:text-slate-900 font-bold shadow-[0_8px_30px_rgb(0,0,0,0.12)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.2)] transition-all duration-300 group/btn overflow-hidden relative"
+                className="inline-flex justify-center items-center w-full h-8 sm:h-9 rounded-lg bg-slate-900 hover:bg-slate-800 dark:bg-slate-100 dark:hover:bg-white text-white dark:text-slate-900 text-xs font-semibold shadow-xs transition-colors"
               >
-                <span className="relative z-10 flex items-center gap-2">
-                  <Eye className="w-5 h-5 group-hover/btn:scale-110 transition-transform" /> 
-                  View Details & Merit List
-                </span>
+                <Eye className="w-3.5 h-3.5 mr-1.5" /> 
+                View Merit & Submissions
               </Link>
             </CardFooter>
           </Card>

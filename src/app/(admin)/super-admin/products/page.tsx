@@ -19,11 +19,7 @@ export default async function SuperAdminProductsPage() {
   ]);
 
   return (
-    <div className="w-full space-y-8">
-      <AdminPageHeader 
-        title="Products & Orders"
-        description="Manage your product catalog, update stock, and fulfill franchise orders."
-      />
+    <div className="w-full">
       <ProductsClient 
         initialProducts={productsRes.success ? (productsRes.data || []) : []} 
         initialOrders={ordersRes.success ? (ordersRes.data || []) : []} 

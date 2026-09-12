@@ -4,6 +4,7 @@ import { notFound, redirect } from "next/navigation";
 import { headers } from "next/headers";
 import { WorkspaceSidebar } from "@/components/layout/WorkspaceSidebar";
 import { WorkspaceAdminHeader } from "@/components/layout/WorkspaceAdminHeader";
+import { QuickActionFAB } from "@/components/dashboard/QuickActionFAB";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { getServerTenantLink, getServerWorkspaceBase } from "@/lib/routing-server";
 import { db } from "@/lib/prisma";
@@ -113,16 +114,23 @@ export default async function WorkspaceAdminLayout({
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         <WorkspaceAdminHeader 
           tenantName={workspace.name}
+          tenant={tenant}
           workspaceBase={workspaceBase}
           walletBalance={workspace.walletBalance}
           userName={session?.user?.name || "Admin"}
           userImage={session?.user?.image}
           centerCode={workspace.centerCode}
+          userRole={userRole}
+          isStateManager={workspace.isStateManager || false}
+          workspaceId={workspace.id}
         />
-        <main className="flex-1 overflow-y-auto custom-scrollbar">
-          {children}
+        <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-6 pb-24 lg:pb-6 custom-scrollbar">
+          <div className="max-w-[1600px] mx-auto">
+            {children}
+          </div>
         </main>
       </div>
+      <QuickActionFAB portal="admin" tenant={tenant} workspaceBase={workspaceBase} />
     </div>
   );
 }

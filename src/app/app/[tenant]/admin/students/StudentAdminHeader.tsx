@@ -29,10 +29,10 @@ export function StudentAdminHeader({
   ];
 
   return (
-    <div className="space-y-6 mb-10">
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-        <div className="space-y-1.5">
-          <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">Students Hub</h1>
+    <div className="space-y-4 mb-6">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+        <div className="space-y-1">
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 dark:text-white">Students Hub</h1>
           <p className="text-sm font-medium text-slate-500 dark:text-slate-400 max-w-2xl leading-relaxed">
             Manage your learners, process new applications, and configure your admission criteria.
           </p>
@@ -48,7 +48,7 @@ export function StudentAdminHeader({
                 onClick={() => onTabChange(item.id)}
                 suppressHydrationWarning
                 className={cn(
-                  "relative flex-1 lg:flex-none min-w-[120px] flex items-center justify-center gap-2.5 px-6 py-3 rounded-xl text-xs font-bold transition-all duration-300 whitespace-nowrap",
+                  "relative flex-1 lg:flex-none min-w-[110px] flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all duration-300 whitespace-nowrap",
                   isActive 
                     ? "bg-white dark:bg-slate-800 text-primary shadow-sm ring-1 ring-slate-200/50 dark:ring-slate-700/50" 
                     : "text-slate-500 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-white/50 dark:hover:bg-slate-800/40"

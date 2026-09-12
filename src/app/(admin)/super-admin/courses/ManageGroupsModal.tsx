@@ -136,78 +136,81 @@ export default function ManageGroupsModal({ isOpen, onClose, onUpdate }: { isOpe
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-5xl max-h-[90vh] flex flex-col overflow-hidden rounded-[2rem] p-0 border-0 shadow-2xl bg-slate-50 dark:bg-zinc-950">
+      <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col overflow-hidden rounded-2xl p-0 border border-slate-200 dark:border-slate-800 shadow-xl bg-white dark:bg-slate-950">
         
-        <DialogHeader className="p-8 pb-4 shrink-0 bg-white dark:bg-zinc-950 border-b border-border/50">
-          <div className="flex items-center gap-3">
-            <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center">
-              <Tag className="h-6 w-6 text-primary" />
+        <DialogHeader className="p-4 sm:p-5 pb-3 shrink-0 bg-slate-50/50 dark:bg-slate-900/50 border-b border-slate-100 dark:border-slate-800">
+          <div className="flex items-center gap-2.5">
+            <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+              <Tag className="h-4 w-4 text-primary" />
             </div>
             <div>
-              <DialogTitle className="text-2xl font-black text-slate-900 dark:text-white">Manage Categories</DialogTitle>
-              <p className="text-sm text-slate-500 dark:text-slate-400 font-medium">Create, edit, or deactivate course categories globally.</p>
+              <DialogTitle className="text-base sm:text-lg font-bold text-slate-900 dark:text-white">Manage Categories</DialogTitle>
+              <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Create, edit, or deactivate course categories globally.</p>
             </div>
           </div>
         </DialogHeader>
 
-        <div className="flex-1 overflow-y-auto p-8 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-slate-200 dark:[&::-webkit-scrollbar-thumb]:bg-zinc-800 [&::-webkit-scrollbar-thumb]:rounded-full">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-5 custom-scrollbar">
           
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-5 items-start">
             
             {/* Add/Edit Form - Left Side */}
-            <div className={`lg:col-span-4 sticky top-0 bg-white dark:bg-zinc-900 rounded-[1.5rem] border p-6 shadow-sm transition-colors duration-300 ${editingId ? 'border-primary/50 shadow-primary/10 ring-4 ring-primary/5' : 'border-border/50'}`}>
-              <div className="flex items-center gap-2 mb-6">
-                {editingId ? (
-                  <div className="h-8 w-8 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center">
-                    <Edit2 className="h-4 w-4" />
-                  </div>
-                ) : (
-                  <div className="h-8 w-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
-                    <Plus className="h-4 w-4" />
-                  </div>
-                )}
-                <h3 className="text-lg font-bold">{editingId ? "Edit Category" : "Add New Category"}</h3>
+            <div className={`lg:col-span-5 bg-white dark:bg-slate-900 rounded-xl border p-4 shadow-sm transition-colors duration-200 ${editingId ? 'border-primary/50 ring-2 ring-primary/10' : 'border-slate-200 dark:border-slate-800'}`}>
+              <div className="flex items-center gap-2 mb-4">
+                <div className={`h-6 w-6 rounded-md flex items-center justify-center ${editingId ? 'bg-blue-100 text-blue-600' : 'bg-primary/10 text-primary'}`}>
+                  {editingId ? <Edit2 className="h-3.5 w-3.5" /> : <Plus className="h-3.5 w-3.5" />}
+                </div>
+                <h3 className="text-xs font-bold text-slate-900 dark:text-white">{editingId ? "Edit Category" : "Add New Category"}</h3>
               </div>
               
-              <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-                <div className="space-y-2">
-                  <Label>ID / Value <span className="text-red-500">*</span></Label>
+              <form onSubmit={handleSubmit} className="flex flex-col gap-3.5">
+                <div className="space-y-1">
+                  <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">ID / Value <span className="text-red-500">*</span></Label>
                   <Input 
-                    placeholder="e.g. diploma (no spaces)" 
+                    placeholder="e.g. diploma" 
                     value={value} 
                     onChange={e => setValue(e.target.value.toLowerCase().replace(/\s+/g, '-'))}
-                    className="rounded-xl border-2 h-11"
+                    className="h-8 sm:h-9 rounded-lg text-xs bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700"
                   />
-                  <p className="text-[10px] text-muted-foreground">Used in URLs and matching. Cannot have spaces.</p>
+                  <p className="text-[9px] text-slate-400">Used in URLs and matching. No spaces allowed.</p>
                 </div>
                 
-                <div className="space-y-2">
-                  <Label>Display Label <span className="text-red-500">*</span></Label>
+                <div className="space-y-1">
+                  <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Display Label <span className="text-red-500">*</span></Label>
                   <Input 
                     placeholder="e.g. Diploma Courses" 
                     value={label} 
                     onChange={e => setLabel(e.target.value)}
-                    className="rounded-xl border-2 h-11"
+                    className="h-8 sm:h-9 rounded-lg text-xs bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700"
                   />
                 </div>
 
-                <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-xl mt-2">
+                <div className="flex items-center justify-between p-2.5 bg-slate-50/70 dark:bg-slate-800/30 border border-slate-200/60 dark:border-slate-700/60 rounded-lg">
                   <div>
-                    <Label className="font-bold text-base block mb-0.5">Active Status</Label>
-                    <span className="text-xs text-muted-foreground">Is this category visible?</span>
+                    <Label className="font-semibold text-xs text-slate-900 dark:text-white block">Active Status</Label>
+                    <span className="text-[10px] text-slate-500">Is this category visible?</span>
                   </div>
-                  <Switch checked={isActive} onCheckedChange={setIsActive} />
+                  <Switch checked={isActive} onCheckedChange={setIsActive} className="scale-90" />
                 </div>
 
-                <div className="flex flex-col gap-3 mt-4">
-                  <Button type="submit" disabled={isSubmitting} className="h-11 rounded-xl font-bold bg-primary text-white shadow-lg shadow-primary/20 w-full">
-                    {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                <div className="flex items-center gap-2 pt-1">
+                  <Button 
+                    type="submit" 
+                    disabled={isSubmitting} 
+                    className="flex-1 h-8 sm:h-9 rounded-lg text-xs font-semibold bg-primary text-white shadow-sm shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all"
+                  >
+                    {isSubmitting && <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />}
                     {editingId ? "Save Changes" : "Create Category"}
                   </Button>
                   
                   {editingId && (
-                    <Button type="button" variant="outline" onClick={resetForm} className="h-11 rounded-xl font-bold border-2 w-full text-slate-500 hover:text-slate-700 hover:bg-slate-50">
-                      Cancel Edit
+                    <Button 
+                      type="button" 
+                      variant="ghost" 
+                      onClick={resetForm} 
+                      className="h-8 sm:h-9 px-3 rounded-lg text-xs font-semibold text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800"
+                    >
+                      Cancel
                     </Button>
                   )}
                 </div>
@@ -215,57 +218,63 @@ export default function ManageGroupsModal({ isOpen, onClose, onUpdate }: { isOpe
             </div>
 
             {/* List - Right Side */}
-            <div className="lg:col-span-8 bg-white dark:bg-zinc-900 rounded-[1.5rem] border border-border/50 overflow-hidden shadow-sm">
+            <div className="lg:col-span-7 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
               {isLoading ? (
-                <div className="p-20 flex flex-col items-center justify-center gap-4">
-                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                  <p className="text-muted-foreground font-medium text-sm">Loading categories...</p>
+                <div className="p-12 flex flex-col items-center justify-center gap-2">
+                  <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                  <p className="text-xs text-slate-500 font-medium">Loading categories...</p>
                 </div>
               ) : (
                 <div className="overflow-x-auto">
-                  <table className="w-full text-sm text-left">
-                    <thead className="text-xs uppercase bg-slate-50 dark:bg-zinc-950/50 text-muted-foreground font-bold border-b">
+                  <table className="w-full text-xs text-left">
+                    <thead className="text-[10px] uppercase bg-slate-50/50 dark:bg-slate-800/20 text-slate-400 font-bold border-b border-slate-100 dark:border-slate-800/50">
                       <tr>
-                        <th className="px-6 py-5">Category Name</th>
-                        <th className="px-6 py-5">Value ID</th>
-                        <th className="px-6 py-5">Status</th>
-                        <th className="px-6 py-5 text-right">Actions</th>
+                        <th className="py-2.5 px-3">Category Name</th>
+                        <th className="py-2.5 px-3">Value ID</th>
+                        <th className="py-2.5 px-3">Status</th>
+                        <th className="py-2.5 px-3 text-right">Actions</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-border/50">
+                    <tbody className="divide-y divide-slate-100 dark:divide-slate-800/50">
                       {groups.map(group => (
-                        <tr key={group.id} className={`transition-colors ${editingId === group.id ? 'bg-primary/5 dark:bg-primary/10' : 'hover:bg-slate-50/50 dark:hover:bg-white/5'}`}>
-                          <td className="px-6 py-4">
-                            <span className="font-bold text-slate-900 dark:text-white block">{group.label}</span>
+                        <tr key={group.id} className={`transition-colors ${editingId === group.id ? 'bg-primary/5 dark:bg-primary/10' : 'hover:bg-slate-50/50 dark:hover:bg-slate-800/30'}`}>
+                          <td className="py-2.5 px-3">
+                            <span className="font-semibold text-slate-900 dark:text-white block">{group.label}</span>
                           </td>
-                          <td className="px-6 py-4">
-                            <span className="font-mono text-xs text-primary bg-primary/10 font-medium rounded-md px-2 py-1">
+                          <td className="py-2.5 px-3">
+                            <span className="font-mono text-[10px] text-primary bg-primary/10 font-bold rounded px-1.5 py-0.5">
                               {group.value}
                             </span>
                           </td>
-                          <td className="px-6 py-4">
-                            <div className="flex items-center gap-2">
+                          <td className="py-2.5 px-3">
+                            <div className="flex items-center gap-1.5">
                               <Switch 
                                 checked={group.isActive} 
                                 onCheckedChange={() => handleToggleActive(group)}
+                                className="scale-75 origin-left"
                               />
-                              <span className={`text-xs font-bold ${group.isActive ? 'text-green-600' : 'text-slate-400'}`}>
+                              <span className={`text-[10px] font-bold uppercase ${group.isActive ? 'text-green-600 dark:text-green-400' : 'text-slate-400'}`}>
                                 {group.isActive ? "Active" : "Hidden"}
                               </span>
                             </div>
                           </td>
-                          <td className="px-6 py-4 text-right">
-                            <div className="flex items-center justify-end gap-2">
+                          <td className="py-2.5 px-3 text-right">
+                            <div className="flex items-center justify-end gap-1">
                               <Button 
                                 variant={editingId === group.id ? "default" : "ghost"} 
                                 size="sm" 
                                 onClick={() => handleEdit(group)} 
-                                className={`h-8 px-3 text-xs font-bold rounded-lg ${editingId === group.id ? 'bg-primary text-white shadow-md shadow-primary/20' : 'text-blue-600 hover:text-blue-700 hover:bg-blue-50'}`}
+                                className={`h-6 px-2 text-[10px] font-semibold rounded ${editingId === group.id ? 'bg-primary text-white shadow-xs' : 'text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-500/10'}`}
                               >
-                                {editingId === group.id ? "Editing..." : "Edit"}
+                                {editingId === group.id ? "Editing" : "Edit"}
                               </Button>
-                              <Button variant="ghost" size="icon" onClick={() => setGroupToDelete(group)} className="h-9 w-9 text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 hover:text-red-600 rounded-xl">
-                                <Trash2 className="h-4 w-4" />
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                onClick={() => setGroupToDelete(group)} 
+                                className="h-6 w-6 text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 hover:text-red-600 rounded"
+                              >
+                                <Trash2 className="h-3 w-3" />
                               </Button>
                             </div>
                           </td>
@@ -273,10 +282,10 @@ export default function ManageGroupsModal({ isOpen, onClose, onUpdate }: { isOpe
                       ))}
                       {groups.length === 0 && (
                         <tr>
-                          <td colSpan={4} className="px-6 py-16 text-center">
-                            <div className="flex flex-col items-center justify-center gap-2">
-                              <Tag className="h-8 w-8 text-slate-300" />
-                              <p className="text-muted-foreground font-medium">No categories found.</p>
+                          <td colSpan={4} className="px-4 py-8 text-center">
+                            <div className="flex flex-col items-center justify-center gap-1">
+                              <Tag className="h-6 w-6 text-slate-300" />
+                              <p className="text-xs text-slate-500 font-medium">No categories found.</p>
                             </div>
                           </td>
                         </tr>

@@ -32,7 +32,7 @@ export default async function ProfilePage() {
   }
 
   return (
-    <div className="space-y-10 pb-24">
+    <div className="space-y-4 sm:space-y-5 pb-8 w-full mx-auto">
       <AdminPageHeader 
         title="Account Settings" 
         description="Manage your personal identity and security infrastructure within the ecosystem."

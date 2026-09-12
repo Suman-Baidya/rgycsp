@@ -26,11 +26,13 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  accounts       Account[]
-  sessions       Session[]
-  workspaceRoles WorkspaceRole[]
-  studentProfile StudentProfile?
-  notifications  Notification[]
+  accounts            Account[]
+  sessions            Session[]
+  workspaceRoles      WorkspaceRole[]
+  studentProfile      StudentProfile?
+  notifications       Notification[]
+  pushSubscriptions   PushSubscription[]
+  passkeyCredentials  PasskeyCredential[]
 }
 
 enum SystemRole {
@@ -99,6 +101,7 @@ model Workspace {
   admissionConfig    AdmissionFormConfig?
   admissionApps      AdmissionApplication[]
   notifications      Notification[]
+  pushSubscriptions  PushSubscription[]
   walletTransactions WalletTransaction[]
   productOrders      ProductOrder[]
   exams              Exam[]
@@ -672,6 +675,42 @@ model Notification {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model PushSubscription {
+  id          String   @id @default(cuid())
+  userId      String?
+  workspaceId String?
+  endpoint    String   @unique
+  p256dh      String
+  auth        String
+  userAgent   String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user      User?      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workspace Workspace? @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([workspaceId])
+}
+
+model PasskeyCredential {
+  id           String    @id @default(cuid())
+  userId       String
+  credentialId String    @unique
+  publicKey    Bytes
+  counter      BigInt    @default(0)
+  deviceType   String?
+  backedUp     Boolean   @default(false)
+  transports   String?
+  name         String?
+  createdAt    DateTime  @default(now())
+  lastUsedAt   DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 model DocumentTemplate {

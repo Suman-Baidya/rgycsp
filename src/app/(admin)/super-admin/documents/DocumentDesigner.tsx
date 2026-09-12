@@ -21,10 +21,12 @@ import {
   MoreVertical,
   CheckCircle2,
   QrCode,
-  Copy
+  Copy,
+  Filter
 } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -261,6 +263,8 @@ export default function DocumentDesigner() {
   const [unit, setUnit] = useState<"px" | "in" | "mm">("px");
   const [pageSize, setPageSize] = useState<string>("CUSTOM");
   const [orientation, setOrientation] = useState<"portrait" | "landscape">("portrait");
+  const [listSearch, setListSearch] = useState("");
+  const [listTypeFilter, setListTypeFilter] = useState("ALL");
 
   const canvasRef = useRef<HTMLDivElement>(null);
   const dragRef = useRef<{ id: string; startX: number; startY: number; origX: number; origY: number; el?: HTMLElement | null } | null>(null);
@@ -677,127 +681,254 @@ export default function DocumentDesigner() {
   const selectedVar = variables.find(v => v.id === selectedId);
 
   if (view === "list") {
+    const filteredTemplates = templates.filter(t => {
+      const term = listSearch.toLowerCase();
+      const matchesSearch = t.name?.toLowerCase().includes(term) || t.type?.toLowerCase().includes(term);
+      const matchesType = listTypeFilter === "ALL" || t.type === listTypeFilter;
+      return matchesSearch && matchesType;
+    });
+
+    const totalTemplates = templates.length;
+    const activeTemplates = templates.filter(t => t.isActive).length;
+    const distinctDocTypes = Array.from(new Set(templates.map(t => t.type))).length;
+    const totalElements = templates.reduce((acc, t) => {
+      if (Array.isArray(t.config)) return acc + t.config.length;
+      if (typeof t.config === "string") {
+        try { return acc + (JSON.parse(t.config).length || 0); } catch { return acc; }
+      }
+      return acc;
+    }, 0);
+
     return (
-      <div className="space-y-10 pb-24 max-w-[1600px] mx-auto">
+      <div className="space-y-4 sm:space-y-5 pb-8 w-full mx-auto">
         <style dangerouslySetInnerHTML={{ __html: `@import url('https://fonts.googleapis.com/css2?family=Charm:wght@400;700&family=Inter:wght@400;700;900&family=Montserrat:wght@400;700;900&family=Open+Sans:wght@400;700;800&family=Oswald:wght@400;700&family=Pacifico&family=Playfair+Display:wght@400;700;900&family=Roboto:wght@400;700;900&display=swap');` }} />
         <AdminPageHeader 
-          title="Document Design System" 
-          description="Manage and architect premium printable layouts for your educational ecosystem."
+          title="Document Templates" 
+          description="Manage and architect premium printable layouts for certificates, ID cards, and official reports."
         >
           <Button 
             onClick={handleNewTemplate} 
-            className="h-11 px-6 rounded-xl gap-2 bg-primary text-primary-foreground font-bold hover:scale-[1.02] active:scale-95 transition-all shadow-xl shadow-primary/10"
+            className="h-8 sm:h-9 px-3.5 rounded-lg gap-1.5 bg-primary text-primary-foreground font-semibold text-xs shadow-sm shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all"
           >
-            <Plus className="h-4 w-4" />
+            <Plus className="h-3.5 w-3.5" />
             Create Template
           </Button>
         </AdminPageHeader>
 
-        {isLoading ? (
-          <div className="flex flex-col items-center justify-center py-32 space-y-4">
-            <Loader2 className="h-12 w-12 text-primary animate-spin opacity-20" />
-            <p className="font-bold text-slate-400 uppercase tracking-widest text-xs">Loading Designs...</p>
+        {/* Metric Cards Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+          <Card className="border border-slate-100 dark:border-white/5 shadow-sm rounded-xl overflow-hidden bg-white dark:bg-slate-900">
+            <CardContent className="p-3.5">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 rounded-lg bg-blue-500/10 text-blue-500 shrink-0">
+                  <FileText className="h-5 w-5" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-slate-400 mb-0.5">Total Templates</p>
+                  <p className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">{totalTemplates.toLocaleString()}</p>
+                </div>
+              </div>
+              <div className="mt-2.5 pt-2 border-t border-slate-100 dark:border-slate-800/60 flex items-center justify-between text-[11px] font-medium text-slate-500">
+                <span className="text-[10px] text-slate-400">Layouts:</span>
+                <span className="font-semibold text-blue-600 dark:text-blue-400">All registered</span>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border border-slate-100 dark:border-white/5 shadow-sm rounded-xl overflow-hidden bg-white dark:bg-slate-900">
+            <CardContent className="p-3.5">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 rounded-lg bg-green-500/10 text-green-500 shrink-0">
+                  <CheckCircle2 className="h-5 w-5" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-slate-400 mb-0.5">Active Templates</p>
+                  <p className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">{activeTemplates.toLocaleString()}</p>
+                </div>
+              </div>
+              <div className="mt-2.5 pt-2 border-t border-slate-100 dark:border-slate-800/60 flex items-center justify-between text-[11px] font-medium text-slate-500">
+                <span className="flex items-center gap-1 text-[10px] text-slate-400">
+                  <span className="h-1.5 w-1.5 rounded-full bg-green-500" /> Issuance:
+                </span>
+                <span className="font-semibold text-green-600 dark:text-green-400">Live in system</span>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border border-slate-100 dark:border-white/5 shadow-sm rounded-xl overflow-hidden bg-white dark:bg-slate-900">
+            <CardContent className="p-3.5">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 rounded-lg bg-purple-500/10 text-purple-500 shrink-0">
+                  <Layout className="h-5 w-5" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-slate-400 mb-0.5">Doc Types</p>
+                  <p className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">{distinctDocTypes.toLocaleString()}</p>
+                </div>
+              </div>
+              <div className="mt-2.5 pt-2 border-t border-slate-100 dark:border-slate-800/60 flex items-center justify-between text-[11px] font-medium text-slate-500">
+                <span className="text-[10px] text-slate-400">Scope:</span>
+                <span className="font-semibold text-purple-600 dark:text-purple-400">Certificates & IDs</span>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border border-slate-100 dark:border-white/5 shadow-sm rounded-xl overflow-hidden bg-white dark:bg-slate-900">
+            <CardContent className="p-3.5">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 rounded-lg bg-amber-500/10 text-amber-500 shrink-0">
+                  <Type className="h-5 w-5" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-slate-400 mb-0.5">Configured Elements</p>
+                  <p className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">{totalElements.toLocaleString()}</p>
+                </div>
+              </div>
+              <div className="mt-2.5 pt-2 border-t border-slate-100 dark:border-slate-800/60 flex items-center justify-between text-[11px] font-medium text-slate-500">
+                <span className="text-[10px] text-slate-400">Variables:</span>
+                <span className="font-semibold text-amber-600 dark:text-amber-400">Dynamic bindings</span>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Filter Toolbar */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="relative w-full sm:max-w-[300px] group">
+            <div className="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none">
+              <Search className="h-3.5 w-3.5 text-slate-400" />
+            </div>
+            <Input 
+              placeholder="Search templates by name..." 
+              value={listSearch}
+              onChange={(e) => setListSearch(e.target.value)}
+              className="pl-8 pr-3 bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700/60 rounded-lg h-8 sm:h-9 font-normal text-[11px] sm:text-xs transition-all focus-visible:ring-1 focus-visible:ring-primary/30 placeholder:text-[11px] sm:placeholder:text-xs placeholder:text-slate-400"
+            />
           </div>
-        ) : templates.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-32 border-2 border-dashed border-slate-200 rounded-[3rem] bg-slate-50/50">
-            <FileText className="h-16 w-16 text-slate-200 mb-6" />
-            <h3 className="text-xl font-bold text-slate-900">No Saved Designs</h3>
-            <p className="text-slate-500 mb-8 max-w-xs text-center">Start by creating your first document template like a certificate or ID card.</p>
-            <Button onClick={handleNewTemplate} variant="outline" className="rounded-2xl h-12 px-8 border-primary/20 text-primary">Get Started</Button>
+
+          <div className="flex items-center gap-2 self-end sm:self-auto">
+            <Select value={listTypeFilter} onValueChange={(val: string) => setListTypeFilter(val)}>
+              <SelectTrigger className="w-[170px] h-8 sm:h-9 rounded-lg text-xs font-medium bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700/60">
+                <div className="flex items-center gap-1.5 truncate">
+                  <Filter className="h-3 w-3 text-slate-400 shrink-0" />
+                  <SelectValue placeholder="All Types" />
+                </div>
+              </SelectTrigger>
+              <SelectContent className="rounded-lg border-slate-200 dark:border-slate-700 shadow-md">
+                <SelectItem value="ALL" className="text-xs">All Types</SelectItem>
+                <SelectItem value="CERTIFICATE" className="text-xs">Certificate</SelectItem>
+                <SelectItem value="MARKSHEET" className="text-xs">Marksheet</SelectItem>
+                <SelectItem value="ADMIT_CARD" className="text-xs">Admit Card</SelectItem>
+                <SelectItem value="STUDENT_ID" className="text-xs">Student ID Card</SelectItem>
+                <SelectItem value="STAFF_ID" className="text-xs">Staff ID Card</SelectItem>
+                <SelectItem value="FRANCHISE_ID" className="text-xs">Franchise ID</SelectItem>
+                <SelectItem value="NOTICE_PAD" className="text-xs">Notice Pad</SelectItem>
+                <SelectItem value="FRANCHISE_CERTIFICATE" className="text-xs">Franchise Certificate</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <div className="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-800/40 px-2.5 py-1 rounded-lg border border-slate-200/60 dark:border-slate-700/60 h-8 sm:h-9 shrink-0">
+              <FileText className="h-3 w-3 text-primary" />
+              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                Results: <span className="text-slate-900 dark:text-white">{filteredTemplates.length}</span>
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {isLoading ? (
+          <div className="flex flex-col items-center justify-center py-24 space-y-3">
+            <Loader2 className="h-8 w-8 text-primary animate-spin opacity-40" />
+            <p className="font-semibold text-slate-400 uppercase tracking-wider text-[11px]">Loading Templates...</p>
+          </div>
+        ) : filteredTemplates.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-20 border border-dashed border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50/50 dark:bg-slate-900/50">
+            <FileText className="h-10 w-10 text-slate-300 dark:text-slate-600 mb-3" />
+            <h3 className="text-sm font-bold text-slate-900 dark:text-white">No Document Templates Found</h3>
+            <p className="text-xs text-slate-500 mb-4 max-w-xs text-center">Create your first certificate, ID card, or marksheet layout.</p>
+            <Button onClick={handleNewTemplate} variant="outline" className="rounded-lg h-8 sm:h-9 px-4 text-xs font-semibold border-primary/20 text-primary">Create Template</Button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-            {templates.map(template => (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
+            {filteredTemplates.map(template => (
               <Card 
                 key={template.id} 
                 onClick={() => handleEditTemplate(template)}
-                className="group border border-slate-200 dark:border-slate-800 hover:border-primary/50 transition-all duration-500 rounded-[2rem] cursor-pointer bg-white dark:bg-zinc-900 overflow-hidden shadow-sm hover:shadow-2xl hover:shadow-primary/10 active:scale-[0.98] flex flex-col"
+                className="group border border-slate-200/80 dark:border-slate-800 hover:border-primary/40 transition-all rounded-xl cursor-pointer bg-white dark:bg-slate-900 overflow-hidden shadow-sm hover:shadow-md flex flex-col justify-between relative"
               >
-                <div className="aspect-[3/2] relative bg-slate-100 dark:bg-zinc-800 overflow-hidden">
-                  {template.background ? (
-                    <img 
-                      src={template.background || ""} 
-                      className="w-full h-full object-cover group- transition-transform duration-1000 ease-out" 
-                      alt={template.name} 
-                    />
-                  ) : (
-                    <div className="w-full h-full flex flex-col items-center justify-center text-slate-300 dark:text-zinc-600 space-y-2">
-                      <div className="w-12 h-12 rounded-full bg-slate-50 dark:bg-zinc-900 flex items-center justify-center border border-slate-100 dark:border-zinc-800">
+                <div>
+                  <div className="aspect-[3/2] relative bg-slate-100 dark:bg-slate-800 overflow-hidden border-b border-slate-100 dark:border-slate-800/60">
+                    {template.background ? (
+                      <img 
+                        src={template.background || ""} 
+                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" 
+                        alt={template.name} 
+                      />
+                    ) : (
+                      <div className="w-full h-full flex flex-col items-center justify-center text-slate-300 dark:text-slate-600 space-y-1">
                         <Layout className="w-6 h-6 opacity-40" />
+                        <span className="text-[9px] font-bold uppercase tracking-wider opacity-60">Blank Canvas</span>
                       </div>
-                      <span className="text-[9px] font-black uppercase tracking-widest opacity-40">No Background</span>
+                    )}
+                    
+                    {/* Top Right Quick Actions */}
+                    <div className="absolute top-2.5 right-2.5 z-20 flex items-center gap-1.5">
+                      <Button 
+                        variant="secondary" 
+                        size="sm" 
+                        className="h-7 px-2.5 rounded-md bg-white/95 dark:bg-slate-900/95 shadow-xs hover:bg-white text-slate-700 dark:text-slate-200 text-xs font-semibold"
+                        onClick={(e) => { e.stopPropagation(); handleEditTemplate(template); }}
+                      >
+                        Edit
+                      </Button>
+                      <Button 
+                        variant="destructive" 
+                        size="sm" 
+                        className="h-7 w-7 p-0 rounded-md shrink-0 shadow-xs"
+                        onClick={(e) => handleDeleteClick(template, e)}
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
                     </div>
-                  )}
-                  
-                  {/* Overlays */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                  
-                  {/* Actions */}
-                  <div className="absolute top-3 right-3 z-20 flex gap-2">
-                     <Button 
-                      variant="secondary" 
-                      size="sm" 
-                      className="h-8 px-3 rounded-lg bg-white/90 shadow-sm hover:bg-white text-slate-700 text-xs font-bold"
-                      onClick={(e) => { e.stopPropagation(); handleEditTemplate(template); }}
-                    >
-                       Edit
-                     </Button>
-                     <Button 
-                      variant="destructive" 
-                      size="sm" 
-                      className="h-8 w-8 p-0 rounded-lg shrink-0 shadow-sm"
-                      onClick={(e) => handleDeleteClick(template, e)}
-                    >
-                       <Trash2 className="h-4 w-4" />
-                     </Button>
                   </div>
 
-                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-500">
-                    <div className="px-5 py-2.5 rounded-2xl bg-white/90 dark:bg-zinc-900/90 backdrop-blur-sm border border-white/20 shadow-2xl transform scale-90 group-hover:scale-100 transition-transform duration-500">
-                      <span className="text-[10px] font-black uppercase tracking-tighter text-slate-900 dark:text-white flex items-center gap-2">
-                        <Settings2 className="h-3 w-3" />
-                        Modify Design
-                      </span>
+                  <CardContent className="p-3 sm:p-3.5 flex flex-col space-y-2">
+                    <div className="flex items-center justify-between">
+                      <Badge className="bg-primary/10 text-primary border-none rounded uppercase text-[9px] font-bold px-1.5 py-0.5 tracking-wider">
+                        {template.type}
+                      </Badge>
+                      <div 
+                        className="flex items-center gap-1.5 cursor-pointer z-20 relative"
+                        onClick={(e) => handleToggleStatus(template, e)}
+                      >
+                        <span className={cn("text-[9px] font-bold uppercase tracking-wider", template.isActive ? "text-green-600 dark:text-green-400" : "text-slate-400")}>
+                          {template.isActive ? "Active" : "Inactive"}
+                        </span>
+                        <Switch checked={!!template.isActive} className="scale-75 pointer-events-none" />
+                      </div>
                     </div>
-                  </div>
+
+                    <h4 className="font-semibold text-xs sm:text-sm text-slate-900 dark:text-white leading-tight group-hover:text-primary transition-colors line-clamp-1">
+                      {template.name}
+                    </h4>
+                  </CardContent>
                 </div>
 
-                <CardContent className="p-5 flex flex-col">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="px-2.5 py-0.5 rounded-full bg-primary/10 border border-primary/20">
-                      <span className="text-[9px] font-black uppercase tracking-widest text-primary">{template.type}</span>
-                    </div>
-                    <div 
-                      className="flex items-center gap-2 cursor-pointer z-20 relative"
-                      onClick={(e) => handleToggleStatus(template, e)}
-                    >
-                      <span className={cn("text-[9px] font-black uppercase tracking-widest", template.isActive ? "text-green-500" : "text-slate-400")}>
-                        {template.isActive ? "Active" : "Inactive"}
-                      </span>
-                      <Switch checked={!!template.isActive} className="scale-75 pointer-events-none" />
-                    </div>
+                <div className="p-3 sm:p-3.5 pt-2 border-t border-slate-100 dark:border-slate-800/60 bg-slate-50/50 dark:bg-slate-900/50 flex items-center justify-between">
+                  <div className="flex -space-x-1">
+                    <div className="w-4 h-4 rounded-full bg-blue-500/10 flex items-center justify-center"><Type className="h-2 w-2 text-blue-500" /></div>
+                    <div className="w-4 h-4 rounded-full bg-purple-500/10 flex items-center justify-center"><ImageIcon className="h-2 w-2 text-purple-500" /></div>
+                    <div className="w-4 h-4 rounded-full bg-green-500/10 flex items-center justify-center"><QrCode className="h-2 w-2 text-green-500" /></div>
                   </div>
-                  <h4 className="font-black text-slate-900 dark:text-white text-base leading-tight group-hover:text-primary transition-colors line-clamp-1 mt-1">
-                    {template.name}
-                  </h4>
-                  
-                  <div className="mt-4 pt-4 flex items-center justify-between border-t border-slate-50 dark:border-zinc-800/50">
-                    <div className="flex -space-x-1.5">
-                      <div className="w-5 h-5 rounded-full bg-blue-500/10 border border-white dark:border-zinc-900 flex items-center justify-center"><Type className="h-2.5 w-2.5 text-blue-500" /></div>
-                      <div className="w-5 h-5 rounded-full bg-purple-500/10 border border-white dark:border-zinc-900 flex items-center justify-center"><ImageIcon className="h-2.5 w-2.5 text-purple-500" /></div>
-                      <div className="w-5 h-5 rounded-full bg-amber-500/10 border border-white dark:border-zinc-900 flex items-center justify-center"><Signature className="h-2.5 w-2.5 text-amber-500" /></div>
-                      <div className="w-5 h-5 rounded-full bg-green-500/10 border border-white dark:border-zinc-900 flex items-center justify-center"><QrCode className="h-2.5 w-2.5 text-green-500" /></div>
-                    </div>
-                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">
-                      {Array.isArray(template.config) 
-                        ? template.config.length 
-                        : (typeof template.config === 'string' ? (
-                            (() => { try { return JSON.parse(template.config).length || 0; } catch { return 0; } })()
-                          ) : 0)
-                      } Elements
-                    </span>
-                  </div>
-                </CardContent>
+                  <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
+                    {Array.isArray(template.config) 
+                      ? template.config.length 
+                      : (typeof template.config === 'string' ? (
+                          (() => { try { return JSON.parse(template.config).length || 0; } catch { return 0; } })()
+                        ) : 0)
+                    } Elements
+                  </span>
+                </div>
               </Card>
             ))}
           </div>
@@ -806,56 +937,56 @@ export default function DocumentDesigner() {
         <ConfirmDialog 
           open={!!templateToDelete}
           onOpenChange={(open) => !open && setTemplateToDelete(null)}
-          title="Delete Template?"
-          description={`Are you sure you want to permanently delete the template "${templateToDelete?.name}"? This action cannot be undone.`}
+          title="Delete Template"
+          description={`Are you sure you want to permanently delete "${templateToDelete?.name}"? This action cannot be undone.`}
           onConfirm={confirmDelete}
-          confirmText="Yes, Delete"
+          confirmText="Delete Template"
+          destructive={true}
         />
       </div>
     );
   }
 
   return (
-    <div className="space-y-10 pb-24 max-w-[1600px] mx-auto">
+    <div className="space-y-4 sm:space-y-5 pb-8 w-full mx-auto">
       <style dangerouslySetInnerHTML={{ __html: `@import url('https://fonts.googleapis.com/css2?family=Charm:wght@400;700&family=Inter:wght@400;700;900&family=Montserrat:wght@400;700;900&family=Open+Sans:wght@400;700;800&family=Oswald:wght@400;700&family=Pacifico&family=Playfair+Display:wght@400;700;900&family=Roboto:wght@400;700;900&display=swap');` }} />
       <AdminPageHeader 
         title={templateName} 
         description={`Designing ${templateType.toLowerCase()} layout with pixel precision.`}
       >
-        <div className="flex items-center gap-3">
-          <Button variant="ghost" onClick={() => setView("list")} className="h-11 rounded-xl gap-2 font-bold hover:bg-slate-100">
-            <ChevronLeft className="h-4 w-4" /> Back to List
+        <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+          <Button variant="ghost" onClick={() => setView("list")} className="h-8 sm:h-9 px-3 rounded-lg gap-1.5 text-xs font-semibold hover:bg-slate-100 dark:hover:bg-slate-800">
+            <ChevronLeft className="h-3.5 w-3.5" /> Back
           </Button>
-          <div className="w-[1px] h-8 bg-slate-200 mx-2" />
           <Button 
             variant="secondary" 
             onClick={() => setShowExampleData(true)} 
-            className="h-11 rounded-xl gap-2 font-bold bg-amber-100 text-amber-700 hover:bg-amber-200"
+            className="h-8 sm:h-9 px-3 rounded-lg gap-1.5 text-xs font-semibold bg-amber-100 text-amber-700 hover:bg-amber-200 dark:bg-amber-500/20 dark:text-amber-400"
           >
-            <Settings2 className="h-4 w-4" />
+            <Settings2 className="h-3.5 w-3.5" />
             Example Data
           </Button>
           <Button 
             variant="outline" 
             onClick={() => setIsPreview(!isPreview)} 
-            className={cn("h-11 rounded-xl gap-2 font-bold", isPreview && "bg-primary/5 border-primary text-primary")}
+            className={cn("h-8 sm:h-9 px-3 rounded-lg gap-1.5 text-xs font-semibold", isPreview && "bg-primary/5 border-primary text-primary")}
           >
-            {isPreview ? <Settings2 className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            {isPreview ? <Settings2 className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5 text-slate-500" />}
             {isPreview ? "Edit Layout" : "Live Preview"}
           </Button>
           <Button 
             onClick={downloadPDF} 
-            className="h-11 px-6 rounded-xl gap-2 bg-zinc-900 text-white font-bold hover:scale-[1.02] transition-all shadow-xl shadow-zinc-900/10"
+            className="h-8 sm:h-9 px-3.5 rounded-lg gap-1.5 text-xs font-semibold bg-zinc-900 text-white hover:bg-zinc-800 shadow-sm"
           >
-            <Download className="h-4 w-4" />
+            <Download className="h-3.5 w-3.5" />
             Download PDF
           </Button>
           <Button 
             onClick={handleSave} 
             disabled={isSaving}
-            className="h-11 px-6 rounded-xl gap-2 bg-primary text-primary-foreground font-bold hover:scale-[1.02] transition-all shadow-xl shadow-primary/20"
+            className="h-8 sm:h-9 px-3.5 rounded-lg gap-1.5 bg-primary text-white text-xs font-semibold shadow-sm shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all"
           >
-            {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+            {isSaving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
             {isSaving ? "Saving..." : "Save Design"}
           </Button>
         </div>
@@ -872,120 +1003,120 @@ export default function DocumentDesigner() {
         confirmText="Save and Set Active"
       />
 
-      <div className="grid grid-cols-1 xl:grid-cols-12 gap-10 items-start">
+      <div className="grid grid-cols-1 xl:grid-cols-12 gap-4 sm:gap-6 items-start">
         {/* Designer Sidebar */}
-        <div className="xl:col-span-3 space-y-6 sticky top-0 h-[100vh] overflow-y-auto custom-scrollbar pr-2 pb-4">
-          <Card className="border-2 border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-sm">
-            <CardHeader className="pb-4">
-              <CardTitle className="text-lg font-bold flex items-center gap-2">
-                <Settings className="h-5 w-5 text-primary" />
+        <div className="xl:col-span-3 space-y-4 sticky top-0 h-[100vh] overflow-y-auto custom-scrollbar pr-1 pb-4">
+          <Card className="border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 rounded-xl shadow-sm">
+            <CardHeader className="p-3.5 sm:p-4 border-b border-slate-100 dark:border-slate-800">
+              <CardTitle className="text-xs sm:text-sm font-bold flex items-center gap-1.5">
+                <Settings className="h-4 w-4 text-primary" />
                 Template Info
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-               <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Design Name</Label>
-                  <Input value={templateName} onChange={(e) => setTemplateName(e.target.value)} className="h-11 bg-slate-50 border-2 border-slate-50 dark:bg-slate-800 dark:border-slate-800 dark:text-white focus-visible:ring-0 rounded-xl font-bold" />
+            <CardContent className="p-3.5 sm:p-4 space-y-3">
+               <div className="space-y-1">
+                  <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Design Name</Label>
+                  <Input value={templateName} onChange={(e) => setTemplateName(e.target.value)} className="h-8 sm:h-9 bg-slate-50 border border-slate-200 dark:bg-slate-800/50 dark:border-slate-700 text-xs rounded-lg font-medium" />
                </div>
-               <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Doc Type</Label>
+               <div className="space-y-1">
+                  <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Doc Type</Label>
                   <Select
                     value={templateType}
                     onValueChange={(value: any) => setTemplateType(value)}
                   >
-                    <SelectTrigger className="w-full h-11 bg-slate-50 border-2 border-slate-50 dark:bg-slate-800 dark:border-slate-800 dark:text-white rounded-xl font-bold px-3 focus:ring-0 focus:ring-offset-0">
+                    <SelectTrigger className="w-full h-8 sm:h-9 bg-slate-50 border border-slate-200 dark:bg-slate-800/50 dark:border-slate-700 text-xs rounded-lg font-medium px-2.5">
                       <SelectValue placeholder="Select document type..." />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="CERTIFICATE">Students Certificate</SelectItem>
-                      <SelectItem value="MARKSHEET">Marksheet</SelectItem>
-                      <SelectItem value="ADMIT_CARD">Admit Card</SelectItem>
-                      <SelectItem value="STUDENT_ID">Student ID Card</SelectItem>
-                      <SelectItem value="STAFF_ID">Staff Id Card</SelectItem>
-                      <SelectItem value="FRANCHISE_ID">Franchise Owner ID</SelectItem>
-                      <SelectItem value="NOTICE_PAD">Notice Pad</SelectItem>
-                      <SelectItem value="FRANCHISE_CERTIFICATE">Franchises Certificate</SelectItem>
+                      <SelectItem value="CERTIFICATE" className="text-xs">Students Certificate</SelectItem>
+                      <SelectItem value="MARKSHEET" className="text-xs">Marksheet</SelectItem>
+                      <SelectItem value="ADMIT_CARD" className="text-xs">Admit Card</SelectItem>
+                      <SelectItem value="STUDENT_ID" className="text-xs">Student ID Card</SelectItem>
+                      <SelectItem value="STAFF_ID" className="text-xs">Staff Id Card</SelectItem>
+                      <SelectItem value="FRANCHISE_ID" className="text-xs">Franchise Owner ID</SelectItem>
+                      <SelectItem value="NOTICE_PAD" className="text-xs">Notice Pad</SelectItem>
+                      <SelectItem value="FRANCHISE_CERTIFICATE" className="text-xs">Franchises Certificate</SelectItem>
                     </SelectContent>
                   </Select>
                </div>
             </CardContent>
           </Card>
 
-          <Card className="border-2 border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-sm">
-            <CardHeader className="pb-4">
-              <CardTitle className="text-lg font-bold flex items-center gap-2">
-                <Plus className="h-5 w-5 text-primary" />
+          <Card className="border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 rounded-xl shadow-sm">
+            <CardHeader className="p-3.5 sm:p-4 border-b border-slate-100 dark:border-slate-800">
+              <CardTitle className="text-xs sm:text-sm font-bold flex items-center gap-1.5">
+                <Plus className="h-4 w-4 text-primary" />
                 Add Components
               </CardTitle>
             </CardHeader>
-            <CardContent className="grid grid-cols-2 gap-3">
-              <Button variant="outline" onClick={() => addVariable("text")} className="h-auto py-4 flex-col gap-2 rounded-2xl hover:bg-primary/5 dark:hover:bg-primary/10 dark:border-slate-800 group">
-                <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center group-hover:bg-blue-500/20"><Type className="h-4 w-4 text-blue-600 dark:text-blue-400" /></div>
-                <span className="font-bold text-xs dark:text-slate-300">Text</span>
+            <CardContent className="p-3.5 sm:p-4 grid grid-cols-2 gap-2">
+              <Button variant="outline" onClick={() => addVariable("text")} className="h-auto py-2.5 flex-col gap-1 rounded-lg hover:bg-primary/5 text-xs font-medium border-slate-200 dark:border-slate-700">
+                <div className="w-6 h-6 rounded-md bg-blue-500/10 flex items-center justify-center"><Type className="h-3.5 w-3.5 text-blue-600" /></div>
+                <span>Text</span>
               </Button>
-              <Button variant="outline" onClick={() => addVariable("image")} className="h-auto py-4 flex-col gap-2 rounded-2xl hover:bg-primary/5 dark:hover:bg-primary/10 dark:border-slate-800 group">
-                <div className="w-8 h-8 rounded-lg bg-purple-500/10 flex items-center justify-center group-hover:bg-purple-500/20"><ImageIcon className="h-4 w-4 text-purple-600 dark:text-purple-400" /></div>
-                <span className="font-bold text-xs dark:text-slate-300 text-center">Image /<br/>Signature</span>
+              <Button variant="outline" onClick={() => addVariable("image")} className="h-auto py-2.5 flex-col gap-1 rounded-lg hover:bg-primary/5 text-xs font-medium border-slate-200 dark:border-slate-700">
+                <div className="w-6 h-6 rounded-md bg-purple-500/10 flex items-center justify-center"><ImageIcon className="h-3.5 w-3.5 text-purple-600" /></div>
+                <span>Image / Sign</span>
               </Button>
-              <Button variant="outline" onClick={() => addVariable("qrcode")} className="h-auto py-4 flex-col gap-2 rounded-2xl hover:bg-primary/5 dark:hover:bg-primary/10 dark:border-slate-800 group">
-                <div className="w-8 h-8 rounded-lg bg-green-500/10 flex items-center justify-center group-hover:bg-green-500/20"><QrCode className="h-4 w-4 text-green-600 dark:text-green-400" /></div>
-                <span className="font-bold text-xs dark:text-slate-300 text-center">Custom<br/>QR Code</span>
+              <Button variant="outline" onClick={() => addVariable("qrcode")} className="h-auto py-2.5 flex-col gap-1 rounded-lg hover:bg-primary/5 text-xs font-medium border-slate-200 dark:border-slate-700">
+                <div className="w-6 h-6 rounded-md bg-green-500/10 flex items-center justify-center"><QrCode className="h-3.5 w-3.5 text-green-600" /></div>
+                <span>QR Code</span>
               </Button>
-              <Button variant="outline" onClick={() => addVariable("attendance_qr")} className="h-auto py-4 flex-col gap-2 rounded-2xl border-indigo-200 hover:bg-indigo-50 dark:border-indigo-900 dark:hover:bg-indigo-900/20 group">
-                <div className="w-8 h-8 rounded-lg bg-indigo-500/10 flex items-center justify-center group-hover:bg-indigo-500/20"><QrCode className="h-4 w-4 text-indigo-600 dark:text-indigo-400" /></div>
-                <span className="font-bold text-xs text-indigo-700 dark:text-indigo-300 text-center">Attendance<br/>Scanner QR</span>
+              <Button variant="outline" onClick={() => addVariable("attendance_qr")} className="h-auto py-2.5 flex-col gap-1 rounded-lg hover:bg-indigo-50 border-indigo-200 dark:border-indigo-900 text-xs font-medium">
+                <div className="w-6 h-6 rounded-md bg-indigo-500/10 flex items-center justify-center"><QrCode className="h-3.5 w-3.5 text-indigo-600" /></div>
+                <span>Scanner QR</span>
               </Button>
             </CardContent>
           </Card>
 
           {selectedVar && (
-            <Card className="border-2 border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-sm">
-              <CardHeader className="pb-4 flex flex-row items-center justify-between">
-                <CardTitle className="text-lg font-bold">Properties</CardTitle>
-                <div className="flex gap-2">
-                  <Button variant="ghost" size="icon" onClick={() => duplicateVariable(selectedVar.id)} className="text-blue-500 hover:bg-blue-50 rounded-xl" title="Duplicate Element">
-                    <Copy className="h-4 w-4" />
+            <Card className="border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 rounded-xl shadow-sm">
+              <CardHeader className="p-3.5 sm:p-4 border-b border-slate-100 dark:border-slate-800 flex flex-row items-center justify-between">
+                <CardTitle className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">Properties</CardTitle>
+                <div className="flex gap-1">
+                  <Button variant="ghost" size="icon" onClick={() => duplicateVariable(selectedVar.id)} className="h-7 w-7 text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-500/10 rounded-lg" title="Duplicate Element">
+                    <Copy className="h-3.5 w-3.5" />
                   </Button>
-                  <Button variant="ghost" size="icon" onClick={() => removeVariable(selectedVar.id)} className="text-red-500 hover:bg-red-50 rounded-xl" title="Delete Element">
-                    <Trash2 className="h-4 w-4" />
+                  <Button variant="ghost" size="icon" onClick={() => removeVariable(selectedVar.id)} className="h-7 w-7 text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg" title="Delete Element">
+                    <Trash2 className="h-3.5 w-3.5" />
                   </Button>
                 </div>
               </CardHeader>
-              <CardContent className="p-4">
-                <Accordion key={selectedVar.id} multiple defaultValue={["data", "appearance", "layout"]} className="w-full space-y-3">
+              <CardContent className="p-3.5 sm:p-4">
+                <Accordion key={selectedVar.id} multiple defaultValue={["data", "appearance", "layout"]} className="w-full space-y-2">
                   
                   {/* DATA SECTION */}
-                  <AccordionItem value="data" className="border-none bg-slate-50 dark:bg-slate-800/50 rounded-xl px-4">
-                    <AccordionTrigger className="hover:no-underline py-3">
-                      <span className="text-xs font-black uppercase tracking-widest text-slate-500">Data Source</span>
+                  <AccordionItem value="data" className="border border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30 rounded-lg px-3">
+                    <AccordionTrigger className="hover:no-underline py-2">
+                      <span className="text-xs font-bold text-slate-600 dark:text-slate-300">Data Source</span>
                     </AccordionTrigger>
-                    <AccordionContent className="space-y-4 pb-4 pt-1">
+                    <AccordionContent className="space-y-3 pb-3 pt-1">
                       {selectedVar.type === 'qrcode' ? (
-                        <div className="space-y-2">
-                          <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">QR Code Content</Label>
+                        <div className="space-y-1.5">
+                          <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">QR Code Content</Label>
                           <textarea 
                             value={selectedVar.qrContentTemplate || ""}
                             onChange={(e) => updateVariable(selectedVar.id, { qrContentTemplate: e.target.value })}
-                            className="w-full h-24 p-3 rounded-xl border-2 border-input bg-background font-mono text-sm resize-none focus:outline-none focus:border-primary/50"
+                            className="w-full h-20 p-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 font-mono text-xs resize-none focus:outline-none focus:border-primary/50"
                             placeholder="e.g. Name: {studentName}&#10;Reg: {registrationNo}"
                           />
-                          <p className="text-[10px] text-slate-400 font-bold">Use {'{variableName}'} to insert dynamic data.</p>
+                          <p className="text-[10px] text-slate-400 font-medium">Use {'{variableName}'} to insert dynamic data.</p>
                         </div>
                       ) : selectedVar.type === 'text' ? (
-                        <div className="space-y-4">
-                          <div className="space-y-2">
-                            <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Content Format</Label>
+                        <div className="space-y-3">
+                          <div className="space-y-1.5">
+                            <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Content Format</Label>
                             <textarea 
                               value={selectedVar.textContent !== undefined ? selectedVar.textContent : `{${selectedVar.name}}`}
                               onChange={(e) => updateVariable(selectedVar.id, { textContent: e.target.value })}
-                              className="w-full h-24 p-3 rounded-xl border-2 border-input bg-background font-mono text-sm resize-none focus:outline-none focus:border-primary/50"
+                              className="w-full h-20 p-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 font-mono text-xs resize-none focus:outline-none focus:border-primary/50"
                               placeholder="e.g. <i>C/o</i> <b>{fatherName}</b>"
                             />
-                            <p className="text-[10px] text-slate-400 font-bold">Use {'{variableName}'} for data. You can use HTML like &lt;b&gt;, &lt;i&gt;, &lt;span style=&quot;color:red&quot;&gt; for rich styling!</p>
+                            <p className="text-[10px] text-slate-400 font-medium">Use {'{variableName}'} for data. You can use HTML &lt;b&gt;, &lt;i&gt; tags.</p>
                           </div>
                           
-                          <div className="space-y-2">
-                            <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Quick Insert Variable</Label>
+                          <div className="space-y-1.5">
+                            <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Quick Insert Variable</Label>
                             <Select
                               key={quickInsertKey}
                               onValueChange={(value: any) => {
@@ -995,7 +1126,7 @@ export default function DocumentDesigner() {
                                 setQuickInsertKey(prev => prev + 1);
                               }}
                             >
-                              <SelectTrigger className="w-full h-11 bg-background border-2 border-input rounded-xl font-bold px-3 focus:ring-0 focus:ring-offset-0">
+                              <SelectTrigger className="w-full h-8 sm:h-9 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-medium px-2.5 focus:ring-0 focus:ring-offset-0">
                                 <SelectValue placeholder="Select to insert..." />
                               </SelectTrigger>
                               <SelectContent className="max-h-[300px]">
@@ -1004,10 +1135,10 @@ export default function DocumentDesigner() {
                                   if (filteredItems.length === 0) return null;
                                   return (
                                     <div key={group.label} className="py-1">
-                                      <div className="font-black text-xs text-white uppercase tracking-wider bg-slate-900 dark:bg-black py-2 px-2 sticky top-0 z-10">{group.label}</div>
+                                      <div className="font-bold text-[11px] text-white uppercase tracking-wider bg-slate-900 dark:bg-black py-1.5 px-2 sticky top-0 z-10">{group.label}</div>
                                       {filteredItems.map((item) => (
-                                        <SelectItem key={item.id} value={item.id} className="font-semibold cursor-pointer py-2 pl-6">
-                                          {item.label} <span className="text-[10px] text-slate-400 font-mono ml-2">({item.id})</span>
+                                        <SelectItem key={item.id} value={item.id} className="text-xs cursor-pointer py-1.5 pl-5">
+                                          {item.label} <span className="text-[10px] text-slate-400 font-mono ml-1.5">({item.id})</span>
                                         </SelectItem>
                                       ))}
                                     </div>
@@ -1018,13 +1149,13 @@ export default function DocumentDesigner() {
                           </div>
                         </div>
                       ) : (
-                        <div className="space-y-2">
-                          <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Binding Variable</Label>
+                        <div className="space-y-1.5">
+                          <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Binding Variable</Label>
                           <Select
                             value={selectedVar.name}
                             onValueChange={(value: any) => updateVariable(selectedVar.id, { name: value })}
                           >
-                            <SelectTrigger className="w-full h-11 bg-background border-2 border-input rounded-xl font-bold px-3 focus:ring-0 focus:ring-offset-0">
+                            <SelectTrigger className="w-full h-8 sm:h-9 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-medium px-2.5 focus:ring-0 focus:ring-offset-0">
                               <SelectValue placeholder="Select variable..." />
                             </SelectTrigger>
                             <SelectContent className="max-h-[300px]">
@@ -1034,10 +1165,10 @@ export default function DocumentDesigner() {
                                 if (filteredItems.length === 0) return null;
                                 return (
                                   <div key={group.label} className="py-1">
-                                    <div className="font-black text-xs text-white uppercase tracking-wider bg-slate-900 dark:bg-black py-2 px-2 sticky top-0 z-10">{group.label}</div>
+                                    <div className="font-bold text-[11px] text-white uppercase tracking-wider bg-slate-900 dark:bg-black py-1.5 px-2 sticky top-0 z-10">{group.label}</div>
                                     {filteredItems.map((item) => (
-                                      <SelectItem key={item.id} value={item.id} className="font-semibold cursor-pointer py-2 pl-6">
-                                        {item.label} <span className="text-[10px] text-slate-400 font-mono ml-2">({item.id})</span>
+                                      <SelectItem key={item.id} value={item.id} className="text-xs cursor-pointer py-1.5 pl-5">
+                                        {item.label} <span className="text-[10px] text-slate-400 font-mono ml-1.5">({item.id})</span>
                                       </SelectItem>
                                     ))}
                                   </div>
@@ -1051,17 +1182,17 @@ export default function DocumentDesigner() {
                   </AccordionItem>
 
                   {/* APPEARANCE SECTION */}
-                  <AccordionItem value="appearance" className="border-none bg-slate-50 dark:bg-slate-800/50 rounded-xl px-4">
-                    <AccordionTrigger className="hover:no-underline py-3">
-                      <span className="text-xs font-black uppercase tracking-widest text-slate-500">Appearance</span>
+                  <AccordionItem value="appearance" className="border border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30 rounded-lg px-3">
+                    <AccordionTrigger className="hover:no-underline py-2">
+                      <span className="text-xs font-bold text-slate-600 dark:text-slate-300">Appearance</span>
                     </AccordionTrigger>
-                    <AccordionContent className="space-y-4 pb-4 pt-1">
+                    <AccordionContent className="space-y-3 pb-3 pt-1">
                       {selectedVar.type === 'text' && (
                         <>
-                          <div className="space-y-2 col-span-2">
+                          <div className="space-y-1 col-span-2">
                             <div className="flex items-center justify-between">
-                              <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Line Height</Label>
-                              <span className="text-[10px] font-bold text-slate-400">{selectedVar.lineHeight || 1}</span>
+                              <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Line Height</Label>
+                              <span className="text-[10px] font-semibold text-slate-400">{selectedVar.lineHeight || 1}</span>
                             </div>
                             <input 
                               type="range"
@@ -1070,89 +1201,89 @@ export default function DocumentDesigner() {
                               step="0.1"
                               value={selectedVar.lineHeight || 1}
                               onChange={(e) => updateVariable(selectedVar.id, { lineHeight: parseFloat(e.target.value) })}
-                              className="w-full accent-primary"
+                              className="w-full accent-primary h-1.5"
                             />
                           </div>
-                          <div className="grid grid-cols-2 gap-3">
-                            <div className="space-y-2">
-                              <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Align</Label>
+                          <div className="grid grid-cols-2 gap-2.5">
+                            <div className="space-y-1">
+                              <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Align</Label>
                               <Select
                                 value={selectedVar.textAlign || "left"}
                                 onValueChange={(value: any) => updateVariable(selectedVar.id, { textAlign: value })}
                               >
-                                <SelectTrigger className="w-full h-10 bg-background border-2 border-input rounded-xl font-bold px-3">
+                                <SelectTrigger className="w-full h-8 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-medium px-2.5">
                                   <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
-                                  <SelectItem value="left">Left</SelectItem>
-                                  <SelectItem value="center">Center</SelectItem>
-                                  <SelectItem value="right">Right</SelectItem>
-                                  <SelectItem value="justify">Justify</SelectItem>
+                                  <SelectItem value="left" className="text-xs">Left</SelectItem>
+                                  <SelectItem value="center" className="text-xs">Center</SelectItem>
+                                  <SelectItem value="right" className="text-xs">Right</SelectItem>
+                                  <SelectItem value="justify" className="text-xs">Justify</SelectItem>
                                 </SelectContent>
                               </Select>
                             </div>
-                            <div className="space-y-2 col-span-2">
-                              <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Font Family</Label>
-                              <Select
-                                value={selectedVar.fontFamily || "Inter"}
-                                onValueChange={(value: any) => updateVariable(selectedVar.id, { fontFamily: value })}
-                              >
-                                <SelectTrigger className="w-full h-10 bg-background border-2 border-input rounded-xl font-bold px-3">
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="Inter"><span style={{ fontFamily: 'Inter' }}>Inter (Default)</span></SelectItem>
-                                  <SelectItem value="Roboto"><span style={{ fontFamily: 'Roboto' }}>Roboto</span></SelectItem>
-                                  <SelectItem value="Open Sans"><span style={{ fontFamily: 'Open Sans' }}>Open Sans</span></SelectItem>
-                                  <SelectItem value="Montserrat"><span style={{ fontFamily: 'Montserrat' }}>Montserrat</span></SelectItem>
-                                  <SelectItem value="Playfair Display"><span style={{ fontFamily: 'Playfair Display' }}>Playfair Display</span></SelectItem>
-                                  <SelectItem value="Charm"><span style={{ fontFamily: 'Charm' }}>Charm</span></SelectItem>
-                                  <SelectItem value="Pacifico"><span style={{ fontFamily: 'Pacifico' }}>Pacifico</span></SelectItem>
-                                  <SelectItem value="Oswald"><span style={{ fontFamily: 'Oswald' }}>Oswald</span></SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </div>
-                            <div className="space-y-2">
-                              <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Weight</Label>
+                            <div className="space-y-1">
+                              <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Weight</Label>
                               <Select
                                 value={selectedVar.fontWeight || "normal"}
                                 onValueChange={(value: any) => updateVariable(selectedVar.id, { fontWeight: value })}
                               >
-                                <SelectTrigger className="w-full h-10 bg-background border-2 border-input rounded-xl font-bold px-3">
+                                <SelectTrigger className="w-full h-8 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-medium px-2.5">
                                   <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
-                                  <SelectItem value="normal">Normal</SelectItem>
-                                  <SelectItem value="500">Medium</SelectItem>
-                                  <SelectItem value="600">Semi Bold</SelectItem>
-                                  <SelectItem value="bold">Bold</SelectItem>
-                                  <SelectItem value="900">Black</SelectItem>
+                                  <SelectItem value="normal" className="text-xs">Normal</SelectItem>
+                                  <SelectItem value="500" className="text-xs">Medium</SelectItem>
+                                  <SelectItem value="600" className="text-xs">Semi Bold</SelectItem>
+                                  <SelectItem value="bold" className="text-xs">Bold</SelectItem>
+                                  <SelectItem value="900" className="text-xs">Black</SelectItem>
                                 </SelectContent>
                               </Select>
                             </div>
-                            <div className="space-y-2">
-                              <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Size ({unit})</Label>
+                            <div className="space-y-1 col-span-2">
+                              <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Font Family</Label>
+                              <Select
+                                value={selectedVar.fontFamily || "Inter"}
+                                onValueChange={(value: any) => updateVariable(selectedVar.id, { fontFamily: value })}
+                              >
+                                <SelectTrigger className="w-full h-8 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-medium px-2.5">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="Inter" className="text-xs"><span style={{ fontFamily: 'Inter' }}>Inter (Default)</span></SelectItem>
+                                  <SelectItem value="Roboto" className="text-xs"><span style={{ fontFamily: 'Roboto' }}>Roboto</span></SelectItem>
+                                  <SelectItem value="Open Sans" className="text-xs"><span style={{ fontFamily: 'Open Sans' }}>Open Sans</span></SelectItem>
+                                  <SelectItem value="Montserrat" className="text-xs"><span style={{ fontFamily: 'Montserrat' }}>Montserrat</span></SelectItem>
+                                  <SelectItem value="Playfair Display" className="text-xs"><span style={{ fontFamily: 'Playfair Display' }}>Playfair Display</span></SelectItem>
+                                  <SelectItem value="Charm" className="text-xs"><span style={{ fontFamily: 'Charm' }}>Charm</span></SelectItem>
+                                  <SelectItem value="Pacifico" className="text-xs"><span style={{ fontFamily: 'Pacifico' }}>Pacifico</span></SelectItem>
+                                  <SelectItem value="Oswald" className="text-xs"><span style={{ fontFamily: 'Oswald' }}>Oswald</span></SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            <div className="space-y-1">
+                              <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Size ({unit})</Label>
                               <Input 
                                 type="number" 
                                 value={selectedVar.fontSize} 
                                 onChange={(e) => updateVariable(selectedVar.id, { fontSize: Number(e.target.value) })}
-                                className="h-10 bg-background border-2 border-input rounded-xl font-bold" 
+                                className="h-8 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-medium" 
                               />
                             </div>
-                            <div className="space-y-2">
-                              <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Color</Label>
-                              <div className="flex gap-2">
+                            <div className="space-y-1">
+                              <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Color</Label>
+                              <div className="flex gap-1.5">
                                 <Input 
                                   type="color" 
                                   value={selectedVar.color || "#000000"} 
                                   onChange={(e) => updateVariable(selectedVar.id, { color: e.target.value })}
-                                  className="h-10 w-10 p-1 bg-background border-2 border-input rounded-xl cursor-pointer shrink-0" 
+                                  className="h-8 w-8 p-0.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg cursor-pointer shrink-0" 
                                 />
                                 <Input 
                                   type="text" 
                                   value={selectedVar.color || "#000000"} 
                                   onChange={(e) => updateVariable(selectedVar.id, { color: e.target.value })}
-                                  className="h-10 bg-background border-2 border-input rounded-xl font-bold font-mono px-2" 
+                                  className="h-8 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-mono px-2 min-w-0" 
                                 />
                               </div>
                             </div>
@@ -1161,17 +1292,17 @@ export default function DocumentDesigner() {
                       )}
                       
                       {(selectedVar.type === 'image' || selectedVar.type === 'signature') && (
-                        <div className="space-y-4">
-                          <div className="space-y-2">
-                            <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Object Fit</Label>
-                            <div className="flex bg-background border-2 border-input p-1 rounded-xl">
+                        <div className="space-y-3">
+                          <div className="space-y-1">
+                            <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Object Fit</Label>
+                            <div className="flex bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 p-0.5 rounded-lg">
                               {(["cover", "contain", "fill"] as const).map((fit) => (
                                 <button
                                   key={fit}
                                   onClick={() => updateVariable(selectedVar.id, { objectFit: fit })}
                                   className={cn(
-                                    "flex-1 py-1.5 text-xs font-bold rounded-lg transition-all capitalize",
-                                    (selectedVar.objectFit || "cover") === fit ? "bg-primary text-primary-foreground shadow-sm" : "text-slate-500 hover:text-slate-800"
+                                    "flex-1 py-1 text-xs font-medium rounded-md transition-all capitalize",
+                                    (selectedVar.objectFit || "cover") === fit ? "bg-primary text-primary-foreground shadow-sm" : "text-slate-500 hover:text-slate-800 dark:hover:text-white"
                                   )}
                                 >
                                   {fit}
@@ -1180,9 +1311,9 @@ export default function DocumentDesigner() {
                             </div>
                           </div>
                           
-                          <div className="space-y-2">
-                            <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Border Radius (px)</Label>
-                            <div className="flex items-center gap-3">
+                          <div className="space-y-1">
+                            <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Border Radius (px)</Label>
+                            <div className="flex items-center gap-2">
                               <input 
                                 type="range"
                                 min="0"
@@ -1190,13 +1321,13 @@ export default function DocumentDesigner() {
                                 step="1"
                                 value={selectedVar.borderRadius || 0}
                                 onChange={(e) => updateVariable(selectedVar.id, { borderRadius: Number(e.target.value) })}
-                                className="flex-1 accent-primary"
+                                className="flex-1 accent-primary h-1.5"
                               />
                               <Input 
                                 type="number" 
                                 value={selectedVar.borderRadius || 0} 
                                 onChange={(e) => updateVariable(selectedVar.id, { borderRadius: Number(e.target.value) })}
-                                className="h-9 w-16 bg-background border-2 border-input rounded-lg font-bold text-center p-0" 
+                                className="h-8 w-14 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-medium text-center p-0" 
                               />
                             </div>
                           </div>
@@ -1206,51 +1337,51 @@ export default function DocumentDesigner() {
                   </AccordionItem>
 
                   {/* LAYOUT SECTION */}
-                  <AccordionItem value="layout" className="border-none bg-slate-50 dark:bg-slate-800/50 rounded-xl px-4">
-                    <AccordionTrigger className="hover:no-underline py-3">
-                      <span className="text-xs font-black uppercase tracking-widest text-slate-500">Layout & Size</span>
+                  <AccordionItem value="layout" className="border border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30 rounded-lg px-3">
+                    <AccordionTrigger className="hover:no-underline py-2">
+                      <span className="text-xs font-bold text-slate-600 dark:text-slate-300">Layout & Size</span>
                     </AccordionTrigger>
-                    <AccordionContent className="space-y-3 pb-4 pt-1">
+                    <AccordionContent className="space-y-2.5 pb-3 pt-1">
                       <div className="flex items-center justify-between">
-                        <Label className="text-[10px] font-black uppercase tracking-widest text-slate-500">Pos X ({unit})</Label>
+                        <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Pos X ({unit})</Label>
                         <Input 
                           type="number" 
                           step="0.01"
                           value={Number(fromPx(selectedVar.x, unit)).toFixed(unit === "px" ? 0 : 2)} 
                           onChange={(e) => updateVariable(selectedVar.id, { x: toPx(parseFloat(e.target.value) || 0, unit) })} 
-                          className="h-9 w-24 bg-background border-2 border-input rounded-lg font-bold px-3 text-right" 
+                          className="h-8 w-20 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-medium px-2 text-right" 
                         />
                       </div>
                       <div className="flex items-center justify-between">
-                        <Label className="text-[10px] font-black uppercase tracking-widest text-slate-500">Pos Y ({unit})</Label>
+                        <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Pos Y ({unit})</Label>
                         <Input 
                           type="number" 
                           step="0.01"
                           value={Number(fromPx(selectedVar.y, unit)).toFixed(unit === "px" ? 0 : 2)} 
                           onChange={(e) => updateVariable(selectedVar.id, { y: toPx(parseFloat(e.target.value) || 0, unit) })} 
-                          className="h-9 w-24 bg-background border-2 border-input rounded-lg font-bold px-3 text-right" 
+                          className="h-8 w-20 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-medium px-2 text-right" 
                         />
                       </div>
                       <div className="flex items-center justify-between">
-                        <Label className="text-[10px] font-black uppercase tracking-widest text-slate-500">{selectedVar.type === 'text' ? 'Max W' : 'Width'} ({unit})</Label>
+                        <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{selectedVar.type === 'text' ? 'Max W' : 'Width'} ({unit})</Label>
                         <Input 
                           type="number" 
                           step="0.01"
                           value={selectedVar.width ? Number(fromPx(selectedVar.width, unit)).toFixed(unit === "px" ? 0 : 2) : ""} 
                           placeholder="Auto"
                           onChange={(e) => updateVariable(selectedVar.id, { width: e.target.value ? toPx(parseFloat(e.target.value), unit) : undefined })} 
-                          className="h-9 w-24 bg-background border-2 border-input rounded-lg font-bold px-3 text-right" 
+                          className="h-8 w-20 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-medium px-2 text-right" 
                         />
                       </div>
                       {(selectedVar.type === 'image' || selectedVar.type === 'signature' || selectedVar.type === 'qrcode') && (
                         <div className="flex items-center justify-between">
-                          <Label className="text-[10px] font-black uppercase tracking-widest text-slate-500">Height ({unit})</Label>
+                          <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Height ({unit})</Label>
                           <Input 
                             type="number" 
                             step="0.01"
                             value={Number(fromPx(selectedVar.height || 0, unit)).toFixed(unit === "px" ? 0 : 2)} 
                             onChange={(e) => updateVariable(selectedVar.id, { height: toPx(parseFloat(e.target.value) || 0, unit) })} 
-                            className="h-9 w-24 bg-background border-2 border-input rounded-lg font-bold px-3 text-right" 
+                            className="h-8 w-20 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-medium px-2 text-right" 
                           />
                         </div>
                       )}
@@ -1262,21 +1393,25 @@ export default function DocumentDesigner() {
             </Card>
           )}
 
-          <Card className="border-2 border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-sm">
-            <CardHeader><CardTitle className="text-lg font-bold flex items-center gap-2"><Layout className="h-5 w-5 text-primary" />Layout</CardTitle></CardHeader>
-            <CardContent className="space-y-6">
+          <Card className="border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 rounded-xl shadow-sm">
+            <CardHeader className="p-3.5 sm:p-4 border-b border-slate-100 dark:border-slate-800">
+              <CardTitle className="text-xs sm:text-sm font-bold flex items-center gap-1.5">
+                <Layout className="h-4 w-4 text-primary" />Layout
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-3.5 sm:p-4 space-y-3.5">
               <ImageUpload value={backgroundUrl} onChange={setBackgroundUrl} label="Background" folder="RGYCSP/SuperAdmin/Documents" />
               
-              <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Preferred Unit</Label>
-                <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
+              <div className="space-y-1">
+                <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Preferred Unit</Label>
+                <div className="flex bg-slate-100 dark:bg-slate-800 p-0.5 rounded-lg">
                   {(["px", "in", "mm"] as const).map((u) => (
                     <button
                       key={u}
                       onClick={() => setUnit(u)}
                       className={cn(
-                        "flex-1 py-1.5 text-xs font-bold rounded-lg transition-all",
-                        unit === u ? "bg-white dark:bg-slate-700 shadow-sm text-primary dark:text-white" : "text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300"
+                        "flex-1 py-1 text-xs font-semibold rounded-md transition-all",
+                        unit === u ? "bg-white dark:bg-slate-700 shadow-sm text-primary dark:text-white" : "text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
                       )}
                     >
                       {u.toUpperCase()}
@@ -1285,12 +1420,12 @@ export default function DocumentDesigner() {
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Page Size Preset</Label>
+              <div className="space-y-1">
+                <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Page Size Preset</Label>
                 <select 
                   value={pageSize}
                   onChange={(e) => handlePageSizeChange(e.target.value)}
-                  className="w-full h-11 bg-slate-50 border-2 border-slate-50 dark:bg-slate-800 dark:border-slate-800 dark:text-white rounded-xl font-bold px-3 focus:outline-none"
+                  className="w-full h-8 sm:h-9 bg-slate-50 border border-slate-200 dark:bg-slate-800/50 dark:border-slate-700 text-xs rounded-lg font-medium px-2.5 focus:outline-none"
                 >
                   <option value="CUSTOM">Custom Size</option>
                   {Object.keys(PAGE_PRESETS).map(key => (
@@ -1299,19 +1434,19 @@ export default function DocumentDesigner() {
                 </select>
               </div>
 
-              <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Orientation</Label>
+              <div className="space-y-1">
+                <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Orientation</Label>
                 <div className="flex gap-2">
                   <Button 
                     variant={orientation === "portrait" ? "default" : "outline"} 
-                    className="flex-1 rounded-xl font-bold h-10 dark:border-slate-800"
+                    className="flex-1 rounded-lg text-xs font-semibold h-8"
                     onClick={() => orientation !== "portrait" && toggleOrientation()}
                   >
                     Portrait
                   </Button>
                   <Button 
                     variant={orientation === "landscape" ? "default" : "outline"} 
-                    className="flex-1 rounded-xl font-bold h-10 dark:border-slate-800"
+                    className="flex-1 rounded-lg text-xs font-semibold h-8"
                     onClick={() => orientation !== "landscape" && toggleOrientation()}
                   >
                     Landscape
@@ -1319,9 +1454,9 @@ export default function DocumentDesigner() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4 pt-2">
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Canvas Width ({unit})</Label>
+              <div className="grid grid-cols-2 gap-2.5 pt-1">
+                <div className="space-y-1">
+                  <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Width ({unit})</Label>
                   <Input 
                     type="number" 
                     step="0.01"
@@ -1330,11 +1465,11 @@ export default function DocumentDesigner() {
                       setCanvasSize({ ...canvasSize, width: toPx(parseFloat(e.target.value) || 0, unit) });
                       setPageSize("CUSTOM");
                     }} 
-                    className="h-11 bg-slate-50 border-2 border-slate-50 dark:bg-slate-800 dark:border-slate-800 dark:text-white focus-visible:ring-0 rounded-xl font-bold" 
+                    className="h-8 bg-slate-50 border border-slate-200 dark:bg-slate-800/50 dark:border-slate-700 rounded-lg text-xs font-medium" 
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Canvas Height ({unit})</Label>
+                <div className="space-y-1">
+                  <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Height ({unit})</Label>
                   <Input 
                     type="number" 
                     step="0.01"
@@ -1343,7 +1478,7 @@ export default function DocumentDesigner() {
                       setCanvasSize({ ...canvasSize, height: toPx(parseFloat(e.target.value) || 0, unit) });
                       setPageSize("CUSTOM");
                     }} 
-                    className="h-11 bg-slate-50 border-2 border-slate-50 dark:bg-slate-800 dark:border-slate-800 dark:text-white focus-visible:ring-0 rounded-xl font-bold" 
+                    className="h-8 bg-slate-50 border border-slate-200 dark:bg-slate-800/50 dark:border-slate-700 rounded-lg text-xs font-medium" 
                   />
                 </div>
               </div>
@@ -1353,8 +1488,8 @@ export default function DocumentDesigner() {
 
         {/* Canvas Area */}
         <div className="xl:col-span-9 flex flex-col items-center sticky top-0 h-[100vh]">
-          <div className="w-full h-full overflow-auto p-10 bg-slate-100 dark:bg-zinc-950 rounded-[3rem] border-2 border-slate-200 dark:border-zinc-800 shadow-inner flex justify-start relative">
-            <div className="relative shadow-2xl shrink-0 m-auto" style={{ width: `${canvasSize.width}px`, height: `${canvasSize.height}px` }}>
+          <div className="w-full h-full overflow-auto p-6 sm:p-8 bg-slate-100/80 dark:bg-zinc-950 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-inner flex justify-start relative">
+            <div className="relative shadow-xl shrink-0 m-auto" style={{ width: `${canvasSize.width}px`, height: `${canvasSize.height}px` }}>
               <div 
                 ref={canvasRef}
                 className="relative bg-white overflow-hidden w-full h-full"
@@ -1363,8 +1498,8 @@ export default function DocumentDesigner() {
                   <img src={backgroundUrl || ""} crossOrigin="anonymous" alt="BG" className="absolute inset-0 w-full h-full object-cover pointer-events-none" />
                 ) : (
                   <div className="absolute inset-0 flex flex-col items-center justify-center" style={{ backgroundColor: "rgba(248, 250, 252, 0.5)", color: "#94a3b8" }}>
-                     <Layout className="w-32 h-32" style={{ opacity: 0.2 }} />
-                     <p className="font-black uppercase tracking-[0.2em] mt-4">Empty Canvas</p>
+                     <Layout className="w-24 h-24" style={{ opacity: 0.2 }} />
+                     <p className="font-bold uppercase tracking-widest mt-3 text-xs">Empty Canvas</p>
                   </div>
                 )}
 
@@ -1396,10 +1531,10 @@ export default function DocumentDesigner() {
             </div>
             </div>
           </div>
-          <div className="mt-8 flex items-center gap-8">
-            <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-primary" /><span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Drag to Move</span></div>
-            <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-blue-500" /><span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Select to Edit</span></div>
-            <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-green-500" /><span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">High-Res Print PDF</span></div>
+          <div className="mt-3 flex items-center gap-5 sm:gap-6">
+            <div className="flex items-center gap-1.5"><div className="w-1.5 h-1.5 rounded-full bg-primary" /><span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Drag to Move</span></div>
+            <div className="flex items-center gap-1.5"><div className="w-1.5 h-1.5 rounded-full bg-blue-500" /><span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Select to Edit</span></div>
+            <div className="flex items-center gap-1.5"><div className="w-1.5 h-1.5 rounded-full bg-green-500" /><span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">High-Res Print PDF</span></div>
           </div>
         </div>
       </div>

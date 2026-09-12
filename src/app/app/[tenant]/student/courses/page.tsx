@@ -25,20 +25,19 @@ export default async function StudentCoursesPage({
   const student = result.data as any;
   if (!student) redirect(await getServerTenantLink("/student/dashboard", tenant));
   const profile = student.studentProfile;
-  const currentCourse = profile?.batch?.course;
+  const currentCourse = profile?.course || profile?.batch?.course;
 
-  // Fetch other courses for discovery (Trending)
+  // Fetch other courses for discovery (Trending/Available in Center)
   const otherCourses = await db.course.findMany({
     where: { 
       workspaceId: workspace.id,
-      id: { not: currentCourse?.id || "" }
+      isActive: true,
+      ...(currentCourse?.id ? { id: { not: currentCourse.id } } : {})
     },
     orderBy: {
-      students: {
-        _count: 'desc'
-      }
+      title: 'asc'
     },
-    take: 3
+    take: 6
   });
 
   const settings = workspace.siteSettings as any;
@@ -50,6 +49,7 @@ export default async function StudentCoursesPage({
       profile={profile}
       settings={settings}
       tenant={tenant}
+      workspace={workspace}
     />
   );
 }

@@ -17,6 +17,7 @@ import {
   Building2,
   FileText,
   MoreHorizontal,
+  GraduationCap,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -91,54 +92,53 @@ export function StudentSidebar({
         )}
       >
         <div className={cn(
-          "h-24 flex items-center border-b border-white/5 transition-all duration-300",
-          isCollapsed ? "justify-center" : "px-8 justify-between"
+          "h-16 flex items-center border-b border-white/10 px-4 transition-all duration-300 shrink-0",
+          isCollapsed ? "justify-center px-2" : "justify-between"
         )}>
-          {!isCollapsed && (
-            <motion.div
-              initial={{ opacity: 0, x: -10 }}
-              animate={{ opacity: 1, x: 0 }}
-              className="flex items-center gap-4 overflow-hidden"
+          {isCollapsed ? (
+            <button
+              onClick={toggleSidebar}
+              title="Expand Sidebar"
+              className="h-10 w-10 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white border border-white/10 flex items-center justify-center transition-all shadow-sm group"
             >
-              <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center shadow-[0_0_20px_rgba(var(--primary-rgb),0.4)] shrink-0">
-                <Building2 className="h-6 w-6 text-primary-foreground" />
-              </div>
-              <div>
-                <span className="font-extrabold text-white tracking-tight text-xl whitespace-nowrap block leading-none">
-                  Dashboard
-                </span>
-                <span className="text-[10px] font-bold text-primary uppercase tracking-widest mt-1 block">
+              <ChevronRight className="h-5 w-5 group-hover:translate-x-0.5 transition-transform" />
+            </button>
+          ) : (
+            <>
+              <div className="flex items-center gap-3 overflow-hidden">
+                <div className="h-10 w-10 rounded-xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center justify-center shadow-xs shrink-0">
+                  <GraduationCap className="h-5.5 w-5.5" />
+                </div>
+                <span className="font-bold text-white tracking-tight text-base truncate">
                   Student Portal
                 </span>
               </div>
-            </motion.div>
-          )}
 
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={toggleSidebar}
-            className={cn(
-              "hover:bg-white/5 text-slate-500 hover:text-white shrink-0 transition-all",
-              isCollapsed ? "h-12 w-12" : "h-10 w-10"
-            )}
-          >
-            {isCollapsed ? <ChevronRight className="h-6 w-6" /> : <ChevronLeft className="h-4 w-4" />}
-          </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={toggleSidebar}
+                className="h-8 w-8 rounded-lg hover:bg-white/5 text-slate-400 hover:text-white shrink-0 transition-all"
+                title="Collapse Sidebar"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+            </>
+          )}
         </div>
 
-        <nav className={cn("flex-1 py-6 space-y-2 overflow-y-auto overflow-x-hidden", isCollapsed ? "px-2 scrollbar-hide" : "px-4 custom-scrollbar")}>
+        <nav className={cn("flex-1 py-4 space-y-1.5 overflow-y-auto overflow-x-hidden", isCollapsed ? "px-2 scrollbar-hide" : "px-4 custom-scrollbar")}>
           {navItems.map((item) => {
             const isActive = isActivePath(pathname, item.href);
             return (
               <TenantNavLink key={item.name} href={item.href} className="block w-full">
                 <div
                   className={cn(
-                    "flex items-center gap-3 transition-all duration-300 group relative overflow-hidden",
+                    "flex items-center gap-3 transition-all duration-200 group relative overflow-hidden",
                     isActive 
-                      ? "bg-primary text-primary-foreground shadow-lg" 
+                      ? "bg-primary text-primary-foreground shadow-lg font-semibold" 
                       : "hover:bg-white/5 hover:text-white text-slate-400",
-                    isCollapsed ? "justify-center h-10 w-10 mx-auto rounded-xl" : "px-3 py-3 rounded-xl"
+                    isCollapsed ? "justify-center h-10 w-10 mx-auto rounded-xl" : "px-3 py-2.5 rounded-xl"
                   )}
                 >
                   <item.icon className={cn("h-5 w-5 flex-shrink-0", isActive ? "text-primary-foreground" : "group-hover:text-white")} />
@@ -185,8 +185,8 @@ export function StudentSidebar({
         </div>
       </motion.aside>
 
-      {/* Mobile Bottom Navigation */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-[60] bg-slate-900/95 backdrop-blur-sm border-t border-white/10 pb-safe pb-4 pt-2">
+      {/* Mobile Bottom Navigation (Native App Feeling) */}
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-[60] bg-white/85 dark:bg-slate-900/90 backdrop-blur-xl border-t border-slate-200/80 dark:border-white/10 pb-[max(env(safe-area-inset-bottom),12px)] pt-2 shadow-[0_-8px_30px_rgba(0,0,0,0.06)] dark:shadow-[0_-8px_30px_rgba(0,0,0,0.3)]">
         <div className="flex items-center justify-around px-2">
           {mainNavItems.map((item) => {
             const isActive = isActivePath(pathname, item.href);
@@ -194,14 +194,16 @@ export function StudentSidebar({
             return (
               <TenantNavLink key={item.name} href={item.href} className="flex flex-col items-center gap-1 w-16 relative">
                 <div className={cn(
-                  "p-2 rounded-xl transition-all duration-300 flex items-center justify-center",
-                  isActive ? "bg-primary text-primary-foreground shadow-lg" : "text-slate-400"
+                  "p-2 rounded-2xl transition-all duration-300 flex items-center justify-center",
+                  isActive 
+                    ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 dark:bg-emerald-500/20 shadow-xs" 
+                    : "text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
                 )}>
-                  <item.icon className="h-5 w-5" />
+                  <item.icon className={cn("h-5 w-5 transition-transform duration-200", isActive && "scale-110")} />
                 </div>
                 <span className={cn(
-                  "text-[10px] font-medium transition-colors text-center w-full truncate px-1",
-                  isActive ? "text-primary" : "text-slate-500"
+                  "text-[10px] tracking-tight transition-colors text-center w-full truncate px-1",
+                  isActive ? "font-bold text-emerald-600 dark:text-emerald-400" : "font-medium text-slate-500 dark:text-slate-400"
                 )}>
                   {item.name}
                 </span>
@@ -211,14 +213,14 @@ export function StudentSidebar({
           
           <button onClick={toggleMore} className="flex flex-col items-center gap-1 w-16 relative">
             <div className={cn(
-              "p-2 rounded-xl transition-all duration-300 flex items-center justify-center",
-              isMoreOpen ? "bg-white/10 text-white" : "text-slate-400"
+              "p-2 rounded-2xl transition-all duration-300 flex items-center justify-center",
+              isMoreOpen ? "bg-slate-100 dark:bg-white/10 text-slate-900 dark:text-white" : "text-slate-500 dark:text-slate-400"
             )}>
               <MoreHorizontal className="h-5 w-5" />
             </div>
             <span className={cn(
               "text-[10px] font-medium transition-colors text-center w-full truncate px-1",
-              isMoreOpen ? "text-white" : "text-slate-500"
+              isMoreOpen ? "font-bold text-slate-900 dark:text-white" : "text-slate-500 dark:text-slate-400"
             )}>
               More
             </span>
@@ -226,7 +228,7 @@ export function StudentSidebar({
         </div>
       </div>
 
-      {/* Mobile More Drawer */}
+      {/* Mobile More Drawer (Native Bottom Sheet) */}
       <AnimatePresence>
         {isMoreOpen && (
           <>
@@ -235,34 +237,36 @@ export function StudentSidebar({
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={toggleMore}
-              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[55] lg:hidden"
+              className="fixed inset-0 bg-black/50 backdrop-blur-xs z-[65] lg:hidden"
             />
             <motion.div
               initial={{ y: "100%" }}
               animate={{ y: 0 }}
               exit={{ y: "100%" }}
-              transition={{ type: "spring", stiffness: 300, damping: 30 }}
-              className="fixed bottom-[76px] left-0 right-0 z-[55] bg-slate-900 border-t border-white/10 rounded-t-3xl overflow-hidden flex flex-col max-h-[70vh] lg:hidden shadow-[0_-10px_40px_rgba(0,0,0,0.5)]"
+              transition={{ type: "spring", stiffness: 320, damping: 32 }}
+              className="fixed bottom-[72px] left-0 right-0 z-[65] bg-white dark:bg-slate-900 border-t border-slate-200/80 dark:border-white/10 rounded-t-[28px] overflow-hidden flex flex-col max-h-[70vh] lg:hidden shadow-[0_-12px_40px_rgba(0,0,0,0.15)] dark:shadow-[0_-12px_40px_rgba(0,0,0,0.5)]"
             >
-              <div className="w-12 h-1.5 bg-slate-800 rounded-full mx-auto mt-4 mb-2" />
-              <div className="flex-1 overflow-y-auto p-4 space-y-2 custom-scrollbar">
+              <div className="w-10 h-1.5 bg-slate-300 dark:bg-slate-700 rounded-full mx-auto mt-3 mb-2" />
+              <div className="flex-1 overflow-y-auto p-4 space-y-1.5 custom-scrollbar">
                 {moreNavItems.map((item) => {
                   const isActive = isActivePath(pathname, item.href);
                   
                   return (
                     <TenantNavLink key={item.name} href={item.href} className="block w-full">
                       <div className={cn(
-                        "flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-300",
-                        isActive ? "bg-primary text-primary-foreground shadow-md" : "hover:bg-white/5 text-slate-300"
+                        "flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200",
+                        isActive 
+                          ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 font-semibold" 
+                          : "hover:bg-slate-100 dark:hover:bg-white/5 text-slate-700 dark:text-slate-300"
                       )}>
-                        <item.icon className="h-5 w-5" />
-                        <span className="font-medium">{item.name}</span>
+                        <item.icon className="h-5 w-5 shrink-0" />
+                        <span className="font-medium text-sm">{item.name}</span>
                       </div>
                     </TenantNavLink>
                   );
                 })}
               </div>
-              <div className="p-4 border-t border-white/5 bg-slate-900">
+              <div className="p-4 border-t border-slate-100 dark:border-white/5 bg-slate-50/50 dark:bg-slate-900/50">
                 <div 
                   onClick={async () => {
                     const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "localhost:3000";
@@ -270,10 +274,10 @@ export function StudentSidebar({
                     await signOut({ redirect: false });
                     window.location.href = `${protocol}://${rootDomain}/`;
                   }}
-                  className="flex items-center gap-3 px-4 py-3.5 rounded-xl hover:bg-red-500/10 bg-red-500/5 text-red-500 transition-all cursor-pointer"
+                  className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-red-500/10 bg-red-500/5 text-red-600 dark:text-red-400 transition-all cursor-pointer font-medium text-sm"
                 >
-                  <LogOut className="h-5 w-5" />
-                  <span className="font-medium">Logout</span>
+                  <LogOut className="h-5 w-5 shrink-0" />
+                  <span>Logout</span>
                 </div>
               </div>
             </motion.div>

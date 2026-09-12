@@ -1,11 +1,25 @@
 "use client";
 
 import React, { useState } from "react";
-import { CreditCard, History, Settings2, Receipt, Upload, Loader2, CheckCircle2, ShieldCheck, Download, Search, Edit3 } from "lucide-react";
+import { 
+  CreditCard, 
+  History, 
+  Settings2, 
+  Receipt, 
+  Upload, 
+  Loader2, 
+  CheckCircle2, 
+  ShieldCheck, 
+  Users,
+  QrCode,
+  Building2,
+  AlertCircle
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { updateFranchisePaymentConfig } from "@/app/actions/payments";
 import { toast } from "sonner";
@@ -15,11 +29,12 @@ import MakePaymentTab from "./MakePaymentTab";
 import PaymentRequestsTab from "./PaymentRequestsTab";
 import PaymentReportsTab from "./PaymentReportsTab";
 import { AdminPageHeader } from "@/components/layout/AdminPageHeader";
+import { StatCard } from "@/components/dashboard/StatCard";
 
 export default function FeesManagementClient({ 
   workspaceId,
-  students,
-  pendingFees,
+  students = [],
+  pendingFees = [],
   paymentConfig,
   workspaceInfo
 }: { 
@@ -29,7 +44,7 @@ export default function FeesManagementClient({
   paymentConfig: any;
   workspaceInfo?: any;
 }) {
-  const [activeTab, setActiveTab] = useState("make_payment");
+  const [activeTab, setActiveTab] = useState<"make_payment" | "requests" | "reports" | "config">("make_payment");
 
   const [configForm, setConfigForm] = useState({
     upiId: paymentConfig?.upiId || "",
@@ -60,125 +75,193 @@ export default function FeesManagementClient({
     }
   };
 
+  const pendingCount = pendingFees?.length || 0;
+  const isUpiConfigured = !!(configForm.upiId || configForm.qrCodeUrl);
+  const isBankConfigured = !!(configForm.accountNumber && configForm.ifscCode);
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-5 pb-8 w-full mx-auto">
       <AdminPageHeader 
         title="Fees Management" 
-        description="Manage student fees, configure payment methods, and view comprehensive payment reports."
+        description="Manage student fees, verify payment proofs, and configure payment methods."
       />
 
-      {/* Sub Tabs */}
-      <div className="flex flex-nowrap overflow-x-auto no-scrollbar gap-2 p-2 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm max-w-full">
+      {/* Top Metric Cards Grid (Rule 7.2 - 1-to-1 with sub tabs) */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <StatCard
+          label="Make Payment"
+          value={students.length}
+          description="Enrolled students"
+          icon={<CreditCard className="h-5 w-5 text-blue-500" />}
+          isActive={activeTab === "make_payment"}
+          onClick={() => setActiveTab("make_payment")}
+        />
+
+        <StatCard
+          label="Verification Requests"
+          value={pendingCount}
+          description={pendingCount > 0 ? "Proofs awaiting review" : "All proofs verified"}
+          icon={<Receipt className="h-5 w-5 text-amber-500" />}
+          color={pendingCount > 0 ? "#f59e0b" : undefined}
+          isActive={activeTab === "requests"}
+          onClick={() => setActiveTab("requests")}
+        />
+
+        <StatCard
+          label="Payments Reports"
+          value="Audit & Logs"
+          description="Collections & receipts"
+          icon={<History className="h-5 w-5 text-indigo-500" />}
+          isActive={activeTab === "reports"}
+          onClick={() => setActiveTab("reports")}
+        />
+
+        <StatCard
+          label="Payments Config"
+          value={isUpiConfigured ? "Configured" : "Not Set"}
+          description={isUpiConfigured ? (isBankConfigured ? "UPI & Bank Active" : "UPI Active") : "Setup payment methods"}
+          icon={<Settings2 className={cn("h-5 w-5", isUpiConfigured ? "text-emerald-500" : "text-slate-400")} />}
+          color={isUpiConfigured ? "#10b981" : undefined}
+          isActive={activeTab === "config"}
+          onClick={() => setActiveTab("config")}
+        />
+      </div>
+
+      {/* Sub Tabs Pill Navigation (Rule 7.3) */}
+      <div className="flex flex-nowrap overflow-x-auto no-scrollbar gap-1.5 p-1.5 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm max-w-full">
         <button
           onClick={() => setActiveTab("make_payment")}
           className={cn(
-            "flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 whitespace-nowrap shrink-0",
+            "flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-medium shrink-0 whitespace-nowrap transition-all",
             activeTab === "make_payment"
-              ? "bg-slate-100 dark:bg-slate-800 text-primary shadow-inner"
+              ? "bg-slate-100 dark:bg-slate-800 text-primary dark:text-white font-semibold shadow-inner"
               : "text-slate-500 hover:text-slate-900 hover:bg-slate-50 dark:hover:text-white dark:hover:bg-slate-800/50"
           )}
         >
-          <CreditCard className="w-4 h-4" /> Make Payment
+          <CreditCard className="w-3.5 h-3.5" /> Make Payment
         </button>
+
         <button
           onClick={() => setActiveTab("requests")}
           className={cn(
-            "flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 whitespace-nowrap shrink-0",
+            "flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-medium shrink-0 whitespace-nowrap transition-all",
             activeTab === "requests"
-              ? "bg-red-100 dark:bg-red-900/40 text-red-600 dark:text-red-500 shadow-inner"
+              ? "bg-amber-100 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 font-semibold shadow-inner"
               : "text-slate-500 hover:text-slate-900 hover:bg-slate-50 dark:hover:text-white dark:hover:bg-slate-800/50"
           )}
         >
-          <Receipt className="w-4 h-4" /> Payment Requests
-          {pendingFees && pendingFees.length > 0 && (
-            <span className="ml-1 h-5 min-w-5 px-1.5 bg-red-500 text-white text-[10px] font-black rounded flex items-center justify-center animate-pulse shadow-[0_0_10px_rgba(239,68,68,0.5)]">
-              {pendingFees.length}
+          <Receipt className="w-3.5 h-3.5" /> Payment Requests
+          {pendingCount > 0 && (
+            <span className="ml-1 h-4 min-w-4 px-1 bg-amber-500 text-white text-[9px] font-bold rounded flex items-center justify-center animate-pulse">
+              {pendingCount}
             </span>
           )}
         </button>
+
         <button
           onClick={() => setActiveTab("reports")}
           className={cn(
-            "flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 whitespace-nowrap shrink-0",
+            "flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-medium shrink-0 whitespace-nowrap transition-all",
             activeTab === "reports"
-              ? "bg-slate-100 dark:bg-slate-800 text-primary shadow-inner"
+              ? "bg-slate-100 dark:bg-slate-800 text-primary dark:text-white font-semibold shadow-inner"
               : "text-slate-500 hover:text-slate-900 hover:bg-slate-50 dark:hover:text-white dark:hover:bg-slate-800/50"
           )}
         >
-          <History className="w-4 h-4" /> Payments Reports
+          <History className="w-3.5 h-3.5" /> Payments Reports
         </button>
+
         <button
           onClick={() => setActiveTab("config")}
           className={cn(
-            "flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 whitespace-nowrap shrink-0",
+            "flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-medium shrink-0 whitespace-nowrap transition-all",
             activeTab === "config"
-              ? "bg-slate-100 dark:bg-slate-800 text-primary shadow-inner"
+              ? "bg-slate-100 dark:bg-slate-800 text-primary dark:text-white font-semibold shadow-inner"
               : "text-slate-500 hover:text-slate-900 hover:bg-slate-50 dark:hover:text-white dark:hover:bg-slate-800/50"
           )}
         >
-          <Settings2 className="w-4 h-4" /> Payments Config
+          <Settings2 className="w-3.5 h-3.5" /> Payments Config
         </button>
       </div>
 
-      {/* Content */}
-      <div className="bg-white dark:bg-zinc-950 p-6 rounded-3xl border border-border/40 shadow-sm min-h-[500px]">
-        {activeTab === "requests" && (
-          <PaymentRequestsTab workspaceId={workspaceId} pendingFees={pendingFees} />
+      {/* Tab Content Panes */}
+      <div>
+        {activeTab === "make_payment" && (
+          <MakePaymentTab 
+            workspaceId={workspaceId} 
+            students={students} 
+            workspaceInfo={workspaceInfo} 
+          />
         )}
 
-        {activeTab === "make_payment" && (
-          <MakePaymentTab workspaceId={workspaceId} students={students} workspaceInfo={workspaceInfo} />
+        {activeTab === "requests" && (
+          <PaymentRequestsTab 
+            workspaceId={workspaceId} 
+            pendingFees={pendingFees} 
+          />
         )}
 
         {activeTab === "reports" && (
-          <PaymentReportsTab workspaceId={workspaceId} workspaceInfo={workspaceInfo} />
+          <PaymentReportsTab 
+            workspaceId={workspaceId} 
+            workspaceInfo={workspaceInfo} 
+          />
         )}
 
         {activeTab === "config" && (
-          <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <div>
-              <h3 className="text-xl font-black text-slate-900 dark:text-white flex items-center gap-2 mb-2">
-                <Settings2 className="w-5 h-5 text-primary" /> Setup Payment Methods
-              </h3>
-              <p className="text-muted-foreground text-sm">Configure how students can pay you offline via their portal.</p>
-            </div>
+          <div className="max-w-4xl mx-auto space-y-4 sm:space-y-5 animate-in fade-in duration-300">
+            <Card className="border border-slate-200/80 dark:border-slate-800 rounded-xl shadow-sm bg-white dark:bg-slate-900 overflow-hidden">
+              <CardHeader className="p-3.5 sm:p-4 border-b border-slate-100 dark:border-slate-800">
+                <div className="flex items-center gap-2">
+                  <Settings2 className="w-4 h-4 text-primary" />
+                  <div>
+                    <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+                      Student Offline Payment Configuration
+                    </h3>
+                    <p className="text-xs text-slate-500">
+                      Configure your UPI ID, QR code, and bank details shown to students when making offline payments.
+                    </p>
+                  </div>
+                </div>
+              </CardHeader>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              {/* UPI & QR Code */}
-              <div className="space-y-6">
-                <div className="p-6 rounded-2xl bg-slate-50 dark:bg-zinc-900/50 border border-border">
-                  <h4 className="font-bold text-sm uppercase tracking-widest text-slate-500 mb-4 flex items-center gap-2">
-                    <ShieldCheck className="w-4 h-4" /> UPI & QR Details
-                  </h4>
-                  
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <Label>UPI ID</Label>
+              <CardContent className="p-3.5 sm:p-5 space-y-5">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5">
+                  {/* UPI & QR Code Settings */}
+                  <div className="p-3.5 sm:p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/60 space-y-3.5">
+                    <h4 className="font-bold text-[10px] uppercase tracking-[0.12em] text-slate-400 flex items-center gap-1.5">
+                      <ShieldCheck className="w-3.5 h-3.5 text-primary" /> UPI & QR Details
+                    </h4>
+                    
+                    <div className="space-y-1">
+                      <Label className="text-xs font-medium">Franchise UPI ID</Label>
                       <Input 
                         value={configForm.upiId} 
                         onChange={e => setConfigForm({...configForm, upiId: e.target.value})}
-                        placeholder="e.g. 9876543210@ybl"
-                        className="bg-white dark:bg-zinc-900"
+                        placeholder="e.g. 9876543210@upi or franchise@ybl"
+                        className="h-8 sm:h-9 text-xs rounded-lg bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700"
                       />
                     </div>
                     
-                    <div className="space-y-2">
-                      <Label>Payment QR Code</Label>
-                      <div className="flex flex-col items-center gap-4">
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-medium">Payment QR Code</Label>
+                      <div className="flex flex-col items-center justify-center p-3 rounded-xl border border-dashed border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900">
                         {configForm.qrCodeUrl ? (
-                          <div className="relative w-40 h-40 rounded-xl overflow-hidden border-2 border-primary/20">
-                            <Image src={configForm.qrCodeUrl} alt="QR Code" fill className="object-cover" />
-                            <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
+                          <div className="flex flex-col items-center gap-2">
+                            <div className="relative w-36 h-36 rounded-lg overflow-hidden border border-slate-200 dark:border-slate-700 bg-white">
+                              <Image src={configForm.qrCodeUrl} alt="QR Code" fill className="object-contain p-1" />
+                            </div>
+                            <div className="w-full">
                               <ImageUpload
                                 value={null}
                                 onChange={handleQrUpload}
                                 folder={`RGYCSP/${workspaceId}/qr-codes`}
-                                label="Change QR"
+                                label="Change QR Code"
                               />
                             </div>
                           </div>
                         ) : (
-                          <div className="w-full">
+                          <div className="w-full text-center py-4">
+                            <QrCode className="w-8 h-8 text-slate-300 dark:text-slate-600 mx-auto mb-2" />
                             <ImageUpload
                               value={null}
                               onChange={handleQrUpload}
@@ -190,50 +273,75 @@ export default function FeesManagementClient({
                       </div>
                     </div>
                   </div>
-                </div>
-              </div>
 
-              {/* Bank Details */}
-              <div className="space-y-6">
-                <div className="p-6 rounded-2xl bg-slate-50 dark:bg-zinc-900/50 border border-border">
-                  <h4 className="font-bold text-sm uppercase tracking-widest text-slate-500 mb-4">Bank Transfer Details</h4>
-                  
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <Label>Bank Name</Label>
-                      <Input value={configForm.bankName} onChange={e => setConfigForm({...configForm, bankName: e.target.value})} className="bg-white dark:bg-zinc-900" />
+                  {/* Bank Transfer Details */}
+                  <div className="p-3.5 sm:p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/60 space-y-3">
+                    <h4 className="font-bold text-[10px] uppercase tracking-[0.12em] text-slate-400 flex items-center gap-1.5">
+                      <Building2 className="w-3.5 h-3.5 text-primary" /> Bank Transfer Details
+                    </h4>
+                    
+                    <div className="space-y-1">
+                      <Label className="text-xs font-medium">Bank Name</Label>
+                      <Input 
+                        value={configForm.bankName} 
+                        onChange={e => setConfigForm({...configForm, bankName: e.target.value})} 
+                        placeholder="e.g. State Bank of India"
+                        className="h-8 sm:h-9 text-xs rounded-lg bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700" 
+                      />
                     </div>
-                    <div className="space-y-2">
-                      <Label>Account Holder Name</Label>
-                      <Input value={configForm.accountHolderName} onChange={e => setConfigForm({...configForm, accountHolderName: e.target.value})} className="bg-white dark:bg-zinc-900" />
+                    <div className="space-y-1">
+                      <Label className="text-xs font-medium">Account Holder Name</Label>
+                      <Input 
+                        value={configForm.accountHolderName} 
+                        onChange={e => setConfigForm({...configForm, accountHolderName: e.target.value})} 
+                        placeholder="e.g. Acme Educational Institute"
+                        className="h-8 sm:h-9 text-xs rounded-lg bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700" 
+                      />
                     </div>
-                    <div className="space-y-2">
-                      <Label>Account Number</Label>
-                      <Input value={configForm.accountNumber} onChange={e => setConfigForm({...configForm, accountNumber: e.target.value})} className="bg-white dark:bg-zinc-900" />
+                    <div className="space-y-1">
+                      <Label className="text-xs font-medium">Account Number</Label>
+                      <Input 
+                        value={configForm.accountNumber} 
+                        onChange={e => setConfigForm({...configForm, accountNumber: e.target.value})} 
+                        placeholder="e.g. 123456789012"
+                        className="h-8 sm:h-9 text-xs rounded-lg bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700" 
+                      />
                     </div>
-                    <div className="space-y-2">
-                      <Label>IFSC Code</Label>
-                      <Input value={configForm.ifscCode} onChange={e => setConfigForm({...configForm, ifscCode: e.target.value})} className="bg-white dark:bg-zinc-900" />
+                    <div className="space-y-1">
+                      <Label className="text-xs font-medium">IFSC Code</Label>
+                      <Input 
+                        value={configForm.ifscCode} 
+                        onChange={e => setConfigForm({...configForm, ifscCode: e.target.value.toUpperCase()})} 
+                        placeholder="e.g. SBIN0001234"
+                        className="h-8 sm:h-9 text-xs rounded-lg bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 uppercase" 
+                      />
                     </div>
                   </div>
                 </div>
-              </div>
-            </div>
 
-            <div className="space-y-2">
-              <Label>Payment Instructions for Students</Label>
-              <textarea 
-                value={configForm.instructions} 
-                onChange={e => setConfigForm({...configForm, instructions: e.target.value})}
-                className="w-full h-24 p-4 rounded-xl border border-input bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring text-sm"
-                placeholder="Enter any specific instructions for students when paying..."
-              />
-            </div>
+                {/* Instructions */}
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-medium">Payment Instructions for Students</Label>
+                  <textarea 
+                    value={configForm.instructions} 
+                    onChange={e => setConfigForm({...configForm, instructions: e.target.value})}
+                    className="w-full h-20 p-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary text-xs placeholder:text-slate-400"
+                    placeholder="Provide instructions for students, e.g. 'Please mention your enrollment number in the transfer remarks and upload the payment receipt screenshot.'"
+                  />
+                </div>
 
-            <Button onClick={handleSaveConfig} disabled={isSaving} className="w-full h-14 rounded-xl font-bold text-lg">
-              {isSaving ? <Loader2 className="w-5 h-5 mr-2 animate-spin" /> : <CheckCircle2 className="w-5 h-5 mr-2" />}
-              Save Payment Configuration
-            </Button>
+                <div className="flex justify-end pt-1">
+                  <Button 
+                    onClick={handleSaveConfig} 
+                    disabled={isSaving} 
+                    className="h-8 sm:h-9 px-4 rounded-lg font-semibold text-xs gap-1.5"
+                  >
+                    {isSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
+                    Save Payment Configuration
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         )}
       </div>

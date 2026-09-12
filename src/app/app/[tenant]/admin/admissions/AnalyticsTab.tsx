@@ -53,14 +53,14 @@ export default function AnalyticsTab({ workspaceId, applications }: { workspaceI
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm">
-        <div className="flex items-center gap-4">
-          <label className="text-sm font-medium text-slate-500">Filter by Year:</label>
+    <div className="space-y-4 sm:space-y-5">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white dark:bg-slate-900 p-3 sm:p-3.5 rounded-xl border border-slate-200/80 dark:border-slate-800 shadow-sm">
+        <div className="flex items-center gap-2.5">
+          <label className="text-xs font-semibold text-slate-500">Filter by Year:</label>
           <select 
             value={selectedYear} 
             onChange={(e) => setSelectedYear(Number(e.target.value))}
-            className="p-2 border rounded-xl text-sm font-bold bg-slate-50 dark:bg-slate-800 dark:border-slate-700"
+            className="h-8 sm:h-9 px-2.5 border rounded-lg text-xs font-semibold bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700/60"
           >
             {availableYears.map(y => <option key={y} value={y}>{y}</option>)}
             {!availableYears.includes(new Date().getFullYear()) && (
@@ -68,19 +68,19 @@ export default function AnalyticsTab({ workspaceId, applications }: { workspaceI
             )}
           </select>
         </div>
-        <Button onClick={downloadReport} className="rounded-xl">
-          <Download className="w-4 h-4 mr-2" /> Download Report
+        <Button onClick={downloadReport} className="h-8 sm:h-9 px-3 rounded-lg text-xs font-semibold gap-1.5 shadow-xs bg-primary text-primary-foreground">
+          <Download className="w-3.5 h-3.5" /> Download Report
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm col-span-1 flex flex-col items-center justify-center">
-          <h3 className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-4 w-full">Enrollment Sources</h3>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-4">
+        <div className="bg-white dark:bg-slate-900 p-3.5 sm:p-4 rounded-xl border border-slate-200/80 dark:border-slate-800 shadow-sm col-span-1 flex flex-col items-center justify-center">
+          <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.12em] mb-3 w-full">Enrollment Sources</h3>
           {pieData.length > 0 ? (
-            <div className="w-full h-[250px]">
+            <div className="w-full h-[220px]">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
-                  <Pie data={pieData} cx="50%" cy="50%" innerRadius={60} outerRadius={80} paddingAngle={5} dataKey="value">
+                  <Pie data={pieData} cx="50%" cy="50%" innerRadius={50} outerRadius={70} paddingAngle={5} dataKey="value">
                     {pieData.map((entry, index) => <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />)}
                   </Pie>
                   <Tooltip />
@@ -89,18 +89,18 @@ export default function AnalyticsTab({ workspaceId, applications }: { workspaceI
               </ResponsiveContainer>
             </div>
           ) : (
-            <div className="flex items-center justify-center h-[250px] text-muted-foreground">No data for {selectedYear}</div>
+            <div className="flex items-center justify-center h-[220px] text-xs text-muted-foreground">No data for {selectedYear}</div>
           )}
         </div>
 
-        <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm col-span-2">
-           <h3 className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-4">Monthly Enrollments ({selectedYear})</h3>
-           <div className="w-full h-[300px]">
+        <div className="bg-white dark:bg-slate-900 p-3.5 sm:p-4 rounded-xl border border-slate-200/80 dark:border-slate-800 shadow-sm col-span-2">
+           <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.12em] mb-3">Monthly Enrollments ({selectedYear})</h3>
+           <div className="w-full h-[260px]">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={stats.monthlyCounts}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                  <XAxis dataKey="name" axisLine={false} tickLine={false} />
-                  <YAxis axisLine={false} tickLine={false} />
+                  <XAxis dataKey="name" axisLine={false} tickLine={false} textAnchor="end" tick={{ fontSize: 11 }} />
+                  <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11 }} />
                   <Tooltip cursor={{fill: 'transparent'}} />
                   <Legend />
                   <Bar dataKey="Online" stackId="a" fill="#3b82f6" radius={[0, 0, 4, 4]} />

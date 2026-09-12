@@ -261,16 +261,16 @@ export function StateManagerClient({ initialManagers, franchises, allWithdrawals
   const renderPagination = (currentPage: number, totalPages: number, setPage: (p: number) => void) => {
     if (totalPages <= 1) return null;
     return (
-      <div className="flex items-center justify-between px-6 py-4 border-t border-slate-50 dark:border-slate-800/50 bg-slate-50/50 dark:bg-slate-800/20">
-        <div className="text-sm font-medium text-slate-500">
+      <div className="flex items-center justify-between px-4 py-2.5 border-t border-slate-50 dark:border-slate-800/50 bg-slate-50/50 dark:bg-slate-800/20">
+        <div className="text-xs font-medium text-slate-500">
           Page {currentPage} of {totalPages}
         </div>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={() => setPage(Math.max(1, currentPage - 1))} disabled={currentPage === 1} className="h-9 px-3 rounded-xl border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-sm">
-            <ChevronLeft className="h-4 w-4" />
+        <div className="flex items-center gap-1.5">
+          <Button variant="outline" size="sm" onClick={() => setPage(Math.max(1, currentPage - 1))} disabled={currentPage === 1} className="h-7 px-2 rounded-md border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-sm">
+            <ChevronLeft className="h-3.5 w-3.5" />
           </Button>
-          <Button variant="outline" size="sm" onClick={() => setPage(Math.min(totalPages, currentPage + 1))} disabled={currentPage === totalPages} className="h-9 px-3 rounded-xl border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-sm">
-            <ChevronRight className="h-4 w-4" />
+          <Button variant="outline" size="sm" onClick={() => setPage(Math.min(totalPages, currentPage + 1))} disabled={currentPage === totalPages} className="h-7 px-2 rounded-md border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-sm">
+            <ChevronRight className="h-3.5 w-3.5" />
           </Button>
         </div>
       </div>
@@ -278,38 +278,38 @@ export function StateManagerClient({ initialManagers, franchises, allWithdrawals
   };
 
   return (
-    <div className="space-y-10 pb-12 w-full mx-auto">
+    <div className="space-y-6 pb-8 w-full mx-auto">
       <AdminPageHeader 
         title="State Managers" 
         description="Manage franchise referrals, set commission hierarchies, and monitor network growth."
       >
-        <div className="flex gap-3">
+        <div className="flex gap-2">
           <Button 
             variant="outline" 
-            className="h-11 px-6 rounded-xl gap-2 font-bold shadow-sm bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800"
+            className="h-8 px-3 rounded-lg gap-1.5 text-xs font-semibold shadow-sm bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800"
             onClick={() => toast.info("Report downloading will be available soon!")}
           >
-            <Download className="h-4 w-4" /> Download Report
+            <Download className="h-3.5 w-3.5" /> Download Report
           </Button>
         </div>
       </AdminPageHeader>
 
-      {/* Sync platform statistics */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      {/* Stats cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
         {[
           { label: "Total State Managers", value: managers.length, icon: Shield, color: "text-amber-500", bg: "bg-amber-500/10" },
           { label: "Independent Franchises", value: independentFranchisesCount, icon: Building2, color: "text-purple-500", bg: "bg-purple-500/10" },
           { label: "Referred Franchises", value: linkedFranchisesCount, icon: Network, color: "text-emerald-500", bg: "bg-emerald-500/10" },
         ].map((stat, i) => (
-          <Card key={i} className="border-none shadow-sm rounded-[2rem] overflow-hidden bg-white dark:bg-slate-900">
-            <CardContent className="p-6">
-              <div className="flex items-center gap-4">
-                <div className={cn("p-3.5 rounded-2xl", stat.bg)}>
-                  <stat.icon className={cn("h-6 w-6", stat.color)} />
+          <Card key={i} className="border border-slate-100 dark:border-white/5 shadow-sm rounded-xl overflow-hidden bg-white dark:bg-slate-900">
+            <CardContent className="p-3.5">
+              <div className="flex items-center gap-3">
+                <div className={cn("p-2.5 rounded-lg", stat.bg)}>
+                  <stat.icon className={cn("h-5 w-5", stat.color)} />
                 </div>
                 <div>
-                  <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-slate-400 mb-0.5">{stat.label}</p>
-                  <p className="text-3xl font-bold tracking-tight">{stat.value.toLocaleString()}</p>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-slate-400 mb-0.5">{stat.label}</p>
+                  <p className="text-2xl font-bold tracking-tight">{stat.value.toLocaleString()}</p>
                 </div>
               </div>
             </CardContent>
@@ -318,12 +318,12 @@ export function StateManagerClient({ initialManagers, franchises, allWithdrawals
       </div>
 
       {/* Tabs */}
-      <div className="flex items-center justify-between mt-2 flex-wrap gap-4">
-        <div className="flex p-1 bg-slate-100 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700/50 w-fit">
+      <div className="flex items-center justify-between flex-wrap gap-3">
+        <div className="flex p-0.5 bg-slate-100 dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700/50 w-fit">
           <button
             onClick={() => setActiveTab("managers")}
             className={cn(
-              "px-5 py-2 rounded-lg text-sm font-bold transition-all",
+              "px-3.5 py-1.5 rounded-md text-xs font-semibold transition-all",
               activeTab === "managers"
                 ? "bg-white dark:bg-slate-700 text-primary dark:text-white shadow-sm"
                 : "text-slate-500 hover:text-slate-900 dark:hover:text-white"
@@ -334,7 +334,7 @@ export function StateManagerClient({ initialManagers, franchises, allWithdrawals
           <button
             onClick={() => setActiveTab("hierarchy")}
             className={cn(
-              "px-5 py-2 rounded-lg text-sm font-bold transition-all",
+              "px-3.5 py-1.5 rounded-md text-xs font-semibold transition-all",
               activeTab === "hierarchy"
                 ? "bg-white dark:bg-slate-700 text-primary dark:text-white shadow-sm"
                 : "text-slate-500 hover:text-slate-900 dark:hover:text-white"
@@ -345,7 +345,7 @@ export function StateManagerClient({ initialManagers, franchises, allWithdrawals
           <button
             onClick={() => setActiveTab("withdrawals")}
             className={cn(
-              "px-5 py-2 rounded-lg text-sm font-bold transition-all relative",
+              "px-3.5 py-1.5 rounded-md text-xs font-semibold transition-all relative",
               activeTab === "withdrawals"
                 ? "bg-white dark:bg-slate-700 text-primary dark:text-white shadow-sm"
                 : "text-slate-500 hover:text-slate-900 dark:hover:text-white"
@@ -353,7 +353,7 @@ export function StateManagerClient({ initialManagers, franchises, allWithdrawals
           >
             Pending Withdrawals
             {pendingWithdrawals.length > 0 && (
-              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-full">
+              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[9px] w-4 h-4 flex items-center justify-center rounded-full">
                 {pendingWithdrawals.length}
               </span>
             )}
@@ -362,30 +362,30 @@ export function StateManagerClient({ initialManagers, franchises, allWithdrawals
       </div>
 
       {activeTab === "managers" && (
-        <Card className="border-none shadow-xl shadow-slate-200/50 dark:shadow-none bg-white dark:bg-slate-900 rounded-[2.5rem] overflow-hidden transition-all duration-500">
-          <CardHeader className="p-6 md:p-8 border-b border-slate-50 dark:border-slate-800/50">
-            <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-              <div className="relative w-full md:max-w-[450px] group">
-                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                  <Search className="h-4 w-4 text-slate-400" />
+        <Card className="border border-slate-100 dark:border-white/5 shadow-sm bg-white dark:bg-slate-900 rounded-xl overflow-hidden">
+          <CardHeader className="px-4 py-3 border-b border-slate-50 dark:border-slate-800/50">
+            <div className="flex flex-col md:flex-row items-center justify-between gap-3">
+              <div className="relative w-full md:max-w-sm group">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Search className="h-3.5 w-3.5 text-slate-400" />
                 </div>
                 <Input 
                   placeholder="Search state managers by name or ID..." 
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-11 pr-4 bg-slate-50 dark:bg-slate-800/40 border-none rounded-2xl h-14 font-bold text-sm transition-all focus-visible:ring-2 focus-visible:ring-primary/20 placeholder:text-slate-400 placeholder:font-medium" 
+                  className="pl-9 pr-4 bg-slate-50 dark:bg-slate-800/40 border-slate-200 dark:border-slate-700 rounded-lg h-8 text-xs font-medium transition-all focus-visible:ring-2 focus-visible:ring-primary/20 placeholder:text-slate-400 placeholder:text-xs" 
                 />
               </div>
-              <div className="flex items-center gap-3 self-end md:self-auto w-full md:w-auto">
-                <span className="text-xs font-bold text-slate-400 uppercase tracking-widest hidden md:inline">Show</span>
+              <div className="flex items-center gap-2 self-end md:self-auto w-full md:w-auto">
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest hidden md:inline">Show</span>
                 <Select value={itemsPerPage.toString()} onValueChange={(v) => setItemsPerPage(Number(v))}>
-                  <SelectTrigger className="w-24 h-14 bg-slate-50 dark:bg-slate-800/40 border-none rounded-2xl font-bold">
+                  <SelectTrigger className="w-20 h-8 bg-slate-50 dark:bg-slate-800/40 border-slate-200 dark:border-slate-700 rounded-lg text-xs font-semibold">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent className="rounded-xl border border-slate-200 dark:border-slate-700 shadow-xl">
-                    <SelectItem value="10" className="rounded-lg font-bold">10</SelectItem>
-                    <SelectItem value="20" className="rounded-lg font-bold">20</SelectItem>
-                    <SelectItem value="50" className="rounded-lg font-bold">50</SelectItem>
+                  <SelectContent className="rounded-lg border border-slate-200 dark:border-slate-700 shadow-xl">
+                    <SelectItem value="10" className="rounded-md text-xs font-semibold">10</SelectItem>
+                    <SelectItem value="20" className="rounded-md text-xs font-semibold">20</SelectItem>
+                    <SelectItem value="50" className="rounded-md text-xs font-semibold">50</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -406,72 +406,72 @@ export function StateManagerClient({ initialManagers, franchises, allWithdrawals
                   // Determine badge based on whether they have ANY referred workspaces
                   const hasReferrals = m._count.referredWorkspaces > 0;
                   return (
-                    <div key={m.id} className="flex flex-col lg:flex-row items-start lg:items-center justify-between p-6 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/30 border-l-4 border-amber-500 transition-all gap-6 group">
-                      <div className="flex items-center gap-4">
-                        <div className="h-12 w-12 rounded-2xl bg-amber-500/10 flex items-center justify-center shrink-0">
-                          <ShieldCheck className="h-6 w-6 text-amber-500" />
+                    <div key={m.id} className="flex flex-col lg:flex-row items-start lg:items-center justify-between px-4 py-3 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/30 border-l-2 border-amber-400 transition-all gap-4 group">
+                      <div className="flex items-center gap-3">
+                        <div className="h-9 w-9 rounded-lg bg-amber-500/10 flex items-center justify-center shrink-0">
+                          <ShieldCheck className="h-4.5 w-4.5 text-amber-500" />
                         </div>
                         <div>
                           <div className="flex items-center gap-2">
-                            <p className="font-bold text-sm text-slate-900 dark:text-white">{m.name}</p>
+                            <p className="font-semibold text-sm text-slate-900 dark:text-white">{m.name}</p>
                             {!hasReferrals ? (
-                              <Badge className="bg-slate-500/10 text-slate-600 border-0 shadow-none font-bold text-[10px] uppercase tracking-widest px-2 py-0">No Referrals</Badge>
+                              <Badge className="bg-slate-500/10 text-slate-600 border-0 shadow-none font-semibold text-[9px] uppercase tracking-widest px-1.5 py-0">No Referrals</Badge>
                             ) : (
-                              <Badge className="bg-amber-500/10 text-amber-600 border-0 shadow-none font-bold text-[10px] uppercase tracking-widest px-2 py-0">Active</Badge>
+                              <Badge className="bg-amber-500/10 text-amber-600 border-0 shadow-none font-semibold text-[9px] uppercase tracking-widest px-1.5 py-0">Active</Badge>
                             )}
                           </div>
                           <p className="text-xs font-medium text-slate-500 mt-0.5">{m._count.referredWorkspaces} referrals attached</p>
                         </div>
                       </div>
                       
-                      <div className="flex flex-col md:flex-row items-start md:items-center gap-6 w-full lg:w-auto">
-                        <div className="flex flex-wrap md:flex-nowrap gap-4 md:gap-8 w-full md:w-auto bg-slate-50 dark:bg-slate-800/40 lg:bg-transparent p-4 lg:p-0 rounded-xl">
+                      <div className="flex flex-col md:flex-row items-start md:items-center gap-4 w-full lg:w-auto">
+                        <div className="flex flex-wrap md:flex-nowrap gap-3 md:gap-6 w-full md:w-auto bg-slate-50 dark:bg-slate-800/40 lg:bg-transparent p-3 lg:p-0 rounded-lg">
                           <div className="text-left md:text-right w-1/2 md:w-auto">
                             <div className="flex items-center md:justify-end gap-1.5">
-                              <p className="font-bold font-mono text-sm text-slate-900 dark:text-white">{m.ownReferralId}</p>
+                              <p className="font-semibold font-mono text-xs text-slate-900 dark:text-white">{m.ownReferralId}</p>
                               <button 
                                 onClick={() => { navigator.clipboard.writeText(m.ownReferralId); toast.success("Referral ID copied!"); }}
                                 className="text-slate-400 hover:text-slate-700 dark:hover:text-slate-300 transition-colors"
                                 title="Copy Referral ID"
                               >
-                                <Copy className="h-3.5 w-3.5" />
+                                <Copy className="h-3 w-3" />
                               </button>
                             </div>
-                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Referral ID</p>
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Referral ID</p>
                           </div>
                           <div className="text-left md:text-right w-1/2 md:w-auto">
-                            <p className="font-black text-sm text-slate-900 dark:text-white">{m.displayRate}</p>
-                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Commission</p>
+                            <p className="font-bold text-xs text-slate-900 dark:text-white">{m.displayRate}</p>
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Commission</p>
                           </div>
                           <div className="text-left md:text-right w-1/2 md:w-auto">
-                            <p className="font-bold text-sm text-emerald-600 dark:text-emerald-400">{formatCurrency(m.totalEarned || 0)}</p>
-                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Total Earned</p>
+                            <p className="font-semibold text-xs text-emerald-600 dark:text-emerald-400">{formatCurrency(m.totalEarned || 0)}</p>
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Total Earned</p>
                           </div>
                           <div className="text-left md:text-right w-1/2 md:w-auto">
-                            <div className="flex items-center md:justify-end gap-2">
-                              <p className="font-bold text-sm text-amber-500">{formatCurrency(m.totalPending || 0)}</p>
+                            <div className="flex items-center md:justify-end gap-1.5">
+                              <p className="font-semibold text-xs text-amber-500">{formatCurrency(m.totalPending || 0)}</p>
                               {m.totalPending > 0 && (
-                                <Button onClick={() => handleClearNowClick(m.workspaceId)} variant="outline" size="sm" className="h-8 rounded-lg font-bold border-green-200 text-green-700 bg-green-50 hover:bg-green-100">Clear Now</Button>
+                                <Button onClick={() => handleClearNowClick(m.workspaceId)} variant="outline" size="sm" className="h-6 rounded-md text-[10px] font-semibold border-green-200 text-green-700 bg-green-50 hover:bg-green-100">Clear Now</Button>
                               )}
                             </div>
-                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Pending</p>
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Pending</p>
                           </div>
-                          <div className="text-left md:text-right w-1/2 md:w-auto md:w-24">
-                            <p className="font-medium text-sm text-slate-900 dark:text-white">
+                          <div className="text-left md:text-right w-1/2 md:w-auto">
+                            <p className="font-medium text-xs text-slate-900 dark:text-white">
                               {m.displayValidity}
                             </p>
-                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Validity</p>
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Validity</p>
                           </div>
                         </div>
 
-                        <div className="flex items-center gap-2 w-full lg:w-auto mt-2 lg:mt-0">
+                        <div className="flex items-center gap-1.5 w-full lg:w-auto mt-1 lg:mt-0">
                           <Button 
                             variant="outline" 
                             size="sm" 
                             onClick={() => { setEditForm(m); setIsEditOpen(true); }} 
-                            className="h-10 px-4 rounded-xl font-bold bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 flex-1 lg:flex-none shadow-sm hover:bg-slate-50"
+                            className="h-8 px-3 rounded-lg text-xs font-semibold bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 flex-1 lg:flex-none shadow-sm hover:bg-slate-50"
                           >
-                            <Edit2 className="w-4 h-4 mr-2" /> Edit
+                            <Edit2 className="w-3.5 h-3.5 mr-1.5" /> Edit
                           </Button>
                         </div>
                       </div>
@@ -486,36 +486,36 @@ export function StateManagerClient({ initialManagers, franchises, allWithdrawals
       )}
 
       {activeTab === "hierarchy" && (
-        <Card className="border-none shadow-xl shadow-slate-200/50 dark:shadow-none bg-white dark:bg-slate-900 rounded-[2.5rem] overflow-hidden transition-all duration-500">
-          <CardHeader className="p-6 md:p-8 border-b border-slate-50 dark:border-slate-800/50">
-            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 w-full lg:max-w-[650px]">
+        <Card className="border border-slate-100 dark:border-white/5 shadow-sm bg-white dark:bg-slate-900 rounded-xl overflow-hidden">
+          <CardHeader className="px-4 py-3 border-b border-slate-50 dark:border-slate-800/50">
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 w-full lg:max-w-xl">
                 <div className="relative w-full group">
-                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                    <Search className="h-4 w-4 text-slate-400" />
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <Search className="h-3.5 w-3.5 text-slate-400" />
                   </div>
                   <Input 
                     placeholder="Search normal franchises..." 
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-11 pr-4 bg-slate-50 dark:bg-slate-800/40 border-none rounded-2xl h-14 font-bold text-sm transition-all focus-visible:ring-2 focus-visible:ring-primary/20 placeholder:text-slate-400 placeholder:font-medium" 
+                    className="pl-9 pr-4 bg-slate-50 dark:bg-slate-800/40 border-slate-200 dark:border-slate-700 rounded-lg h-8 text-xs font-medium transition-all focus-visible:ring-2 focus-visible:ring-primary/20 placeholder:text-slate-400 placeholder:text-xs" 
                   />
                 </div>
-                <div className="flex items-center gap-3 w-full sm:w-auto shrink-0 bg-slate-50 dark:bg-slate-800/40 p-2.5 rounded-2xl h-14">
+                <div className="flex items-center gap-2 w-full sm:w-auto shrink-0 bg-slate-50 dark:bg-slate-800/40 px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 h-8">
                   <Switch id="linked-toggle" checked={showOnlyLinked} onCheckedChange={setShowOnlyLinked} />
-                  <label htmlFor="linked-toggle" className="text-xs font-bold text-slate-600 dark:text-slate-300 cursor-pointer pr-2">Linked Only</label>
+                  <label htmlFor="linked-toggle" className="text-xs font-semibold text-slate-600 dark:text-slate-300 cursor-pointer pr-1">Linked Only</label>
                 </div>
               </div>
-              <div className="flex items-center gap-3 self-end lg:self-auto w-full sm:w-auto">
-                <span className="text-xs font-bold text-slate-400 uppercase tracking-widest hidden sm:inline">Show</span>
+              <div className="flex items-center gap-2 self-end lg:self-auto w-full sm:w-auto">
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest hidden sm:inline">Show</span>
                 <Select value={itemsPerPage.toString()} onValueChange={(v) => setItemsPerPage(Number(v))}>
-                  <SelectTrigger className="w-full sm:w-24 h-14 bg-slate-50 dark:bg-slate-800/40 border-none rounded-2xl font-bold">
+                  <SelectTrigger className="w-full sm:w-20 h-8 bg-slate-50 dark:bg-slate-800/40 border-slate-200 dark:border-slate-700 rounded-lg text-xs font-semibold">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent className="rounded-xl border border-slate-200 dark:border-slate-700 shadow-xl">
-                    <SelectItem value="10" className="rounded-lg font-bold">10</SelectItem>
-                    <SelectItem value="20" className="rounded-lg font-bold">20</SelectItem>
-                    <SelectItem value="50" className="rounded-lg font-bold">50</SelectItem>
+                  <SelectContent className="rounded-lg border border-slate-200 dark:border-slate-700 shadow-xl">
+                    <SelectItem value="10" className="rounded-md text-xs font-semibold">10</SelectItem>
+                    <SelectItem value="20" className="rounded-md text-xs font-semibold">20</SelectItem>
+                    <SelectItem value="50" className="rounded-md text-xs font-semibold">50</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -538,27 +538,27 @@ export function StateManagerClient({ initialManagers, franchises, allWithdrawals
                     <div 
                       key={f.id} 
                       className={cn(
-                        "flex flex-col xl:flex-row items-start xl:items-center justify-between p-6 transition-all gap-6 group border-l-4",
+                        "flex flex-col xl:flex-row items-start xl:items-center justify-between px-4 py-3 transition-all gap-4 group border-l-2",
                         isLinked 
                           ? "bg-emerald-50/30 dark:bg-emerald-900/10 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 border-emerald-400" 
                           : "bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/30 border-transparent"
                       )}
                     >
-                      <div className="flex items-center gap-4">
+                      <div className="flex items-center gap-3">
                         <div className={cn(
-                          "h-12 w-12 rounded-2xl flex items-center justify-center shrink-0",
+                          "h-9 w-9 rounded-lg flex items-center justify-center shrink-0",
                           isLinked ? "bg-emerald-500/10" : "bg-indigo-500/10"
                         )}>
-                          <Building2 className={cn("h-6 w-6", isLinked ? "text-emerald-600" : "text-indigo-600")} />
+                          <Building2 className={cn("h-4.5 w-4.5", isLinked ? "text-emerald-600" : "text-indigo-600")} />
                         </div>
                         <div>
-                          <p className="font-bold text-sm text-slate-900 dark:text-white">{f.name}</p>
+                          <p className="font-semibold text-sm text-slate-900 dark:text-white">{f.name}</p>
                           <p className="text-xs font-medium text-slate-500 mt-0.5">Domain: {f.subdomain}</p>
                         </div>
                       </div>
                       
-                      <div className="flex flex-col md:flex-row items-start md:items-center gap-6 w-full xl:w-auto">
-                        <div className="flex items-center gap-2 w-full md:w-auto mt-2 md:mt-0 order-2 md:order-1">
+                      <div className="flex flex-col md:flex-row items-start md:items-center gap-4 w-full xl:w-auto">
+                        <div className="flex items-center gap-1.5 w-full md:w-auto mt-1 md:mt-0 order-2 md:order-1">
                           {!isLinked ? (
                             <>
                               <Button 
@@ -569,17 +569,17 @@ export function StateManagerClient({ initialManagers, franchises, allWithdrawals
                                   setPromoteForm({ ...promoteForm, workspaceId: f.id, referralId: uniqueId }); 
                                   setIsPromoteOpen(true); 
                                 }} 
-                                className="h-10 px-4 rounded-xl font-bold bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 flex-1 md:flex-none text-amber-600 hover:text-amber-700 hover:bg-amber-50 dark:hover:bg-amber-500/10 shadow-sm transition-all"
+                                className="h-8 px-3 rounded-lg text-xs font-semibold bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 flex-1 md:flex-none text-amber-600 hover:text-amber-700 hover:bg-amber-50 dark:hover:bg-amber-500/10 shadow-sm transition-all"
                               >
-                                <ShieldCheck className="w-4 h-4 mr-2" /> Make State Manager
+                                <ShieldCheck className="w-3.5 h-3.5 mr-1.5" /> Make State Manager
                               </Button>
                               <Button 
                                 variant="outline" 
                                 size="sm" 
                                 onClick={() => { setAssignForm({ ...assignForm, workspaceId: f.id, appliedReferralId: "", referralCommissionRate: "10", referralCommissionExpiry: formattedDefaultExpiry }); setIsAssignOpen(true); }} 
-                                className="h-10 px-4 rounded-xl font-bold bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 flex-1 md:flex-none text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 shadow-sm transition-all"
+                                className="h-8 px-3 rounded-lg text-xs font-semibold bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 flex-1 md:flex-none text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 shadow-sm transition-all"
                               >
-                                <LinkIcon className="w-4 h-4 mr-2" /> Link Referral
+                                <LinkIcon className="w-3.5 h-3.5 mr-1.5" /> Link Referral
                               </Button>
                             </>
                           ) : (
@@ -588,9 +588,9 @@ export function StateManagerClient({ initialManagers, franchises, allWithdrawals
                                 variant="outline" 
                                 size="sm" 
                                 onClick={() => setFranchiseToUnlink(f.id)} 
-                                className="h-10 px-4 rounded-xl font-bold bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 flex-1 md:flex-none text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-500/10 shadow-sm transition-all"
+                                className="h-8 px-3 rounded-lg text-xs font-semibold bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 flex-1 md:flex-none text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-500/10 shadow-sm transition-all"
                               >
-                                <Unlink className="w-4 h-4 mr-2" /> Unlink
+                                <Unlink className="w-3.5 h-3.5 mr-1.5" /> Unlink
                               </Button>
                               <Button 
                                 variant="outline" 
@@ -604,30 +604,30 @@ export function StateManagerClient({ initialManagers, franchises, allWithdrawals
                                   }); 
                                   setIsOverrideOpen(true); 
                                 }} 
-                                className="h-10 px-4 rounded-xl font-bold bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 flex-1 md:flex-none text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 shadow-sm transition-all"
+                                className="h-8 px-3 rounded-lg text-xs font-semibold bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 flex-1 md:flex-none text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 shadow-sm transition-all"
                               >
-                                <Settings className="w-4 h-4 mr-2" /> Settings
+                                <Settings className="w-3.5 h-3.5 mr-1.5" /> Settings
                               </Button>
                             </>
                           )}
                         </div>
 
-                        <div className="text-left md:text-right w-full md:w-auto bg-slate-50 dark:bg-slate-800/40 xl:bg-transparent p-4 xl:p-0 rounded-xl order-1 md:order-2">
+                        <div className="text-left md:text-right w-full md:w-auto bg-slate-50 dark:bg-slate-800/40 xl:bg-transparent p-3 xl:p-0 rounded-lg order-1 md:order-2">
                           {f.referredBy ? (
                             <div className="flex flex-col md:items-start xl:items-end">
-                              <div className="flex items-center gap-2">
-                                <Badge className="bg-emerald-500/10 text-emerald-700 border-0 shadow-none font-bold font-mono tracking-widest text-[10px]">
+                              <div className="flex items-center gap-1.5">
+                                <Badge className="bg-emerald-500/10 text-emerald-700 border-0 shadow-none font-semibold font-mono tracking-widest text-[9px]">
                                   {f.appliedReferralId}
                                 </Badge>
                                 <CheckCircle2 className="h-3 w-3 text-emerald-500" />
                               </div>
-                              <p className="text-sm font-bold text-slate-900 dark:text-white mt-1">{f.referredBy.name}</p>
-                              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Linked State Manager</p>
+                              <p className="text-xs font-semibold text-slate-900 dark:text-white mt-0.5">{f.referredBy.name}</p>
+                              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Linked State Manager</p>
                             </div>
                           ) : (
                             <div className="flex flex-col md:items-start xl:items-end">
-                              <span className="text-sm font-bold text-slate-400 italic">No Referral</span>
-                              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Status</p>
+                              <span className="text-xs font-semibold text-slate-400 italic">No Referral</span>
+                              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Status</p>
                             </div>
                           )}
                         </div>
@@ -643,19 +643,19 @@ export function StateManagerClient({ initialManagers, franchises, allWithdrawals
       )}
 
       {activeTab === "withdrawals" && (
-        <Card className="border-none shadow-xl shadow-slate-200/50 dark:shadow-none bg-white dark:bg-slate-900 rounded-[2.5rem] overflow-hidden transition-all duration-500">
-          <CardHeader className="p-6 md:p-8 border-b border-slate-50 dark:border-slate-800/50 flex flex-row items-center justify-between">
-            <h2 className="text-xl font-bold">Withdrawal Requests</h2>
-            <div className="flex bg-slate-100 dark:bg-slate-800/50 p-1 rounded-lg">
+        <Card className="border border-slate-100 dark:border-white/5 shadow-sm bg-white dark:bg-slate-900 rounded-xl overflow-hidden">
+          <CardHeader className="px-4 py-3 border-b border-slate-50 dark:border-slate-800/50 flex flex-row items-center justify-between">
+            <h2 className="text-sm font-semibold">Withdrawal Requests</h2>
+            <div className="flex bg-slate-100 dark:bg-slate-800/50 p-0.5 rounded-md">
               <button
                 onClick={() => setWithdrawalTab("pending")}
-                className={cn("px-4 py-1.5 rounded-md text-sm font-bold transition-all", withdrawalTab === "pending" ? "bg-white dark:bg-slate-700 shadow-sm text-primary" : "text-slate-500")}
+                className={cn("px-3 py-1 rounded-md text-xs font-semibold transition-all", withdrawalTab === "pending" ? "bg-white dark:bg-slate-700 shadow-sm text-primary" : "text-slate-500")}
               >
                 Pending
               </button>
               <button
                 onClick={() => setWithdrawalTab("history")}
-                className={cn("px-4 py-1.5 rounded-md text-sm font-bold transition-all", withdrawalTab === "history" ? "bg-white dark:bg-slate-700 shadow-sm text-primary" : "text-slate-500")}
+                className={cn("px-3 py-1 rounded-md text-xs font-semibold transition-all", withdrawalTab === "history" ? "bg-white dark:bg-slate-700 shadow-sm text-primary" : "text-slate-500")}
               >
                 History
               </button>
@@ -664,26 +664,26 @@ export function StateManagerClient({ initialManagers, franchises, allWithdrawals
           <CardContent className="p-0">
             {withdrawalTab === "pending" ? (
               pendingWithdrawals.length === 0 ? (
-                <div className="text-center py-20">
-                  <p className="text-sm font-medium text-slate-500">No pending withdrawal requests.</p>
+                <div className="text-center py-12">
+                  <p className="text-xs font-medium text-slate-500">No pending withdrawal requests.</p>
                 </div>
               ) : (
                 <div className="divide-y divide-slate-50 dark:divide-slate-800/50">
                   {paginatedPending.map((req) => (
-                    <div key={req.id} className="flex flex-col md:flex-row items-start md:items-center justify-between p-6 hover:bg-slate-50 dark:hover:bg-slate-800/30 gap-6">
+                    <div key={req.id} className="flex flex-col md:flex-row items-start md:items-center justify-between px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-800/30 gap-4">
                       <div>
-                        <p className="font-bold text-slate-900 dark:text-white">{req.workspace.name} ({req.workspace.ownReferralId})</p>
-                        <p className="text-xs text-slate-500 mt-1">Requested: {new Date(req.createdAt).toLocaleString()}</p>
+                        <p className="font-semibold text-sm text-slate-900 dark:text-white">{req.workspace.name} ({req.workspace.ownReferralId})</p>
+                        <p className="text-xs text-slate-500 mt-0.5">Requested: {new Date(req.createdAt).toLocaleString()}</p>
                       </div>
-                      <div className="flex items-center gap-4">
-                        <div className="text-right mr-4">
-                          <p className="font-black text-emerald-600">{formatCurrency(req.amount)}</p>
+                      <div className="flex items-center gap-3">
+                        <div className="text-right mr-2">
+                          <p className="font-bold text-sm text-emerald-600">{formatCurrency(req.amount)}</p>
                           <p className="text-[10px] font-bold text-slate-400 uppercase">Amount</p>
                         </div>
-                        <Button size="sm" onClick={() => handleApproveWithdrawal(req.id)} className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold h-9">
+                        <Button size="sm" onClick={() => handleApproveWithdrawal(req.id)} className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold h-7 text-xs px-2 rounded-md">
                           Approve
                         </Button>
-                        <Button size="sm" variant="destructive" onClick={() => handleRejectWithdrawal(req.id)} className="font-bold h-9">
+                        <Button size="sm" variant="destructive" onClick={() => handleRejectWithdrawal(req.id)} className="font-semibold h-7 text-xs px-2 rounded-md">
                           Reject
                         </Button>
                       </div>
@@ -694,43 +694,43 @@ export function StateManagerClient({ initialManagers, franchises, allWithdrawals
               )
             ) : (
               historyWithdrawals.length === 0 ? (
-                <div className="text-center py-20">
-                  <p className="text-sm font-medium text-slate-500">No withdrawal history found.</p>
+                <div className="text-center py-12">
+                  <p className="text-xs font-medium text-slate-500">No withdrawal history found.</p>
                 </div>
               ) : (
                 <div className="flex flex-col">
-                  <div className="p-4 border-b border-slate-50 dark:border-slate-800/50 bg-slate-50/50 dark:bg-slate-800/20">
-                    <div className="relative max-w-md">
-                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                  <div className="px-4 py-2.5 border-b border-slate-50 dark:border-slate-800/50 bg-slate-50/50 dark:bg-slate-800/20">
+                    <div className="relative max-w-sm">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
                       <Input 
                         placeholder="Search by workspace, referral ID, or date..." 
                         value={historySearchQuery}
                         onChange={(e) => setHistorySearchQuery(e.target.value)}
-                        className="pl-9 h-10 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 rounded-xl"
+                        className="pl-9 h-8 text-xs bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 rounded-lg"
                       />
                     </div>
                   </div>
                   
                   {filteredHistoryWithdrawals.length === 0 ? (
-                    <div className="text-center py-16">
-                      <p className="text-sm font-medium text-slate-500">No matches found for "{historySearchQuery}".</p>
+                    <div className="text-center py-10">
+                      <p className="text-xs font-medium text-slate-500">No matches found for "{historySearchQuery}".</p>
                     </div>
                   ) : (
                     <div className="divide-y divide-slate-50 dark:divide-slate-800/50">
                       {paginatedHistory.map((req) => (
-                        <div key={req.id} className="flex flex-col md:flex-row items-start md:items-center justify-between p-6 hover:bg-slate-50 dark:hover:bg-slate-800/30 gap-6">
+                        <div key={req.id} className="flex flex-col md:flex-row items-start md:items-center justify-between px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-800/30 gap-4">
                           <div>
-                            <p className="font-bold text-slate-900 dark:text-white">{req.workspace.name} ({req.workspace.ownReferralId})</p>
-                            <p className="text-xs text-slate-500 mt-1">Date: {new Date(req.createdAt).toLocaleString()}</p>
+                            <p className="font-semibold text-sm text-slate-900 dark:text-white">{req.workspace.name} ({req.workspace.ownReferralId})</p>
+                            <p className="text-xs text-slate-500 mt-0.5">Date: {new Date(req.createdAt).toLocaleString()}</p>
                           </div>
-                          <div className="flex items-center gap-6">
+                          <div className="flex items-center gap-4">
                             <div className="text-right">
-                              <p className={cn("font-black", req.status === "APPROVED" ? "text-emerald-600" : "text-red-600")}>
+                              <p className={cn("font-bold text-sm", req.status === "APPROVED" ? "text-emerald-600" : "text-red-600")}>
                                 {formatCurrency(req.amount)}
                               </p>
                               <p className="text-[10px] font-bold text-slate-400 uppercase">Amount</p>
                             </div>
-                            <Badge variant="outline" className={cn("font-bold border-0 shadow-none px-3 py-1", req.status === "APPROVED" ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400" : "bg-red-100 text-red-700 dark:bg-red-500/10 dark:text-red-400")}>
+                            <Badge variant="outline" className={cn("font-semibold border-0 shadow-none px-2 py-0.5 text-xs", req.status === "APPROVED" ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400" : "bg-red-100 text-red-700 dark:bg-red-500/10 dark:text-red-400")}>
                               {req.status}
                             </Badge>
                           </div>

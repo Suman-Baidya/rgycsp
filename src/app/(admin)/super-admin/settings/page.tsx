@@ -18,7 +18,7 @@ export default async function SettingsPage() {
   }
 
   return (
-    <div className="space-y-10 pb-12 max-w-7xl mx-auto w-full">
+    <div className="space-y-4 sm:space-y-5 pb-8 w-full mx-auto">
       <AdminPageHeader 
         title="Site Management" 
         description="Configure the global landing page, branding, and navigation."

@@ -28,26 +28,26 @@ export default function StaffManagementClient({
   if (!mounted) return null;
 
   return (
-    <div className="p-4 lg:p-10 max-w-7xl mx-auto space-y-8 w-full">
+    <div className="space-y-4 sm:space-y-5 pb-8 w-full mx-auto">
       <AdminPageHeader 
         title="Staff & Roles" 
         description="Manage team members, teachers, and configure their access permissions."
       />
 
-      <div className="flex flex-nowrap overflow-x-auto no-scrollbar gap-2 p-2 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm max-w-full">
+      <div className="flex flex-nowrap overflow-x-auto no-scrollbar gap-1 p-1 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm max-w-full">
         {tabs.map((tab) => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
             className={cn(
-              "flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 whitespace-nowrap shrink-0",
+              "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs transition-all duration-150 whitespace-nowrap shrink-0",
               activeTab === tab.id
-                ? "bg-slate-100 dark:bg-slate-800 text-primary shadow-inner"
-                : "text-slate-500 hover:text-slate-900 hover:bg-slate-50 dark:hover:text-white dark:hover:bg-slate-800/50"
+                ? "bg-slate-100 dark:bg-slate-800 text-primary font-semibold shadow-inner"
+                : "text-slate-500 hover:text-slate-900 hover:bg-slate-50 dark:hover:text-white dark:hover:bg-slate-800/50 font-medium"
             )}
           >
-            <tab.icon className="w-4 h-4" />
-            {tab.label}
+            <tab.icon className="w-3.5 h-3.5" />
+            <span>{tab.label}</span>
           </button>
         ))}
       </div>
