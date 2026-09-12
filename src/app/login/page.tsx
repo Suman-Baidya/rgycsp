@@ -61,13 +61,12 @@ export default async function LoginPage() {
   }
 
   return (
-    <div className="min-h-[100dvh] w-full flex flex-col items-center justify-center bg-white dark:bg-zinc-950 p-2 sm:p-4 md:p-6 relative overflow-y-auto font-sans">
+    <div className="min-h-[100dvh] w-full flex flex-col items-center justify-center bg-slate-50/70 dark:bg-[#06080e] p-2 sm:p-4 md:p-6 relative overflow-y-auto font-sans transition-colors duration-300">
       {/* Premium Background Layer */}
       <div className="fixed inset-0 z-0 pointer-events-none">
-        <div className="absolute top-[-20%] left-[-10%] w-[70%] h-[70%] bg-primary/10 rounded-full blur-[120px] animate-pulse" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-blue-500/10 rounded-full blur-[100px] animate-pulse delay-700" />
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,#8080800a_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-[size:40px_40px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_50%,#000_70%,transparent_100%)]" />
-        <div className="absolute inset-0 opacity-[0.02] bg-[url('https://grainy-gradients.vercel.app/noise.svg')]" />
+        <div className="absolute top-[-15%] left-[-10%] w-[65%] h-[65%] bg-indigo-600/10 dark:bg-indigo-600/15 rounded-full blur-[130px] animate-pulse" />
+        <div className="absolute bottom-[-15%] right-[-10%] w-[55%] h-[55%] bg-blue-600/10 dark:bg-amber-500/10 rounded-full blur-[130px] animate-pulse delay-700" />
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#8080800a_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] dark:bg-[linear-gradient(to_right,#ffffff05_1px,transparent_1px),linear-gradient(to_bottom,#ffffff05_1px,transparent_1px)] bg-[size:36px_36px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_50%,#000_70%,transparent_100%)]" />
       </div>
 
       <div className="relative z-10 w-full my-auto flex flex-col items-center justify-center py-1 sm:py-0">
@@ -81,6 +80,8 @@ export default async function LoginPage() {
           tenantName={branding.name}
           tenantLogo={branding.logo}
           isGlobal={!tenant || tenant === "super-admin"}
+          variant={!tenant || tenant === "super-admin" ? "super-admin" : "franchise"}
+          primaryColor={branding.settings?.primaryColor || undefined}
         />
       </div>
     </div>

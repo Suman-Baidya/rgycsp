@@ -26,6 +26,7 @@ import { toast } from "sonner";
 import { signOut } from "next-auth/react";
 import { updateProfile, updatePassword } from "@/app/actions/profile";
 import { cn } from "@/lib/utils";
+import { BiometricPasskeyManager } from "@/components/auth/BiometricPasskeyManager";
 
 interface ProfileFormProps {
   user: {
@@ -409,6 +410,9 @@ export function ProfileForm({ user }: ProfileFormProps) {
                 </CardContent>
               </form>
             </Card>
+
+            {/* Biometric Passkey Hardware Management */}
+            <BiometricPasskeyManager userRole="Super Administrator" />
           </TabsContent>
 
         </div>

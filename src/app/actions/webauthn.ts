@@ -228,12 +228,33 @@ export async function getPasskeyAuthOptions(identifier?: string, tenantSlug?: st
         }
       }
 
-      if (user && user.passkeyCredentials.length > 0) {
-        allowCredentials = user.passkeyCredentials.map((c) => ({
-          id: Buffer.from(c.credentialId, "base64url"),
-          type: "public-key" as const,
-          transports: c.transports ? JSON.parse(c.transports) : undefined,
-        }));
+      if (!user) {
+        return { 
+          success: false, 
+          error: "No account found matching this identification." 
+        };
+      }
+
+      if (user.passkeyCredentials.length === 0) {
+        return {
+          success: false,
+          error: "No biometric passkey registered for this account yet. Please sign in with your password first and enroll your device in Profile Settings.",
+        };
+      }
+
+      allowCredentials = user.passkeyCredentials.map((c) => ({
+        id: Buffer.from(c.credentialId, "base64url"),
+        type: "public-key" as const,
+        transports: c.transports ? JSON.parse(c.transports) : undefined,
+      }));
+    } else {
+      // If user clicked Biometrics without typing username, verify that any passkeys exist in the system
+      const totalPasskeys = await db.passkeyCredential.count();
+      if (totalPasskeys === 0) {
+        return {
+          success: false,
+          error: "No biometric devices have been enrolled on this system yet. Please sign in with your password and register your device in Profile Settings.",
+        };
       }
     }
 
@@ -271,10 +292,22 @@ export async function verifyPasskeyAuth(response: any, tenantSlug?: string) {
       return { success: false, error: "Authentication challenge expired. Please retry." };
     }
 
-    const credential = await db.passkeyCredential.findUnique({
+    let credential = await db.passkeyCredential.findUnique({
       where: { credentialId: response.id },
       include: { user: true },
     });
+
+    if (!credential && response.rawId) {
+      try {
+        const altId = Buffer.from(response.rawId, "base64").toString("base64url");
+        credential = await db.passkeyCredential.findUnique({
+          where: { credentialId: altId },
+          include: { user: true },
+        });
+      } catch (e) {
+        // ignore conversion error
+      }
+    }
 
     if (!credential) {
       return { success: false, error: "No matching biometric credential found for this device." };
