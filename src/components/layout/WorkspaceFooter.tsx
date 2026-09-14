@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { getTenantLink, detectTenant } from "@/lib/routing";
 import { usePathname } from "next/navigation";
+import { cn } from "@/lib/utils";
 
 import { useState, useEffect } from "react";
 import { getWorkspaceRole } from "@/app/actions/student";
@@ -42,30 +43,59 @@ export function WorkspaceFooter({ settings, tenant: propTenant, user }: { settin
   const siteName = settings?.siteName || "Institute Portal";
   const footerBrandName = settings?.navbarConfig?.footerBrandName || siteName;
   const logoUrl = settings?.logoUrl || "/logo.png";
-  const footerTagline = settings?.navbarConfig?.footerTagline || "Official Institute Portal";
+  const footerTagline = settings?.navbarConfig?.footerTagline || settings?.navbarConfig?.subtitle?.trim() || "An Authorized Study & Training Center";
   const contactEmail = settings?.contactEmail || "";
   const contactPhone = settings?.contactPhone || "";
   const address = settings?.address || "";
   const socialLinks = settings?.socialLinks || {};
   const whatsapp = settings?.whatsapp;
   
-  const brandDescription = settings?.brandDescription || "Providing quality education and digital resources to learners. Your success is our mission.";
+  const brandDescription = settings?.brandDescription || settings?.navbarConfig?.footerDescription || "Providing quality education and digital resources to learners. Your success is our mission.";
   
   // Link helper
   const getLink = (path: string) => getTenantLink(path, tenant, pathname);
 
-  const navLinks = settings?.navigation || [
-    { name: "About", href: "/about", id: "about" },
-    { name: "Courses", href: "/courses", id: "courses" },
-    { name: "Admission", href: "/admission", id: "admission" },
-    { name: "Learners", href: "/learners", id: "learners" },
-    { name: "Contact", href: "/contact", id: "contact" }
+  const defaultItems = [
+    { name: "Home", href: "/", id: "home", isActive: true },
+    { name: "About", href: "/about", id: "about", isActive: true },
+    { name: "Admission", href: "/admission", id: "admission", isActive: false },
+    { name: "Learners", href: "/learners", id: "learners", isActive: false },
+    { name: "Courses", href: "/courses", id: "courses", isActive: true },
+    { name: "Guidance", href: "/guidance", id: "guidance", isActive: true },
+    { name: "Notice", href: "/notice", id: "notice", isActive: true },
+    { name: "Events", href: "/events", id: "events", isActive: true },
+    { name: "Gallery", href: "/gallery", id: "gallery", isActive: true },
+    { name: "Enquiry", href: "/enquiry", id: "enquiry", isActive: false },
+    { name: "Contact", href: "/contact", id: "contact", isActive: true },
   ];
+
+  // Use the navigation array directly from settings to preserve the user's custom order and labels
+  const rawNav = (settings?.navigation && Array.isArray(settings.navigation) && settings.navigation.length > 0)
+    ? settings.navigation
+    : defaultItems;
+
+  // Filter active items and remove unwanted legacy duplicates - perfectly synced with WorkspaceNavbar
+  const visibleNavItems = rawNav.filter((item: any) => 
+    item.isActive !== false &&
+    item.id !== 'franchise' && item.name?.toLowerCase() !== 'franchise' &&
+    item.name?.toLowerCase() !== 'students' &&
+    item.name?.toLowerCase() !== 'learner' &&
+    item.href !== '/students'
+  );
+
+  // Select key essential menus for footer (capped at 5-6 items in single column)
+  const priorityKeys = ["home", "about", "courses", "admission", "notice", "contact", "gallery", "guidance"];
+  const prioritized = visibleNavItems.filter((item: any) => {
+    const key = (item.id || item.name || "").toLowerCase();
+    const href = (item.href || "").toLowerCase();
+    return priorityKeys.some((p) => key.includes(p) || href === `/${p}` || (p === "home" && (href === "/" || href === "")));
+  });
+  const footerNavItems = prioritized.length >= 4 ? prioritized.slice(0, 6) : visibleNavItems.slice(0, 6);
 
   if (!mounted) return null;
 
   return (
-    <footer className="w-full bg-zinc-950 text-zinc-300 pt-24 pb-12 font-sans relative overflow-hidden border-t border-white/5">
+    <footer className="dark dark-context w-full bg-zinc-950 text-zinc-300 pt-24 pb-12 font-sans relative overflow-hidden border-t border-white/5">
       {/* Decorative Glows - Maintained for Workspace modern look */}
       <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[120px] pointer-events-none -translate-y-1/2" />
       <div className="absolute top-0 right-1/4 w-[400px] h-[400px] bg-blue-500/5 rounded-full blur-[100px] pointer-events-none -translate-y-1/2" />
@@ -96,16 +126,21 @@ export function WorkspaceFooter({ settings, tenant: propTenant, user }: { settin
           {/* Brand Column */}
           <div className="space-y-8">
             <Link href={rootHref} className="flex items-center gap-3 shrink-0 group w-fit">
-              <div className="relative w-12 h-12 flex items-center justify-center shrink-0 bg-white/5 rounded-2xl overflow-hidden border border-white/10 group-hover:border-primary/50 transition-all">
+              <div className={cn(
+                "relative w-12 h-12 flex items-center justify-center shrink-0 transition-all",
+                settings?.logoUrl
+                  ? "bg-transparent border-0"
+                  : "bg-white/5 rounded-2xl border border-white/10 group-hover:border-primary/50 overflow-hidden"
+              )}>
                 {settings?.logoUrl ? (
                   <Image
                     src={settings.logoUrl}
                     alt={`${siteName} Logo`}
                     fill
-                    className="object-contain p-1"
+                    className="object-contain"
                   />
                 ) : (
-                  <div className="w-full h-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-xl">
+                  <div className="w-full h-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-xl rounded-2xl">
                     {siteName.charAt(0)}
                   </div>
                 )}
@@ -157,13 +192,13 @@ export function WorkspaceFooter({ settings, tenant: propTenant, user }: { settin
               <h4 className="text-white font-bold text-xs tracking-[0.2em]">Quick Links</h4>
               <div className="absolute -bottom-2 left-0 w-8 h-0.5 bg-primary rounded-full"></div>
             </div>
-            <div className="flex flex-col gap-4">
-              {navLinks.map((link: any) => {
+            <div className="flex flex-col gap-3.5">
+              {footerNavItems.map((link: any) => {
                 const href = getLink(link.href);
                 return (
-                  <Link key={link.id} href={href} className="text-zinc-400 hover:text-primary font-bold text-[15px] transition-all flex items-center gap-2 group">
-                    <ArrowRight className="w-3 h-3 text-primary/40 group-hover:text-primary group-hover:translate-x-1 transition-all" /> 
-                    {link.name}
+                  <Link key={link.id || link.name || link.href} href={href} className="text-zinc-400 hover:text-white font-semibold text-sm transition-all flex items-center gap-2 group hover:translate-x-1">
+                    <ArrowRight className="w-3.5 h-3.5 text-zinc-600 group-hover:text-primary group-hover:translate-x-0.5 transition-all shrink-0" /> 
+                    <span className="truncate">{link.name}</span>
                   </Link>
                 );
               })}
@@ -176,7 +211,7 @@ export function WorkspaceFooter({ settings, tenant: propTenant, user }: { settin
               <h4 className="text-white font-bold text-xs tracking-[0.2em]">Support</h4>
               <div className="absolute -bottom-2 left-0 w-8 h-0.5 bg-primary rounded-full"></div>
             </div>
-            <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-3.5">
               {[
                 { name: 'Help Center', href: '/help' },
                 { name: 'Privacy Policy', href: '/legal/privacy' },
@@ -185,9 +220,9 @@ export function WorkspaceFooter({ settings, tenant: propTenant, user }: { settin
               ].map((item) => {
                 const href = getLink(item.href);
                 return (
-                  <Link key={item.name} href={href} className="text-zinc-400 hover:text-primary font-bold text-[15px] transition-all flex items-center gap-2 group">
-                     <ArrowRight className="w-3 h-3 text-primary/40 group-hover:text-primary group-hover:translate-x-1 transition-all" /> 
-                     {item.name}
+                  <Link key={item.name} href={href} className="text-zinc-400 hover:text-white font-semibold text-sm transition-all flex items-center gap-2 group hover:translate-x-1">
+                     <ArrowRight className="w-3 h-3 text-zinc-600 group-hover:text-primary group-hover:translate-x-0.5 transition-all shrink-0" /> 
+                     <span>{item.name}</span>
                   </Link>
                 );
               })}
@@ -202,24 +237,24 @@ export function WorkspaceFooter({ settings, tenant: propTenant, user }: { settin
             </div>
             <div className="space-y-6">
               {address && (
-                <div className="flex items-start gap-4">
-                  <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0 border border-primary/20">
+                <div className="flex items-start gap-4 group/item">
+                  <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center shrink-0 border border-white/10 group-hover/item:border-primary/50 transition-colors">
                     <MapPin className="w-4 h-4 text-primary" />
                   </div>
-                  <p className="text-zinc-400 font-bold text-sm leading-relaxed">{address}</p>
+                  <p className="text-zinc-300 font-bold text-sm leading-relaxed">{address}</p>
                 </div>
               )}
               {contactPhone && (
-                <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0 border border-primary/20">
+                <div className="flex items-center gap-4 group/item">
+                  <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center shrink-0 border border-white/10 group-hover/item:border-primary/50 transition-colors">
                     <PhoneCall className="w-4 h-4 text-primary" />
                   </div>
                   <Link href={`tel:${contactPhone}`} className="text-white font-bold text-sm hover:text-primary transition-colors">{contactPhone}</Link>
                 </div>
               )}
               {contactEmail && (
-                <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0 border border-primary/20">
+                <div className="flex items-center gap-4 group/item">
+                  <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center shrink-0 border border-white/10 group-hover/item:border-primary/50 transition-colors">
                     <Mail className="w-4 h-4 text-primary" />
                   </div>
                   <Link href={`mailto:${contactEmail}`} className="text-white font-bold text-sm hover:text-primary transition-colors">{contactEmail}</Link>

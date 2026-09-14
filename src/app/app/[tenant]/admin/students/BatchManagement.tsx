@@ -221,7 +221,13 @@ export default function BatchManagement({
 
             <Select value={courseFilter} onValueChange={(val: any) => setCourseFilter(val as string)}>
               <SelectTrigger className="h-8 sm:h-9 w-full sm:w-[190px] text-xs font-medium rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700/60">
-                <SelectValue placeholder="All Batches" />
+                <SelectValue placeholder="All Batches">
+                  {courseFilter === "all"
+                    ? "All Batches"
+                    : courseFilter === "independent"
+                    ? "Independent Batches"
+                    : (courses.find(c => c.id === courseFilter)?.title || "All Batches")}
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Batches</SelectItem>
@@ -415,7 +421,7 @@ export default function BatchManagement({
 
       {/* Create / Edit Batch Modal (Strict Rule 7.7) */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="max-w-md rounded-2xl p-4 sm:p-5">
+        <DialogContent className="max-w-md rounded-2xl p-4 sm:p-5 overflow-hidden">
           <DialogHeader className="space-y-1 pb-2 border-b border-slate-100 dark:border-slate-800">
             <DialogTitle className="text-base font-bold text-slate-900 dark:text-white">
               {editingBatch ? "Edit Batch" : "Create New Batch"}
@@ -425,8 +431,8 @@ export default function BatchManagement({
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-3 py-3 max-h-[65vh] overflow-y-auto pr-1">
-            <div className="space-y-1">
+          <div className="space-y-3 py-3 max-h-[65vh] overflow-y-auto overflow-x-hidden px-1 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-slate-200 dark:[&::-webkit-scrollbar-thumb]:bg-slate-700 [&::-webkit-scrollbar-thumb]:rounded-full">
+            <div className="space-y-1 min-w-0">
               <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Associated Course</Label>
               <Select value={formData.courseId || ""} onValueChange={(v: any) => setFormData({...formData, courseId: v as string})}>
                 <SelectTrigger className="h-8 sm:h-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700">
@@ -446,85 +452,85 @@ export default function BatchManagement({
             </div>
 
             <div className="grid grid-cols-2 gap-2.5">
-              <div className="space-y-1">
+              <div className="space-y-1 min-w-0">
                 <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Batch Name *</Label>
                 <Input 
                   value={formData.name} 
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })} 
                   placeholder="e.g., Morning Batch A" 
-                  className="h-8 sm:h-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700"
+                  className="h-8 sm:h-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 focus-visible:ring-2"
                 />
               </div>
-              <div className="space-y-1">
+              <div className="space-y-1 min-w-0">
                 <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Capacity</Label>
                 <Input 
                   type="number"
                   value={formData.capacity} 
                   onChange={(e) => setFormData({ ...formData, capacity: e.target.value })} 
-                  className="h-8 sm:h-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700"
+                  className="h-8 sm:h-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 focus-visible:ring-2"
                 />
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-2.5">
-              <div className="space-y-1">
+              <div className="space-y-1 min-w-0">
                 <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Teacher's Name</Label>
                 <Input 
                   value={formData.teacherName} 
                   onChange={(e) => setFormData({ ...formData, teacherName: e.target.value })} 
                   placeholder="e.g., John Doe" 
-                  className="h-8 sm:h-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700"
+                  className="h-8 sm:h-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 focus-visible:ring-2"
                 />
               </div>
-              <div className="space-y-1">
+              <div className="space-y-1 min-w-0">
                 <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Schedule (Days)</Label>
                 <Input 
                   value={formData.schedule} 
                   onChange={(e) => setFormData({ ...formData, schedule: e.target.value })} 
                   placeholder="e.g., Mon, Wed, Fri" 
-                  className="h-8 sm:h-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700"
+                  className="h-8 sm:h-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 focus-visible:ring-2"
                 />
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-2.5">
-              <div className="space-y-1">
+              <div className="space-y-1 min-w-0">
                 <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Start Time</Label>
                 <Input 
                   type="time" 
                   value={formData.startTime} 
                   onChange={(e) => setFormData({ ...formData, startTime: e.target.value })} 
-                  className="h-8 sm:h-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700"
+                  className="h-8 sm:h-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 focus-visible:ring-2"
                 />
               </div>
-              <div className="space-y-1">
+              <div className="space-y-1 min-w-0">
                 <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">End Time</Label>
                 <Input 
                   type="time" 
                   value={formData.endTime} 
                   onChange={(e) => setFormData({ ...formData, endTime: e.target.value })} 
-                  className="h-8 sm:h-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700"
+                  className="h-8 sm:h-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 focus-visible:ring-2"
                 />
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-2.5">
-              <div className="space-y-1">
+              <div className="space-y-1 min-w-0">
                 <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Start Date</Label>
                 <Input 
                   type="date" 
                   value={formData.startDate} 
                   onChange={(e) => setFormData({ ...formData, startDate: e.target.value })} 
-                  className="h-8 sm:h-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700"
+                  className="h-8 sm:h-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 focus-visible:ring-2"
                 />
               </div>
-              <div className="space-y-1">
+              <div className="space-y-1 min-w-0">
                 <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">End Date</Label>
                 <Input 
                   type="date" 
                   value={formData.endDate} 
                   onChange={(e) => setFormData({ ...formData, endDate: e.target.value })} 
-                  className="h-8 sm:h-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700"
+                  className="h-8 sm:h-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 focus-visible:ring-2"
                 />
               </div>
             </div>

@@ -82,7 +82,7 @@ export function WorkspaceWhyChooseUs({ data }: { data?: any }) {
               const Icon = iconMap[feat.icon] || Cpu;
               return (
                 <div key={i} className="group p-2 flex gap-6">
-                  <div className="w-14 h-14 shrink-0 bg-white dark:bg-zinc-900 border border-border rounded-2xl flex items-center justify-center shadow-sm group-hover:bg-primary group-hover:text-white transition-all duration-300 transform group-hover:rotate-6">
+                  <div className="w-14 h-14 shrink-0 bg-white dark:bg-zinc-900 border border-border rounded-2xl flex items-center justify-center shadow-sm group-hover:bg-primary group-hover:text-primary-foreground transition-all duration-300 transform group-hover:rotate-6">
                     <Icon className="w-6 h-6" />
                   </div>
                   <div className="space-y-1">

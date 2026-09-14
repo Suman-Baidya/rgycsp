@@ -121,7 +121,7 @@ export default async function EventsPage() {
                           {featuredEvent.hostName || "Main Institute"}
                         </div>
                       </div>
-                      <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-white -translate-x-4 opacity-0 group-hover:translate-x-0 group-hover:opacity-100 transition-all duration-300">
+                      <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-primary-foreground -translate-x-4 opacity-0 group-hover:translate-x-0 group-hover:opacity-100 transition-all duration-300 shadow-sm">
                         <ArrowRight className="w-5 h-5" />
                       </div>
                     </div>

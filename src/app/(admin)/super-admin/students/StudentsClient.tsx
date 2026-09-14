@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState, useMemo, useRef } from "react";
+import React, { useState, useMemo, useRef, useEffect } from "react";
+import { getActiveDocumentTemplates } from "@/app/actions/document-templates";
 import Link from "next/link";
 import {
   Users, GraduationCap, Building2, Search,
@@ -443,6 +444,27 @@ export default function StudentsClient({ initialStudents, initialWorkspaces, ini
   // Add state for selected students (for bulk actions)
   const [selectedStudentIds, setSelectedStudentIds] = useState<string[]>([]);
   const [bulkDownloadOpen, setBulkDownloadOpen] = useState(false);
+
+  // Active document templates for multi-design support
+  const [activeTemplates, setActiveTemplates] = useState<any[]>([]);
+  const [selectedDocTemplates, setSelectedDocTemplates] = useState<Record<string, string>>({});
+  const [printSettingsOpen, setPrintSettingsOpen] = useState(false);
+
+  useEffect(() => {
+    getActiveDocumentTemplates().then((templates) => {
+      if (Array.isArray(templates)) {
+        setActiveTemplates(templates);
+        const defaults: Record<string, string> = {};
+        ['CERTIFICATE', 'MARKSHEET', 'ADMIT_CARD', 'STUDENT_ID'].forEach((type) => {
+          const matching = templates.filter((t: any) => t.type === type);
+          if (matching.length > 0) {
+            defaults[type] = matching[0].id;
+          }
+        });
+        setSelectedDocTemplates(prev => ({ ...defaults, ...prev }));
+      }
+    });
+  }, []);
 
   // Stats for cards
   const stats = useMemo(() => {
@@ -912,9 +934,9 @@ export default function StudentsClient({ initialStudents, initialWorkspaces, ini
                     <Button 
                       variant="default" 
                       onClick={() => setBulkDownloadOpen(true)}
-                      className="bg-primary hover:bg-primary/90 text-white font-semibold h-7 px-2.5 rounded-lg shadow-sm text-xs flex items-center gap-1.5"
+                      className="bg-emerald-600 hover:bg-emerald-700 dark:bg-emerald-600 dark:hover:bg-emerald-500 text-white font-semibold h-7 px-2.5 rounded-lg shadow-sm text-xs flex items-center gap-1.5"
                     >
-                      <Download className="w-3.5 h-3.5" /> Bulk ({selectedStudentIds.length})
+                      <Printer className="w-3.5 h-3.5" /> Bulk Print ({selectedStudentIds.length})
                     </Button>
                   )}
                 </div>
@@ -949,6 +971,16 @@ export default function StudentsClient({ initialStudents, initialWorkspaces, ini
               )}
             </div>
             <div className="flex items-center gap-2 self-end md:self-auto shrink-0">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setPrintSettingsOpen(true)}
+                className="h-8 sm:h-9 px-2.5 sm:px-3 text-xs font-semibold rounded-lg border-slate-200 dark:border-slate-700/60 bg-white dark:bg-slate-800/60 hover:bg-slate-50 dark:hover:bg-slate-800 gap-1.5 text-slate-700 dark:text-slate-200 shadow-xs"
+              >
+                <Printer className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
+                <span className="hidden sm:inline">Print Settings</span>
+                <span className="sm:hidden">Print</span>
+              </Button>
               <span className="text-xs font-medium text-slate-400">Show:</span>
               <Select value={itemsPerPage.toString()} onValueChange={(v) => { setItemsPerPage(Number(v)); setCurrentPage(1); }}>
                 <SelectTrigger className="w-16 h-8 sm:h-9 bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700/60 rounded-lg text-xs font-medium">
@@ -1855,9 +1887,33 @@ export default function StudentsClient({ initialStudents, initialWorkspaces, ini
                           )}
                         </div>
                         
+                        {activeTemplates.filter(t => t.type === 'CERTIFICATE').length > 1 && (
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-[10px] font-semibold text-slate-500">Design:</span>
+                            <Select 
+                              value={selectedDocTemplates['CERTIFICATE'] || activeTemplates.find(t => t.type === 'CERTIFICATE')?.id || ''}
+                              onValueChange={(val: any) => setSelectedDocTemplates(prev => ({ ...prev, CERTIFICATE: String(val) }))}
+                            >
+                              <SelectTrigger className="h-7 text-[11px] font-medium bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 max-w-[170px]">
+                                <SelectValue placeholder="Select Template">
+                                  {activeTemplates.find(t => t.id === (selectedDocTemplates['CERTIFICATE'] || activeTemplates.find(a => a.type === 'CERTIFICATE')?.id))?.name || "Select Template"}
+                                </SelectValue>
+                              </SelectTrigger>
+                              <SelectContent>
+                                {activeTemplates.filter(t => t.type === 'CERTIFICATE').map(t => (
+                                  <SelectItem key={t.id} value={t.id} className="text-xs">
+                                    {t.name}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        )}
+
                         <DocumentRenderer 
                           ref={el => { docRefs.current['CERTIFICATE'] = el; }} 
                           type="CERTIFICATE" 
+                          templateId={selectedDocTemplates['CERTIFICATE'] || null}
                           student={selectedStudentForDocs}
                         />
 
@@ -1920,6 +1976,28 @@ export default function StudentsClient({ initialStudents, initialWorkspaces, ini
                           </div>
                         )}
                       </div>
+                      {activeTemplates.filter(t => t.type === 'MARKSHEET').length > 1 && (
+                        <div className="flex items-center gap-1.5 ml-auto">
+                          <span className="text-[10px] font-semibold text-slate-500">Design:</span>
+                          <Select 
+                            value={selectedDocTemplates['MARKSHEET'] || activeTemplates.find(t => t.type === 'MARKSHEET')?.id || ''}
+                            onValueChange={(val: any) => setSelectedDocTemplates(prev => ({ ...prev, MARKSHEET: String(val) }))}
+                          >
+                            <SelectTrigger className="h-7 text-[11px] font-medium bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 max-w-[170px]">
+                              <SelectValue placeholder="Select Template">
+                                {activeTemplates.find(t => t.id === (selectedDocTemplates['MARKSHEET'] || activeTemplates.find(a => a.type === 'MARKSHEET')?.id))?.name || "Select Template"}
+                              </SelectValue>
+                            </SelectTrigger>
+                            <SelectContent>
+                              {activeTemplates.filter(t => t.type === 'MARKSHEET').map(t => (
+                                <SelectItem key={t.id} value={t.id} className="text-xs">
+                                  {t.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      )}
                     </div>
                     
                     <div className="border border-slate-100 dark:border-slate-800 rounded-lg overflow-hidden">
@@ -1968,7 +2046,7 @@ export default function StudentsClient({ initialStudents, initialWorkspaces, ini
                                 </TableCell>
                                 <TableCell className="text-right py-2">
                                   <div className="flex items-center justify-end gap-1">
-                                    <DocumentRenderer ref={el => { docRefs.current[uniqueKey] = el; }} type="MARKSHEET" student={selectedStudentForDocs} semesterNumber={sem.semesterNumber} />
+                                    <DocumentRenderer ref={el => { docRefs.current[uniqueKey] = el; }} type="MARKSHEET" templateId={selectedDocTemplates['MARKSHEET'] || null} student={selectedStudentForDocs} semesterNumber={sem.semesterNumber} />
                                     <Button variant="ghost" size="icon" className="h-7 w-7 text-slate-500 hover:text-blue-600" onClick={() => docRefs.current[uniqueKey]?.preview()}><Eye className="w-3.5 h-3.5" /></Button>
                                     <Button variant="ghost" size="icon" className="h-7 w-7 text-slate-500 hover:text-emerald-600" onClick={() => docRefs.current[uniqueKey]?.downloadPDF()}><Download className="w-3.5 h-3.5" /></Button>
                                   </div>
@@ -2003,12 +2081,34 @@ export default function StudentsClient({ initialStudents, initialWorkspaces, ini
                     </div>
                     
                     <div className="flex items-center justify-between pt-2.5 mt-0.5 border-t border-slate-100 dark:border-slate-800/60">
-                      <div className="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded text-[9px] font-semibold text-slate-600 dark:text-slate-400">
-                        <ShieldCheck className="w-3 h-3 text-slate-500 dark:text-slate-400" />
-                        <span className="uppercase tracking-wider">Delegated</span>
+                      <div className="flex items-center gap-1.5">
+                        {activeTemplates.filter(t => t.type === doc.id).length > 1 ? (
+                          <Select 
+                            value={selectedDocTemplates[doc.id] || activeTemplates.find(t => t.type === doc.id)?.id || ''}
+                            onValueChange={(val: any) => setSelectedDocTemplates(prev => ({ ...prev, [doc.id]: String(val) }))}
+                          >
+                            <SelectTrigger className="h-6 text-[10px] font-medium bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 max-w-[140px]">
+                              <SelectValue placeholder="Select Template">
+                                {activeTemplates.find(t => t.id === (selectedDocTemplates[doc.id] || activeTemplates.find(a => a.type === doc.id)?.id))?.name || "Select Template"}
+                              </SelectValue>
+                            </SelectTrigger>
+                            <SelectContent>
+                              {activeTemplates.filter(t => t.type === doc.id).map(t => (
+                                <SelectItem key={t.id} value={t.id} className="text-xs">
+                                  {t.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        ) : (
+                          <div className="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded text-[9px] font-semibold text-slate-600 dark:text-slate-400">
+                            <ShieldCheck className="w-3 h-3 text-slate-500 dark:text-slate-400" />
+                            <span className="uppercase tracking-wider">Delegated</span>
+                          </div>
+                        )}
                       </div>
                       
-                      <DocumentRenderer ref={el => { docRefs.current[doc.id] = el; }} type={doc.id as any} student={selectedStudentForDocs} />
+                      <DocumentRenderer ref={el => { docRefs.current[doc.id] = el; }} type={doc.id as any} templateId={selectedDocTemplates[doc.id] || null} student={selectedStudentForDocs} />
                       
                       <div className="flex items-center gap-1">
                         <Button variant="ghost" size="icon" className="h-7 w-7 text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400" onClick={() => docRefs.current[doc.id]?.preview()}><Eye className="w-3.5 h-3.5" /></Button>
@@ -2038,6 +2138,123 @@ export default function StudentsClient({ initialStudents, initialWorkspaces, ini
         selectedStudentIds={selectedStudentIds}
         students={initialStudents}
       />
+
+      {/* Document Print & Download Settings Modal */}
+      <Dialog open={printSettingsOpen} onOpenChange={setPrintSettingsOpen}>
+        <DialogContent className="max-w-xl rounded-2xl p-0 overflow-hidden border border-slate-200 dark:border-slate-800 shadow-2xl">
+          <div className="bg-white dark:bg-slate-900 p-5 sm:p-6 space-y-5">
+            <div className="flex items-start justify-between">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
+                  <Printer className="h-5 w-5" />
+                </div>
+                <div>
+                  <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white">Document Print & Download Settings</h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">Configure default templates and print quality for student documents</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Quality & High-Res Clarity Banner */}
+            <div className="p-3 bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-200/60 dark:border-emerald-800/40 rounded-xl flex items-start gap-2.5">
+              <CheckCircle className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
+              <div className="text-xs text-emerald-800 dark:text-emerald-300">
+                <p className="font-semibold">Full Resolution Printing Active</p>
+                <p className="text-[11px] text-emerald-700 dark:text-emerald-400/90 mt-0.5">
+                  Document templates are rendered without lossy compression and exported at 300 DPI high-clarity background print mode.
+                </p>
+              </div>
+            </div>
+
+            {/* Active Templates Config Section */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400">Default Active Templates for Printing</h4>
+                <Link 
+                  href="/super-admin/documents" 
+                  className="text-xs text-primary hover:underline font-semibold flex items-center gap-1"
+                >
+                  Manage Templates <ExternalLink className="w-3 h-3" />
+                </Link>
+              </div>
+
+              <div className="space-y-2.5">
+                {[
+                  { type: 'CERTIFICATE', label: 'Certificate Template', desc: 'Design used for student completion certificates' },
+                  { type: 'MARKSHEET', label: 'Marksheet Template', desc: 'Design used for semester and final marksheets' },
+                  { type: 'ADMIT_CARD', label: 'Admit Card Template', desc: 'Design used for exam hall admit cards' },
+                  { type: 'STUDENT_ID', label: 'Student ID Card Template', desc: 'Design used for student identification cards' }
+                ].map(item => {
+                  const matchingTemplates = activeTemplates.filter(t => t.type === item.type);
+                  const currentSelected = selectedDocTemplates[item.type] || matchingTemplates[0]?.id || "";
+
+                  return (
+                    <div key={item.type} className="p-3 rounded-xl border border-slate-100 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-800/30 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-bold text-slate-800 dark:text-slate-200">{item.label}</span>
+                          <Badge variant="outline" className="text-[9px] font-semibold border-slate-200 dark:border-slate-700 text-slate-500">
+                            {matchingTemplates.length} {matchingTemplates.length === 1 ? 'Design Active' : 'Designs Active'}
+                          </Badge>
+                        </div>
+                        <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">{item.desc}</p>
+                      </div>
+
+                      <div className="w-full sm:w-56 shrink-0">
+                        {matchingTemplates.length === 0 ? (
+                          <span className="text-[11px] text-amber-600 dark:text-amber-400 font-medium">No active template found</span>
+                        ) : (
+                          <Select
+                            value={currentSelected}
+                            onValueChange={(val: any) => {
+                              setSelectedDocTemplates(prev => ({ ...prev, [item.type]: String(val) }));
+                              toast.success(`Default ${item.label} updated to ${matchingTemplates.find(t => t.id === val)?.name}`);
+                            }}
+                          >
+                            <SelectTrigger className="h-8 text-xs font-medium bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 rounded-lg">
+                              <SelectValue placeholder="Choose template">
+                                {matchingTemplates.find(t => t.id === currentSelected)?.name || "Choose template"}
+                              </SelectValue>
+                            </SelectTrigger>
+                            <SelectContent>
+                              {matchingTemplates.map(t => (
+                                <SelectItem key={t.id} value={t.id} className="text-xs">
+                                  {t.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => setPrintSettingsOpen(false)}
+                className="h-8 text-xs font-semibold rounded-lg"
+              >
+                Close
+              </Button>
+              <Button 
+                size="sm" 
+                onClick={() => {
+                  setPrintSettingsOpen(false);
+                  toast.success("Print settings preferences saved for this session!");
+                }}
+                className="h-8 text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg px-4"
+              >
+                Done
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Password Reset Modal */}
       <Dialog open={passwordModalOpen} onOpenChange={setPasswordModalOpen}>

@@ -22,15 +22,34 @@ export function LandingFooter({ settings }: { settings?: any }) {
   const brandDescription = settings?.brandDescription || "Empowering the next generation of learners through innovative technology and expert-led educational programs. Your success is our ultimate mission.";
   const footerTagline = settings?.navbarConfig?.footerTagline || settings?.navbarConfig?.secondarySiteName || "Empowering Education Worldwide";
   
-  const navLinks = settings?.navigation || [
-    { name: "Home", href: "/", id: "home" },
-    { name: "About", href: "/about", id: "about" },
-    { name: "Courses", href: "/courses", id: "courses" },
-    { name: "Contact", href: "/contact", id: "contact" }
+  const defaultNav = [
+    { name: "Home", href: "/", id: "home", isActive: true },
+    { name: "About", href: "/about", id: "about", isActive: true },
+    { name: "Services", href: "/services", id: "services", isActive: true },
+    { name: "Students", href: "/students", id: "students", isActive: true },
+    { name: "Courses", href: "/courses", id: "courses", isActive: true },
+    { name: "Franchises", href: "/franchises", id: "franchises", isActive: true },
+    { name: "Events", href: "/events", id: "events", isActive: true },
+    { name: "Placement", href: "/placement", id: "placement", isActive: true },
+    { name: "Pricing", href: "/pricing", id: "pricing", isActive: true },
+    { name: "Support", href: "/support", id: "support", isActive: true }
   ];
 
+  const navLinks = (settings?.navigation && Array.isArray(settings.navigation) && settings.navigation.length > 0
+    ? settings.navigation
+    : defaultNav
+  ).filter((link: any) => link.isActive !== false);
+
+  const priorityKeys = ["home", "about", "services", "courses", "franchises", "pricing", "support", "students"];
+  const prioritized = navLinks.filter((item: any) => {
+    const key = (item.id || item.name || "").toLowerCase();
+    const href = (item.href || "").toLowerCase();
+    return priorityKeys.some((p) => key.includes(p) || href === `/${p}` || (p === "home" && (href === "/" || href === "")));
+  });
+  const footerNavItems = prioritized.length >= 4 ? prioritized.slice(0, 6) : navLinks.slice(0, 6);
+
   return (
-    <footer className="w-full bg-zinc-950 text-zinc-300 pt-24 pb-12 font-sans relative overflow-hidden border-t border-white/5">
+    <footer className="dark dark-context w-full bg-zinc-950 text-zinc-300 pt-24 pb-12 font-sans relative overflow-hidden border-t border-white/5">
       {/* Decorative Glows */}
       <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[120px] pointer-events-none -translate-y-1/2" />
       <div className="absolute top-0 right-1/4 w-[400px] h-[400px] bg-blue-500/5 rounded-full blur-[100px] pointer-events-none -translate-y-1/2" />
@@ -118,11 +137,11 @@ export function LandingFooter({ settings }: { settings?: any }) {
               <h4 className="text-white font-bold text-xs tracking-[0.2em]">Our Institute</h4>
               <div className="absolute -bottom-2 left-0 w-8 h-0.5 bg-primary rounded-full"></div>
             </div>
-            <div className="flex flex-col gap-4">
-              {navLinks.map((link: any) => (
-                <Link key={link.id} href={link.href} className="text-zinc-400 hover:text-primary font-bold text-[15px] transition-all flex items-center gap-2 group">
-                  <ArrowRight className="w-3 h-3 text-primary/40 group-hover:text-primary group-hover:translate-x-1 transition-all" /> 
-                  {link.name}
+            <div className="flex flex-col gap-3.5">
+              {footerNavItems.map((link: any) => (
+                <Link key={link.id || link.name || link.href} href={link.href} className="text-zinc-400 hover:text-white font-semibold text-sm transition-all flex items-center gap-2 group hover:translate-x-1">
+                  <ArrowRight className="w-3.5 h-3.5 text-zinc-600 group-hover:text-primary group-hover:translate-x-0.5 transition-all shrink-0" /> 
+                  <span className="truncate">{link.name}</span>
                 </Link>
               ))}
             </div>
@@ -134,16 +153,16 @@ export function LandingFooter({ settings }: { settings?: any }) {
               <h4 className="text-white font-bold text-xs tracking-[0.2em]">Support</h4>
               <div className="absolute -bottom-2 left-0 w-8 h-0.5 bg-primary rounded-full"></div>
             </div>
-            <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-3.5">
               {[
                 { name: 'Help Center', href: '/help' },
                 { name: 'Privacy Policy', href: '/legal/privacy' },
                 { name: 'Terms of Service', href: '/legal/terms' },
                 { name: 'Cookie Policy', href: '/legal/cookie' }
               ].map((item) => (
-                <Link key={item.name} href={item.href} className="text-zinc-400 hover:text-primary font-bold text-[15px] transition-all flex items-center gap-2 group">
-                   <ArrowRight className="w-3 h-3 text-primary/40 group-hover:text-primary group-hover:translate-x-1 transition-all" /> 
-                   {item.name}
+                <Link key={item.name} href={item.href} className="text-zinc-400 hover:text-white font-semibold text-sm transition-all flex items-center gap-2 group hover:translate-x-1">
+                   <ArrowRight className="w-3 h-3 text-zinc-600 group-hover:text-primary group-hover:translate-x-0.5 transition-all shrink-0" /> 
+                   <span>{item.name}</span>
                 </Link>
               ))}
             </div>

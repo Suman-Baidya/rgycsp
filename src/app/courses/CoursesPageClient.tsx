@@ -199,7 +199,7 @@ export default function CoursesPageClient({ initialData, initialGroups = [] }: {
                   </Button>
                   <Link href={`/nearest-center?courseId=${course.id}`} className="flex-1">
                     <Button 
-                      className="w-full rounded-xl h-11 font-bold bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/20"
+                      className="w-full rounded-xl h-11 font-bold bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/20"
                     >
                       Enroll
                     </Button>

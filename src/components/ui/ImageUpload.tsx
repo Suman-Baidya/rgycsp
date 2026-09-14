@@ -16,6 +16,7 @@ interface ImageUploadProps {
   folder?: string;
   label?: string;
   maxSizeK?: number; // In KB
+  rawUpload?: boolean; // When true, bypasses canvas downscaling & compression to preserve 100% lossless print quality
 }
 
 export function ImageUpload({ 
@@ -24,7 +25,8 @@ export function ImageUpload({
   onRemove, 
   folder = "RGYCSP/Uncategorized", 
   label,
-  maxSizeK = 10240 // Default 10MB
+  maxSizeK = 10240, // Default 10MB
+  rawUpload = false
 }: ImageUploadProps) {
   const [isUploading, setIsUploading] = useState(false);
 
@@ -84,37 +86,67 @@ export function ImageUpload({
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Check raw file size before compression as a first pass
-    // (Optional: we can allow larger raw files if we compress them)
-    if (file.size > 20 * 1024 * 1024) {
-      toast.error("File is too large (Max 20MB raw)");
+    const maxAllowedBytes = maxSizeK * 1024;
+    if (file.size > maxAllowedBytes) {
+      toast.error(`File is too large (${(file.size / (1024 * 1024)).toFixed(1)}MB). Max allowed: ${displaySize}`);
       return;
     }
 
     setIsUploading(true);
     try {
-      const compressedBase64 = await compressImage(file, maxSizeK);
-      
-      // Calculate size of base64
-      const sizeInBytes = Math.round((compressedBase64.length * 3) / 4);
-      const sizeInK = sizeInBytes / 1024;
+      const formData = new FormData();
+      formData.append("folder", folder);
 
-      if (sizeInK > maxSizeK) {
-        toast.error(`Image is still too large (${Math.round(sizeInK)}KB). Max allowed: ${maxSizeK}KB. Please try a smaller image.`);
-        setIsUploading(false);
-        return;
+      if (rawUpload) {
+        // Stream raw binary File directly to preserve 100% original high-resolution print quality
+        formData.append("preserveQuality", "true");
+        formData.append("file", file);
+      } else {
+        const compressedBase64 = await compressImage(file, maxSizeK);
+        
+        // Calculate size of base64
+        const sizeInBytes = Math.round((compressedBase64.length * 3) / 4);
+        const sizeInK = sizeInBytes / 1024;
+
+        if (sizeInK > maxSizeK) {
+          toast.error(`Image is still too large (${Math.round(sizeInK)}KB). Max allowed: ${maxSizeK}KB. Please try a smaller image.`);
+          setIsUploading(false);
+          return;
+        }
+
+        formData.append("file", compressedBase64);
       }
 
-      const result = await uploadImage(compressedBase64, folder);
-      
+      // Stream file upload via API endpoint (avoids Server Action serialization limits for large templates)
+      let result: { success: boolean; url?: string; error?: string };
+      try {
+        const res = await fetch("/api/upload", {
+          method: "POST",
+          body: formData,
+        });
+        result = await res.json();
+      } catch (fetchErr: any) {
+        console.warn("API upload failed, attempting fallback:", fetchErr);
+        const payload = rawUpload
+          ? await new Promise<string>((resolve, reject) => {
+              const reader = new FileReader();
+              reader.onload = () => resolve(reader.result as string);
+              reader.onerror = reject;
+              reader.readAsDataURL(file);
+            })
+          : (formData.get("file") as string);
+        result = await uploadImage(payload, folder, { preserveQuality: rawUpload });
+      }
+
       if (result.success && result.url) {
         onChange(result.url);
-        toast.success("Image uploaded and optimized");
+        toast.success(rawUpload ? "High-definition template uploaded successfully" : "Image uploaded and optimized");
       } else {
         toast.error(result.error || "Upload failed");
       }
-    } catch (error) {
-      toast.error("Error processing image");
+    } catch (error: any) {
+      console.error("Image upload/processing error:", error);
+      toast.error(error?.message || "Error processing image");
     } finally {
       setIsUploading(false);
     }
@@ -148,7 +180,9 @@ export function ImageUpload({
                 </div>
                 <div className="text-center px-4">
                   <p className="text-sm font-bold">Click to upload or drag and drop</p>
-                  <p className="text-[10px] text-muted-foreground uppercase tracking-widest mt-1">Images only (Max {displaySize})</p>
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-widest mt-1">
+                    {rawUpload ? `Lossless Print Resolution (Max ${displaySize})` : `Images only (Max ${displaySize})`}
+                  </p>
                 </div>
               </>
             )}
@@ -171,7 +205,10 @@ export function ImageUpload({
       )}
       
       <p className="text-[10px] text-muted-foreground italic">
-        * Image will be automatically optimized and compressed to under {displaySize}.
+        {rawUpload
+          ? `* 100% Original High-Definition Quality preserved without compression (Print-Ready, Max ${displaySize}).`
+          : `* Image will be automatically optimized and compressed to under ${displaySize}.`
+        }
       </p>
     </div>
   );

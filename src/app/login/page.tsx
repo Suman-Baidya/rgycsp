@@ -61,7 +61,7 @@ export default async function LoginPage() {
   }
 
   return (
-    <div className="min-h-[100dvh] w-full flex flex-col items-center justify-center bg-slate-50/70 dark:bg-[#06080e] p-2 sm:p-4 md:p-6 relative overflow-y-auto font-sans transition-colors duration-300">
+    <div className="min-h-[100dvh] w-full flex flex-col items-center justify-center bg-slate-50/70 dark:bg-[#06080e] p-4 sm:p-6 relative overflow-y-auto font-sans transition-colors duration-300">
       {/* Premium Background Layer */}
       <div className="fixed inset-0 z-0 pointer-events-none">
         <div className="absolute top-[-15%] left-[-10%] w-[65%] h-[65%] bg-indigo-600/10 dark:bg-indigo-600/15 rounded-full blur-[130px] animate-pulse" />

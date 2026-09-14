@@ -18,7 +18,7 @@ export async function generateMetadata({ params }: { params: Promise<{ tenant: s
 
   const siteName = workspace.siteSettings.siteName || workspace.name;
   const desc = workspace.siteSettings.brandDescription || `${siteName} Educational Portal`;
-  const iconUrl = workspace.siteSettings.faviconUrl || workspace.siteSettings.logoUrl || "https://res.cloudinary.com/dmhipemqk/image/upload/v1780409947/RGYCSP/SuperAdmin/branding/mjwcqjcyprkxpyleggms.webp";
+  const iconUrl = workspace.siteSettings.logoUrl || workspace.siteSettings.faviconUrl || "https://res.cloudinary.com/dmhipemqk/image/upload/v1780409947/RGYCSP/SuperAdmin/branding/mjwcqjcyprkxpyleggms.webp";
 
   return {
     title: {
@@ -33,7 +33,9 @@ export async function generateMetadata({ params }: { params: Promise<{ tenant: s
       siteName: siteName,
     },
     icons: {
-      icon: iconUrl
+      icon: iconUrl,
+      shortcut: iconUrl,
+      apple: iconUrl,
     }
   };
 }

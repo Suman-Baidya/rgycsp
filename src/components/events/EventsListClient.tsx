@@ -202,7 +202,7 @@ export function EventsListClient({ events }: { events: any[] }) {
                 <button
                   key={i}
                   onClick={() => setCurrentPage(i + 1)}
-                  className={`h-10 w-10 rounded-xl font-bold text-sm transition-colors ${currentPage === i + 1 ? "bg-primary text-white shadow-md shadow-primary/20" : "text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-zinc-800"}`}
+                  className={`h-10 w-10 rounded-xl font-bold text-sm transition-colors ${currentPage === i + 1 ? "bg-primary text-primary-foreground shadow-md shadow-primary/20" : "text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-zinc-800"}`}
                 >
                   {i + 1}
                 </button>

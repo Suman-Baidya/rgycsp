@@ -118,7 +118,9 @@ export default function StudentList({
   const router = useRouter();
   const pathname = usePathname();
   const params = useParams();
-  const tenant = params?.tenant;
+  const tenant = (params?.tenant as string) || "";
+  const isSubdirectoryMode = pathname.startsWith('/app/');
+  const workspaceBase = isSubdirectoryMode ? `/app/${tenant}` : '';
 
   const [editFormData, setEditFormData] = useState({
     fullName: "",
@@ -532,9 +534,6 @@ export default function StudentList({
     }
   };
 
-  const isSubdirectoryMode = pathname.startsWith('/app/');
-  const workspaceBase = isSubdirectoryMode ? `/app/${tenant}` : '';
-
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
@@ -657,7 +656,11 @@ export default function StudentList({
                 <div className="w-full sm:w-[200px]">
                   <Select value={selectedBatchId} onValueChange={(val) => { setSelectedBatchId((val as string) || "all"); setCurrentPage(1); }}>
                     <SelectTrigger className="h-8 sm:h-9 text-xs font-medium rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700/60">
-                      <SelectValue placeholder="All Batches" />
+                      <SelectValue placeholder="All Batches">
+                        {selectedBatchId === "all" || !selectedBatchId
+                          ? "All Batches"
+                          : (batches.find((b: any) => b.id === selectedBatchId)?.name || "All Batches")}
+                      </SelectValue>
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All Batches ({initialStudents.length})</SelectItem>
@@ -1224,53 +1227,53 @@ export default function StudentList({
       </Dialog>
 
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
-        <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col overflow-hidden rounded-[2.5rem] p-0 border-2 border-slate-100 dark:border-slate-800">
-          <div className="flex-1 overflow-y-auto p-8 sm:p-10 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-slate-200 dark:[&::-webkit-scrollbar-thumb]:bg-slate-700 [&::-webkit-scrollbar-thumb]:rounded-full">
-            <DialogHeader className="mb-6">
-              <DialogTitle className="text-2xl font-bold tracking-tight">Edit Student Profile</DialogTitle>
-              <p className="text-sm text-slate-500 mt-1">Modify the student's information and save changes.</p>
+        <DialogContent className="max-w-3xl w-[95vw] max-h-[88vh] flex flex-col overflow-hidden rounded-2xl p-0 border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xl">
+          <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-5 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-slate-200 dark:[&::-webkit-scrollbar-thumb]:bg-slate-700 [&::-webkit-scrollbar-thumb]:rounded-full">
+            <DialogHeader className="mb-3 space-y-0.5">
+              <DialogTitle className="text-base sm:text-lg font-bold tracking-tight">Edit Student Profile</DialogTitle>
+              <p className="text-xs text-slate-500">Modify the student's information and save changes.</p>
             </DialogHeader>
             
-            <form onSubmit={handleUpdate}>
-              <div className="space-y-10">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+            <form onSubmit={handleUpdate} className="space-y-6">
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                   {/* 01 Personal Information */}
-                  <div className="space-y-6">
-                    <h3 className="text-lg font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2 border-b pb-2">
-                      <span className="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center text-xs">01</span>
+                  <div className="space-y-4">
+                    <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2 border-b pb-1.5 border-slate-100 dark:border-slate-800">
+                      <span className="w-6 h-6 rounded-md bg-primary/10 text-primary flex items-center justify-center text-[11px] font-bold">01</span>
                       Personal Information
                     </h3>
-                    <div className="grid gap-4">
-                      <div className="space-y-1.5">
-                        <label className="text-xs font-bold text-slate-400">Full Name *</label>
-                        <Input required value={editFormData.fullName} onChange={e => setEditFormData({...editFormData, fullName: e.target.value})} className="h-11 rounded-xl" />
+                    <div className="grid gap-3">
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Full Name *</label>
+                        <Input required value={editFormData.fullName} onChange={e => setEditFormData({...editFormData, fullName: e.target.value})} className="h-9 text-xs rounded-lg" />
                       </div>
                       
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-1.5">
-                          <label className="text-xs font-bold text-slate-400">Father's Name</label>
-                          <Input value={editFormData.fatherName} onChange={e => setEditFormData({...editFormData, fatherName: e.target.value})} className="h-11 rounded-xl" />
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Father's Name</label>
+                          <Input value={editFormData.fatherName} onChange={e => setEditFormData({...editFormData, fatherName: e.target.value})} className="h-9 text-xs rounded-lg" />
                         </div>
-                        <div className="space-y-1.5">
-                          <label className="text-xs font-bold text-slate-400">Mother's Name</label>
-                          <Input value={editFormData.motherName} onChange={e => setEditFormData({...editFormData, motherName: e.target.value})} className="h-11 rounded-xl" />
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-1.5">
-                          <label className="text-xs font-bold text-slate-400">Enrollment No</label>
-                          <Input required value={editFormData.enrollmentNo} onChange={e => setEditFormData({...editFormData, enrollmentNo: e.target.value})} className="h-11 rounded-xl" />
-                        </div>
-                        <div className="space-y-1.5">
-                          <label className="text-xs font-bold text-slate-400">Login Password</label>
-                          <Input value={editFormData.loginPassword} onChange={e => setEditFormData({...editFormData, loginPassword: e.target.value})} className="h-11 rounded-xl" />
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Mother's Name</label>
+                          <Input value={editFormData.motherName} onChange={e => setEditFormData({...editFormData, motherName: e.target.value})} className="h-9 text-xs rounded-lg" />
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-1.5">
-                          <label className="text-xs font-bold text-slate-400">Date of Birth</label>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Enrollment No</label>
+                          <Input required value={editFormData.enrollmentNo} onChange={e => setEditFormData({...editFormData, enrollmentNo: e.target.value})} className="h-9 text-xs rounded-lg" />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Login Password</label>
+                          <Input value={editFormData.loginPassword} onChange={e => setEditFormData({...editFormData, loginPassword: e.target.value})} className="h-9 text-xs rounded-lg" />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Date of Birth</label>
                           <Input 
                             type="text" 
                             placeholder="DD/MM/YYYY"
@@ -1283,11 +1286,11 @@ export default function StudentList({
                               setEditFormData({...editFormData, dob: val});
                             }} 
                             maxLength={10}
-                            className="h-11 rounded-xl" 
+                            className="h-9 text-xs rounded-lg" 
                           />
                         </div>
-                        <div className="space-y-1.5">
-                          <label className="text-xs font-bold text-slate-400">Admission Date</label>
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Admission Date</label>
                           <Input 
                             type="text" 
                             placeholder="DD/MM/YYYY"
@@ -1300,149 +1303,149 @@ export default function StudentList({
                               setEditFormData({...editFormData, admissionDate: val});
                             }} 
                             maxLength={10}
-                            className="h-11 rounded-xl" 
+                            className="h-9 text-xs rounded-lg" 
                           />
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-1.5">
-                          <label className="text-xs font-bold text-slate-400">Gender</label>
-                          <select value={editFormData.gender} onChange={e => setEditFormData({...editFormData, gender: e.target.value})} className="flex h-11 w-full rounded-xl border-2 border-slate-100 bg-background px-3 py-2 text-sm focus:border-primary outline-none">
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Gender</label>
+                          <select value={editFormData.gender} onChange={e => setEditFormData({...editFormData, gender: e.target.value})} className="flex h-9 w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-background px-3 py-1 text-xs focus:border-primary outline-none">
                             <option value="">Select</option>
                             <option value="Male">Male</option>
                             <option value="Female">Female</option>
                             <option value="Other">Other</option>
                           </select>
                         </div>
-                        <div className="space-y-1.5">
-                          <label className="text-xs font-bold text-slate-400">Blood Group</label>
-                          <select value={editFormData.bloodGroup} onChange={e => setEditFormData({...editFormData, bloodGroup: e.target.value})} className="flex h-11 w-full rounded-xl border-2 border-slate-100 bg-background px-3 py-2 text-sm focus:border-primary outline-none">
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Blood Group</label>
+                          <select value={editFormData.bloodGroup} onChange={e => setEditFormData({...editFormData, bloodGroup: e.target.value})} className="flex h-9 w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-background px-3 py-1 text-xs focus:border-primary outline-none">
                             <option value="">Select</option>
-                            {["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"].map(bg => <option key={bg} value={bg}>{bg}</option>)}
+                            <option value="A+">A+</option>
+                            <option value="A-">A-</option>
+                            <option value="B+">B+</option>
+                            <option value="B-">B-</option>
+                            <option value="O+">O+</option>
+                            <option value="O-">O-</option>
+                            <option value="AB+">AB+</option>
+                            <option value="AB-">AB-</option>
                           </select>
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-1.5">
-                          <label className="text-xs font-bold text-slate-400">Religion</label>
-                          <Input value={editFormData.religion} onChange={e => setEditFormData({...editFormData, religion: e.target.value})} className="h-11 rounded-xl" />
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Religion</label>
+                          <Input value={editFormData.religion} onChange={e => setEditFormData({...editFormData, religion: e.target.value})} className="h-9 text-xs rounded-lg" />
                         </div>
-                        <div className="space-y-1.5">
-                          <label className="text-xs font-bold text-slate-400">Caste</label>
-                          <select value={editFormData.caste} onChange={e => setEditFormData({...editFormData, caste: e.target.value})} className="flex h-11 w-full rounded-xl border-2 border-slate-100 bg-background px-3 py-2 text-sm focus:border-primary outline-none">
-                            <option value="">Select</option>
-                            {["GEN", "SC", "ST", "OBC", "Others"].map(c => <option key={c} value={c}>{c}</option>)}
-                          </select>
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Caste</label>
+                          <Input value={editFormData.caste} onChange={e => setEditFormData({...editFormData, caste: e.target.value})} className="h-9 text-xs rounded-lg" />
                         </div>
                       </div>
                     </div>
                   </div>
 
                   {/* 02 Contact & Address */}
-                  <div className="space-y-6">
-                    <h3 className="text-lg font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2 border-b pb-2">
-                      <span className="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center text-xs">02</span>
+                  <div className="space-y-4">
+                    <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2 border-b pb-1.5 border-slate-100 dark:border-slate-800">
+                      <span className="w-6 h-6 rounded-md bg-primary/10 text-primary flex items-center justify-center text-[11px] font-bold">02</span>
                       Contact & Address
                     </h3>
-                    <div className="grid gap-4">
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-1.5">
-                          <label className="text-xs font-bold text-slate-400">Mobile Number *</label>
-                          <Input value={editFormData.phone} onChange={e => setEditFormData({...editFormData, phone: e.target.value})} className="h-11 rounded-xl" />
+                    <div className="grid gap-3">
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Phone Number</label>
+                        <Input value={editFormData.phone} onChange={e => setEditFormData({...editFormData, phone: e.target.value})} className="h-9 text-xs rounded-lg" />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Email Address</label>
+                        <Input type="email" value={editFormData.email} onChange={e => setEditFormData({...editFormData, email: e.target.value})} className="h-9 text-xs rounded-lg" />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">WhatsApp Number</label>
+                        <Input value={editFormData.whatsapp} onChange={e => setEditFormData({...editFormData, whatsapp: e.target.value})} className="h-9 text-xs rounded-lg" />
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Village / Street</label>
+                          <Input value={editFormData.addressVill} onChange={e => setEditFormData({...editFormData, addressVill: e.target.value})} className="h-9 text-xs rounded-lg" />
                         </div>
-                        <div className="space-y-1.5">
-                          <label className="text-xs font-bold text-slate-400">WhatsApp Number</label>
-                          <Input value={editFormData.whatsapp} onChange={e => setEditFormData({...editFormData, whatsapp: e.target.value})} className="h-11 rounded-xl" />
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Post Office (PO)</label>
+                          <Input value={editFormData.addressPO} onChange={e => setEditFormData({...editFormData, addressPO: e.target.value})} className="h-9 text-xs rounded-lg" />
                         </div>
                       </div>
-                      <div className="space-y-1.5">
-                        <label className="text-xs font-bold text-slate-400">Email Address</label>
-                        <Input type="email" value={editFormData.email} onChange={e => setEditFormData({...editFormData, email: e.target.value})} className="h-11 rounded-xl" />
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Police Station (PS)</label>
+                          <Input value={editFormData.addressPS} onChange={e => setEditFormData({...editFormData, addressPS: e.target.value})} className="h-9 text-xs rounded-lg" />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">District</label>
+                          <Input value={editFormData.addressDist} onChange={e => setEditFormData({...editFormData, addressDist: e.target.value})} className="h-9 text-xs rounded-lg" />
+                        </div>
                       </div>
-                      <div className="space-y-1.5">
-                        <label className="text-xs font-bold text-slate-400">Guardian Phone</label>
-                        <Input value={editFormData.guardianPhone} onChange={e => setEditFormData({...editFormData, guardianPhone: e.target.value})} className="h-11 rounded-xl" />
-                      </div>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-1.5">
-                          <label className="text-xs font-bold text-slate-400">Village/Street</label>
-                          <Input value={editFormData.addressVill} onChange={e => setEditFormData({...editFormData, addressVill: e.target.value})} className="h-11 rounded-xl" />
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">State</label>
+                          <Input value={editFormData.addressState} onChange={e => setEditFormData({...editFormData, addressState: e.target.value})} className="h-9 text-xs rounded-lg" />
                         </div>
-                        <div className="space-y-1.5">
-                          <label className="text-xs font-bold text-slate-400">Post Office</label>
-                          <Input value={editFormData.addressPO} onChange={e => setEditFormData({...editFormData, addressPO: e.target.value})} className="h-11 rounded-xl" />
-                        </div>
-                        <div className="space-y-1.5">
-                          <label className="text-xs font-bold text-slate-400">Police Station</label>
-                          <Input value={editFormData.addressPS} onChange={e => setEditFormData({...editFormData, addressPS: e.target.value})} className="h-11 rounded-xl" />
-                        </div>
-                        <div className="space-y-1.5">
-                          <label className="text-xs font-bold text-slate-400">District</label>
-                          <Input value={editFormData.addressDist} onChange={e => setEditFormData({...editFormData, addressDist: e.target.value})} className="h-11 rounded-xl" />
-                        </div>
-                        <div className="space-y-1.5">
-                          <label className="text-xs font-bold text-slate-400">State</label>
-                          <Input value={editFormData.addressState} onChange={e => setEditFormData({...editFormData, addressState: e.target.value})} className="h-11 rounded-xl" />
-                        </div>
-                        <div className="space-y-1.5">
-                          <label className="text-xs font-bold text-slate-400">PIN Code</label>
-                          <Input value={editFormData.addressPin} onChange={e => setEditFormData({...editFormData, addressPin: e.target.value})} className="h-11 rounded-xl" />
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">PIN Code</label>
+                          <Input value={editFormData.addressPin} onChange={e => setEditFormData({...editFormData, addressPin: e.target.value})} className="h-9 text-xs rounded-lg" />
                         </div>
                       </div>
                     </div>
                   </div>
-                </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
                   {/* 03 Academic Details */}
-                  <div className="space-y-6">
-                    <h3 className="text-lg font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2 border-b pb-2">
-                      <span className="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center text-xs">03</span>
+                  <div className="space-y-4">
+                    <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2 border-b pb-1.5 border-slate-100 dark:border-slate-800">
+                      <span className="w-6 h-6 rounded-md bg-primary/10 text-primary flex items-center justify-center text-[11px] font-bold">03</span>
                       Academic Details
                     </h3>
-                    <div className="grid gap-4">
-                      <div className="space-y-1.5">
-                        <label className="text-xs font-bold text-slate-400">Qualification Name</label>
-                        <Input value={editFormData.qualName} onChange={e => setEditFormData({...editFormData, qualName: e.target.value})} placeholder="e.g. 10th, 12th, B.A." className="h-11 rounded-xl" />
+                    <div className="grid gap-3">
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Qualification Name</label>
+                        <Input value={editFormData.qualName} onChange={e => setEditFormData({...editFormData, qualName: e.target.value})} placeholder="e.g. 10th, 12th, B.A." className="h-9 text-xs rounded-lg" />
                       </div>
-                      <div className="space-y-1.5">
-                        <label className="text-xs font-bold text-slate-400">Board/University</label>
-                        <Input value={editFormData.qualBoard} onChange={e => setEditFormData({...editFormData, qualBoard: e.target.value})} className="h-11 rounded-xl" />
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Board/University</label>
+                        <Input value={editFormData.qualBoard} onChange={e => setEditFormData({...editFormData, qualBoard: e.target.value})} className="h-9 text-xs rounded-lg" />
                       </div>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-1.5">
-                          <label className="text-xs font-bold text-slate-400">Year of Passing</label>
-                          <Input value={editFormData.qualYear} onChange={e => setEditFormData({...editFormData, qualYear: e.target.value})} placeholder="YYYY" maxLength={4} className="h-11 rounded-xl" />
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Year of Passing</label>
+                          <Input value={editFormData.qualYear} onChange={e => setEditFormData({...editFormData, qualYear: e.target.value})} placeholder="YYYY" maxLength={4} className="h-9 text-xs rounded-lg" />
                         </div>
-                        <div className="space-y-1.5">
-                          <label className="text-xs font-bold text-slate-400">Percentage (%)</label>
-                          <Input value={editFormData.qualPercent} onChange={e => setEditFormData({...editFormData, qualPercent: e.target.value})} className="h-11 rounded-xl" />
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Percentage (%)</label>
+                          <Input value={editFormData.qualPercent} onChange={e => setEditFormData({...editFormData, qualPercent: e.target.value})} className="h-9 text-xs rounded-lg" />
                         </div>
                       </div>
                     </div>
                   </div>
 
                   {/* 04 Course Details */}
-                  <div className="space-y-6">
-                    <h3 className="text-lg font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2 border-b pb-2">
-                      <span className="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center text-xs">04</span>
+                  <div className="space-y-4">
+                    <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2 border-b pb-1.5 border-slate-100 dark:border-slate-800">
+                      <span className="w-6 h-6 rounded-md bg-primary/10 text-primary flex items-center justify-center text-[11px] font-bold">04</span>
                       Course Details
                     </h3>
-                    <div className="grid gap-4">
-                      <div className="space-y-1.5">
-                        <label className="text-xs font-bold text-slate-400">Assign Course</label>
-                        <select value={editFormData.courseId} onChange={e => setEditFormData({...editFormData, courseId: e.target.value})} className="flex h-11 w-full rounded-xl border-2 border-slate-100 bg-background px-3 py-2 text-sm focus:border-primary outline-none">
+                    <div className="grid gap-3">
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Assign Course</label>
+                        <select value={editFormData.courseId} onChange={e => setEditFormData({...editFormData, courseId: e.target.value})} className="flex h-9 w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-background px-3 py-1 text-xs focus:border-primary outline-none">
                           <option value="">Select a course</option>
                           {courses.map((course: any) => (
                             <option key={course.id} value={course.id}>{course.title}</option>
                           ))}
                         </select>
                       </div>
-                      <div className="space-y-1.5">
-                        <label className="text-xs font-bold text-slate-400">Assign Batch</label>
-                        <select value={editFormData.batchId} onChange={e => setEditFormData({...editFormData, batchId: e.target.value})} className="flex h-11 w-full rounded-xl border-2 border-slate-100 bg-background px-3 py-2 text-sm focus:border-primary outline-none">
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Assign Batch</label>
+                        <select value={editFormData.batchId} onChange={e => setEditFormData({...editFormData, batchId: e.target.value})} className="flex h-9 w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-background px-3 py-1 text-xs focus:border-primary outline-none">
                           <option value="">Select a batch</option>
                           {batches.map((batch: any) => (
                             <option key={batch.id} value={batch.id}>{batch.name}</option>
@@ -1455,32 +1458,32 @@ export default function StudentList({
               </div>
 
               {/* 05 Documents (Full Width) */}
-              <div className="space-y-6 pt-6 mt-6 border-t border-slate-100 dark:border-slate-800">
-                <h3 className="text-lg font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2 border-b pb-2">
-                  <span className="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center text-xs">05</span>
+              <div className="space-y-3 pt-4 border-t border-slate-100 dark:border-slate-800">
+                <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2 border-b pb-1.5 border-slate-100 dark:border-slate-800">
+                  <span className="w-6 h-6 rounded-md bg-primary/10 text-primary flex items-center justify-center text-[11px] font-bold">05</span>
                   Documents
                 </h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <div className="space-y-1.5">
-                    <label className="text-[10px] font-bold text-slate-400">Photo</label>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Photo</label>
                     <ImageUpload value={editFormData.photoUrl} onChange={(url) => setEditFormData({...editFormData, photoUrl: url})} maxSizeK={100} folder={`RGYCSP/Workspaces/${workspaceId}/students`} />
                   </div>
-                  <div className="space-y-1.5">
-                    <label className="text-[10px] font-bold text-slate-400">Signature</label>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Signature</label>
                     <ImageUpload value={editFormData.signatureUrl} onChange={(url) => setEditFormData({...editFormData, signatureUrl: url})} maxSizeK={100} folder={`RGYCSP/Workspaces/${workspaceId}/students`} />
                   </div>
-                  <div className="space-y-1.5">
-                    <label className="text-[10px] font-bold text-slate-400">ID Proof</label>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">ID Proof</label>
                     <ImageUpload value={editFormData.idProofUrl} onChange={(url) => setEditFormData({...editFormData, idProofUrl: url})} maxSizeK={1024} folder={`RGYCSP/Workspaces/${workspaceId}/students`} />
                   </div>
                 </div>
               </div>
 
-              <div className="mt-10 pt-6 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end gap-3 sticky bottom-0 bg-white dark:bg-slate-900 z-10 -mx-2 px-2 pb-2">
-                <Button type="button" variant="outline" onClick={() => setEditOpen(false)} className="rounded-xl font-bold h-11 px-8" disabled={isSubmitting}>
+              <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end gap-2 sticky bottom-0 bg-white dark:bg-slate-900 z-10 px-1 pb-1">
+                <Button type="button" variant="outline" size="sm" onClick={() => setEditOpen(false)} className="h-8 px-4 text-xs font-semibold rounded-lg" disabled={isSubmitting}>
                   Cancel
                 </Button>
-                <Button type="submit" disabled={isSubmitting} className="rounded-xl font-bold h-11 px-8 shadow-xl shadow-primary/20 hover:shadow-primary/30 transition-all">
+                <Button type="submit" size="sm" disabled={isSubmitting} className="h-8 px-4 text-xs font-semibold rounded-lg shadow-sm">
                   {isSubmitting ? "Updating..." : "Save Changes"}
                 </Button>
               </div>
@@ -1521,125 +1524,135 @@ export default function StudentList({
 
       {/* Docs Modal for Franchise Admin */}
       <Dialog open={docsModalOpen} onOpenChange={setDocsModalOpen}>
-        <DialogContent className="max-w-3xl w-[95vw] h-[90vh] flex flex-col overflow-hidden rounded-[2.5rem] p-0 bg-white/95 dark:bg-slate-950/95 backdrop-blur-xl border-2 border-slate-100 dark:border-slate-800 shadow-2xl">
-          <div className="flex-1 overflow-y-auto p-6 sm:p-8 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-slate-200 dark:[&::-webkit-scrollbar-thumb]:bg-slate-700 [&::-webkit-scrollbar-thumb]:rounded-full">
-            <DialogHeader className="mb-6">
-              <div className="w-12 h-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mb-4">
-                <FileText className="w-6 h-6" />
-              </div>
-              <DialogTitle className="text-3xl font-black tracking-tight text-slate-900 dark:text-white">
-                Document Management
-              </DialogTitle>
-              <p className="text-base text-slate-500 font-medium mt-2">
-                View and issue documents for <strong className="text-slate-900 dark:text-white font-black">{selectedStudent?.fullName}</strong>.
-                <br />
-                <span className="text-sm">Note: You can only issue documents that have been approved by the Super Admin.</span>
-              </p>
-            </DialogHeader>
-
-            <div className="flex flex-col gap-6">
-            {(() => {
-              const certStatus = getDocumentStatus(selectedStudent, null, globalConfig);
-              return (
-                <>
-                  {/* Top: Certificate */}
-                  <div className="flex flex-col p-6 bg-white dark:bg-slate-900 border-2 border-amber-200/50 dark:border-amber-800/50 rounded-3xl shadow-sm hover:shadow-md transition-all relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/5 rounded-bl-[4rem] -z-10"></div>
-                <div className="flex items-start justify-between">
-                  <div className="flex-1 pr-4">
-                    <div className="flex items-center gap-3 mb-2">
-                      <div className="w-12 h-12 rounded-2xl bg-amber-50 dark:bg-amber-900/20 flex items-center justify-center">
-                        <GraduationCap className="w-6 h-6 text-amber-600 dark:text-amber-500" />
-                      </div>
-                      <h3 className="font-black text-slate-900 dark:text-white text-xl tracking-tight">Final Certificate</h3>
-                    </div>
-                    <p className="text-sm font-medium text-slate-500 leading-snug">Official completion certificate. This is the final milestone document.</p>
-                  </div>
-                  {certStatus.isCertAuto ? (
-                    <Badge className="bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 border-0 rounded-xl px-4 py-1.5 font-bold shadow-sm">Auto Issued</Badge>
-                  ) : certStatus.finalCertApproved ? (
-                    <Badge className="bg-amber-50 text-amber-600 dark:bg-amber-500/10 border-0 rounded-xl px-4 py-1.5 font-bold shadow-sm">Approved</Badge>
-                  ) : certStatus.finalCertIssued ? (
-                    <Badge className="bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 border-0 rounded-xl px-4 py-1.5 font-bold shadow-sm">Issued</Badge>
-                  ) : hasDocumentAuthority ? (
-                    <Badge className="bg-blue-50 text-blue-600 dark:bg-blue-500/10 border-0 rounded-xl px-4 py-1.5 font-bold shadow-sm">Authority</Badge>
-                  ) : (
-                    <Badge className="bg-red-50 text-red-600 dark:bg-red-500/10 border-0 rounded-xl px-4 py-1.5 font-bold shadow-sm">Pending</Badge>
-                  )}
+        <DialogContent className="max-w-2xl w-[95vw] max-h-[88vh] flex flex-col overflow-hidden rounded-2xl p-0 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 shadow-xl">
+          {/* Static Pinned Header */}
+          <div className="shrink-0 px-4 sm:px-5 pt-4 pb-3 border-b border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-950 pr-10">
+            <DialogHeader className="space-y-1">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                  <FileText className="w-4 h-4" />
                 </div>
-                
-                <div className="flex items-center justify-between pt-5 mt-3 border-t border-slate-100 dark:border-slate-800">
-                  <div className="flex items-center gap-3">
-                    <span className="text-xs font-black text-slate-400 uppercase tracking-widest">Issue Status</span>
-                    {(certStatus.finalCertApproved || hasDocumentAuthority || certStatus.finalCertIssued) && !certStatus.isCertAuto ? (
-                      <Switch 
-                        checked={!!selectedStudent?.certificateIssuedToStudent} 
-                        disabled={selectedStudent?.status === "PASS_OUT"}
-                        onCheckedChange={(checked) => {
-                          if (checked) {
-                            const remainingBalance = (selectedStudent?.invoices || [])
-                              .filter((i: any) => i.status === "PENDING" || i.status === "OVERDUE")
-                              .reduce((sum: number, i: any) => sum + Number(i.amount), 0);
-                            
-                            if (remainingBalance > 0) {
-                              toast.error(`Cannot issue certificate. Student has a pending fee balance of Rs. ${remainingBalance.toFixed(2)}`);
-                              return;
-                            }
-                          }
+                <div>
+                  <DialogTitle className="text-base sm:text-lg font-bold tracking-tight text-slate-900 dark:text-white">
+                    Document Management
+                  </DialogTitle>
+                  <p className="text-xs text-slate-500 font-medium">
+                    Issue and preview documents for <strong className="text-slate-800 dark:text-slate-200 font-semibold">{selectedStudent?.fullName}</strong>
+                  </p>
+                </div>
+              </div>
+            </DialogHeader>
+          </div>
 
-                          if (docRefs.current['CERTIFICATE'] && !docRefs.current['CERTIFICATE']?.hasTemplate()) {
-                            toast.error(`Design template for Certificate does not exist yet!`);
-                            return;
-                          }
-                          handleIssueToStudent(selectedStudent?.id, 'CERTIFICATE', checked);
-                        }}
-                        className={selectedStudent?.certificateIssuedToStudent ? "data-[state=checked]:bg-emerald-500" : ""}
-                      />
-                    ) : (
-                      <span className="text-xs text-slate-400 font-medium">
-                        {certStatus.isCertAuto ? "Auto Issued" : "-"}
-                      </span>
-                    )}
-                  </div>
-                  
-                  {!(certStatus.finalCertApproved || hasDocumentAuthority || certStatus.finalCertIssued || certStatus.isCertAuto) && (
-                    <div className="flex items-center gap-2">
-                      {selectedStudent?.documentIssueRequestedAt ? (
-                        <Badge variant="outline" className="text-amber-500 border-amber-200">
-                          <Clock className="w-3 h-3 mr-1" /> Request Pending
-                        </Badge>
-                      ) : (
-                        <Button 
-                          onClick={() => handleRequestIssue(selectedStudent?.id)}
-                          disabled={isRequestingIssue}
-                          variant="outline" 
-                          size="sm" 
-                          className="rounded-xl font-bold h-9 px-4 text-indigo-600 border-indigo-200 hover:bg-indigo-50"
-                        >
-                          {isRequestingIssue ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Rocket className="w-4 h-4 mr-2" />}
-                          Request Quick Issue
-                        </Button>
+          {/* Scrollable Body Content */}
+          <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-3.5 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-slate-200 dark:[&::-webkit-scrollbar-thumb]:bg-slate-700 [&::-webkit-scrollbar-thumb]:rounded-full">
+            <div className="flex flex-col gap-3.5">
+              {(() => {
+                const certStatus = getDocumentStatus(selectedStudent, null, globalConfig);
+                return (
+                  <div className="flex flex-col p-3.5 sm:p-4 bg-white dark:bg-slate-900 border border-amber-200/60 dark:border-amber-800/50 rounded-xl shadow-xs hover:shadow-sm transition-all relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-24 h-24 bg-amber-500/5 rounded-bl-[3rem] -z-10"></div>
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex-1 min-w-0 pr-2">
+                        <div className="flex items-center gap-2.5 mb-1.5">
+                          <div className="w-8 h-8 rounded-lg bg-amber-50 dark:bg-amber-900/20 flex items-center justify-center shrink-0">
+                            <GraduationCap className="w-4 h-4 text-amber-600 dark:text-amber-500" />
+                          </div>
+                          <h3 className="font-bold text-slate-900 dark:text-white text-sm sm:text-base tracking-tight">Final Certificate</h3>
+                        </div>
+                        <p className="text-xs text-slate-500 leading-snug">Official completion certificate. This is the final milestone document.</p>
+                        {selectedStudent?.certificateNo && (
+                          <div className="mt-1.5 text-[11px] font-mono font-bold bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-400 px-2.5 py-0.5 rounded border border-amber-200 dark:border-amber-800 inline-block">
+                            Cert No: {selectedStudent.certificateNo}
+                          </div>
+                        )}
+                      </div>
+                      <div className="shrink-0">
+                        {certStatus.isCertAuto ? (
+                          <Badge className="bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 border-0 rounded-lg px-2.5 py-1 text-xs font-bold">Auto Issued</Badge>
+                        ) : certStatus.finalCertApproved ? (
+                          <Badge className="bg-amber-50 text-amber-600 dark:bg-amber-500/10 border-0 rounded-lg px-2.5 py-1 text-xs font-bold">Approved</Badge>
+                        ) : certStatus.finalCertIssued ? (
+                          <Badge className="bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 border-0 rounded-lg px-2.5 py-1 text-xs font-bold">Issued</Badge>
+                        ) : hasDocumentAuthority ? (
+                          <Badge className="bg-blue-50 text-blue-600 dark:bg-blue-500/10 border-0 rounded-lg px-2.5 py-1 text-xs font-bold">Authority</Badge>
+                        ) : (
+                          <Badge className="bg-red-50 text-red-600 dark:bg-red-500/10 border-0 rounded-lg px-2.5 py-1 text-xs font-bold">Pending</Badge>
+                        )}
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center justify-between pt-3 mt-2.5 border-t border-slate-100 dark:border-slate-800 flex-wrap gap-2">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Issue Status</span>
+                        {(certStatus.finalCertApproved || hasDocumentAuthority || certStatus.finalCertIssued) && !certStatus.isCertAuto ? (
+                          <Switch 
+                            checked={!!selectedStudent?.certificateIssuedToStudent} 
+                            disabled={selectedStudent?.status === "PASS_OUT"}
+                            onCheckedChange={(checked) => {
+                              if (checked) {
+                                const remainingBalance = (selectedStudent?.invoices || [])
+                                  .filter((i: any) => i.status === "PENDING" || i.status === "OVERDUE")
+                                  .reduce((sum: number, i: any) => sum + Number(i.amount), 0);
+                                
+                                if (remainingBalance > 0) {
+                                  toast.error(`Cannot issue certificate. Student has a pending fee balance of Rs. ${remainingBalance.toFixed(2)}`);
+                                  return;
+                                }
+                              }
+
+                              if (docRefs.current['CERTIFICATE'] && !docRefs.current['CERTIFICATE']?.hasTemplate()) {
+                                toast.error(`Design template for Certificate does not exist yet!`);
+                                return;
+                              }
+                              handleIssueToStudent(selectedStudent?.id, 'CERTIFICATE', checked);
+                            }}
+                            className={selectedStudent?.certificateIssuedToStudent ? "data-[state=checked]:bg-emerald-500" : ""}
+                          />
+                        ) : (
+                          <span className="text-xs text-slate-400 font-medium">
+                            {certStatus.isCertAuto ? "Auto Issued" : "-"}
+                          </span>
+                        )}
+                      </div>
+                      
+                      {!(certStatus.finalCertApproved || hasDocumentAuthority || certStatus.finalCertIssued || certStatus.isCertAuto) && (
+                        <div className="flex items-center gap-2 ml-auto">
+                          {selectedStudent?.documentIssueRequestedAt ? (
+                            <Badge variant="outline" className="text-amber-500 border-amber-200 text-xs py-0.5">
+                              <Clock className="w-3 h-3 mr-1" /> Request Pending
+                            </Badge>
+                          ) : (
+                            <Button 
+                              onClick={() => handleRequestIssue(selectedStudent?.id)}
+                              disabled={isRequestingIssue}
+                              variant="outline" 
+                              size="sm" 
+                              className="rounded-lg font-semibold h-8 px-3 text-xs text-indigo-600 border-indigo-200 hover:bg-indigo-50 dark:hover:bg-indigo-950/40"
+                            >
+                              {isRequestingIssue ? <Loader2 className="w-3.5 h-3.5 animate-spin mr-1.5" /> : <Rocket className="w-3.5 h-3.5 mr-1.5" />}
+                              Request Quick Issue
+                            </Button>
+                          )}
+                        </div>
+                      )}
+
+                      {(certStatus.finalCertApproved || hasDocumentAuthority || certStatus.finalCertIssued) && (
+                        <>
+                          <DocumentRenderer 
+                            ref={el => { docRefs.current['CERTIFICATE'] = el; }} 
+                            type="CERTIFICATE" 
+                            student={selectedStudent}
+                          />
+                          <div className="flex items-center gap-1.5 ml-auto">
+                            <Button variant="outline" size="sm" className="rounded-lg font-semibold h-8 px-3 text-xs" onClick={() => docRefs.current['CERTIFICATE']?.preview()}><Eye className="w-3.5 h-3.5 mr-1" /> Preview</Button>
+                            <Button size="sm" className="rounded-lg font-semibold h-8 px-3 text-xs shadow-sm shadow-primary/20" onClick={() => docRefs.current['CERTIFICATE']?.downloadPDF()}><Download className="w-3.5 h-3.5 mr-1" /> Download</Button>
+                          </div>
+                        </>
                       )}
                     </div>
-                  )}
-
-                  {(certStatus.finalCertApproved || hasDocumentAuthority || certStatus.finalCertIssued) && (
-                    <>
-                      <DocumentRenderer 
-                        ref={el => { docRefs.current['CERTIFICATE'] = el; }} 
-                        type="CERTIFICATE" 
-                        student={selectedStudent}
-                      />
-                      <div className="flex items-center gap-2">
-                        <Button variant="outline" size="sm" className="rounded-xl font-bold h-10 px-4" onClick={() => docRefs.current['CERTIFICATE']?.preview()}><Eye className="w-4 h-4 mr-2" /> Preview</Button>
-                        <Button size="sm" className="rounded-xl font-bold h-10 px-4 shadow-md shadow-primary/20" onClick={() => docRefs.current['CERTIFICATE']?.downloadPDF()}><Download className="w-4 h-4 mr-2" /> Download</Button>
-                      </div>
-                    </>
-                  )}
-                </div>
-              </div>
-                </>
-              );
+                  </div>
+                );
               })()}
 
               {/* Middle: Marksheets */}
@@ -1676,25 +1689,32 @@ export default function StudentList({
                 }
 
                 return (
-                  <div className="flex flex-col p-6 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-sm">
-                    <div className="flex items-center gap-3 mb-4">
-                      <div className="w-10 h-10 rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
-                        <FileText className="w-5 h-5 text-emerald-500" />
-                      </div>
-                      <div>
-                        <h3 className="font-black text-slate-900 dark:text-white text-lg tracking-tight">Academic Marksheets</h3>
-                        <p className="text-sm font-medium text-slate-500 leading-snug">Semester-wise detailed marksheets. (Total {totalSemesters})</p>
+                  <div className="flex flex-col p-3.5 sm:p-4 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-xl shadow-xs">
+                    <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center shrink-0">
+                          <FileText className="w-4 h-4 text-emerald-500" />
+                        </div>
+                        <div>
+                          <h3 className="font-bold text-slate-900 dark:text-white text-sm sm:text-base tracking-tight">Academic Marksheets</h3>
+                          <p className="text-xs text-slate-500 leading-snug">Semester-wise detailed marksheets. (Total {totalSemesters})</p>
+                          {selectedStudent?.marksheetNo && (
+                            <div className="mt-1 text-[11px] font-mono font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-2 py-0.5 rounded border border-slate-200 dark:border-slate-700 inline-block">
+                              Marksheet No: {selectedStudent.marksheetNo}
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
                     
-                    <div className="border border-slate-100 dark:border-slate-800 rounded-2xl overflow-hidden overflow-y-auto max-h-[300px] scrollbar-thin scrollbar-thumb-slate-200 dark:scrollbar-thumb-slate-700 scrollbar-track-transparent">
+                    <div className="border border-slate-100 dark:border-slate-800 rounded-lg overflow-hidden max-h-[220px] overflow-y-auto">
                       <Table>
                         <TableHeader className="bg-slate-50 dark:bg-slate-900/50 sticky top-0 z-10">
                           <TableRow>
-                            <TableHead className="font-bold">Semester</TableHead>
-                            <TableHead className="font-bold">Super Admin Status</TableHead>
-                            <TableHead className="font-bold text-center">Issue Status</TableHead>
-                            <TableHead className="font-bold text-right">Actions</TableHead>
+                            <TableHead className="font-semibold text-xs py-2">Semester</TableHead>
+                            <TableHead className="font-semibold text-xs py-2">Super Admin Status</TableHead>
+                            <TableHead className="font-semibold text-xs py-2 text-center">Issue Status</TableHead>
+                            <TableHead className="font-semibold text-xs py-2 text-right">Actions</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -1702,21 +1722,21 @@ export default function StudentList({
                             const uniqueKey = `MARKSHEET_SEM_${sem.semesterNumber}`;
                             return (
                               <TableRow key={uniqueKey} className="hover:bg-slate-50 dark:bg-slate-900 dark:hover:bg-slate-800/50">
-                                <TableCell className="font-bold py-3 text-slate-700 dark:text-slate-300">Semester {sem.semesterNumber}</TableCell>
-                                <TableCell className="py-3">
+                                <TableCell className="font-semibold text-xs py-2 text-slate-700 dark:text-slate-300">Semester {sem.semesterNumber}</TableCell>
+                                <TableCell className="py-2">
                                   {sem.isAuto ? (
-                                    <Badge className="bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 border-0 rounded-lg font-bold">Auto Issued</Badge>
+                                    <Badge className="bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 border-0 rounded px-2 py-0.5 text-[10px] font-bold">Auto Issued</Badge>
                                   ) : sem.superAdminApproved ? (
-                                    <Badge className="bg-amber-50 text-amber-600 dark:bg-amber-500/10 border-0 rounded-lg font-bold">Approved</Badge>
+                                    <Badge className="bg-amber-50 text-amber-600 dark:bg-amber-500/10 border-0 rounded px-2 py-0.5 text-[10px] font-bold">Approved</Badge>
                                   ) : sem.issuedToStudent ? (
-                                    <Badge className="bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 border-0 rounded-lg font-bold">Issued</Badge>
+                                    <Badge className="bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 border-0 rounded px-2 py-0.5 text-[10px] font-bold">Issued</Badge>
                                   ) : hasDocumentAuthority ? (
-                                    <Badge className="bg-blue-50 text-blue-600 dark:bg-blue-500/10 border-0 rounded-lg font-bold">Authority</Badge>
+                                    <Badge className="bg-blue-50 text-blue-600 dark:bg-blue-500/10 border-0 rounded px-2 py-0.5 text-[10px] font-bold">Authority</Badge>
                                   ) : (
-                                    <Badge className="bg-red-50 text-red-600 dark:bg-red-500/10 border-0 rounded-lg font-bold">Pending</Badge>
+                                    <Badge className="bg-red-50 text-red-600 dark:bg-red-500/10 border-0 rounded px-2 py-0.5 text-[10px] font-bold">Pending</Badge>
                                   )}
                                 </TableCell>
-                                <TableCell className="text-center py-3">
+                                <TableCell className="text-center py-2">
                                   {(sem.superAdminApproved || hasDocumentAuthority || sem.issuedToStudent) && !sem.isAuto ? (
                                     <Switch 
                                       checked={!!sem.rawIssued} 
@@ -1736,12 +1756,12 @@ export default function StudentList({
                                     </span>
                                   )}
                                 </TableCell>
-                                <TableCell className="text-right py-3">
+                                <TableCell className="text-right py-2">
                                   {(sem.superAdminApproved || hasDocumentAuthority || sem.issuedToStudent) && (
                                     <div className="flex items-center justify-end gap-1">
                                       <DocumentRenderer ref={el => { docRefs.current[uniqueKey] = el; }} type="MARKSHEET" student={selectedStudent} semesterNumber={sem.semesterNumber} />
-                                      <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-500 hover:text-blue-600" onClick={() => docRefs.current[uniqueKey]?.preview()}><Eye className="w-4 h-4" /></Button>
-                                      <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-500 hover:text-emerald-600" onClick={() => docRefs.current[uniqueKey]?.downloadPDF()}><Download className="w-4 h-4" /></Button>
+                                      <Button variant="ghost" size="icon" className="h-7 w-7 text-slate-500 hover:text-blue-600" onClick={() => docRefs.current[uniqueKey]?.preview()}><Eye className="w-3.5 h-3.5" /></Button>
+                                      <Button variant="ghost" size="icon" className="h-7 w-7 text-slate-500 hover:text-emerald-600" onClick={() => docRefs.current[uniqueKey]?.downloadPDF()}><Download className="w-3.5 h-3.5" /></Button>
                                     </div>
                                   )}
                                 </TableCell>
@@ -1756,27 +1776,27 @@ export default function StudentList({
               })()}
 
               {/* Bottom: Auxiliary Documents */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                 {[
-                  { id: 'STUDENT_ID', label: 'Student ID Card', desc: 'Identity verification.', icon: <User className="w-5 h-5 text-blue-500 dark:text-blue-400" />, isIssued: selectedStudent?.registrationCardIssuedToStudent },
-                  { id: 'ADMIT_CARD', label: 'Admit Card', desc: 'Required for examinations.', icon: <Calendar className="w-5 h-5 text-indigo-500 dark:text-indigo-400" />, isIssued: selectedStudent?.admitCardIssuedToStudent }
+                  { id: 'STUDENT_ID', label: 'Student ID Card', desc: 'Identity verification.', icon: <User className="w-4 h-4 text-blue-500 dark:text-blue-400" />, isIssued: selectedStudent?.registrationCardIssuedToStudent },
+                  { id: 'ADMIT_CARD', label: 'Admit Card', desc: 'Required for examinations.', icon: <Calendar className="w-4 h-4 text-indigo-500 dark:text-indigo-400" />, isIssued: selectedStudent?.admitCardIssuedToStudent }
                 ].map((doc) => (
-                  <div key={doc.id} className="flex flex-col p-5 bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-2xl gap-3 hover:border-blue-200 dark:hover:border-blue-900/50 hover:shadow-md transition-all group">
+                  <div key={doc.id} className="flex flex-col p-3 sm:p-3.5 bg-white dark:bg-slate-900/90 border border-slate-200/80 dark:border-slate-800 rounded-xl gap-2 hover:border-blue-200 dark:hover:border-blue-900/50 hover:shadow-xs transition-all group">
                     <div className="flex items-start justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center shadow-sm">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200/60 dark:border-slate-700 flex items-center justify-center shadow-xs shrink-0">
                           {doc.icon}
                         </div>
                         <div>
-                          <h3 className="font-bold text-slate-900 dark:text-white text-base">{doc.label}</h3>
-                          <p className="text-xs font-medium text-slate-500 dark:text-slate-400">{doc.desc}</p>
+                          <h3 className="font-bold text-slate-900 dark:text-white text-xs sm:text-sm">{doc.label}</h3>
+                          <p className="text-[11px] text-slate-500 dark:text-slate-400">{doc.desc}</p>
                         </div>
                       </div>
                     </div>
                     
-                    <div className="flex items-center justify-between pt-3 mt-1 border-t border-slate-200 dark:border-slate-800/60">
-                      <div className="flex items-center gap-3 bg-slate-200/50 dark:bg-slate-800 px-2 py-1 rounded-md">
-                        <span className="text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-widest">Issue Status</span>
+                    <div className="flex items-center justify-between pt-2 mt-1 border-t border-slate-100 dark:border-slate-800/60 flex-wrap gap-1.5">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Issue:</span>
                         <Switch 
                           checked={!!doc.isIssued} 
                           disabled={selectedStudent?.status === "PASS_OUT"}
@@ -1794,14 +1814,27 @@ export default function StudentList({
                       <DocumentRenderer ref={el => { docRefs.current[doc.id] = el; }} type={doc.id as any} student={selectedStudent} />
                       
                       <div className="flex items-center gap-1">
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 dark:hover:bg-slate-800" onClick={() => docRefs.current[doc.id]?.preview()}><Eye className="w-4 h-4" /></Button>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-500 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 dark:hover:bg-slate-800" onClick={() => docRefs.current[doc.id]?.downloadPDF()}><Download className="w-4 h-4" /></Button>
+                        <Button variant="ghost" size="icon" className="h-7 w-7 text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400" onClick={() => docRefs.current[doc.id]?.preview()}><Eye className="w-3.5 h-3.5" /></Button>
+                        <Button variant="ghost" size="icon" className="h-7 w-7 text-slate-500 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400" onClick={() => docRefs.current[doc.id]?.downloadPDF()}><Download className="w-3.5 h-3.5" /></Button>
                       </div>
                     </div>
                   </div>
                 ))}
               </div>
             </div>
+          </div>
+          <div className="px-4 py-2.5 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/20 flex items-center justify-between shrink-0">
+            <span className="text-[11px] text-slate-400 font-medium">
+              Approved documents can be downloaded or previewed at high resolution.
+            </span>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => setDocsModalOpen(false)}
+              className="h-7 px-3 text-xs font-semibold rounded-lg"
+            >
+              Close
+            </Button>
           </div>
         </DialogContent>
       </Dialog>

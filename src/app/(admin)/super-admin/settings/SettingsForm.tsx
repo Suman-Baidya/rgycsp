@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Image from "next/image";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -8,13 +9,14 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
-import { Globe, Layout, Palette, Phone, Save, Settings2, Trash2, ChevronDown, ChevronUp, Cpu, LayoutDashboard, FileText, Play, Rocket, Mail, ShieldCheck, UserCheck, BookOpenCheck, Menu, MousePointer2, ExternalLink, Plus, Check, X, Zap, Bell, Calendar, Pencil } from "lucide-react";
+import { Globe, Layout, Palette, Phone, Save, Settings2, Trash2, ChevronDown, ChevronUp, Cpu, LayoutDashboard, FileText, Play, Rocket, Mail, ShieldCheck, UserCheck, BookOpenCheck, Menu, MousePointer2, ExternalLink, Plus, Check, X, Zap, Bell, Calendar, Pencil, Building2 } from "lucide-react";
 import { updateSiteSettings, updateLandingSection, syncAllSections } from "@/app/actions/site-settings";
 import { toast } from "sonner";
 import { ImageUpload } from "@/components/ui/ImageUpload";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { SuperAdminEventsTab } from "./SuperAdminEventsTab";
 import { cn } from "@/lib/utils";
+import { ThemeContrastIndicator } from "@/components/theme/ThemeContrastIndicator";
 
 const THEME_PRESETS = [
   { name: "Sunset Glow", primary: "#f97316", accent: "#ea580c", description: "Vibrant and energetic orange tones." },
@@ -44,6 +46,18 @@ export function SettingsForm({ settings, isSuperAdmin = true }: { settings: any,
     ctaPrimary: { text: "Login", link: "/login" },
     ctaSecondary: { text: "Call Now", link: `tel:${settings.contactPhone || "8944899747"}` }
   });
+  const [headOfficeBadge, setHeadOfficeBadge] = useState<any>(
+    settings.navbarConfig?.headOfficeBadge || {
+      enabled: true,
+      label: "Head Office",
+      title: "",
+      logoUrl: "",
+      showButton: false,
+      buttonText: "Visit Portal",
+      linkUrl: "/",
+      openInNewTab: true,
+    }
+  );
   const [floatingConfig, setFloatingConfig] = useState(settings.floatingConfig || {
     enableWhatsApp: true,
     enableChatbot: true,
@@ -137,6 +151,16 @@ export function SettingsForm({ settings, isSuperAdmin = true }: { settings: any,
     setNavigation(baseNav);
     setGlobalIdCardAccess(settings.globalIdCardAccess ?? true);
     setGlobalAdmitCardAccess(settings.globalAdmitCardAccess ?? true);
+    setHeadOfficeBadge(settings.navbarConfig?.headOfficeBadge || {
+      enabled: true,
+      label: "Head Office",
+      title: "",
+      logoUrl: "",
+      showButton: false,
+      buttonText: "Visit Portal",
+      linkUrl: "/",
+      openInNewTab: true,
+    });
   }, [settings]);
 
   const handleSaveGeneral = async () => {
@@ -156,7 +180,10 @@ export function SettingsForm({ settings, isSuperAdmin = true }: { settings: any,
         address,
         brandDescription,
         socialLinks,
-        navbarConfig,
+        navbarConfig: {
+          ...navbarConfig,
+          headOfficeBadge,
+        },
         floatingConfig,
         navigation,
         globalIdCardAccess,
@@ -364,6 +391,8 @@ export function SettingsForm({ settings, isSuperAdmin = true }: { settings: any,
                     </div>
                   </div>
 
+                  <ThemeContrastIndicator primaryColor={primaryColor} accentColor={accentColor} />
+
                   <div className="space-y-2 pt-1">
                     <Label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Typography (Font Family)</Label>
                     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
@@ -463,6 +492,175 @@ export function SettingsForm({ settings, isSuperAdmin = true }: { settings: any,
                   <div className="pt-2 flex justify-end">
                     <Button onClick={handleSaveGeneral} disabled={isSaving} className="h-8 sm:h-9 px-3.5 sm:px-4 gap-1.5 rounded-lg text-xs font-semibold shadow-sm bg-primary text-primary-foreground hover:bg-primary/90 transition-all">
                       <Save className="h-3.5 w-3.5" /> {isSaving ? "Saving..." : "Update Contact Info"}
+                    </Button>
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+
+              {/* Franchise Head Office Affiliation Badge Section */}
+              <AccordionItem value="head-office-badge" className="border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 rounded-xl overflow-hidden shadow-sm">
+                <AccordionTrigger className="hover:no-underline py-3.5 sm:py-4 px-4 sm:px-5 border-b border-slate-100 dark:border-slate-800">
+                  <div className="flex items-center justify-between w-full pr-3 sm:pr-4">
+                    <div className="flex items-center gap-3 text-left">
+                      <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-emerald-500/10 text-emerald-600 flex items-center justify-center shrink-0">
+                        <Building2 className="w-4 h-4 sm:w-5 sm:h-5" />
+                      </div>
+                      <div>
+                        <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white tracking-tight">Franchise Navbar Head Office Affiliation Badge</h3>
+                        <p className="text-xs text-slate-500 font-medium mt-0.5">Control the Head Office logo, title, and link shown on all franchise website navbars (before the Dashboard button).</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 hidden sm:inline">
+                        {headOfficeBadge.enabled !== false ? "Active" : "Disabled"}
+                      </span>
+                      <Switch
+                        checked={headOfficeBadge.enabled !== false}
+                        onCheckedChange={(checked) => setHeadOfficeBadge({ ...headOfficeBadge, enabled: checked })}
+                      />
+                    </div>
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="p-4 sm:p-5 space-y-4 sm:space-y-5">
+                  <div className="p-3.5 bg-slate-50 dark:bg-slate-800/40 rounded-xl border border-slate-200/70 dark:border-slate-800 flex items-center justify-between gap-4">
+                    <div className="space-y-0.5">
+                      <Label className="text-xs font-bold text-slate-900 dark:text-white">Enable Head Office Affiliation on Franchises</Label>
+                      <p className="text-[11px] text-slate-500 font-medium">When enabled, students and visitors on franchise websites will see this official badge linking back to your main site.</p>
+                    </div>
+                    <Switch
+                      checked={headOfficeBadge.enabled !== false}
+                      onCheckedChange={(checked) => setHeadOfficeBadge({ ...headOfficeBadge, enabled: checked })}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
+                    {/* Left Column: Head Office Logo Upload */}
+                    <div className="lg:col-span-4 space-y-1.5">
+                      <Label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Head Office Badge Logo</Label>
+                      <ImageUpload
+                        value={headOfficeBadge.logoUrl || ""}
+                        onChange={(url) => setHeadOfficeBadge({ ...headOfficeBadge, logoUrl: url })}
+                        label="Badge Logo (Optional)"
+                        folder={`${mediaFolderBase}/branding`}
+                      />
+                      <p className="text-[10px] text-slate-400 font-medium">
+                        * Leave empty to automatically use your Primary Main Logo.
+                      </p>
+                    </div>
+
+                    {/* Right Column: Title, Subtitle, and Link Settings */}
+                    <div className="lg:col-span-8 space-y-3.5">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                        <div className="space-y-1.5">
+                          <Label htmlFor="headOfficeLabel" className="text-xs font-semibold text-slate-700 dark:text-slate-300">Badge Label / Subtitle</Label>
+                          <Input
+                            id="headOfficeLabel"
+                            value={headOfficeBadge.label || ""}
+                            onChange={(e) => setHeadOfficeBadge({ ...headOfficeBadge, label: e.target.value })}
+                            placeholder="e.g. Head Office / Affiliated With"
+                            className="h-8 sm:h-9 bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700/60 rounded-lg text-xs"
+                          />
+                          <p className="text-[9px] text-slate-400 font-medium">Small label shown above the organization name.</p>
+                        </div>
+                        <div className="space-y-1.5">
+                          <Label htmlFor="headOfficeTitle" className="text-xs font-semibold text-slate-700 dark:text-slate-300">Badge Title / Organization Name</Label>
+                          <Input
+                            id="headOfficeTitle"
+                            value={headOfficeBadge.title || ""}
+                            onChange={(e) => setHeadOfficeBadge({ ...headOfficeBadge, title: e.target.value })}
+                            placeholder={siteName || "e.g. RGYCSP Central Board"}
+                            className="h-8 sm:h-9 bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700/60 rounded-lg text-xs"
+                          />
+                          <p className="text-[9px] text-slate-400 font-medium">Defaults to Primary Site Name if left empty.</p>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                        <div className="space-y-1.5">
+                          <Label htmlFor="headOfficeLink" className="text-xs font-semibold text-slate-700 dark:text-slate-300">Target Link URL</Label>
+                          <Input
+                            id="headOfficeLink"
+                            value={headOfficeBadge.linkUrl || ""}
+                            onChange={(e) => setHeadOfficeBadge({ ...headOfficeBadge, linkUrl: e.target.value })}
+                            placeholder="e.g. / or https://rgycsp.in"
+                            className="h-8 sm:h-9 bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700/60 rounded-lg text-xs"
+                          />
+                          <p className="text-[9px] text-slate-400 font-medium">Clicking opens this link. Defaults to main site landing page.</p>
+                        </div>
+
+                        <div className="space-y-1.5">
+                          <div className="flex items-center justify-between h-5">
+                            <Label htmlFor="headOfficeShowBtn" className="text-xs font-semibold text-slate-700 dark:text-slate-300">CTA Action Button</Label>
+                            <Switch
+                              id="headOfficeShowBtn"
+                              checked={!!headOfficeBadge.showButton}
+                              onCheckedChange={(checked) => setHeadOfficeBadge({ ...headOfficeBadge, showButton: checked })}
+                            />
+                          </div>
+                          <Input
+                            disabled={!headOfficeBadge.showButton}
+                            value={headOfficeBadge.buttonText || ""}
+                            onChange={(e) => setHeadOfficeBadge({ ...headOfficeBadge, buttonText: e.target.value })}
+                            placeholder="e.g. Visit Portal"
+                            className="h-8 sm:h-9 bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700/60 rounded-lg text-xs disabled:opacity-50"
+                          />
+                          <p className="text-[9px] text-slate-400 font-medium">Optional button inside badge (e.g. &quot;Visit HQ&quot;).</p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between p-2.5 bg-slate-50 dark:bg-slate-800/40 rounded-lg border border-slate-200 dark:border-slate-700/60">
+                        <span className="text-xs font-medium text-slate-700 dark:text-slate-300">Open target link in new browser tab</span>
+                        <Switch
+                          checked={headOfficeBadge.openInNewTab !== false}
+                          onCheckedChange={(checked) => setHeadOfficeBadge({ ...headOfficeBadge, openInNewTab: checked })}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Live Preview Box */}
+                  <div className="pt-3 border-t border-slate-100 dark:border-slate-800 space-y-2">
+                    <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400 ml-0.5">Live Navbar Preview</Label>
+                    <div className="p-3 bg-zinc-950 rounded-xl border border-white/10 flex items-center justify-between gap-4">
+                      <span className="text-xs text-zinc-400 font-medium">Franchise Navbar Position:</span>
+                      <div className="flex items-center gap-2.5 px-3 py-1.5 rounded-xl bg-white/5 border border-white/10">
+                        <div className="relative w-8 h-8 flex items-center justify-center shrink-0">
+                          {headOfficeBadge.logoUrl || logoUrl ? (
+                            <Image
+                              src={headOfficeBadge.logoUrl || logoUrl}
+                              alt="HQ Preview"
+                              fill
+                              sizes="64px"
+                              className="object-contain"
+                            />
+                          ) : (
+                            <div className="w-8 h-8 rounded-lg bg-primary/20 text-primary flex items-center justify-center font-bold text-xs">HQ</div>
+                          )}
+                        </div>
+                        <div className="flex flex-col text-left">
+                          <span className="text-[8px] font-extrabold uppercase tracking-widest text-primary flex items-center gap-1">
+                            {headOfficeBadge.label || "Head Office"}
+                            <ExternalLink className="w-2.5 h-2.5 opacity-60" />
+                          </span>
+                          <span className="text-xs font-bold text-white line-clamp-1 max-w-[160px]">
+                            {headOfficeBadge.title || siteName || "Head Office"}
+                          </span>
+                        </div>
+                        {headOfficeBadge.showButton && (
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-primary text-primary-foreground">
+                            {headOfficeBadge.buttonText || "Visit"}
+                          </span>
+                        )}
+                      </div>
+                      <div className="px-3 py-1.5 rounded-lg bg-primary text-primary-foreground font-bold text-xs">
+                        Dashboard
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="pt-2 flex justify-end">
+                    <Button onClick={handleSaveGeneral} disabled={isSaving} className="h-8 sm:h-9 px-3.5 sm:px-4 gap-1.5 rounded-lg text-xs font-semibold shadow-sm bg-primary text-primary-foreground hover:bg-primary/90 transition-all">
+                      <Save className="h-3.5 w-3.5" /> {isSaving ? "Saving..." : "Save Affiliation Settings"}
                     </Button>
                   </div>
                 </AccordionContent>

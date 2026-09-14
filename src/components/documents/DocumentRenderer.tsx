@@ -23,6 +23,7 @@ interface DocumentRendererProps {
   examData?: any;
   workspaceId?: string | null;
   semesterNumber?: number;
+  templateId?: string | null;
   onReady?: () => void;
 }
 
@@ -30,7 +31,7 @@ const DPI = 96;
 const MM_PER_INCH = 25.4;
 
 export const DocumentRenderer = forwardRef<DocumentRendererRef, DocumentRendererProps>(
-  ({ type, student, examData, workspaceId = null, semesterNumber, onReady }, ref) => {
+  ({ type, student, examData, workspaceId = null, semesterNumber, templateId = null, onReady }, ref) => {
     const [template, setTemplate] = useState<any>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [previewOpen, setPreviewOpen] = useState(false);
@@ -64,14 +65,16 @@ export const DocumentRenderer = forwardRef<DocumentRendererRef, DocumentRenderer
       const fetchTemplate = async () => {
         setIsLoading(true);
         hasCalledOnReady.current = false;
-        const data = await getDocumentTemplateByType(type, workspaceId);
+        const data = await getDocumentTemplateByType(type, workspaceId, templateId);
         if (data) {
           setTemplate(data);
+        } else {
+          setTemplate(null);
         }
         setIsLoading(false);
       };
       fetchTemplate();
-    }, [type, workspaceId]);
+    }, [type, workspaceId, templateId]);
 
     // Data Mapping Logic
     const mapVariable = (varName: string) => {
@@ -331,36 +334,54 @@ export const DocumentRenderer = forwardRef<DocumentRendererRef, DocumentRenderer
       }
     };
 
+    const cleanBackgroundUrl = template?.background
+      ? template.background.replace(/\/upload\/(?:f_auto,q_auto\/|f_auto\/|q_auto\/)/, '/upload/')
+      : null;
+
     const generateImage = async (): Promise<string | null> => {
       if (!canvasRef.current || !template) return null;
       try {
         // Wait for React to render the DOM and apply styles
         await new Promise(resolve => setTimeout(resolve, 500));
 
-        // Wait for background image if exists
-        if (template.background) {
+        // Wait for background image to fully load and decode if exists
+        if (cleanBackgroundUrl) {
           await Promise.race([
             new Promise((resolve) => {
               const img = new Image();
               img.crossOrigin = "anonymous";
-              img.onload = resolve;
+              img.onload = () => {
+                if (img.decode) {
+                  img.decode().then(resolve).catch(resolve);
+                } else {
+                  resolve(null);
+                }
+              };
               img.onerror = resolve;
-              img.src = template.background;
+              img.src = cleanBackgroundUrl;
             }),
-            new Promise((resolve) => setTimeout(resolve, 2000))
+            new Promise((resolve) => setTimeout(resolve, 3000))
           ]);
         }
 
-        // Ensure all child images are loaded
+        // Ensure all child images (photos, signatures, QR codes) are fully loaded and decoded
         const images = canvasRef.current.querySelectorAll("img");
         await Promise.all(Array.from(images).map(img => {
-          if (img.complete) return Promise.resolve();
+          if (img.complete) {
+            return img.decode ? img.decode().catch(() => {}) : Promise.resolve();
+          }
           return Promise.race([
             new Promise((resolve) => {
-              img.onload = resolve;
+              img.onload = () => {
+                if (img.decode) {
+                  img.decode().then(resolve).catch(resolve);
+                } else {
+                  resolve(null);
+                }
+              };
               img.onerror = resolve;
             }),
-            new Promise((resolve) => setTimeout(resolve, 2000))
+            new Promise((resolve) => setTimeout(resolve, 3000))
           ]);
         }));
 
@@ -370,9 +391,12 @@ export const DocumentRenderer = forwardRef<DocumentRendererRef, DocumentRenderer
         }
 
         const { toPng } = await import("html-to-image");
+        // 2.5 pixelRatio provides ultra-crisp 240+ DPI resolution for print while avoiding browser memory saturation
         const imgData = await toPng(canvasRef.current, { 
-          pixelRatio: 2,
-          backgroundColor: '#ffffff'
+          pixelRatio: 2.5,
+          backgroundColor: '#ffffff',
+          quality: 0.98,
+          cacheBust: false,
         });
         return imgData;
       } catch (err) {
@@ -391,7 +415,7 @@ export const DocumentRenderer = forwardRef<DocumentRendererRef, DocumentRenderer
           toast.error(`${formatType(type)} template not found! Please ask Super Admin to create one.`);
           return;
         }
-        const loadingToast = toast.loading("Generating PDF...");
+        const loadingToast = toast.loading("Generating High-Resolution PDF...");
         const imgData = await generateImage();
         if (!imgData) {
           toast.dismiss(loadingToast);
@@ -463,8 +487,8 @@ export const DocumentRenderer = forwardRef<DocumentRendererRef, DocumentRenderer
                 ref={canvasRef}
                 className="relative bg-white overflow-hidden w-full h-full"
               >
-                {template.background && (
-                  <img src={template.background} crossOrigin="anonymous" alt="BG" className="absolute inset-0 w-full h-full object-cover pointer-events-none" />
+                {cleanBackgroundUrl && (
+                  <img src={cleanBackgroundUrl} crossOrigin="anonymous" alt="BG" className="absolute inset-0 w-full h-full object-fill pointer-events-none" />
                 )}
                 {config.map((item: any) => {
                   if (item.type === "qrcode") {

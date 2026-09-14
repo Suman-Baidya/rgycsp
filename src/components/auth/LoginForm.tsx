@@ -120,19 +120,19 @@ export function LoginForm({
   };
 
   return (
-    <div className="w-full max-w-[420px] mx-auto px-3 sm:px-4 relative animate-in fade-in duration-500">
+    <div className="w-full max-w-[340px] xs:max-w-[360px] sm:max-w-[390px] mx-auto relative animate-in fade-in duration-500">
       {/* Decorative Glowing Orbs */}
       <div 
-        className="absolute -top-20 -left-20 w-48 h-48 rounded-full blur-[90px] pointer-events-none opacity-40 dark:opacity-30"
+        className="absolute -top-16 -left-16 w-44 h-44 rounded-full blur-[80px] pointer-events-none opacity-40 dark:opacity-25"
         style={{ backgroundColor: effectiveBrandColor }} 
       />
       <div 
-        className="absolute -bottom-20 -right-20 w-52 h-52 rounded-full blur-[100px] pointer-events-none opacity-30 dark:opacity-20"
+        className="absolute -bottom-16 -right-16 w-48 h-48 rounded-full blur-[90px] pointer-events-none opacity-30 dark:opacity-20"
         style={{ backgroundColor: isSuperAdmin ? "#f59e0b" : "#38bdf8" }} 
       />
 
-      <Card className="relative rounded-2xl sm:rounded-[2rem] border border-slate-200/80 dark:border-zinc-800/80 shadow-xl dark:shadow-[0_24px_80px_-12px_rgba(0,0,0,0.95)] bg-white/95 dark:bg-[#0c0d14]/95 backdrop-blur-2xl overflow-hidden">
-        {/* Proper Top Accent Line */}
+      <Card className="relative rounded-[1.75rem] sm:rounded-[2rem] border border-slate-200/90 dark:border-white/[0.09] shadow-[0_16px_48px_-10px_rgba(0,0,0,0.12),0_4px_16px_rgba(0,0,0,0.06)] dark:shadow-[0_24px_70px_-12px_rgba(0,0,0,0.95),0_0_0_1px_rgba(255,255,255,0.06)] bg-white/95 dark:bg-[#0c0d14]/95 backdrop-blur-2xl overflow-hidden">
+        {/* Proper Top Accent Line with Subtle Glow */}
         <div className="relative h-1 sm:h-1.5 w-full overflow-hidden z-10">
           <div 
             className="absolute inset-0"
@@ -147,13 +147,13 @@ export function LoginForm({
           )}
         </div>
 
-        <CardContent className="relative p-4 sm:p-5 md:p-6 space-y-2.5 sm:space-y-3.5 z-10">
+        <CardContent className="relative p-4 sm:p-5 md:p-5.5 space-y-2.5 sm:space-y-3 z-10">
           {/* Header Section: Logo WITHOUT box + 2-line balanced brand name */}
           <div className="flex flex-col items-center text-center space-y-1.5 sm:space-y-2">
-            {/* Logo (Increased natural scale, unboxed) */}
-            <Link href="/" className="group relative inline-block my-1" title="Homepage">
+            {/* Logo (Refined, proportional scale) */}
+            <Link href="/" className="group relative inline-block my-0.5" title="Homepage">
               {tenantLogo ? (
-                <div className="relative w-[84px] h-[84px] sm:w-[98px] sm:h-[98px] flex items-center justify-center transition-transform duration-300 group-hover:scale-105">
+                <div className="relative w-[76px] h-[76px] sm:w-[90px] sm:h-[90px] flex items-center justify-center transition-transform duration-300 group-hover:scale-105">
                   <Image 
                     fill 
                     src={tenantLogo} 
@@ -163,26 +163,26 @@ export function LoginForm({
                   />
                 </div>
               ) : isSuperAdmin ? (
-                <div className="relative w-[84px] h-[84px] sm:w-[98px] sm:h-[98px] flex items-center justify-center transition-transform duration-300 group-hover:scale-105">
-                  <ShieldCheck className="w-16 h-16 sm:w-18 sm:h-18 text-indigo-500 drop-shadow-md" />
+                <div className="relative w-[76px] h-[76px] sm:w-[90px] sm:h-[90px] flex items-center justify-center transition-transform duration-300 group-hover:scale-105">
+                  <ShieldCheck className="w-14 h-14 sm:w-16 sm:h-16 text-indigo-500 drop-shadow-md" />
                 </div>
               ) : (
                 <div 
-                  className="w-[76px] h-[76px] sm:w-[88px] sm:h-[88px] rounded-2xl flex items-center justify-center transition-transform duration-300 group-hover:scale-105"
+                  className="w-[70px] h-[70px] sm:w-[82px] sm:h-[82px] rounded-2xl flex items-center justify-center transition-transform duration-300 group-hover:scale-105"
                   style={{ 
                     backgroundColor: `${effectiveBrandColor}15`,
                     color: effectiveBrandColor,
                     border: `1px solid ${effectiveBrandColor}35`
                   }}
                 >
-                  <GraduationCap className="w-10 h-10 sm:w-12 sm:h-12 drop-shadow-sm" />
+                  <GraduationCap className="w-9 h-9 sm:w-11 sm:h-11 drop-shadow-sm" />
                 </div>
               )}
             </Link>
 
             {/* Dynamic Brand Name (Balanced 2 lines) */}
             <div className="space-y-0.5 sm:space-y-1">
-              <h1 className="text-base sm:text-xl font-bold tracking-tight text-slate-900 dark:text-zinc-50 capitalize leading-tight [text-wrap:balance] max-w-[270px] sm:max-w-[340px] mx-auto">
+              <h1 className="text-[15px] sm:text-lg font-bold tracking-tight text-slate-900 dark:text-zinc-50 capitalize leading-snug [text-wrap:balance] max-w-[250px] sm:max-w-[310px] mx-auto">
                 {tenantName || (isSuperAdmin ? "Rajeev Gandhi Youth Computer Shiksha Parishad" : "Institute Portal")}
               </h1>
               <div className="flex items-center justify-center gap-2 pt-0.5">

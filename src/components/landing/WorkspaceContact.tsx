@@ -107,7 +107,7 @@ export function WorkspaceContact({ data, settings }: { data?: any, settings?: an
                   {showSocials && (
                      <div className="flex items-center gap-4">
                         {platforms.filter(p => p.link).map((p, idx) => (
-                           <a key={idx} href={p.link} target="_blank" rel="noopener noreferrer" className="w-12 h-12 rounded-full bg-muted flex items-center justify-center hover:bg-primary hover:text-white transition-all cursor-pointer shadow-sm">
+                           <a key={idx} href={p.link} target="_blank" rel="noopener noreferrer" className="w-12 h-12 rounded-full bg-muted flex items-center justify-center hover:bg-primary hover:text-primary-foreground transition-all cursor-pointer shadow-sm">
                               <p.icon className="w-5 h-5" />
                            </a>
                         ))}

@@ -38,7 +38,7 @@ export default function CourseDetailsModal({ isOpen, onClose, course }: { isOpen
           <div className="absolute bottom-8 left-8 right-8">
             <div className="flex flex-wrap items-center gap-3 mb-5">
               {course.short && (
-                <span className="inline-flex items-center px-4 py-1.5 rounded-xl text-sm sm:text-base font-black bg-primary text-white shadow-lg">
+                <span className="inline-flex items-center px-4 py-1.5 rounded-xl text-sm sm:text-base font-black bg-primary text-primary-foreground shadow-lg">
                   {course.short}
                 </span>
               )}
@@ -178,7 +178,7 @@ export default function CourseDetailsModal({ isOpen, onClose, course }: { isOpen
             ) : null}
           </div>
           <Link href={enrollHref} className="w-full sm:w-auto">
-            <Button className="w-full px-10 h-14 rounded-2xl bg-primary hover:bg-primary/90 text-white font-bold shadow-lg shadow-primary/20 text-lg transition-transform active:scale-95">
+            <Button className="w-full px-10 h-14 rounded-2xl bg-primary hover:bg-primary/90 text-primary-foreground font-bold shadow-lg shadow-primary/20 text-lg transition-transform active:scale-95">
               Enroll Now
             </Button>
           </Link>

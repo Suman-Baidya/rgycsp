@@ -65,12 +65,12 @@ export async function updateSiteSettings(data: any) {
       });
     }
 
-    revalidateTag("site-settings");
+    (revalidateTag as any)("site-settings");
     revalidatePath("/", "layout");
     revalidatePath("/");
     revalidatePath("/(admin)/super-admin/settings");
-    await revalidateWorkspacePath(typeof workspaceId !== 'undefined' ? workspaceId : (typeof data !== 'undefined' ? data.workspaceId : null), "/admin/settings");
-    await revalidateWorkspacePath(typeof workspaceId !== 'undefined' ? workspaceId : (typeof data !== 'undefined' ? data.workspaceId : null), "/", "layout");
+    await revalidateWorkspacePath(typeof workspaceId !== 'undefined' ? workspaceId : null, "/admin/settings");
+    await revalidateWorkspacePath(typeof workspaceId !== 'undefined' ? workspaceId : null, "/", "layout");
     
     return { success: true };
   } catch (error: any) {
@@ -95,11 +95,12 @@ export async function updateLandingSection(sectionId: string, data: any) {
       },
     });
 
-    revalidateTag("site-settings");
+    (revalidateTag as any)("site-settings");
     revalidatePath("/");
     revalidatePath("/(admin)/super-admin/settings");
-    await revalidateWorkspacePath(typeof workspaceId !== 'undefined' ? workspaceId : (typeof data !== 'undefined' ? data.workspaceId : null), "/admin/settings");
-    await revalidateWorkspacePath(typeof workspaceId !== 'undefined' ? workspaceId : (typeof data !== 'undefined' ? data.workspaceId : null), "/", "layout");
+    const targetWorkspaceId = data?.workspaceId || null;
+    await revalidateWorkspacePath(targetWorkspaceId, "/admin/settings");
+    await revalidateWorkspacePath(targetWorkspaceId, "/", "layout");
     return { success: true };
   } catch (error) {
     console.error("Failed to update landing section:", error);
@@ -217,5 +218,36 @@ export async function syncAllSections(settingsId: string, sectionTypes: string[]
   } catch (error) {
     console.error("Failed to sync sections:", error);
     return { success: false, error: "Sync failed" };
+  }
+}
+
+export async function getHeadOfficeBadgeConfig() {
+  try {
+    const globalSettings = await db.siteSettings.findFirst({
+      where: { workspaceId: null },
+      select: {
+        siteName: true,
+        logoUrl: true,
+        navbarConfig: true,
+      }
+    });
+    if (!globalSettings) return null;
+    const navConfig = (globalSettings.navbarConfig as any) || {};
+    const badge = navConfig.headOfficeBadge || {};
+    return {
+      enabled: badge.enabled !== false,
+      label: badge.label || "Head Office",
+      title: badge.title || globalSettings.siteName || "RGYCSP Head Office",
+      logoUrl: badge.logoUrl || globalSettings.logoUrl || "/logo.png",
+      showButton: !!badge.showButton,
+      buttonText: badge.buttonText || "Visit Portal",
+      linkUrl: badge.linkUrl || "/",
+      openInNewTab: badge.openInNewTab !== false,
+      globalLogoUrl: globalSettings.logoUrl || "/logo.png",
+      globalSiteName: globalSettings.siteName || "RGYCSP",
+    };
+  } catch (error) {
+    console.error("Failed to get head office badge config:", error);
+    return null;
   }
 }

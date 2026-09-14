@@ -230,7 +230,7 @@ export function StudentFeaturesGrid() {
                       <feature.icon className={cn("h-8 w-8", feature.color)} />
                     </div>
                     {feature.actionType !== "dual" && (
-                      <div className="w-10 h-10 rounded-full bg-slate-50 dark:bg-slate-800 flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-colors duration-300">
+                      <div className="w-10 h-10 rounded-full bg-slate-50 dark:bg-slate-800 flex items-center justify-center group-hover:bg-primary group-hover:text-primary-foreground transition-colors duration-300">
                         <ArrowRight className="h-5 w-5 opacity-50 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all" />
                       </div>
                     )}
@@ -268,8 +268,8 @@ export function StudentFeaturesGrid() {
                       <Button 
                         className={cn(
                           "w-full h-12 rounded-2xl font-bold transition-all duration-300 hover:-translate-y-0.5",
-                          "bg-slate-100 text-slate-700 hover:bg-primary hover:text-white dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-primary dark:hover:text-white",
-                          "group-hover:bg-primary group-hover:text-white shadow-none group-hover:shadow-lg group-hover:shadow-primary/25"
+                          "bg-slate-100 text-slate-700 hover:bg-primary hover:text-primary-foreground dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-primary dark:hover:text-primary-foreground",
+                          "group-hover:bg-primary group-hover:text-primary-foreground shadow-none group-hover:shadow-lg group-hover:shadow-primary/25"
                         )}
                         onClick={(e) => { e.stopPropagation(); handleOpenModal(feature.id); }}
                       >

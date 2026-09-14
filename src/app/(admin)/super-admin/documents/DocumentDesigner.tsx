@@ -245,7 +245,6 @@ export default function DocumentDesigner() {
   const [isLoading, setIsLoading] = useState(true);
   const [templateToDelete, setTemplateToDelete] = useState<any>(null);
   const [templateToSave, setTemplateToSave] = useState<{ id?: string, forceActive?: boolean } | null>(null);
-  const [conflictWarning, setConflictWarning] = useState<{ exists: boolean, name?: string } | null>(null);
   
   // Current Template State
   const [currentId, setCurrentId] = useState<string | null>(null);
@@ -444,8 +443,6 @@ export default function DocumentDesigner() {
       toast.success("Document template saved successfully");
       if (!currentId) setCurrentId(res.id || null);
       fetchTemplates();
-      setTemplateToSave(null);
-      setConflictWarning(null);
     } else {
       toast.error(res.error || "Failed to save template");
     }
@@ -453,15 +450,6 @@ export default function DocumentDesigner() {
   };
 
   const handleSave = async () => {
-    if (!currentId) {
-      // It's a new template, check for conflict
-      const conflict = await checkActiveTemplateExists(templateType);
-      if (conflict.exists) {
-        setConflictWarning(conflict);
-        setTemplateToSave({ forceActive: true });
-        return;
-      }
-    }
     performSave(true);
   };
   
@@ -471,7 +459,7 @@ export default function DocumentDesigner() {
     
     toast.promise(
       new Promise(async (resolve, reject) => {
-        const res = await toggleTemplateStatus(template.id, newStatus, template.type);
+        const res = await toggleTemplateStatus(template.id, newStatus);
         if (res.success) {
           fetchTemplates();
           resolve(res);
@@ -567,12 +555,20 @@ export default function DocumentDesigner() {
       // Wait for React to render the preview state
       await new Promise(resolve => setTimeout(resolve, 500));
 
-      // 1. Ensure all images are loaded
+      // 1. Ensure all images are loaded and decoded
       const images = canvasRef.current.querySelectorAll("img");
       await Promise.all(Array.from(images).map(img => {
-        if (img.complete) return Promise.resolve();
+        if (img.complete) {
+          return img.decode ? img.decode().catch(() => {}) : Promise.resolve();
+        }
         return new Promise((resolve) => {
-          img.onload = resolve;
+          img.onload = () => {
+            if (img.decode) {
+              img.decode().then(resolve).catch(resolve);
+            } else {
+              resolve(null);
+            }
+          };
           img.onerror = resolve;
         });
       }));
@@ -581,7 +577,8 @@ export default function DocumentDesigner() {
       const { toPng } = await import("html-to-image");
       const imgData = await toPng(canvasRef.current, {
         pixelRatio: 4,
-        backgroundColor: '#ffffff'
+        backgroundColor: '#ffffff',
+        quality: 1.0,
       });
       
       // 3. Create PDF with precise unit dimensions
@@ -592,7 +589,7 @@ export default function DocumentDesigner() {
         format: [fromPx(canvasSize.width, "mm"), fromPx(canvasSize.height, "mm")]
       });
       
-      pdf.addImage(imgData, "PNG", 0, 0, fromPx(canvasSize.width, "mm"), fromPx(canvasSize.height, "mm"), undefined, 'FAST');
+      pdf.addImage(imgData, "PNG", 0, 0, fromPx(canvasSize.width, "mm"), fromPx(canvasSize.height, "mm"), undefined, 'SLOW');
       
       // Add metadata
       pdf.setProperties({
@@ -807,7 +804,7 @@ export default function DocumentDesigner() {
           </div>
 
           <div className="flex items-center gap-2 self-end sm:self-auto">
-            <Select value={listTypeFilter} onValueChange={(val: string) => setListTypeFilter(val)}>
+            <Select value={listTypeFilter} onValueChange={(val: any) => setListTypeFilter(val)}>
               <SelectTrigger className="w-[170px] h-8 sm:h-9 rounded-lg text-xs font-medium bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700/60">
                 <div className="flex items-center gap-1.5 truncate">
                   <Filter className="h-3 w-3 text-slate-400 shrink-0" />
@@ -976,7 +973,7 @@ export default function DocumentDesigner() {
           </Button>
           <Button 
             onClick={downloadPDF} 
-            className="h-8 sm:h-9 px-3.5 rounded-lg gap-1.5 text-xs font-semibold bg-zinc-900 text-white hover:bg-zinc-800 shadow-sm"
+            className="h-8 sm:h-9 px-3.5 rounded-lg gap-1.5 text-xs font-semibold bg-slate-900 hover:bg-slate-800 text-white dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-100 border border-slate-700/50 shadow-sm"
           >
             <Download className="h-3.5 w-3.5" />
             Download PDF
@@ -984,24 +981,13 @@ export default function DocumentDesigner() {
           <Button 
             onClick={handleSave} 
             disabled={isSaving}
-            className="h-8 sm:h-9 px-3.5 rounded-lg gap-1.5 bg-primary text-white text-xs font-semibold shadow-sm shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all"
+            className="h-8 sm:h-9 px-3.5 rounded-lg gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white dark:bg-emerald-600 dark:hover:bg-emerald-500 shadow-sm shadow-emerald-500/20 text-xs font-semibold hover:scale-[1.02] active:scale-95 transition-all"
           >
             {isSaving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
             {isSaving ? "Saving..." : "Save Design"}
           </Button>
         </div>
       </AdminPageHeader>
-
-      <ConfirmDialog 
-        open={!!conflictWarning}
-        onOpenChange={(open) => !open && setConflictWarning(null)}
-        title="Active Template Exists"
-        description={`An active template already exists for this document type${conflictWarning?.name ? ` ("${conflictWarning.name}")` : ''}. Saving this new design will deactivate the previous one. Do you want to proceed and set this as the active template?`}
-        onConfirm={() => {
-          performSave(true);
-        }}
-        confirmText="Save and Set Active"
-      />
 
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-4 sm:gap-6 items-start">
         {/* Designer Sidebar */}
@@ -1400,7 +1386,14 @@ export default function DocumentDesigner() {
               </CardTitle>
             </CardHeader>
             <CardContent className="p-3.5 sm:p-4 space-y-3.5">
-              <ImageUpload value={backgroundUrl} onChange={setBackgroundUrl} label="Background" folder="RGYCSP/SuperAdmin/Documents" />
+              <ImageUpload 
+                value={backgroundUrl} 
+                onChange={setBackgroundUrl} 
+                label="Background Template" 
+                folder="RGYCSP/SuperAdmin/Documents" 
+                rawUpload={true}
+                maxSizeK={25600}
+              />
               
               <div className="space-y-1">
                 <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Preferred Unit</Label>
@@ -1495,7 +1488,12 @@ export default function DocumentDesigner() {
                 className="relative bg-white overflow-hidden w-full h-full"
               >
                 {backgroundUrl ? (
-                  <img src={backgroundUrl || ""} crossOrigin="anonymous" alt="BG" className="absolute inset-0 w-full h-full object-cover pointer-events-none" />
+                  <img 
+                    src={backgroundUrl.replace(/\/upload\/(?:f_auto,q_auto\/|f_auto\/|q_auto\/)/, '/upload/')} 
+                    crossOrigin="anonymous" 
+                    alt="BG" 
+                    className="absolute inset-0 w-full h-full object-fill pointer-events-none" 
+                  />
                 ) : (
                   <div className="absolute inset-0 flex flex-col items-center justify-center" style={{ backgroundColor: "rgba(248, 250, 252, 0.5)", color: "#94a3b8" }}>
                      <Layout className="w-24 h-24" style={{ opacity: 0.2 }} />

@@ -24,16 +24,33 @@ export function MainFooter({ settings }: { settings?: any }) {
   const socialLinks = settings?.socialLinks || {};
   const floatingConfig = settings?.floatingConfig || {};
 
-  // Dynamic Navigation from settings
-  const navLinks = settings?.navigation?.length > 0
+  const defaultNav = [
+    { name: "Home", href: "/", id: "home", isActive: true },
+    { name: "About", href: "/about", id: "about", isActive: true },
+    { name: "Services", href: "/services", id: "services", isActive: true },
+    { name: "Students", href: "/students", id: "students", isActive: true },
+    { name: "Courses", href: "/courses", id: "courses", isActive: true },
+    { name: "Franchises", href: "/franchises", id: "franchises", isActive: true },
+    { name: "Events", href: "/events", id: "events", isActive: true },
+    { name: "Placement", href: "/placement", id: "placement", isActive: true },
+    { name: "Pricing", href: "/pricing", id: "pricing", isActive: true },
+    { name: "Support", href: "/support", id: "support", isActive: true }
+  ];
+
+  // Dynamic Navigation from settings - perfectly synced with LandingNavbar
+  const navLinks = (settings?.navigation && Array.isArray(settings.navigation) && settings.navigation.length > 0
     ? settings.navigation
-    : [
-      { name: "Home", href: "/" },
-      { name: "About Us", href: "/about" },
-      { name: "Services", href: "/services" },
-      { name: "Pricing", href: "/pricing" },
-      { name: "Support", href: "/support" }
-    ];
+    : defaultNav
+  ).filter((link: any) => link.isActive !== false);
+
+  // Select key high-priority menus for footer (capped at 5-6 items in single column)
+  const priorityKeys = ["home", "about", "services", "courses", "franchises", "pricing", "support", "students"];
+  const prioritized = navLinks.filter((item: any) => {
+    const key = (item.id || item.name || "").toLowerCase();
+    const href = (item.href || "").toLowerCase();
+    return priorityKeys.some((p) => key.includes(p) || href === `/${p}` || (p === "home" && (href === "/" || href === "")));
+  });
+  const footerNavItems = prioritized.length >= 4 ? prioritized.slice(0, 6) : navLinks.slice(0, 6);
 
   // Dynamic Legal Links from sections (SiteSettings -> sections -> type starting with 'legal-')
   const dynamicLegalLinks = settings?.sections
@@ -53,17 +70,17 @@ export function MainFooter({ settings }: { settings?: any }) {
     ];
 
   const solutions = [
-    { name: "LMS for Schools", href: "#" },
-    { name: "Online Coaching", href: "#" },
-    { name: "Skill Training", href: "#" },
-    { name: "Corporate Education", href: "#" }
+    { name: "LMS for Institutes", href: "/services" },
+    { name: "Online Coaching", href: "/courses" },
+    { name: "Skill Development", href: "/courses" },
+    { name: "Franchise Network", href: "/franchises" }
   ];
 
   return (
     <>
       <FloatingWhatsApp phoneNumber={whatsappNumber} config={floatingConfig} />
       <FloatingChatbot config={floatingConfig} />
-      <footer className="w-full bg-black text-white border-t border-white/20 transition-colors">
+      <footer className="dark dark-context w-full bg-black text-white border-t border-white/20 transition-colors">
         <div className="max-w-7xl mx-auto px-6 py-20">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-16 lg:gap-12">
           {/* Brand Info */}
@@ -123,12 +140,12 @@ export function MainFooter({ settings }: { settings?: any }) {
           <div className="lg:col-span-8 grid grid-cols-1 sm:grid-cols-3 gap-12">
             <div className="space-y-8">
               <h4 className="text-[11px] font-black text-white uppercase tracking-[0.25em] border-l-2 border-white pl-4">Menus</h4>
-              <ul className="space-y-2">
-                {navLinks.map((link: any) => (
-                  <li key={link.name || link.label}>
-                    <Link href={link.href} className="text-zinc-300 hover:text-white transition-all text-base font-bold flex items-center gap-3 group hover:underline decoration-white underline-offset-8 decoration-2">
-                      <div className="w-1.5 h-1.5 rounded-full bg-white/30 group-hover:bg-white transition-colors" />
-                      {link.name || link.label}
+              <ul className="space-y-4">
+                {footerNavItems.map((link: any) => (
+                  <li key={link.id || link.name || link.href}>
+                    <Link href={link.href} className="text-zinc-300 hover:text-white transition-all text-sm font-semibold flex items-center gap-2.5 group hover:translate-x-1">
+                      <div className="w-1.5 h-1.5 rounded-full bg-white/30 group-hover:bg-primary transition-colors shrink-0" />
+                      <span className="truncate">{link.name || link.label}</span>
                     </Link>
                   </li>
                 ))}

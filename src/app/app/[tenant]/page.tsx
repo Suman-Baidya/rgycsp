@@ -110,11 +110,31 @@ export default async function InstituteLandingPage({
     return <div>Failed to initialize workspace settings.</div>;
   }
 
+  const globalBadge = (globalSettings?.navbarConfig as any)?.headOfficeBadge || {};
+  const headOfficeBadgeData = {
+    enabled: globalBadge.enabled !== false,
+    label: globalBadge.label || "Head Office",
+    title: globalBadge.title || globalSettings?.siteName || "Head Office",
+    logoUrl: globalBadge.logoUrl || globalSettings?.logoUrl || "/logo.png",
+    showButton: !!globalBadge.showButton,
+    buttonText: globalBadge.buttonText || "Visit Portal",
+    linkUrl: globalBadge.linkUrl || "/",
+    openInNewTab: globalBadge.openInNewTab !== false,
+    globalLogoUrl: globalSettings?.logoUrl || "/logo.png",
+    globalSiteName: globalSettings?.siteName || "Head Office",
+  };
+
   // Merge logic: Workspace settings override global settings, but global layout configs apply if not editable.
-  // We use workspaceSettings for content, and globalSettings for structural toggles like navbarConfig.
+  // Workspace specific navbarConfig (subtitle, brand name, footer branding, CTA) takes precedence over global fallback
   const mergedSettings = {
     ...workspaceSettings,
-    navbarConfig: globalSettings.navbarConfig, // Force global navbar toggles
+    navbarConfig: {
+      ...(typeof globalSettings?.navbarConfig === "object" ? globalSettings.navbarConfig : {}),
+      ...(typeof workspaceSettings?.navbarConfig === "object" ? workspaceSettings.navbarConfig : {}),
+      secondarySiteName: undefined,
+      headOfficeBadge: headOfficeBadgeData,
+    },
+    headOfficeBadge: headOfficeBadgeData,
   };
 
   const isSectionActive = (type: string) => {

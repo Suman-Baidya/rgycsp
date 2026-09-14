@@ -1,8 +1,6 @@
 "use client";
 
 import Image from "next/image";
-
-
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -55,7 +53,7 @@ export function WorkspaceHero({ data }: { data: any }) {
   const getLink = (path: string) => getTenantLink(path, tenant, pathname);
 
   return (
-    <section className="relative w-full h-screen min-h-[700px] overflow-hidden bg-zinc-950 flex items-center">
+    <section className="dark dark-context relative w-full h-screen min-h-[700px] overflow-hidden bg-zinc-950 flex items-center text-slate-100">
       {/* Background Slider */}
       <div className="absolute inset-0 z-0">
         <AnimatePresence mode="wait">
@@ -86,20 +84,20 @@ export function WorkspaceHero({ data }: { data: any }) {
           transition={{ duration: 0.8, delay: 0.2 }}
           className="space-y-8"
         >
-          <div className="inline-flex items-center gap-3 px-4 py-2 rounded-lg bg-primary/10 border border-primary/20 backdrop-blur-sm">
+          <div className="inline-flex items-center gap-3 px-4 py-2 rounded-lg bg-white/10 border border-white/20 backdrop-blur-sm">
             <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-            <span className="text-[11px] font-bold text-primary tracking-[0.2em] uppercase">{slide.tagline || slide.subtitle}</span>
+            <span className="text-[11px] font-bold text-white tracking-[0.2em] uppercase">{slide.tagline || slide.subtitle}</span>
           </div>
 
           <h1 className="text-5xl md:text-6xl lg:text-[76px] font-black text-white leading-[0.9] tracking-tight max-w-[15ch]">
             {slide.title.split(' ').map((word: string, i: number) => (
-              <span key={i} className={cn(i % 2 === 1 ? "text-primary" : "")}>
+              <span key={i} className={cn(i % 2 === 1 ? "text-primary brightness-125 drop-shadow-[0_0_20px_rgba(255,255,255,0.15)]" : "")}>
                 {word}{" "}
               </span>
             ))}
           </h1>
 
-          <p className="text-zinc-400 text-lg md:text-xl max-w-lg leading-relaxed font-medium">
+          <p className="text-zinc-300 text-lg md:text-xl max-w-lg leading-relaxed font-medium">
             {slide.description}
           </p>
 
@@ -114,7 +112,7 @@ export function WorkspaceHero({ data }: { data: any }) {
             )}
             {slide.btn2Text && (
               <Link href={getLink(slide.btn2Link || "/about")} className="w-full sm:w-auto">
-                <Button size="lg" variant="outline" className="w-full sm:w-[220px] border-white/10 text-primary hover:text-primary hover:bg-primary/5 rounded-xl h-14 sm:h-16 text-base sm:text-lg font-bold backdrop-blur-sm transition-all hover:scale-[1.02] active:scale-95">
+                <Button size="lg" variant="outline" className="w-full sm:w-[220px] border-white/20 text-white hover:text-white hover:bg-white/10 rounded-xl h-14 sm:h-16 text-base sm:text-lg font-bold backdrop-blur-sm transition-all hover:scale-[1.02] active:scale-95">
                   {slide.btn2Text}
                 </Button>
               </Link>
@@ -152,7 +150,7 @@ export function WorkspaceHero({ data }: { data: any }) {
                 onClick={() => setCurrentSlide(i)}
                 className={cn(
                   "h-1 rounded-full transition-all duration-1000",
-                  currentSlide === i ? "w-12 bg-primary" : "w-4 bg-white/10"
+                  currentSlide === i ? "w-12 bg-primary" : "w-4 bg-white/20"
                 )}
               />
             ))}

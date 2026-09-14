@@ -422,14 +422,14 @@ export function LandingNavbar({ settings, user, isHome }: { settings?: any, user
           <div className="sticky bottom-0 bg-background dark:bg-zinc-950 p-4 border-t border-border flex flex-col gap-4 pb-safe shadow-[0_-10px_30px_rgba(0,0,0,0.05)] dark:shadow-[0_-10px_30px_rgba(0,0,0,0.5)]">
             {user ? (
               <Link href={dashboardHref} onClick={() => setIsOpen(false)}>
-                <Button className="w-full h-12 rounded-xl bg-primary text-primary-foreground font-bold gap-3 shadow-xl shadow-primary/20 dark:text-white">
+                <Button className="w-full h-12 rounded-xl bg-primary text-primary-foreground font-bold gap-3 shadow-xl shadow-primary/20">
                   <LayoutDashboard className="h-4 w-4" />
                   Go to Dashboard
                 </Button>
               </Link>
             ) : (
               <Link href="/login" onClick={() => setIsOpen(false)}>
-                <Button className="w-full bg-primary text-primary-foreground h-12 text-lg rounded-xl font-bold shadow-xl shadow-primary/20 dark:text-white">
+                <Button className="w-full bg-primary text-primary-foreground h-12 text-lg rounded-xl font-bold shadow-xl shadow-primary/20">
                   Login
                 </Button>
               </Link>

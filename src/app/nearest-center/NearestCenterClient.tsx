@@ -154,7 +154,7 @@ export default function NearestCenterClient() {
                               href={`/app/${center.subdomain}/admission${courseId ? `?courseId=${courseId}&fromGlobal=true` : '?fromGlobal=true'}`} 
                               className="flex-1"
                             >
-                              <Button className="w-full rounded-xl h-12 bg-primary text-white font-bold shadow-lg shadow-primary/20">
+                              <Button className="w-full rounded-xl h-12 bg-primary text-primary-foreground font-bold shadow-lg shadow-primary/20">
                                 Proceed to Enroll <ArrowRight className="w-4 h-4 ml-2" />
                               </Button>
                             </Link>

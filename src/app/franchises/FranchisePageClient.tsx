@@ -349,29 +349,29 @@ export function FranchisePageClient({ settings, initialWorkspaces }: FranchisePa
               </CardHeader>
               
               <div className="px-10 lg:px-14">
-                <div className="h-px w-full bg-gradient-to-r from-transparent via-slate-200 to-transparent"></div>
+                <div className="h-px w-full bg-gradient-to-r from-transparent via-slate-200 dark:via-zinc-800 to-transparent"></div>
               </div>
 
               <CardContent className="p-6 lg:p-10 pt-6">
                 <form onSubmit={handleVerifyCenter} className="flex flex-col gap-5 max-w-2xl mx-auto">
                   <div className="space-y-2">
                     <Label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Registration Code</Label>
-                    <Input required value={verifySearch} onChange={(e) => setVerifySearch(e.target.value)} placeholder="e.g. WB-002" className="rounded-xl h-14 border-slate-200 bg-slate-50 text-slate-900 uppercase font-bold text-center sm:text-left text-lg shadow-inner placeholder:text-slate-400 focus-visible:ring-blue-500/50 focus-visible:border-blue-500 transition-all w-full" />
+                    <Input required value={verifySearch} onChange={(e) => setVerifySearch(e.target.value)} placeholder="e.g. WB-002" className="rounded-xl h-14 border-slate-200 dark:border-zinc-700 bg-slate-50 dark:bg-zinc-800/80 text-slate-900 dark:text-white uppercase font-bold text-center sm:text-left text-lg shadow-inner placeholder:text-slate-400 dark:placeholder:text-zinc-500 focus-visible:ring-blue-500/50 focus-visible:border-blue-500 transition-all w-full" />
                   </div>
                   
                   {/* Captcha Section */}
-                  <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm">
+                  <div className="bg-slate-50 dark:bg-zinc-800/40 border border-slate-200 dark:border-zinc-700/70 rounded-xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm">
                     <div className="flex items-center gap-3">
-                      <div className="p-2 bg-white border border-slate-200 rounded-lg text-slate-700 shadow-sm">
+                      <div className="p-2 bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded-lg text-slate-700 dark:text-zinc-300 shadow-sm">
                         <ShieldCheck className="w-4 h-4" />
                       </div>
                       <div className="text-left">
                         <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-0.5">Security Check</p>
-                        <p className="text-xs font-semibold text-slate-700">Solve to verify human identity</p>
+                        <p className="text-xs font-semibold text-slate-700 dark:text-zinc-300">Solve to verify human identity</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <div className="h-10 px-4 bg-white border border-slate-200 rounded-lg flex items-center justify-center font-black text-lg tracking-wider text-slate-800 shadow-sm">
+                      <div className="h-10 px-4 bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded-lg flex items-center justify-center font-black text-lg tracking-wider text-slate-800 dark:text-white shadow-sm">
                         {captchaNum1} + {captchaNum2} =
                       </div>
                       <Input 
@@ -379,7 +379,7 @@ export function FranchisePageClient({ settings, initialWorkspaces }: FranchisePa
                         value={captchaAnswer} 
                         onChange={(e) => setCaptchaAnswer(e.target.value)} 
                         placeholder="?" 
-                        className="w-16 h-10 rounded-lg border-slate-200 bg-white text-slate-900 font-black text-center text-lg shadow-inner focus-visible:ring-blue-500/50" 
+                        className="w-16 h-10 rounded-lg border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-slate-900 dark:text-white font-black text-center text-lg shadow-inner focus-visible:ring-blue-500/50" 
                       />
                     </div>
                   </div>
@@ -453,12 +453,12 @@ export function FranchisePageClient({ settings, initialWorkspaces }: FranchisePa
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-24 items-center">
               {/* Left: Video */}
               {guideSection.content?.videoUrl ? (
-                <div className="rounded-[2.5rem] overflow-hidden border-[12px] border-white shadow-2xl shadow-blue-900/10 aspect-video relative bg-slate-900 transform lg:-rotate-2 transition-transform hover:rotate-0">
+                <div className="rounded-[2.5rem] overflow-hidden border-[12px] border-white dark:border-zinc-800 shadow-2xl shadow-blue-900/10 aspect-video relative bg-slate-900 transform lg:-rotate-2 transition-transform hover:rotate-0">
                   <iframe src={guideSection.content.videoUrl} title="Guidelines Video" className="absolute inset-0 w-full h-full border-0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen></iframe>
                 </div>
               ) : (
-                <div className="rounded-[2.5rem] overflow-hidden border-[12px] border-white shadow-2xl shadow-blue-900/10 aspect-video relative bg-slate-100 flex flex-col items-center justify-center transform lg:-rotate-2">
-                   <div className="w-16 h-16 rounded-full bg-slate-200 flex items-center justify-center mb-4">
+                <div className="rounded-[2.5rem] overflow-hidden border-[12px] border-white dark:border-zinc-800 shadow-2xl shadow-blue-900/10 aspect-video relative bg-slate-100 dark:bg-zinc-900 flex flex-col items-center justify-center transform lg:-rotate-2">
+                   <div className="w-16 h-16 rounded-full bg-slate-200 dark:bg-zinc-800 flex items-center justify-center mb-4">
                      <span className="text-slate-400 font-black">?</span>
                    </div>
                    <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">No Video Provided</p>
@@ -466,15 +466,15 @@ export function FranchisePageClient({ settings, initialWorkspaces }: FranchisePa
               )}
 
               {/* Right: Steps */}
-              <div className="space-y-10 relative before:absolute before:left-[1.35rem] before:top-4 before:bottom-4 before:w-1 before:bg-blue-100 before:rounded-full">
+              <div className="space-y-10 relative before:absolute before:left-[1.35rem] before:top-4 before:bottom-4 before:w-1 before:bg-blue-100 dark:before:bg-zinc-800 before:rounded-full">
                 {(guideSection.content?.steps || []).map((step: any, idx: number) => (
                   <div key={idx} className="flex gap-8 relative items-start group">
-                    <div className="w-12 h-12 rounded-full bg-white border-[3px] border-blue-100 flex items-center justify-center font-black shrink-0 relative z-10 group-hover:bg-blue-600 group-hover:border-blue-600 group-hover:text-white transition-all shadow-md shadow-blue-900/5 text-lg text-slate-400">
+                    <div className="w-12 h-12 rounded-full bg-white dark:bg-zinc-800 border-[3px] border-blue-100 dark:border-zinc-700 flex items-center justify-center font-black shrink-0 relative z-10 group-hover:bg-primary group-hover:border-primary group-hover:text-primary-foreground transition-all shadow-md shadow-blue-900/5 text-lg text-slate-500 dark:text-zinc-300">
                       {idx + 1}
                     </div>
                     <div className="space-y-3 pt-1">
-                      <h3 className="font-bold text-xl text-slate-900 group-hover:text-blue-700 transition-colors">{step.title}</h3>
-                      <p className="text-sm text-slate-500 leading-relaxed font-medium">{step.description}</p>
+                      <h3 className="font-bold text-xl text-slate-900 dark:text-white group-hover:text-primary dark:group-hover:text-primary transition-colors">{step.title}</h3>
+                      <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed font-medium">{step.description}</p>
                     </div>
                   </div>
                 ))}

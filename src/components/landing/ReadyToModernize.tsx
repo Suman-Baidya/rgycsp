@@ -46,9 +46,9 @@ export function ReadyToModernize({ data }: { data?: any }) {
           {description}
         </p>
         <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
-          <a href={primaryBtn.link} className="group relative h-16 px-12 bg-primary text-primary-foreground font-black text-lg rounded-2xl overflow-hidden transition-all  active:scale-95 shadow-[0_20px_40px_rgba(var(--primary),0.3)] flex items-center justify-center border border-white dark:text-white">
+          <a href={primaryBtn.link} className="group relative h-16 px-12 bg-primary text-primary-foreground font-black text-lg rounded-2xl overflow-hidden transition-all active:scale-95 shadow-[0_20px_40px_rgba(var(--primary),0.3)] flex items-center justify-center border border-transparent">
             <span className="relative z-10">{primaryBtn.label}</span>
-            <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
+            <div className="absolute inset-0 bg-primary-foreground/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
           </a>
           <a href={secondaryBtn.link} className="h-16 px-12 border-2 border-white/20 text-white font-bold text-lg rounded-2xl hover:bg-white hover:text-zinc-950 transition-all  active:scale-95 backdrop-blur-sm flex items-center justify-center">
             {secondaryBtn.label}

@@ -269,8 +269,8 @@ export function StudyCenterClient({ initialCenters, contentSection }: StudyCente
                               rel="noopener noreferrer"
                               className="flex items-start gap-2 text-foreground/80 font-bold hover:text-primary transition-colors group/location"
                             >
-                              <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center shrink-0 group-hover/location:bg-primary group-hover/location:text-white transition-colors">
-                                <MapPin className="w-3.5 h-3.5 text-primary group-hover/location:text-white" />
+                              <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center shrink-0 group-hover/location:bg-primary group-hover/location:text-primary-foreground transition-colors">
+                                <MapPin className="w-3.5 h-3.5 text-primary group-hover/location:text-primary-foreground" />
                               </div>
                               <div className="flex flex-col mt-0.5 max-w-[200px] sm:max-w-[250px] md:max-w-[300px]">
                                 <span className="line-clamp-2 leading-snug text-sm break-words whitespace-normal">

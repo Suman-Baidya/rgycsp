@@ -74,7 +74,7 @@ export function WorkspaceFaq({ data }: { data?: any }) {
                 <span className="text-xl font-bold pr-8">{faq.question}</span>
                 <div className={cn(
                   "w-10 h-10 rounded-full flex items-center justify-center transition-all",
-                  activeIndex === i ? "bg-primary text-white rotate-180" : "bg-muted text-muted-foreground group-hover:bg-primary group-hover:text-white"
+                  activeIndex === i ? "bg-primary text-primary-foreground rotate-180" : "bg-muted text-muted-foreground group-hover:bg-primary group-hover:text-primary-foreground"
                 )}>
                   {activeIndex === i ? <Minus className="w-5 h-5" /> : <Plus className="w-5 h-5" />}
                 </div>

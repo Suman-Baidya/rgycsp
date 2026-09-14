@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Input } from "@/components/ui/input";
@@ -22,6 +23,7 @@ import { createGalleryItem, updateGalleryItem, deleteGalleryItem } from "@/app/a
 import { toast } from "sonner";
 import { ImageUpload } from "@/components/ui/ImageUpload";
 import { cn } from "@/lib/utils";
+import { ThemeContrastIndicator } from "@/components/theme/ThemeContrastIndicator";
 
 const THEME_PRESETS = [
   { name: "Academic Indigo", primary: "#4f46e5", accent: "#4338ca", description: "Standard professional indigo." },
@@ -35,9 +37,11 @@ const THEME_PRESETS = [
 ];
 
 export function WorkspaceSettingsForm({ settings }: { settings: any }) {
+  const router = useRouter();
   const [siteName, setSiteName] = useState(settings.siteName);
   const [logoUrl, setLogoUrl] = useState(settings.logoUrl);
   const [faviconUrl, setFaviconUrl] = useState(settings.faviconUrl);
+  const [navbarConfig, setNavbarConfig] = useState(settings.navbarConfig || {});
   const [primaryColor, setPrimaryColor] = useState(settings.primaryColor);
   const [accentColor, setAccentColor] = useState(settings.accentColor);
   const [fontFamily, setFontFamily] = useState(settings.fontFamily || "Inter");
@@ -88,6 +92,7 @@ export function WorkspaceSettingsForm({ settings }: { settings: any }) {
     setSiteName(settings.siteName);
     setLogoUrl(settings.logoUrl);
     setFaviconUrl(settings.faviconUrl);
+    setNavbarConfig(settings.navbarConfig || {});
     setPrimaryColor(settings.primaryColor);
     setAccentColor(settings.accentColor);
     setFontFamily(settings.fontFamily || "Inter");
@@ -151,6 +156,7 @@ export function WorkspaceSettingsForm({ settings }: { settings: any }) {
         workspaceId: settings.workspaceId,
         siteName,
         logoUrl,
+        faviconUrl: logoUrl,
         primaryColor,
         accentColor,
         fontFamily,
@@ -162,11 +168,16 @@ export function WorkspaceSettingsForm({ settings }: { settings: any }) {
         brandDescription,
         socialLinks,
         navigation,
+        navbarConfig,
         pageHeaderBanner,
         attendanceConfig,
       });
-      if (result.success) toast.success("Institute settings updated");
-      else toast.error(result.error || "Update failed");
+      if (result.success) {
+        toast.success("Institute settings updated");
+        router.refresh();
+      } else {
+        toast.error(result.error || "Update failed");
+      }
     } catch (error: any) {
       toast.error(error.message || "An unexpected error occurred");
     } finally {
@@ -273,17 +284,115 @@ export function WorkspaceSettingsForm({ settings }: { settings: any }) {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1">
-                    <div className="space-y-1.5">
-                      <Label htmlFor="siteName" className="text-[10px] font-bold uppercase tracking-wider text-slate-400 ml-0.5">Institute Name</Label>
-                      <Input id="siteName" value={siteName || ""} onChange={(e) => setSiteName(e.target.value)} className="h-8 sm:h-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 font-semibold" />
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400 ml-0.5">Logo & Favicon</Label>
-                      <div className="flex items-center gap-3 p-2 bg-slate-50 dark:bg-slate-800/40 rounded-xl border border-slate-200/80 dark:border-slate-800">
-                        <ImageUpload value={logoUrl} onChange={setLogoUrl} folder={`${mediaFolderBase}/branding`} />
-                        <ImageUpload value={faviconUrl || ""} onChange={setFaviconUrl} label="Favicon" folder={`${mediaFolderBase}/branding`} />
+                  {/* Institute Identity & Logo */}
+                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 pt-1 items-start">
+                    {/* Left Column: Institute Name & Navbar Subtitle */}
+                    <div className="lg:col-span-7 space-y-3.5">
+                      <div className="space-y-1.5">
+                        <Label htmlFor="siteName" className="text-[10px] font-bold uppercase tracking-wider text-slate-400 ml-0.5">
+                          Institute Name
+                        </Label>
+                        <Input 
+                          id="siteName" 
+                          value={siteName || ""} 
+                          onChange={(e) => setSiteName(e.target.value)} 
+                          placeholder="e.g. RGYCSP Chandpara"
+                          className="h-8 sm:h-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 font-semibold" 
+                        />
+                        <p className="text-[9px] text-slate-400 font-medium">Main title displayed in the franchise navbar and official records.</p>
                       </div>
+
+                      <div className="space-y-1.5">
+                        <Label htmlFor="navbarSubtitle" className="text-[10px] font-bold uppercase tracking-wider text-slate-400 ml-0.5">
+                          Navbar Subtitle / Tagline
+                        </Label>
+                        <Input 
+                          id="navbarSubtitle" 
+                          value={navbarConfig?.subtitle || ""} 
+                          onChange={(e) => setNavbarConfig({ ...navbarConfig, subtitle: e.target.value })} 
+                          placeholder="e.g. An Authorized Study & Training Center"
+                          className="h-8 sm:h-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 font-medium" 
+                        />
+                        <p className="text-[9px] text-slate-400 font-medium">Shows under main title in navbar. Defaults to &quot;An Authorized Study & Training Center&quot;.</p>
+                      </div>
+                    </div>
+
+                    {/* Right Column: Single Logo Upload (automatically used for favicon) */}
+                    <div className="lg:col-span-5 space-y-1.5">
+                      <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400 ml-0.5">
+                        Institute Logo & Favicon
+                      </Label>
+                      <div className="p-2.5 bg-slate-50 dark:bg-slate-800/40 rounded-xl border border-slate-200/80 dark:border-slate-800 flex flex-col gap-2">
+                        <ImageUpload 
+                          value={logoUrl} 
+                          onChange={(url) => { 
+                            setLogoUrl(url); 
+                            setFaviconUrl(url); 
+                          }} 
+                          label="Institute Logo" 
+                          folder={`${mediaFolderBase}/branding`} 
+                        />
+                        <p className="text-[9px] text-slate-400 font-medium px-1 leading-snug">
+                          * Your logo is automatically synced and used as both the website brand logo and the browser tab favicon.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Footer Branding Sub-section */}
+                  <div className="pt-4 border-t border-slate-100 dark:border-slate-800/80 space-y-3">
+                    <div>
+                      <h4 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">
+                        Footer Branding & Description
+                      </h4>
+                      <p className="text-[10px] text-slate-400 font-medium mt-0.5">
+                        Configure the brand title, subtitle, and about message shown at the bottom of your franchise public site.
+                      </p>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="space-y-1.5">
+                        <Label htmlFor="footerBrandName" className="text-[10px] font-bold uppercase tracking-wider text-slate-400 ml-0.5">
+                          Footer Title
+                        </Label>
+                        <Input 
+                          id="footerBrandName" 
+                          value={navbarConfig?.footerBrandName || ""} 
+                          onChange={(e) => setNavbarConfig({ ...navbarConfig, footerBrandName: e.target.value })} 
+                          placeholder={siteName || "e.g. RGYCSP Chandpara"}
+                          className="h-8 sm:h-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 font-medium" 
+                        />
+                        <p className="text-[9px] text-slate-400 font-medium">Defaults to Institute Name if left empty.</p>
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <Label htmlFor="footerTagline" className="text-[10px] font-bold uppercase tracking-wider text-slate-400 ml-0.5">
+                          Footer Subtitle
+                        </Label>
+                        <Input 
+                          id="footerTagline" 
+                          value={navbarConfig?.footerTagline || ""} 
+                          onChange={(e) => setNavbarConfig({ ...navbarConfig, footerTagline: e.target.value })} 
+                          placeholder="e.g. Official Institute Portal"
+                          className="h-8 sm:h-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 font-medium" 
+                        />
+                        <p className="text-[9px] text-slate-400 font-medium">Small uppercase badge under footer title.</p>
+                      </div>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <Label htmlFor="brandDescription" className="text-[10px] font-bold uppercase tracking-wider text-slate-400 ml-0.5">
+                        Footer Description
+                      </Label>
+                      <Textarea 
+                        id="brandDescription" 
+                        value={brandDescription || ""} 
+                        onChange={(e) => setBrandDescription(e.target.value)} 
+                        placeholder="e.g. Providing quality education and digital resources to learners. Your success is our mission."
+                        rows={2}
+                        className="text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 font-medium resize-none" 
+                      />
+                      <p className="text-[9px] text-slate-400 font-medium">Brief mission or description displayed under the brand in your footer.</p>
                     </div>
                   </div>
 
@@ -343,12 +452,8 @@ export function WorkspaceSettingsForm({ settings }: { settings: any }) {
                       </div>
                     </div>
                   </div>
-                  
-                  <div className="space-y-1.5 pt-1">
-                    <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400 ml-0.5">Default Page Header Banner</Label>
-                    <ImageUpload value={pageHeaderBanner} onChange={setPageHeaderBanner} label="Page Banner" folder={`${mediaFolderBase}/branding`} />
-                    <p className="text-[10px] text-slate-400 font-medium">This banner appears at the top of informational sub-pages like Events, Notice, and About Us.</p>
-                  </div>
+
+                  <ThemeContrastIndicator primaryColor={primaryColor} accentColor={accentColor} />
                   
                   <div className="pt-2 flex justify-end">
                     <Button onClick={handleSaveGeneral} disabled={isSaving} className="h-8 sm:h-9 px-4 gap-1.5 rounded-lg font-semibold text-xs sm:text-sm bg-primary text-primary-foreground shadow-xs">

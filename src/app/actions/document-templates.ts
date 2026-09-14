@@ -18,8 +18,52 @@ export async function getDocumentTemplates(workspaceId: string | null = null) {
   }
 }
 
-export async function getDocumentTemplateByType(type: string, workspaceId: string | null = null) {
+export async function getActiveDocumentTemplates(workspaceId: string | null = null) {
   try {
+    return await db.documentTemplate.findMany({
+      where: { 
+        workspaceId,
+        isActive: true,
+        type: { not: "EXAMPLE_DATA" }
+      },
+      select: {
+        id: true,
+        name: true,
+        type: true,
+        background: true,
+        width: true,
+        height: true,
+        isActive: true,
+        updatedAt: true,
+      },
+      orderBy: { updatedAt: "desc" }
+    });
+  } catch (error) {
+    console.error("Failed to fetch active templates:", error);
+    return [];
+  }
+}
+
+export async function getDocumentTemplateById(id: string) {
+  try {
+    return await db.documentTemplate.findUnique({
+      where: { id }
+    });
+  } catch (error) {
+    console.error("Failed to fetch template by id:", error);
+    return null;
+  }
+}
+
+export async function getDocumentTemplateByType(type: string, workspaceId: string | null = null, templateId?: string | null) {
+  try {
+    if (templateId) {
+      const specific = await db.documentTemplate.findUnique({
+        where: { id: templateId }
+      });
+      if (specific) return specific;
+    }
+
     let template = await db.documentTemplate.findFirst({
       where: { type, workspaceId, isActive: true },
       orderBy: { updatedAt: "desc" }
@@ -51,15 +95,9 @@ export async function checkActiveTemplateExists(type: string, workspaceId: strin
   }
 }
 
-export async function toggleTemplateStatus(id: string, isActive: boolean, type: string, workspaceId: string | null = null) {
+export async function toggleTemplateStatus(id: string, isActive: boolean, type?: string, workspaceId: string | null = null) {
   try {
-    if (isActive) {
-      // Deactivate all others of this type
-      await db.documentTemplate.updateMany({
-        where: { type, workspaceId, id: { not: id } },
-        data: { isActive: false }
-      });
-    }
+    // Allows multiple active templates concurrently without deactivating others
     await db.documentTemplate.update({
       where: { id },
       data: { isActive }
@@ -85,14 +123,7 @@ export async function saveDocumentTemplate(data: {
   try {
     const { id, isActive = true, ...payload } = data;
     
-    if (isActive) {
-      // Deactivate others
-      await db.documentTemplate.updateMany({
-        where: { type: payload.type, workspaceId: payload.workspaceId || null, ...(id ? { id: { not: id } } : {}) },
-        data: { isActive: false }
-      });
-    }
-    
+    // Multiple active designs permitted concurrently (e.g., Old vs New certificate designs)
     if (id) {
       await db.documentTemplate.update({
         where: { id },

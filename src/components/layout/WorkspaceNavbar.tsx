@@ -17,7 +17,9 @@ import {
   User as UserIcon,
   Settings,
   GraduationCap,
-  Mail
+  Mail,
+  ExternalLink,
+  Building2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -33,6 +35,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { signOut } from "next-auth/react";
 import { getWorkspaceRole } from "@/app/actions/student";
+import { getHeadOfficeBadgeConfig } from "@/app/actions/site-settings";
 import { getTenantLink, getWorkspaceBase, detectTenant } from "@/lib/routing";
 import { CustomThemeStyle } from "../providers/CustomThemeStyle";
 
@@ -43,6 +46,9 @@ export function WorkspaceNavbar({ settings, user, tenant: propTenant }: { settin
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [workspaceRole, setWorkspaceRole] = useState<string | null>(null);
+  const [headOfficeBadge, setHeadOfficeBadge] = useState<any>(
+    settings?.headOfficeBadge || settings?.navbarConfig?.headOfficeBadge || null
+  );
   const { theme, setTheme } = useTheme();
 
   // Tenant Detection
@@ -68,6 +74,45 @@ export function WorkspaceNavbar({ settings, user, tenant: propTenant }: { settin
 
     return () => window.removeEventListener("scroll", handleScroll);
   }, [user, settings.workspaceId]);
+
+  useEffect(() => {
+    if (!headOfficeBadge) {
+      getHeadOfficeBadgeConfig().then((cfg) => {
+        if (cfg) setHeadOfficeBadge(cfg);
+      });
+    }
+  }, [headOfficeBadge]);
+
+  const getMainSiteUrl = (customLink?: string) => {
+    if (customLink && customLink.trim() && customLink !== "/") {
+      return customLink;
+    }
+    if (typeof window !== "undefined") {
+      const hostname = window.location.hostname;
+      const port = window.location.port ? `:${window.location.port}` : "";
+      const protocol = window.location.protocol;
+      const rootEnv = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "";
+      
+      // If in subdirectory mode (/app/[tenant]/...)
+      if (pathname.startsWith('/app/')) {
+        return "/";
+      }
+      
+      // If on subdomain (e.g. chandpara.localhost:3000 or chandpara.domain.com)
+      if (rootEnv && hostname.includes(rootEnv.split(':')[0])) {
+        return `${protocol}//${rootEnv}/`;
+      }
+      if (hostname.includes("localhost") || hostname.includes("127.0.0.1")) {
+        return `${protocol}//localhost${port}/`;
+      }
+      const parts = hostname.split('.');
+      if (parts.length > 2) {
+        const rootHost = parts.slice(1).join('.');
+        return `${protocol}//${rootHost}${port}/`;
+      }
+    }
+    return "/";
+  };
 
   const dashboardHref = (workspaceRole === "STUDENT" || (!workspaceRole && user?.role === "STUDENT")) ? studentBase : adminBase;
   const dashboardLabel = "Dashboard";
@@ -103,9 +148,21 @@ export function WorkspaceNavbar({ settings, user, tenant: propTenant }: { settin
 
   const Logo = ({ size = "w-10 h-10 lg:w-12 lg:h-12", iconSize = "text-xl lg:text-2xl", showName = true }: { size?: string, iconSize?: string, showName?: boolean }) => (
     <div className="flex items-center gap-3 lg:gap-5 group min-w-0">
-      <div className={cn(size, "rounded-xl bg-primary flex items-center justify-center shadow-2xl shadow-primary/20 group- transition-transform overflow-hidden shrink-0 relative")}>
+      <div className={cn(
+        size,
+        "flex items-center justify-center shrink-0 relative transition-transform",
+        settings.logoUrl
+          ? "bg-transparent"
+          : "rounded-xl bg-primary shadow-2xl shadow-primary/20 overflow-hidden"
+      )}>
         {settings.logoUrl ? (
-          <Image src={settings.logoUrl} alt={settings.siteName} fill sizes="(max-width: 768px) 150px, 200px" className="object-contain p-1" />
+          <Image 
+            src={settings.logoUrl} 
+            alt={settings.siteName || "Logo"} 
+            fill 
+            sizes="(max-width: 768px) 150px, 200px" 
+            className="object-contain" 
+          />
         ) : (
           <span className={cn("text-primary-foreground font-black tracking-tighter uppercase", iconSize)}>
             {settings.siteName?.charAt(0) || "W"}
@@ -118,7 +175,7 @@ export function WorkspaceNavbar({ settings, user, tenant: propTenant }: { settin
             {settings.siteName || "WORKSPACE"}
           </h1>
           <p className="text-[8px] lg:text-[10px] text-primary font-bold tracking-widest mt-1 line-clamp-2">
-            Computer Education Institute
+            {settings?.navbarConfig?.subtitle?.trim() || "An Authorized Study & Training Center"}
           </p>
         </div>
       )}
@@ -171,7 +228,7 @@ export function WorkspaceNavbar({ settings, user, tenant: propTenant }: { settin
   if (!mounted) return null;
 
   return (
-    <div className="absolute top-0 left-0 w-full z-[100] flex flex-col">
+    <div className="dark dark-context absolute top-0 left-0 w-full z-[100] flex flex-col text-slate-100">
       <CustomThemeStyle primaryColor={settings?.primaryColor} accentColor={settings?.accentColor} />
 
       {/* Tier 1: Top Bar */}
@@ -220,8 +277,49 @@ export function WorkspaceNavbar({ settings, user, tenant: propTenant }: { settin
             <Logo />
           </Link>
 
-          <div className="flex items-center gap-2 lg:gap-6 shrink-0">
-            <div className="flex items-center gap-2 lg:gap-3 pl-3 lg:pl-6 border-l border-white/10">
+          <div className="flex items-center gap-2 lg:gap-5 shrink-0">
+            {/* Head Office Affiliation Badge */}
+            {headOfficeBadge && headOfficeBadge.enabled !== false && (
+              <a
+                href={getMainSiteUrl(headOfficeBadge.linkUrl)}
+                target={headOfficeBadge.openInNewTab !== false ? "_blank" : undefined}
+                rel={headOfficeBadge.openInNewTab !== false ? "noopener noreferrer" : undefined}
+                className="flex items-center gap-2 sm:gap-2.5 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-primary/40 transition-all duration-300 group shadow-xs cursor-pointer shrink-0"
+                title={`${headOfficeBadge.label || "Head Office"}: ${headOfficeBadge.title || "Central Portal"}`}
+              >
+                <div className="relative w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center shrink-0">
+                  {headOfficeBadge.logoUrl ? (
+                    <Image
+                      src={headOfficeBadge.logoUrl}
+                      alt={headOfficeBadge.title || "Head Office Logo"}
+                      fill
+                      sizes="64px"
+                      className="object-contain transition-transform duration-300 group-hover:scale-105"
+                    />
+                  ) : (
+                    <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-primary/20 text-primary flex items-center justify-center font-black text-xs">
+                      HQ
+                    </div>
+                  )}
+                </div>
+                <div className="hidden sm:flex flex-col text-left min-w-0">
+                  <span className="text-[8px] font-extrabold uppercase tracking-widest text-primary flex items-center gap-1">
+                    {headOfficeBadge.label || "Head Office"}
+                    <ExternalLink className="w-2.5 h-2.5 opacity-60 group-hover:opacity-100 transition-opacity" />
+                  </span>
+                  <span className="text-xs font-bold text-white group-hover:text-primary transition-colors truncate max-w-[120px] lg:max-w-[170px]">
+                    {headOfficeBadge.title || "Central Portal"}
+                  </span>
+                </div>
+                {headOfficeBadge.showButton && (
+                  <span className="hidden md:inline-flex items-center text-[10px] font-bold px-2 py-0.5 rounded-md bg-primary text-primary-foreground shadow-xs group-hover:brightness-110 transition-all ml-0.5">
+                    {headOfficeBadge.buttonText || "Visit"}
+                  </span>
+                )}
+              </a>
+            )}
+
+            <div className="flex items-center gap-2 lg:gap-3 pl-3 lg:pl-5 border-l border-white/10">
               {user ? (
                 <div className="flex items-center gap-3 lg:gap-5">
                   <Link href={dashboardHref} className="hidden lg:block">
@@ -293,7 +391,30 @@ export function WorkspaceNavbar({ settings, user, tenant: propTenant }: { settin
           {/* Right: Auth / Dashboard */}
           <div className="flex justify-end">
             {isScrolled && (
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-3">
+                {headOfficeBadge && headOfficeBadge.enabled !== false && (
+                  <a
+                    href={getMainSiteUrl(headOfficeBadge.linkUrl)}
+                    target={headOfficeBadge.openInNewTab !== false ? "_blank" : undefined}
+                    rel={headOfficeBadge.openInNewTab !== false ? "noopener noreferrer" : undefined}
+                    className="w-9 h-9 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-primary/40 flex items-center justify-center transition-all p-1.5 group shrink-0"
+                    title={`${headOfficeBadge.label || "Head Office"}: ${headOfficeBadge.title || "Central Portal"}`}
+                  >
+                    {headOfficeBadge.logoUrl ? (
+                      <div className="relative w-6 h-6">
+                        <Image
+                          src={headOfficeBadge.logoUrl}
+                          alt={headOfficeBadge.title || "Head Office"}
+                          fill
+                          sizes="48px"
+                          className="object-contain transition-transform group-hover:scale-110"
+                        />
+                      </div>
+                    ) : (
+                      <Building2 className="w-4 h-4 text-primary" />
+                    )}
+                  </a>
+                )}
                 {user ? (
                   <div className="flex items-center gap-4">
                     <Link href={dashboardHref}>
@@ -327,13 +448,51 @@ export function WorkspaceNavbar({ settings, user, tenant: propTenant }: { settin
           >
             <div className="flex-1 overflow-y-auto p-6 custom-scrollbar">
               <div className="flex items-start justify-between mb-6 gap-4">
-                <span className="font-black text-xl leading-tight tracking-tighter text-white uppercase break-words line-clamp-3">
-                  {settings.siteName}
-                </span>
+                <div className="flex flex-col min-w-0">
+                  <span className="font-black text-xl leading-tight tracking-tighter text-white uppercase break-words line-clamp-3">
+                    {settings.siteName}
+                  </span>
+                  <span className="text-[10px] text-primary font-bold tracking-widest uppercase mt-0.5">
+                    {settings?.navbarConfig?.subtitle?.trim() || "An Authorized Study & Training Center"}
+                  </span>
+                </div>
                 <Button variant="ghost" size="icon" onClick={() => setIsMobileMenuOpen(false)} className="text-white shrink-0 mt-[-4px] -mr-2 hover:bg-white/10 rounded-full">
                   <X className="h-6 w-6" />
                 </Button>
               </div>
+
+              {/* Mobile Head Office Affiliation Card */}
+              {headOfficeBadge && headOfficeBadge.enabled !== false && (
+                <a
+                  href={getMainSiteUrl(headOfficeBadge.linkUrl)}
+                  target={headOfficeBadge.openInNewTab !== false ? "_blank" : undefined}
+                  rel={headOfficeBadge.openInNewTab !== false ? "noopener noreferrer" : undefined}
+                  className="flex items-center gap-3 p-2.5 rounded-xl bg-white/5 border border-white/10 mb-4 hover:border-primary/40 transition-all group"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  <div className="relative w-8 h-8 flex items-center justify-center shrink-0">
+                    {headOfficeBadge.logoUrl ? (
+                      <Image src={headOfficeBadge.logoUrl} alt={headOfficeBadge.title || "Head Office"} fill sizes="64px" className="object-contain" />
+                    ) : (
+                      <div className="w-8 h-8 rounded-lg bg-primary/20 text-primary flex items-center justify-center font-bold text-xs">HQ</div>
+                    )}
+                  </div>
+                  <div className="flex flex-col text-left flex-1 min-w-0">
+                    <span className="text-[8px] font-bold uppercase tracking-widest text-primary flex items-center gap-1">
+                      {headOfficeBadge.label || "Head Office"}
+                      <ExternalLink className="w-2.5 h-2.5 opacity-60" />
+                    </span>
+                    <span className="text-xs font-bold text-white group-hover:text-primary transition-colors truncate">
+                      {headOfficeBadge.title || "Main Portal"}
+                    </span>
+                  </div>
+                  {headOfficeBadge.showButton && (
+                    <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-md bg-primary text-primary-foreground">
+                      {headOfficeBadge.buttonText || "Visit"}
+                    </span>
+                  )}
+                </a>
+              )}
               <div className="flex flex-col gap-4">
                 {visibleNavItems.map((item: any) => (
                   <Link

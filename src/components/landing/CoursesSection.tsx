@@ -130,7 +130,7 @@ export async function CoursesSection({ data }: { data?: any }) {
                     href={`/courses`}
                     className={cn(
                       buttonVariants({ variant: "default" }),
-                      "flex-1 rounded-xl h-11 font-bold bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/20 flex items-center justify-center"
+                      "flex-1 rounded-xl h-11 font-bold bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/20 flex items-center justify-center"
                     )}
                   >
                     Enroll

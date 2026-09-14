@@ -218,8 +218,8 @@ export function HeroSection({ data }: { data?: any }) {
         </CarouselContent>
         {/* Navigation Buttons */}
         <div className="absolute bottom-12 right-12 flex gap-2 z-10 hidden md:flex">
-          <CarouselPrevious className="relative inset-0 translate-y-0 h-12 w-12 bg-background/50 backdrop-blur-sm border-border/50 hover:bg-primary hover:text-white" />
-          <CarouselNext className="relative inset-0 translate-y-0 h-12 w-12 bg-background/50 backdrop-blur-sm border-border/50 hover:bg-primary hover:text-white" />
+          <CarouselPrevious className="relative inset-0 translate-y-0 h-12 w-12 bg-background/50 backdrop-blur-sm border-border/50 hover:bg-primary hover:text-primary-foreground" />
+          <CarouselNext className="relative inset-0 translate-y-0 h-12 w-12 bg-background/50 backdrop-blur-sm border-border/50 hover:bg-primary hover:text-primary-foreground" />
         </div>
       </Carousel>
     </section>
