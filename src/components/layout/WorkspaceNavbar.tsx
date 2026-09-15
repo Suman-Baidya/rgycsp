@@ -267,57 +267,77 @@ export function WorkspaceNavbar({ settings, user, tenant: propTenant }: { settin
         )}
       </AnimatePresence>
 
-      {/* Tier 2: Branding Bar */}
+      {/* Tier 2: Branding Bar (Middle Part) */}
       <div className={cn(
-        "w-full bg-white/5 backdrop-blur-sm border-b border-white/5 py-4 overflow-hidden transition-all duration-500",
-        isScrolled ? "lg:hidden fixed top-0 bg-zinc-950/90 border-b border-white/10 py-3 shadow-2xl z-[150]" : "relative"
+        "w-full bg-white/5 backdrop-blur-sm border-b border-white/5 py-1 sm:py-1.5 overflow-hidden transition-all duration-500",
+        isScrolled ? "lg:hidden fixed top-0 bg-zinc-950/90 border-b border-white/10 py-1.5 shadow-2xl z-[150]" : "relative"
       )}>
         <div className="max-w-7xl mx-auto px-4 lg:px-6 flex items-center justify-between gap-2 lg:gap-4">
           <Link href={rootHref} className="min-w-0 flex-1">
             <Logo />
           </Link>
-
           <div className="flex items-center gap-2 lg:gap-5 shrink-0">
-            {/* Head Office Affiliation Badge */}
-            {headOfficeBadge && headOfficeBadge.enabled !== false && (
-              <a
-                href={getMainSiteUrl(headOfficeBadge.linkUrl)}
-                target={headOfficeBadge.openInNewTab !== false ? "_blank" : undefined}
-                rel={headOfficeBadge.openInNewTab !== false ? "noopener noreferrer" : undefined}
-                className="flex items-center gap-2 sm:gap-2.5 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-primary/40 transition-all duration-300 group shadow-xs cursor-pointer shrink-0"
-                title={`${headOfficeBadge.label || "Head Office"}: ${headOfficeBadge.title || "Central Portal"}`}
-              >
-                <div className="relative w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center shrink-0">
-                  {headOfficeBadge.logoUrl ? (
-                    <Image
-                      src={headOfficeBadge.logoUrl}
-                      alt={headOfficeBadge.title || "Head Office Logo"}
-                      fill
-                      sizes="64px"
-                      className="object-contain transition-transform duration-300 group-hover:scale-105"
-                    />
-                  ) : (
-                    <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-primary/20 text-primary flex items-center justify-center font-black text-xs">
-                      HQ
-                    </div>
+            {/* Head Office Affiliation / Central Board Partner Logo */}
+            {headOfficeBadge && headOfficeBadge.enabled !== false && (() => {
+              const rawLabel = (headOfficeBadge.label || "Head Office").trim();
+              const wordCaseLabel = rawLabel
+                .toLowerCase()
+                .split(" ")
+                .map((w: string) => w.charAt(0).toUpperCase() + w.slice(1))
+                .join(" ");
+              
+              const brandShortName = headOfficeBadge.shortName || 
+                (headOfficeBadge.title?.toLowerCase().includes("rajeev gandhi") 
+                  ? "RGYCSP" 
+                  : (headOfficeBadge.title && headOfficeBadge.title.length <= 10 
+                      ? headOfficeBadge.title 
+                      : (headOfficeBadge.globalSiteName || "RGYCSP")));
+
+              return (
+                <a
+                  href={getMainSiteUrl(headOfficeBadge.linkUrl)}
+                  target={headOfficeBadge.openInNewTab !== false ? "_blank" : undefined}
+                  rel={headOfficeBadge.openInNewTab !== false ? "noopener noreferrer" : undefined}
+                  className="flex items-center gap-1.5 sm:gap-2 px-1 sm:px-2 py-0.5 rounded-xl hover:bg-white/5 border border-transparent hover:border-white/10 transition-all duration-300 group cursor-pointer shrink-0"
+                  title={`${wordCaseLabel}: ${headOfficeBadge.title || brandShortName}`}
+                >
+                  {/* Full-Height Standalone Logo (Increased Height & Crisp) */}
+                  <div className="relative h-14 w-14 sm:h-16 sm:w-16 lg:h-[72px] lg:w-[72px] flex items-center justify-center shrink-0 transition-transform duration-300 group-hover:scale-105">
+                    {headOfficeBadge.logoUrl ? (
+                      <Image
+                        src={headOfficeBadge.logoUrl}
+                        alt={headOfficeBadge.title || "Head Office Logo"}
+                        fill
+                        sizes="(max-width: 640px) 56px, (max-width: 1024px) 64px, 80px"
+                        className="object-contain filter drop-shadow-sm group-hover:drop-shadow-md transition-all"
+                        priority
+                      />
+                    ) : (
+                      <div className="w-full h-full rounded-xl bg-primary/20 text-primary flex items-center justify-center font-black text-xs sm:text-sm border border-primary/30">
+                        HQ
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Subtle Affiliation Details - Tighter Gap & Proper Short Name */}
+                  <div className="hidden sm:flex flex-col text-left min-w-0 justify-center">
+                    <span className="text-[11px] sm:text-xs font-bold text-primary flex items-center gap-1 leading-tight capitalize">
+                      {wordCaseLabel}
+                      <ExternalLink className="w-2.5 h-2.5 opacity-60 group-hover:opacity-100 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
+                    </span>
+                    <span className="text-base sm:text-xl lg:text-2xl font-black text-white group-hover:text-primary transition-colors tracking-wide leading-tight mt-0.5">
+                      {brandShortName}
+                    </span>
+                  </div>
+
+                  {headOfficeBadge.showButton && (
+                    <span className="hidden md:inline-flex items-center text-[10px] font-bold px-2 py-0.5 rounded-md bg-primary text-primary-foreground shadow-xs group-hover:brightness-110 transition-all ml-1 shrink-0">
+                      {headOfficeBadge.buttonText || "Visit"}
+                    </span>
                   )}
-                </div>
-                <div className="hidden sm:flex flex-col text-left min-w-0">
-                  <span className="text-[8px] font-extrabold uppercase tracking-widest text-primary flex items-center gap-1">
-                    {headOfficeBadge.label || "Head Office"}
-                    <ExternalLink className="w-2.5 h-2.5 opacity-60 group-hover:opacity-100 transition-opacity" />
-                  </span>
-                  <span className="text-xs font-bold text-white group-hover:text-primary transition-colors truncate max-w-[120px] lg:max-w-[170px]">
-                    {headOfficeBadge.title || "Central Portal"}
-                  </span>
-                </div>
-                {headOfficeBadge.showButton && (
-                  <span className="hidden md:inline-flex items-center text-[10px] font-bold px-2 py-0.5 rounded-md bg-primary text-primary-foreground shadow-xs group-hover:brightness-110 transition-all ml-0.5">
-                    {headOfficeBadge.buttonText || "Visit"}
-                  </span>
-                )}
-              </a>
-            )}
+                </a>
+              );
+            })()}
 
             <div className="flex items-center gap-2 lg:gap-3 pl-3 lg:pl-5 border-l border-white/10">
               {user ? (
@@ -462,37 +482,53 @@ export function WorkspaceNavbar({ settings, user, tenant: propTenant }: { settin
               </div>
 
               {/* Mobile Head Office Affiliation Card */}
-              {headOfficeBadge && headOfficeBadge.enabled !== false && (
-                <a
-                  href={getMainSiteUrl(headOfficeBadge.linkUrl)}
-                  target={headOfficeBadge.openInNewTab !== false ? "_blank" : undefined}
-                  rel={headOfficeBadge.openInNewTab !== false ? "noopener noreferrer" : undefined}
-                  className="flex items-center gap-3 p-2.5 rounded-xl bg-white/5 border border-white/10 mb-4 hover:border-primary/40 transition-all group"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  <div className="relative w-8 h-8 flex items-center justify-center shrink-0">
-                    {headOfficeBadge.logoUrl ? (
-                      <Image src={headOfficeBadge.logoUrl} alt={headOfficeBadge.title || "Head Office"} fill sizes="64px" className="object-contain" />
-                    ) : (
-                      <div className="w-8 h-8 rounded-lg bg-primary/20 text-primary flex items-center justify-center font-bold text-xs">HQ</div>
+              {headOfficeBadge && headOfficeBadge.enabled !== false && (() => {
+                const rawLabel = (headOfficeBadge.label || "Head Office").trim();
+                const wordCaseLabel = rawLabel
+                  .toLowerCase()
+                  .split(" ")
+                  .map((w: string) => w.charAt(0).toUpperCase() + w.slice(1))
+                  .join(" ");
+                const brandShortName = headOfficeBadge.shortName || 
+                  (headOfficeBadge.title?.toLowerCase().includes("rajeev gandhi") 
+                    ? "RGYCSP" 
+                    : (headOfficeBadge.title && headOfficeBadge.title.length <= 10 
+                        ? headOfficeBadge.title 
+                        : (headOfficeBadge.globalSiteName || "RGYCSP")));
+
+                return (
+                  <a
+                    href={getMainSiteUrl(headOfficeBadge.linkUrl)}
+                    target={headOfficeBadge.openInNewTab !== false ? "_blank" : undefined}
+                    rel={headOfficeBadge.openInNewTab !== false ? "noopener noreferrer" : undefined}
+                    className="flex items-center gap-2.5 p-2.5 rounded-2xl bg-white/5 border border-white/10 mb-4 hover:border-primary/40 transition-all group"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    title={`${wordCaseLabel}: ${headOfficeBadge.title || brandShortName}`}
+                  >
+                    <div className="relative w-14 h-14 flex items-center justify-center shrink-0">
+                      {headOfficeBadge.logoUrl ? (
+                        <Image src={headOfficeBadge.logoUrl} alt={headOfficeBadge.title || "Head Office"} fill sizes="64px" className="object-contain filter drop-shadow-sm" />
+                      ) : (
+                        <div className="w-14 h-14 rounded-xl bg-primary/20 text-primary flex items-center justify-center font-bold text-xs border border-primary/30">HQ</div>
+                      )}
+                    </div>
+                    <div className="flex flex-col text-left flex-1 min-w-0 justify-center">
+                      <span className="text-[11px] font-bold text-primary flex items-center gap-1 leading-tight capitalize">
+                        {wordCaseLabel}
+                        <ExternalLink className="w-2.5 h-2.5 opacity-60" />
+                      </span>
+                      <span className="text-base sm:text-lg font-black text-white group-hover:text-primary transition-colors tracking-wide leading-tight mt-0.5">
+                        {brandShortName}
+                      </span>
+                    </div>
+                    {headOfficeBadge.showButton && (
+                      <span className="text-[10px] font-bold px-2.5 py-1 rounded-md bg-primary text-primary-foreground">
+                        {headOfficeBadge.buttonText || "Visit"}
+                      </span>
                     )}
-                  </div>
-                  <div className="flex flex-col text-left flex-1 min-w-0">
-                    <span className="text-[8px] font-bold uppercase tracking-widest text-primary flex items-center gap-1">
-                      {headOfficeBadge.label || "Head Office"}
-                      <ExternalLink className="w-2.5 h-2.5 opacity-60" />
-                    </span>
-                    <span className="text-xs font-bold text-white group-hover:text-primary transition-colors truncate">
-                      {headOfficeBadge.title || "Main Portal"}
-                    </span>
-                  </div>
-                  {headOfficeBadge.showButton && (
-                    <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-md bg-primary text-primary-foreground">
-                      {headOfficeBadge.buttonText || "Visit"}
-                    </span>
-                  )}
-                </a>
-              )}
+                  </a>
+                );
+              })()}
               <div className="flex flex-col gap-4">
                 {visibleNavItems.map((item: any) => (
                   <Link

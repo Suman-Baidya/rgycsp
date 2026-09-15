@@ -550,28 +550,39 @@ export function SettingsForm({ settings, isSuperAdmin = true }: { settings: any,
 
                     {/* Right Column: Title, Subtitle, and Link Settings */}
                     <div className="lg:col-span-8 space-y-3.5">
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
                         <div className="space-y-1.5">
-                          <Label htmlFor="headOfficeLabel" className="text-xs font-semibold text-slate-700 dark:text-slate-300">Badge Label / Subtitle</Label>
+                          <Label htmlFor="headOfficeLabel" className="text-xs font-semibold text-slate-700 dark:text-slate-300">Badge Label (Word Case)</Label>
                           <Input
                             id="headOfficeLabel"
                             value={headOfficeBadge.label || ""}
                             onChange={(e) => setHeadOfficeBadge({ ...headOfficeBadge, label: e.target.value })}
-                            placeholder="e.g. Head Office / Affiliated With"
+                            placeholder="e.g. Head Office"
                             className="h-8 sm:h-9 bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700/60 rounded-lg text-xs"
                           />
-                          <p className="text-[9px] text-slate-400 font-medium">Small label shown above the organization name.</p>
+                          <p className="text-[9px] text-slate-400 font-medium">Small label shown above (e.g. Head Office).</p>
                         </div>
                         <div className="space-y-1.5">
-                          <Label htmlFor="headOfficeTitle" className="text-xs font-semibold text-slate-700 dark:text-slate-300">Badge Title / Organization Name</Label>
+                          <Label htmlFor="headOfficeShortName" className="text-xs font-semibold text-slate-700 dark:text-slate-300">Brand Short Name</Label>
+                          <Input
+                            id="headOfficeShortName"
+                            value={headOfficeBadge.shortName || ""}
+                            onChange={(e) => setHeadOfficeBadge({ ...headOfficeBadge, shortName: e.target.value })}
+                            placeholder="e.g. RGYCSP"
+                            className="h-8 sm:h-9 bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700/60 rounded-lg text-xs"
+                          />
+                          <p className="text-[9px] text-slate-400 font-medium">Acronym shown in navbar (e.g. RGYCSP).</p>
+                        </div>
+                        <div className="space-y-1.5">
+                          <Label htmlFor="headOfficeTitle" className="text-xs font-semibold text-slate-700 dark:text-slate-300">Full Organization Name</Label>
                           <Input
                             id="headOfficeTitle"
                             value={headOfficeBadge.title || ""}
                             onChange={(e) => setHeadOfficeBadge({ ...headOfficeBadge, title: e.target.value })}
-                            placeholder={siteName || "e.g. RGYCSP Central Board"}
+                            placeholder={siteName || "e.g. Rajeev Gandhi Youth Computer Shiksha Parishad"}
                             className="h-8 sm:h-9 bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700/60 rounded-lg text-xs"
                           />
-                          <p className="text-[9px] text-slate-400 font-medium">Defaults to Primary Site Name if left empty.</p>
+                          <p className="text-[9px] text-slate-400 font-medium">Full name shown in tooltip & link details.</p>
                         </div>
                       </div>
 
@@ -623,31 +634,31 @@ export function SettingsForm({ settings, isSuperAdmin = true }: { settings: any,
                     <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400 ml-0.5">Live Navbar Preview</Label>
                     <div className="p-3 bg-zinc-950 rounded-xl border border-white/10 flex items-center justify-between gap-4">
                       <span className="text-xs text-zinc-400 font-medium">Franchise Navbar Position:</span>
-                      <div className="flex items-center gap-2.5 px-3 py-1.5 rounded-xl bg-white/5 border border-white/10">
-                        <div className="relative w-8 h-8 flex items-center justify-center shrink-0">
+                      <div className="flex items-center gap-2 px-2 py-0.5 rounded-xl hover:bg-white/5 border border-transparent transition-all">
+                        <div className="relative h-14 w-14 sm:h-16 sm:w-16 flex items-center justify-center shrink-0">
                           {headOfficeBadge.logoUrl || logoUrl ? (
                             <Image
                               src={headOfficeBadge.logoUrl || logoUrl}
                               alt="HQ Preview"
                               fill
                               sizes="64px"
-                              className="object-contain"
+                              className="object-contain filter drop-shadow-sm"
                             />
                           ) : (
-                            <div className="w-8 h-8 rounded-lg bg-primary/20 text-primary flex items-center justify-center font-bold text-xs">HQ</div>
+                            <div className="w-full h-full rounded-xl bg-primary/20 text-primary flex items-center justify-center font-bold text-xs border border-primary/30">HQ</div>
                           )}
                         </div>
-                        <div className="flex flex-col text-left">
-                          <span className="text-[8px] font-extrabold uppercase tracking-widest text-primary flex items-center gap-1">
-                            {headOfficeBadge.label || "Head Office"}
+                        <div className="flex flex-col text-left justify-center">
+                          <span className="text-[11px] sm:text-xs font-bold text-primary flex items-center gap-1 leading-tight capitalize">
+                            {(headOfficeBadge.label || "Head Office").toLowerCase().split(" ").map((w: string) => w.charAt(0).toUpperCase() + w.slice(1)).join(" ")}
                             <ExternalLink className="w-2.5 h-2.5 opacity-60" />
                           </span>
-                          <span className="text-xs font-bold text-white line-clamp-1 max-w-[160px]">
-                            {headOfficeBadge.title || siteName || "Head Office"}
+                          <span className="text-base sm:text-xl lg:text-2xl font-black text-white tracking-wide leading-tight mt-0.5">
+                            {headOfficeBadge.shortName || (headOfficeBadge.title?.toLowerCase().includes("rajeev gandhi") ? "RGYCSP" : (headOfficeBadge.title || "RGYCSP"))}
                           </span>
                         </div>
                         {headOfficeBadge.showButton && (
-                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-primary text-primary-foreground">
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-primary text-primary-foreground ml-1">
                             {headOfficeBadge.buttonText || "Visit"}
                           </span>
                         )}

@@ -92,34 +92,65 @@ export function WorkspaceFooter({ settings, tenant: propTenant, user }: { settin
   });
   const footerNavItems = prioritized.length >= 4 ? prioritized.slice(0, 6) : visibleNavItems.slice(0, 6);
 
+  const [newsletterEmail, setNewsletterEmail] = useState("");
+  const [isSubscribed, setIsSubscribed] = useState(false);
+
+  const handleSubscribe = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newsletterEmail || !newsletterEmail.includes("@")) {
+      return;
+    }
+    setIsSubscribed(true);
+    setNewsletterEmail("");
+  };
+
   if (!mounted) return null;
 
   return (
-    <footer className="dark dark-context w-full bg-zinc-950 text-zinc-300 pt-24 pb-12 font-sans relative overflow-hidden border-t border-white/5">
+    <footer className="dark dark-context w-full bg-zinc-950 text-zinc-300 pt-14 sm:pt-16 pb-12 font-sans relative overflow-hidden border-t border-white/5">
       {/* Decorative Glows - Maintained for Workspace modern look */}
       <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[120px] pointer-events-none -translate-y-1/2" />
       <div className="absolute top-0 right-1/4 w-[400px] h-[400px] bg-blue-500/5 rounded-full blur-[100px] pointer-events-none -translate-y-1/2" />
 
       <div className="max-w-7xl mx-auto px-6 relative z-10">
-        {/* Top Newsletter Section - Now exclusive to Workspace institutes */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center pb-20 border-b border-white/5 mb-20">
-          <div className="space-y-4">
-             <h3 className="text-3xl md:text-4xl font-bold text-white tracking-tight leading-tight">
-               Stay ahead with our <span className="text-primary">educational</span> insights
+        {/* Top Newsletter Section - Sleek & Compact */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-center pb-10 sm:pb-12 border-b border-white/10 mb-12 sm:mb-14">
+          <div className="lg:col-span-6 space-y-1 sm:space-y-1.5">
+             <h3 className="text-xl sm:text-2xl font-bold text-white tracking-tight leading-tight">
+               Stay <span className="text-primary">Updated</span>
              </h3>
-             <p className="text-zinc-400 font-medium text-lg">Join 5,000+ learners receiving weekly updates and career tips.</p>
+             <p className="text-xs sm:text-sm text-zinc-400 font-medium leading-relaxed">
+               Get course announcements, exam notices, and student updates.
+             </p>
           </div>
-          <div className="flex flex-col sm:flex-row gap-3">
-             <div className="relative flex-1 group">
-                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-zinc-500 group-focus-within:text-primary transition-colors" />
-                <Input 
-                  placeholder="Enter your email" 
-                  className="h-14 pl-12 rounded-2xl bg-white/5 border-white/10 text-white placeholder:text-zinc-600 focus:ring-primary/20 focus:border-primary/40 transition-all"
-                />
-             </div>
-             <Button className="h-14 px-8 rounded-2xl font-bold bg-primary text-primary-foreground shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all border-none">
-               Subscribe <Send className="w-4 h-4 ml-2" />
-             </Button>
+          <div className="lg:col-span-6">
+             <form onSubmit={handleSubscribe} className="flex flex-col sm:flex-row gap-2.5 max-w-lg lg:ml-auto w-full">
+                <div className="relative flex-1 group">
+                   <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500 group-focus-within:text-primary transition-colors" />
+                   <Input 
+                     type="email"
+                     value={newsletterEmail}
+                     onChange={(e) => setNewsletterEmail(e.target.value)}
+                     placeholder="Enter your email address" 
+                     className="h-11 pl-10 pr-3 rounded-xl bg-white/5 border-white/10 text-white text-xs sm:text-sm placeholder:text-zinc-500 focus:ring-primary/20 focus:border-primary/50 transition-all"
+                     required
+                   />
+                </div>
+                <Button 
+                  type="submit"
+                  className="h-11 px-5 sm:px-6 rounded-xl font-bold text-xs sm:text-sm bg-primary text-primary-foreground shadow-lg shadow-primary/20 hover:brightness-110 active:scale-95 transition-all border-none flex items-center justify-center gap-2 shrink-0"
+                >
+                  {isSubscribed ? (
+                    <>
+                      <ShieldCheck className="w-4 h-4" /> Subscribed
+                    </>
+                  ) : (
+                    <>
+                      Subscribe <Send className="w-3.5 h-3.5" />
+                    </>
+                  )}
+                </Button>
+             </form>
           </div>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-16">

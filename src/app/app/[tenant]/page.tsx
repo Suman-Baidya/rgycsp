@@ -115,6 +115,7 @@ export default async function InstituteLandingPage({
     enabled: globalBadge.enabled !== false,
     label: globalBadge.label || "Head Office",
     title: globalBadge.title || globalSettings?.siteName || "Head Office",
+    shortName: globalBadge.shortName || "RGYCSP",
     logoUrl: globalBadge.logoUrl || globalSettings?.logoUrl || "/logo.png",
     showButton: !!globalBadge.showButton,
     buttonText: globalBadge.buttonText || "Visit Portal",

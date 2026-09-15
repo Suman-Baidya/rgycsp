@@ -41,7 +41,7 @@ export default async function WorkspaceLearnersPage({
         <WorkspacePageHeader 
           title="Learners Portal"
           description="A dedicated space for our learners to explore resources, track progress, and stay updated."
-          bgImage={workspace.siteSettings.pageHeaderBanner || "https://images.unsplash.com/photo-1523240715181-01489a943ee2?q=80&w=2070"}
+          bgImage={workspace.siteSettings.pageHeaderBanner || "https://images.unsplash.com/photo-1523240795612-9a054b0db644?q=80&w=2070"}
           statusTitle="LEARNER"
           statusSub="Access Area"
           breadcrumbs={[
