@@ -34,7 +34,7 @@ export async function createBatch(data: {
       },
     });
 
-    await revalidateWorkspacePath(typeof workspaceId !== 'undefined' ? workspaceId : (typeof data !== 'undefined' ? data.workspaceId : null), "/admin", "layout");
+    await revalidateWorkspacePath(data.workspaceId, "/admin", "layout");
     return { success: true, data: batch };
   } catch (error: any) {
     console.error("Failed to create batch:", error);
@@ -59,7 +59,9 @@ export async function updateBatch(id: string, data: {
       data,
     });
 
-    await revalidateWorkspacePath(typeof workspaceId !== 'undefined' ? workspaceId : (typeof data !== 'undefined' ? data.workspaceId : null), "/admin", "layout");
+    if (batch.workspaceId) {
+      await revalidateWorkspacePath(batch.workspaceId, "/admin", "layout");
+    }
     return { success: true, data: batch };
   } catch (error: any) {
     console.error("Failed to update batch:", error);
@@ -81,11 +83,13 @@ export async function deleteBatch(id: string) {
       };
     }
 
-    await db.batch.delete({
+    const batch = await db.batch.delete({
       where: { id },
     });
 
-    await revalidateWorkspacePath(typeof workspaceId !== 'undefined' ? workspaceId : (typeof data !== 'undefined' ? data.workspaceId : null), "/admin", "layout");
+    if (batch.workspaceId) {
+      await revalidateWorkspacePath(batch.workspaceId, "/admin", "layout");
+    }
     return { success: true };
   } catch (error: any) {
     console.error("Failed to delete batch:", error);

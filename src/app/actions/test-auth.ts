@@ -22,9 +22,9 @@ export async function testLogin(username: string, password: string) {
     return {
       userId: user.id,
       username: user.username,
-      profiles: user.studentProfile.length,
+      hasProfile: !!user.studentProfile,
       passwordMatch: isMatch,
-      tenant: user.studentProfile[0]?.workspace?.subdomain
+      tenant: user.studentProfile?.workspace?.subdomain
     };
   } catch(e: any) {
     return e.message;

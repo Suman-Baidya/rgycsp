@@ -293,7 +293,7 @@ export function CommandPalette({ portal, tenant = "" }: CommandPaletteProps) {
         title: "Token Economy & Top-ups",
         category: "Navigation",
         icon: Wallet,
-        href: "/super-admin/token-economy",
+        href: "/super-admin/wallet",
       },
       {
         id: "sa-logs",

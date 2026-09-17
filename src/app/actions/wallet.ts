@@ -356,6 +356,7 @@ export async function savePlatformFeeConfig(data: { id?: string, name: string, a
         }
       });
     }
+    revalidatePath("/super-admin/wallet");
     revalidatePath("/(admin)/super-admin/token-economy");
     return { success: true };
   } catch (error: any) {
@@ -366,6 +367,7 @@ export async function savePlatformFeeConfig(data: { id?: string, name: string, a
 export async function deletePlatformFeeConfig(id: string) {
   try {
     await prisma.platformFeeConfig.delete({ where: { id } });
+    revalidatePath("/super-admin/wallet");
     revalidatePath("/(admin)/super-admin/token-economy");
     return { success: true };
   } catch (error: any) {

@@ -140,8 +140,8 @@ export default function StudentNoticesClient({
   const workspaceName = workspace?.name || settings?.siteName || "Academic Center";
   const centerCode = workspace?.centerCode || tenant.toUpperCase();
   const centerAddress = workspace?.address || settings?.address || "Institutional Campus";
-  const centerPhone = workspace?.phone || settings?.phone || "+91 98765 43210";
-  const centerEmail = workspace?.email || settings?.email || `admin@${tenant}.edu`;
+  const centerPhone = workspace?.phone || settings?.phone || "Contact Institute Office";
+  const centerEmail = workspace?.email || settings?.email || "support@rgycsp.org.in";
 
   // Has custom notices configured by center admin
   const hasCustomNotices = initialNotices && initialNotices.length > 0;

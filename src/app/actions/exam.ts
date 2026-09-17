@@ -20,7 +20,7 @@ export async function createExam(workspaceId: string, data: { title: string, typ
         courseId: data.courseId,
       }
     });
-    await revalidateWorkspacePath(typeof workspaceId !== 'undefined' ? workspaceId : (typeof data !== 'undefined' ? data.workspaceId : null), "/admin/exam-generator", "page");
+    await revalidateWorkspacePath(workspaceId, "/admin/exam-generator", "page");
 
     // Trigger Web Push notification to students in this workspace
     sendWebPushNotification({
@@ -54,7 +54,7 @@ export async function createOnlineExam(workspaceId: string, data: { title: strin
         }
       }
     });
-    await revalidateWorkspacePath(typeof workspaceId !== 'undefined' ? workspaceId : (typeof data !== 'undefined' ? data.workspaceId : null), "/admin/exam-generator", "page");
+    await revalidateWorkspacePath(workspaceId, "/admin/exam-generator", "page");
 
     // Trigger Web Push notification to students in this workspace
     sendWebPushNotification({
@@ -99,7 +99,9 @@ export async function updateExam(id: string, data: { title: string, type: string
       });
     }
 
-    await revalidateWorkspacePath(typeof workspaceId !== 'undefined' ? workspaceId : (typeof data !== 'undefined' ? data.workspaceId : null), "/admin/exam-generator", "page");
+    if (exam.workspaceId) {
+      await revalidateWorkspacePath(exam.workspaceId, "/admin/exam-generator", "page");
+    }
     return { success: true, data: exam };
   } catch (error: any) {
     return { success: false, error: error.message };
@@ -117,7 +119,10 @@ export async function createExamShift(examId: string, data: { name: string, star
         capacity: data.capacity,
       }
     });
-    await revalidateWorkspacePath(typeof workspaceId !== 'undefined' ? workspaceId : (typeof data !== 'undefined' ? data.workspaceId : null), "/admin/exam-generator", "page");
+    const exam = await db.exam.findUnique({ where: { id: examId }, select: { workspaceId: true } });
+    if (exam?.workspaceId) {
+      await revalidateWorkspacePath(exam.workspaceId, "/admin/exam-generator", "page");
+    }
     return { success: true, data: shift };
   } catch (error: any) {
     return { success: false, error: error.message };
@@ -126,8 +131,10 @@ export async function createExamShift(examId: string, data: { name: string, star
 
 export async function deleteExam(id: string) {
   try {
-    await db.exam.delete({ where: { id } });
-    await revalidateWorkspacePath(typeof workspaceId !== 'undefined' ? workspaceId : (typeof data !== 'undefined' ? data.workspaceId : null), "/admin/exam-generator", "page");
+    const exam = await db.exam.delete({ where: { id } });
+    if (exam.workspaceId) {
+      await revalidateWorkspacePath(exam.workspaceId, "/admin/exam-generator", "page");
+    }
     return { success: true };
   } catch (error: any) {
     return { success: false, error: error.message };
@@ -136,8 +143,13 @@ export async function deleteExam(id: string) {
 
 export async function deleteExamShift(id: string) {
   try {
-    await db.examShift.delete({ where: { id } });
-    await revalidateWorkspacePath(typeof workspaceId !== 'undefined' ? workspaceId : (typeof data !== 'undefined' ? data.workspaceId : null), "/admin/exam-generator", "page");
+    const shift = await db.examShift.delete({
+      where: { id },
+      include: { exam: { select: { workspaceId: true } } }
+    });
+    if (shift.exam?.workspaceId) {
+      await revalidateWorkspacePath(shift.exam.workspaceId, "/admin/exam-generator", "page");
+    }
     return { success: true };
   } catch (error: any) {
     return { success: false, error: error.message };
@@ -242,7 +254,9 @@ export async function enrollStudentsToExam(examId: string, studentIds: string[],
       return { success: false, error: `Not enough capacity in shifts. ${unassignedStudents.length} students were not assigned.` };
     }
 
-    await revalidateWorkspacePath(typeof workspaceId !== 'undefined' ? workspaceId : (typeof data !== 'undefined' ? data.workspaceId : null), "/admin/exam-generator", "page");
+    if (exam?.workspaceId) {
+      await revalidateWorkspacePath(exam.workspaceId, "/admin/exam-generator", "page");
+    }
     return { 
       success: true, 
       message: `Successfully enrolled ${enrollmentsToCreate.length} students.${skippedCount > 0 ? ` (${skippedCount} already assigned)` : ''}` 
@@ -277,7 +291,19 @@ export async function saveStudentMarks(studentSemesterId: string, unitName: stri
       });
     }
     
-    await revalidateWorkspacePath(typeof workspaceId !== 'undefined' ? workspaceId : (typeof data !== 'undefined' ? data.workspaceId : null), "/admin/exam-generator", "page");
+    const sem = await db.studentSemester.findUnique({
+      where: { id: studentSemesterId },
+      select: { studentProfileId: true }
+    });
+    if (sem?.studentProfileId) {
+      const p = await db.studentProfile.findUnique({
+        where: { id: sem.studentProfileId },
+        select: { workspaceId: true }
+      });
+      if (p?.workspaceId) {
+        await revalidateWorkspacePath(p.workspaceId, "/admin/exam-generator", "page");
+      }
+    }
     return { success: true };
   } catch (error: any) {
     return { success: false, error: error.message };
@@ -329,7 +355,10 @@ export async function saveStudentMarksBatch(
         });
       }
     }
-    await revalidateWorkspacePath(typeof workspaceId !== 'undefined' ? workspaceId : (typeof data !== 'undefined' ? data.workspaceId : null), "/admin/exam-generator", "page");
+    const profile = await db.studentProfile.findUnique({ where: { id: studentProfileId }, select: { workspaceId: true } });
+    if (profile?.workspaceId) {
+      await revalidateWorkspacePath(profile.workspaceId, "/admin/exam-generator", "page");
+    }
     return { success: true };
   } catch (error: any) {
     return { success: false, error: error.message };
@@ -342,7 +371,9 @@ export async function toggleExamCompletion(id: string, isCompleted: boolean, for
       where: { id },
       data: { isCompleted, forceUncomplete }
     });
-    await revalidateWorkspacePath(typeof workspaceId !== 'undefined' ? workspaceId : (typeof data !== 'undefined' ? data.workspaceId : null), "/admin/exam-generator", "page");
+    if (exam.workspaceId) {
+      await revalidateWorkspacePath(exam.workspaceId, "/admin/exam-generator", "page");
+    }
     return { success: true, data: exam };
   } catch (error: any) {
     return { success: false, error: error.message };
@@ -355,7 +386,9 @@ export async function toggleExamActiveStatus(id: string, isActive: boolean) {
       where: { id },
       data: { isActive }
     });
-    await revalidateWorkspacePath(typeof workspaceId !== 'undefined' ? workspaceId : (typeof data !== 'undefined' ? data.workspaceId : null), "/admin/exam-generator", "page");
+    if (exam.workspaceId) {
+      await revalidateWorkspacePath(exam.workspaceId, "/admin/exam-generator", "page");
+    }
     return { success: true, data: exam };
   } catch (error: any) {
     return { success: false, error: error.message };
@@ -400,7 +433,10 @@ export async function bulkIssueAdmitCards(examId: string) {
       data: { admitCardIssuedToStudent: true }
     });
 
-    await revalidateWorkspacePath(typeof workspaceId !== 'undefined' ? workspaceId : (typeof data !== 'undefined' ? data.workspaceId : null), "/admin/exam-generator", "page");
+    const exam = await db.exam.findUnique({ where: { id: examId }, select: { workspaceId: true } });
+    if (exam?.workspaceId) {
+      await revalidateWorkspacePath(exam.workspaceId, "/admin/exam-generator", "page");
+    }
     return { success: true, count: studentIds.length };
   } catch (error: any) {
     return { success: false, error: error.message };

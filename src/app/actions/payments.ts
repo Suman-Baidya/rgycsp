@@ -1,8 +1,7 @@
 "use server";
 
 import { revalidateWorkspacePath } from "@/lib/revalidate";
-
-
+import { auth } from "@/auth";
 import { db } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 
@@ -162,9 +161,10 @@ export async function generateStudentPaymentStructure(studentProfileId: string, 
 
     // Notify student via web push
     if (student.userId) {
+      const targetUserId: string = student.userId;
       import("@/app/actions/web-push").then(({ sendWebPushNotification }) => {
         sendWebPushNotification({
-          userIds: [student.userId],
+          userIds: [targetUserId],
           title: "New Fee Invoices Generated",
           message: "Your payment structure and fee schedule have been published. Check your fees portal.",
           url: "/student/dashboard/fees",
@@ -172,7 +172,9 @@ export async function generateStudentPaymentStructure(studentProfileId: string, 
       });
     }
 
-    await revalidateWorkspacePath(typeof workspaceId !== 'undefined' ? workspaceId : (typeof data !== 'undefined' ? data.workspaceId : null), "/admin/students");
+    if (student.workspaceId) {
+      await revalidateWorkspacePath(student.workspaceId, "/admin/students");
+    }
     return { success: true, message: "Payment structure generated successfully" };
   } catch (error: any) {
     console.error("Failed to generate payment structure:", error);
@@ -197,9 +199,10 @@ export async function recordManualOfflinePayment(invoiceId: string, paymentMetho
 
     // Notify student of payment acknowledgment
     if (invoice.student?.userId) {
+      const targetUserId: string = invoice.student.userId;
       import("@/app/actions/web-push").then(({ sendWebPushNotification }) => {
         sendWebPushNotification({
-          userIds: [invoice.student.userId],
+          userIds: [targetUserId],
           title: "Payment Receipt Acknowledged",
           message: `Payment of ₹${invoice.amount} has been marked as PAID. Thank you!`,
           url: "/student/dashboard/fees",
@@ -207,7 +210,9 @@ export async function recordManualOfflinePayment(invoiceId: string, paymentMetho
       });
     }
 
-    await revalidateWorkspacePath(typeof workspaceId !== 'undefined' ? workspaceId : (typeof data !== 'undefined' ? data.workspaceId : null), "/admin/students");
+    if (invoice.workspaceId) {
+      await revalidateWorkspacePath(invoice.workspaceId, "/admin/students");
+    }
     return { success: true, data: invoice };
   } catch (error: any) {
     console.error("Failed to record payment:", error);
@@ -258,8 +263,10 @@ export async function updateInvoiceProof(invoiceId: string, paymentProofUrl: str
       }
     });
 
-    await revalidateWorkspacePath(typeof workspaceId !== 'undefined' ? workspaceId : (typeof data !== 'undefined' ? data.workspaceId : null), "/student/dashboard/fees");
-    await revalidateWorkspacePath(typeof workspaceId !== 'undefined' ? workspaceId : (typeof data !== 'undefined' ? data.workspaceId : null), "/admin/students");
+    if (invoice.workspaceId) {
+      await revalidateWorkspacePath(invoice.workspaceId, "/student/dashboard/fees");
+      await revalidateWorkspacePath(invoice.workspaceId, "/admin/students");
+    }
     
     return { success: true, data: invoice };
   } catch (error: any) {
@@ -317,8 +324,10 @@ export async function rejectInvoiceProof(invoiceId: string, reason: string) {
       }
     });
 
-    await revalidateWorkspacePath(typeof workspaceId !== 'undefined' ? workspaceId : (typeof data !== 'undefined' ? data.workspaceId : null), "/student/dashboard/fees");
-    await revalidateWorkspacePath(typeof workspaceId !== 'undefined' ? workspaceId : (typeof data !== 'undefined' ? data.workspaceId : null), "/admin/students");
+    if (invoice.workspaceId) {
+      await revalidateWorkspacePath(invoice.workspaceId, "/student/dashboard/fees");
+      await revalidateWorkspacePath(invoice.workspaceId, "/admin/students");
+    }
     
     return { success: true, data: invoice };
   } catch (error: any) {

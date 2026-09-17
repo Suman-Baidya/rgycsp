@@ -85,7 +85,25 @@ export default function StudentCoursesClient({
     }
   ];
 
-  const overallProgress = 65;
+  // Dynamically calculate course progress based on certificate issuance or duration elapsed
+  const isCompleted = !!profile?.certificateApproved || !!profile?.certificateIssuedToStudent;
+  const overallProgress = isCompleted 
+    ? 100 
+    : (profile?.admissionDate 
+        ? (() => {
+            const daysSinceAdmission = Math.max(1, Math.floor((Date.now() - new Date(profile.admissionDate).getTime()) / (1000 * 60 * 60 * 24)));
+            const durationStr = (currentCourse?.duration || "6 Months").toLowerCase();
+            let estimatedDays = 180;
+            if (durationStr.includes("1 year") || durationStr.includes("12 month")) estimatedDays = 365;
+            else if (durationStr.includes("3 month")) estimatedDays = 90;
+            else if (durationStr.includes("2 year")) estimatedDays = 730;
+            else if (durationStr.includes("month")) {
+              const months = parseInt(durationStr.match(/\d+/)?.[0] || "6");
+              estimatedDays = months * 30;
+            }
+            return Math.min(95, Math.max(10, Math.round((daysSinceAdmission / estimatedDays) * 100)));
+          })()
+        : 25);
 
   return (
     <div className="space-y-4 sm:space-y-5 pb-8 w-full mx-auto">

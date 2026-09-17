@@ -53,3 +53,10 @@ The **Super Administrator Command Center** (`/super-admin`) is tailored for cent
 #### 8. National Platform Governance & System Logs
 - **Main Landing Page Builder**: Customize `https://abcdeduhub.com` with value propositions, trust badges, ISO certifications, and affiliation inquiry forms.
 - **Immutable System Activity Logs**: Complete audit trail capturing every administrative action (who approved a center, who minted tokens, when, and from which IP address) with one-click CSV export.
+
+#### 9. National Center Network Analytics & Visitor Intelligence
+- **National Footfall Intelligence (`/super-admin/analytics`)**: Real-time aggregated visitor metrics, unique learner sessions, bounce rates, and dwell times across all branches.
+- **High-Performance Center Selector**: Scalable combobox filter supporting 500–1,000+ study centers with instant search by Center Code, Institute Name, and Subdomain slug.
+- **National Course Admission Funnel**: Track cross-network conversion rates from Course Showcase discovery to Admission Form Drafts and Central Registry Verified Enrollments.
+- **Bot & Crawler Shield**: Automated server-side bot filtering and sliding-window rate limiters to preserve genuine student analytics.
+- **Executive Audit Export**: One-click timestamped `.xlsx` Excel downloads with traffic sources, device breakdowns, and inquiry logs.

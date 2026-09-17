@@ -18,7 +18,8 @@ import {
   Terminal,
   Cpu,
   Building2,
-  Coins
+  Coins,
+  BarChart2
 } from "lucide-react";
 import { 
   BarChart, 
@@ -129,9 +130,15 @@ export default function SuperAdminOverviewClient({
     <div className="space-y-4 sm:space-y-5 pb-8 w-full mx-auto">
       <AdminPageHeader 
         title="Global Overview" 
-        description="Real-time performance metrics and franchise system statistics."
+        description="Real-time network metrics and system status."
       >
         <div className="flex items-center gap-2.5">
+          <Link href="/super-admin/analytics">
+            <Button variant="outline" className="h-9 px-3.5 rounded-lg gap-2 border-slate-200 dark:border-slate-800 font-semibold text-xs sm:text-sm hover:bg-slate-50 dark:hover:bg-slate-800">
+              <BarChart2 className="h-4 w-4 text-indigo-600" />
+              Visitor Analytics
+            </Button>
+          </Link>
           <Link href="/super-admin/franchises">
             <Button className="h-9 px-4 rounded-lg gap-2 shadow-md shadow-primary/20 bg-primary font-semibold text-xs sm:text-sm text-primary-foreground hover:scale-[1.02] active:scale-95 transition-all">
               <Building2 className="h-4 w-4" />
@@ -259,24 +266,24 @@ export default function SuperAdminOverviewClient({
         </motion.div>
       </div>
 
-      {/* System Integrity & Nodes */}
+      {/* System Integrity & Regional Distribution */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-5">
         <Card className="lg:col-span-1 border-2 border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 rounded-xl shadow-sm overflow-hidden flex flex-col">
           <CardHeader className="px-4 py-3 border-b border-slate-50 dark:border-slate-800 bg-slate-50/30 dark:bg-slate-800/20">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-sm sm:text-base font-bold tracking-tight">Active Nodes</CardTitle>
-              <Badge className="bg-green-500/10 text-green-600 border-none font-black text-[9px] px-1.5 py-0.5">LIVE</Badge>
+              <CardTitle className="text-sm sm:text-base font-bold tracking-tight">Regional Footprint</CardTitle>
+              <Badge className="bg-green-500/10 text-green-600 border-none font-black text-[9px] px-1.5 py-0.5">EXPANDING</Badge>
             </div>
-            <CardDescription className="text-xs font-medium text-slate-500 leading-normal">Global edge node health status</CardDescription>
+            <CardDescription className="text-xs font-medium text-slate-500 leading-normal">Active study centers by region</CardDescription>
           </CardHeader>
           <CardContent className="p-3 sm:p-3.5 space-y-2 flex-1">
             {nodes.map((node) => (
               <div key={node.region} className="flex items-center justify-between p-2.5 rounded-lg border border-slate-100 dark:border-slate-800">
                 <div className="flex items-center gap-2.5">
-                  <Server className="h-3.5 w-3.5 text-slate-400" />
+                  <Building2 className="h-3.5 w-3.5 text-slate-400" />
                   <div className="flex flex-col leading-tight">
                     <span className="text-xs font-bold text-slate-900 dark:text-white">{node.region}</span>
-                    <span className="text-[10px] text-slate-400 font-medium">Load: {node.load}</span>
+                    <span className="text-[10px] text-slate-400 font-medium">{node.load}</span>
                   </div>
                 </div>
                 <div className={cn(
@@ -287,40 +294,42 @@ export default function SuperAdminOverviewClient({
             ))}
           </CardContent>
           <div className="p-2.5 bg-slate-50/50 dark:bg-slate-800/10 border-t border-slate-50 dark:border-slate-800">
-             <Button variant="ghost" className="w-full text-[10px] font-black uppercase tracking-widest text-primary gap-1.5 h-7">
-                <Terminal className="h-3 w-3" /> System Diagnostics
-             </Button>
+             <Link href="/super-admin/franchises">
+               <Button variant="ghost" className="w-full text-[10px] font-black uppercase tracking-widest text-primary gap-1.5 h-7">
+                  <Building2 className="h-3 w-3" /> View All Franchises
+               </Button>
+             </Link>
           </div>
         </Card>
 
         <Card className="lg:col-span-2 border-2 border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 rounded-xl shadow-sm overflow-hidden flex flex-col">
           <CardHeader className="px-4 py-3 border-b border-slate-50 dark:border-slate-800">
-             <CardTitle className="text-sm sm:text-base font-bold tracking-tight">System Performance</CardTitle>
-             <CardDescription className="text-xs font-medium text-slate-500 leading-normal">Real-time resource allocation across all workspaces.</CardDescription>
+             <CardTitle className="text-sm sm:text-base font-bold tracking-tight">Platform Telemetry</CardTitle>
+             <CardDescription className="text-xs font-medium text-slate-500 leading-normal">Real-time database latency and center network activity.</CardDescription>
           </CardHeader>
           <CardContent className="p-4 grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <div className="space-y-2">
                <div className="flex items-center justify-between">
                   <div className="flex items-center gap-1.5">
                     <Cpu className="h-3.5 w-3.5 text-primary" />
-                    <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Total CPU Usage</span>
+                    <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Database Engine</span>
                   </div>
-                  <span className="text-xs font-black text-slate-900 dark:text-white">{cpuUsage}%</span>
+                  <span className="text-xs font-black text-slate-900 dark:text-white">{cpuUsage}ms latency</span>
                </div>
                <div className="h-1.5 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-                  <motion.div initial={{ width: 0 }} animate={{ width: `${cpuUsage}%` }} className="h-full bg-primary rounded-full" />
+                  <motion.div initial={{ width: 0 }} animate={{ width: `${Math.min(100, Math.max(10, cpuUsage))}%` }} className="h-full bg-primary rounded-full" />
                </div>
             </div>
             <div className="space-y-2">
                <div className="flex items-center justify-between">
                   <div className="flex items-center gap-1.5">
                     <Zap className="h-3.5 w-3.5 text-amber-500" />
-                    <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">API Throughput</span>
+                    <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Network Activity</span>
                   </div>
                   <span className="text-xs font-black text-slate-900 dark:text-white">{apiThroughput}</span>
                </div>
                <div className="h-1.5 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-                  <motion.div initial={{ width: 0 }} animate={{ width: "85%" }} className="h-full bg-amber-500 rounded-full" />
+                  <motion.div initial={{ width: 0 }} animate={{ width: "75%" }} className="h-full bg-amber-500 rounded-full" />
                </div>
             </div>
             <div className="sm:col-span-2 p-3 sm:p-3.5 rounded-lg bg-indigo-500/5 border border-indigo-500/10 flex items-center justify-between">

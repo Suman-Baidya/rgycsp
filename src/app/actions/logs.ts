@@ -51,14 +51,16 @@ export async function clearLogs(timeframe: 'WEEKLY' | 'MONTHLY' | 'ALL') {
     const now = new Date();
     
     if (timeframe === 'WEEKLY') {
-      const oneWeekAgo = new Date(now.setDate(now.getDate() - 7));
+      const oneWeekAgo = new Date();
+      oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
       whereClause = {
         createdAt: {
           lt: oneWeekAgo
         }
       };
     } else if (timeframe === 'MONTHLY') {
-      const oneMonthAgo = new Date(now.setMonth(now.getMonth() - 1));
+      const oneMonthAgo = new Date();
+      oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
       whereClause = {
         createdAt: {
           lt: oneMonthAgo

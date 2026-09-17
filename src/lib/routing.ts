@@ -127,6 +127,7 @@ export const WORKSPACE_ROUTES = {
   HOME: "/",
   LOGIN: "/login",
   ADMIN: "/admin",
+  ADMIN_ANALYTICS: "/admin/analytics",
   ADMIN_STAFF: "/admin/staff",
   ADMIN_STUDENTS: "/admin/students",
   ADMIN_FEES: "/admin/fees",

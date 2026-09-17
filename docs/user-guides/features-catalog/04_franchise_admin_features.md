@@ -89,3 +89,14 @@ Every franchise center has its own high-conversion public admission portal (`/ad
 #### 10. Center Token Wallet
 - View real-time token balances and detailed credit/debit transaction logs.
 - Submit wallet top-up requests with uploaded payment screenshots directly to Head Office.
+
+#### 11. Visitor Intelligence & 3-Stage Course Admission Funnel
+- **Live Branch Analytics (`/admin/analytics`)**: Dedicated portal tracking total hits, unique student visitors, dwell time, bounce rate, and lead conversion percentage.
+- **3-Stage Course Admission Funnel**: Tracks the full student journey:
+  - *Stage 1: Course Showcase Discovery* (Course views and syllabus exploration)
+  - *Stage 2: Admission Form Draft* (Pre-lead capture, contact initiation, and abandoned form recovery)
+  - *Stage 3: Completed Official Enrollment* (Approved applications with active student fee ledgers)
+- **Hourly Peak Traffic Heatmap**: 24-hour IST distribution revealing peak student browsing hours to optimize WhatsApp broadcasts and counselor availability.
+- **Traffic Channels & Device Distribution**: Tracks WhatsApp shares, Google search queries, Instagram/Facebook referrals, and Mobile vs Desktop ratios.
+- **Inquiry Management & Instant Recovery**: Capture incomplete inquiries and initiate direct one-click WhatsApp outreach.
+- **One-Click Excel Export**: Download full analytics reports (`.xlsx`) for local marketing audits and batch planning.

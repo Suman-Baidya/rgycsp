@@ -26,6 +26,7 @@
 | **Pre-Paid Internal Token Economy & Minting** | Mint / Reconcile | Top-Up Request | N/A | N/A |
 | **Regional State Manager Oversight Network** | Appoint / Audit | Supervised | N/A | N/A |
 | **Public Website Builder (Hero, Notice, Gallery)** | Master Landing | Local Website | N/A | Browse & Apply |
+| **Visitor Intelligence & Course Admission Funnel** | National Oversight | Branch Portal | N/A | High-Intent Tracking |
 | **Immutable System Audit Trail & Logs** | Full Export | No | No | No |
 
 ---

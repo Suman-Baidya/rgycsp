@@ -3,6 +3,8 @@ import { getWorkspaces } from "@/app/actions/workspaces";
 import { getRegistrationConfig } from "@/app/actions/registration-config";
 import StudentsClient from "./StudentsClient";
 
+export const dynamic = "force-dynamic";
+
 export default async function SuperAdminStudentsPage() {
   // Fetch all students
   const studentsRes = await getAllPlatformStudents();

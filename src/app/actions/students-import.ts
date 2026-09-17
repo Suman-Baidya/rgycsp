@@ -159,7 +159,7 @@ export async function importStudentsCSV(workspaceId: string, students: any[]) {
       }
     }
 
-    await revalidateWorkspacePath(typeof workspaceId !== 'undefined' ? workspaceId : (typeof data !== 'undefined' ? data.workspaceId : null), "/admin/students", "page");
+    await revalidateWorkspacePath(workspaceId, "/admin/students", "page");
 
     return {
       success: successCount > 0,

@@ -76,9 +76,9 @@ export default function StudentExamsClient({
     return (exams || []).filter((e) => e.results && e.results.length > 0);
   }, [exams]);
 
-  // Calculate average score across completed exams
+  // Calculate genuine average score across completed exams
   const avgScore = useMemo(() => {
-    if (completedExams.length === 0) return 85; // baseline standing
+    if (completedExams.length === 0) return null;
     const totalPercentage = completedExams.reduce((acc, exam) => {
       const result = exam.results[0];
       const maxMarks = (exam._count?.questions || 0) * (exam.marksPerQuestion || 1);
@@ -90,32 +90,52 @@ export default function StudentExamsClient({
 
   const isAdmitCardReady = !!profile?.admitCardIssuedToStudent;
 
-  // Chart datasets
-  const performanceData = [
-    { subject: "Core Concepts", A: 88, fullMark: 100 },
-    { subject: "Practical Skills", A: 82, fullMark: 100 },
-    { subject: "Problem Solving", A: 90, fullMark: 100 },
-    { subject: "Terminology", A: 76, fullMark: 100 },
-    { subject: "Execution", A: 85, fullMark: 100 },
-  ];
+  // Real score trends from completed tests
+  const scoreTrends = useMemo(() => {
+    return completedExams.map((exam, idx) => {
+      const result = exam.results[0];
+      const maxMarks = (exam._count?.questions || 0) * (exam.marksPerQuestion || 1);
+      const score = maxMarks > 0 ? Math.round((result.marksObtained / maxMarks) * 100) : 0;
+      return {
+        name: exam.title?.substring(0, 10) || `Exam ${idx + 1}`,
+        score
+      };
+    });
+  }, [completedExams]);
 
-  const scoreTrends = completedExams.length > 0
-    ? completedExams.map((exam, idx) => {
-        const result = exam.results[0];
-        const maxMarks = (exam._count?.questions || 0) * (exam.marksPerQuestion || 1);
-        const score = maxMarks > 0 ? Math.round((result.marksObtained / maxMarks) * 100) : 75;
+  // Real competency radar mapping derived from student semester unit marks or completed exams
+  const performanceData = useMemo(() => {
+    const allMarks: { subject: string; A: number; fullMark: number }[] = [];
+    (profile?.semesters || []).forEach((sem: any) => {
+      (sem.marks || []).forEach((m: any) => {
+        const pct = m.maxMarks > 0 ? Math.round((m.marksObtained / m.maxMarks) * 100) : 0;
+        allMarks.push({
+          subject: m.unitName || `Unit ${allMarks.length + 1}`,
+          A: pct,
+          fullMark: 100
+        });
+      });
+    });
+
+    if (allMarks.length >= 3) {
+      return allMarks.slice(0, 6);
+    }
+
+    if (completedExams.length >= 3) {
+      return completedExams.slice(0, 5).map((e: any, i: number) => {
+        const res = e.results[0];
+        const max = (e._count?.questions || 0) * (e.marksPerQuestion || 1);
+        const pct = max > 0 ? Math.round((res.marksObtained / max) * 100) : 0;
         return {
-          name: exam.title?.substring(0, 10) || `Exam ${idx + 1}`,
-          score
+          subject: e.title?.substring(0, 10) || `Topic ${i + 1}`,
+          A: pct,
+          fullMark: 100
         };
-      })
-    : [
-        { name: "Exam 1", score: 75 },
-        { name: "Exam 2", score: 82 },
-        { name: "Exam 3", score: 78 },
-        { name: "Exam 4", score: 88 },
-        { name: "Exam 5", score: 85 }
-      ];
+      });
+    }
+
+    return [];
+  }, [profile, completedExams]);
 
   const tabs = [
     { id: "pending", label: "Live Exams", count: pendingExams.length, icon: FileText },
@@ -202,10 +222,10 @@ export default function StudentExamsClient({
               <div>
                 <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-slate-400 mb-0.5">Assessment Standing</p>
                 <p className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
-                  {avgScore}%
+                  {avgScore !== null ? `${avgScore}%` : "Pending"}
                 </p>
                 <p className="text-[10px] font-semibold text-purple-600 dark:text-purple-400 mt-0.5">
-                  Above standard passing mark
+                  {avgScore !== null ? (avgScore >= 75 ? "Distinction standing" : "Satisfactory passing mark") : "Awaiting initial test"}
                 </p>
               </div>
               <div className="p-2.5 rounded-lg bg-purple-500/10 text-purple-600 dark:text-purple-400 shrink-0">
@@ -451,26 +471,41 @@ export default function StudentExamsClient({
               </CardHeader>
 
               <CardContent className="p-3.5 sm:p-4">
-                <div className="h-56 w-full">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={scoreTrends} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                      <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 600, fill: "#94a3b8" }} />
-                      <YAxis domain={[0, 100]} axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 600, fill: "#94a3b8" }} />
-                      <Tooltip
-                        contentStyle={{
-                          backgroundColor: "#0f172a",
-                          borderRadius: "8px",
-                          border: "none",
-                          color: "#fff",
-                          fontSize: "11px",
-                          fontWeight: 600
-                        }}
-                      />
-                      <Bar dataKey="score" name="Percentage" fill={primaryColor} radius={[4, 4, 0, 0]} barSize={28} />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
+                {scoreTrends.length > 0 ? (
+                  <div className="h-56 w-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={scoreTrends} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" strokeOpacity={0.2} />
+                        <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 9, fontWeight: 600, fill: "#94a3b8" }} />
+                        <YAxis domain={[0, 100]} axisLine={false} tickLine={false} tick={{ fontSize: 9, fontWeight: 600, fill: "#94a3b8" }} />
+                        <Tooltip
+                          contentStyle={{
+                            backgroundColor: "#0f172a",
+                            borderRadius: "8px",
+                            border: "none",
+                            color: "#fff",
+                            fontSize: "11px",
+                            fontWeight: 600
+                          }}
+                          formatter={(val: any) => [`${val}%`, "Assessment Score"]}
+                        />
+                        <Bar dataKey="score" name="Percentage" fill={primaryColor} radius={[4, 4, 0, 0]} barSize={28} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                ) : (
+                  <div className="h-56 w-full flex flex-col items-center justify-center text-center p-4 rounded-xl border border-dashed border-slate-200 dark:border-slate-800 bg-slate-50/40 dark:bg-slate-800/20">
+                    <div className="p-2 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 mb-1.5">
+                      <TrendingUp className="h-5 w-5" />
+                    </div>
+                    <p className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                      No Assessment Trends Yet
+                    </p>
+                    <p className="text-[10px] text-slate-400 max-w-xs mt-0.5 leading-normal">
+                      Complete scheduled computer-based assessments to generate your historical score progression curve.
+                    </p>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
@@ -489,16 +524,30 @@ export default function StudentExamsClient({
               </CardHeader>
 
               <CardContent className="p-3.5 sm:p-4 flex items-center justify-center">
-                <div className="h-56 w-full">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <RadarChart cx="50%" cy="50%" outerRadius="70%" data={performanceData}>
-                      <PolarGrid stroke="#e2e8f0" />
-                      <PolarAngleAxis dataKey="subject" tick={{ fontSize: 9, fontWeight: 600, fill: "#64748b" }} />
-                      <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} axisLine={false} />
-                      <Radar name="Proficiency" dataKey="A" stroke={primaryColor} strokeWidth={2} fill={primaryColor} fillOpacity={0.2} />
-                    </RadarChart>
-                  </ResponsiveContainer>
-                </div>
+                {performanceData.length >= 3 ? (
+                  <div className="h-56 w-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <RadarChart cx="50%" cy="50%" outerRadius="70%" data={performanceData}>
+                        <PolarGrid stroke="#e2e8f0" strokeOpacity={0.2} />
+                        <PolarAngleAxis dataKey="subject" tick={{ fontSize: 9, fontWeight: 600, fill: "#64748b" }} />
+                        <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} axisLine={false} />
+                        <Radar name="Proficiency" dataKey="A" stroke={primaryColor} strokeWidth={2} fill={primaryColor} fillOpacity={0.2} />
+                      </RadarChart>
+                    </ResponsiveContainer>
+                  </div>
+                ) : (
+                  <div className="h-56 w-full flex flex-col items-center justify-center text-center p-4 rounded-xl border border-dashed border-slate-200 dark:border-slate-800 bg-slate-50/40 dark:bg-slate-800/20">
+                    <div className="p-2 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 mb-1.5">
+                      <Target className="h-5 w-5" />
+                    </div>
+                    <p className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                      Competency Mapping Pending
+                    </p>
+                    <p className="text-[10px] text-slate-400 max-w-xs mt-0.5 leading-normal">
+                      Subject capability radar will plot as unit test marks and semester marksheet evaluations are published.
+                    </p>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>

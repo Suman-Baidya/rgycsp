@@ -32,11 +32,11 @@ export default async function RootLandingPage() {
 
   // Helper to check if a section is active
   const isSectionActive = (type: string) => {
-    return settings.sections.find(s => s.type === type)?.isActive ?? true;
+    return (settings as any)?.sections?.find((s: any) => s.type === type)?.isActive ?? true;
   };
 
   const getSectionData = (type: string) => {
-    return settings.sections.find(s => s.type === type);
+    return (settings as any)?.sections?.find((s: any) => s.type === type);
   };
 
   return (

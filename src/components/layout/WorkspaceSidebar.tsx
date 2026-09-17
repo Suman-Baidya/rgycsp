@@ -26,6 +26,7 @@ import {
   Receipt,
   IndianRupee,
   GraduationCap,
+  BarChart2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -77,6 +78,7 @@ export function WorkspaceSidebar({
 
   const allNavItems = [
     { id: "dashboard", name: "Overview", href: generateLink(WORKSPACE_ROUTES.ADMIN), icon: LayoutDashboard },
+    { id: "analytics", name: "Visitor Analytics", href: generateLink(WORKSPACE_ROUTES.ADMIN_ANALYTICS), icon: BarChart2 },
     { id: "wallet", name: "Wallet", href: generateLink(WORKSPACE_ROUTES.ADMIN_WALLET), icon: Wallet },
     { id: "staff", name: "Staff & Roles", href: generateLink(WORKSPACE_ROUTES.ADMIN_STAFF), icon: UserCheck },
     { id: "students", name: "Students", href: generateLink(WORKSPACE_ROUTES.ADMIN_STUDENTS), icon: Users },

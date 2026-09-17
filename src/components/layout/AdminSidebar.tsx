@@ -23,7 +23,8 @@ import {
   Building2,
   BookOpen,
   MapPinned,
-  ShoppingCart
+  ShoppingCart,
+  BarChart2
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -37,6 +38,7 @@ import { getPendingDocumentRequestsCount } from "@/app/actions/student-documents
 
 const navItems = [
   { name: "Overview", href: "/", icon: LayoutDashboard },
+  { name: "Visitor Analytics", href: "/analytics", icon: BarChart2 },
   { name: "Wallet Economy", href: "/wallet", icon: Coins },
   { name: "Franchises", href: "/franchises", icon: Building2 },
   { name: "State Managers", href: "/state-managers", icon: MapPinned },

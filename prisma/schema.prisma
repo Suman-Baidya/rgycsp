@@ -118,6 +118,11 @@ model Workspace {
   practicalConfig        PracticalConfig?
   practicalSlots         PracticalSlot[]
   practicalSchedules     StudentPracticalSchedule[]
+
+  // Visitor Analytics & Leads
+  visitorSessions        VisitorSession[]
+  pageVisits             PageVisit[]
+  visitorLeads           VisitorLead[]
 }
 
 // ============================================
@@ -1185,3 +1190,79 @@ model SystemLog {
   user      String?  // Optional user identifier or email
   createdAt DateTime @default(now())
 }
+
+// ============================================
+// Visitor Analytics, Hotspots & Lead Capture
+// ============================================
+
+model VisitorSession {
+  id          String   @id @default(cuid())
+  visitorId   String   // Client-generated persistent UUID
+  workspaceId String?  // Null for global/main site, or specific franchise workspace ID
+  ipHash      String?  // Truncated SHA-256 hash for privacy-safe deduplication
+  city        String?
+  state       String?
+  country     String?  @default("India")
+  device      String?  // Mobile, Desktop, Tablet
+  browser     String?
+  os          String?
+  referrer    String?
+  landingPage String?
+  firstSeen   DateTime @default(now())
+  lastSeen    DateTime @updatedAt
+  totalVisits Int      @default(1)
+
+  workspace   Workspace?    @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  pageVisits  PageVisit[]
+  leads       VisitorLead[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([workspaceId, createdAt])
+  @@index([visitorId])
+  @@index([createdAt])
+}
+
+model PageVisit {
+  id              String   @id @default(cuid())
+  sessionId       String
+  workspaceId     String?  // Null for global site, or specific franchise workspace ID
+  path            String   // URL path visited e.g. /courses/adca or /app/kolkata
+  title           String?  // Page title / course name
+  courseId        String?  // If visited a specific course
+  durationSeconds Int      @default(0)
+  createdAt       DateTime @default(now())
+
+  session         VisitorSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  workspace       Workspace?     @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId, createdAt])
+  @@index([path])
+  @@index([createdAt])
+}
+
+model VisitorLead {
+  id          String   @id @default(cuid())
+  sessionId   String?
+  workspaceId String?  // Null for global site, or specific franchise workspace ID
+  visitorId   String?  // Client UUID
+  name        String?
+  phone       String?
+  email       String?
+  source      String   // WHATSAPP_CLICK, CALL_CLICK, CONTACT_ENQUIRY, ADMISSION_DRAFT, COURSE_INTEREST
+  intent      String?  // e.g., "Interested in DCA Course", "Clicked WhatsApp on Kolkata Center"
+  metadata    Json?    // Extra contextual data (e.g. course title, page URL)
+  status      String   @default("NEW") // NEW, CONTACTED, CONVERTED, ARCHIVED
+  notes       String?  @db.Text
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  session     VisitorSession? @relation(fields: [sessionId], references: [id], onDelete: SetNull)
+  workspace   Workspace?      @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId, createdAt])
+  @@index([status])
+  @@index([phone])
+}
+

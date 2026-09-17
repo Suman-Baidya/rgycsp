@@ -90,15 +90,17 @@ export default function StudentDashboardClient({
     { name: "Absent", value: Math.max(0, 100 - attendancePercent) },
   ];
 
-  // Academic score curve data
-  const progressData = [
-    { month: "Sem 1", score: 72 },
-    { month: "Mid 1", score: 78 },
-    { month: "Sem 2", score: 85 },
-    { month: "Mid 2", score: 82 },
-    { month: "Sem 3", score: 89 },
-    { month: "Current", score: 91 },
-  ];
+  // Real academic score curve derived from evaluated semesters
+  const realSemesters = (profile.semesters || [])
+    .filter((s: any) => (s.percentage && s.percentage > 0) || (s.marks && s.marks.length > 0))
+    .sort((a: any, b: any) => a.semesterNumber - b.semesterNumber);
+
+  const progressData = realSemesters.length > 0
+    ? realSemesters.map((sem: any) => ({
+        month: `Sem ${sem.semesterNumber}`,
+        score: Math.round(sem.percentage || 0)
+      }))
+    : [];
 
   // Document verification checklist
   const documentsStatus = [
@@ -351,54 +353,72 @@ export default function StudentDashboardClient({
                 </div>
 
                 {/* Performance Progress Graph */}
+                {/* Performance Progress Graph */}
                 <div className="md:col-span-8">
-                  <div className="h-44 w-full">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <AreaChart data={progressData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                        <defs>
-                          <linearGradient id="scoreGradient" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor={primaryColor} stopOpacity={0.25} />
-                            <stop offset="95%" stopColor={primaryColor} stopOpacity={0.0} />
-                          </linearGradient>
-                        </defs>
-                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                        <XAxis
-                          dataKey="month"
-                          axisLine={false}
-                          tickLine={false}
-                          tick={{ fontSize: 10, fontWeight: 600, fill: "#94a3b8" }}
-                        />
-                        <YAxis
-                          domain={[50, 100]}
-                          axisLine={false}
-                          tickLine={false}
-                          tick={{ fontSize: 10, fontWeight: 600, fill: "#94a3b8" }}
-                        />
-                        <Tooltip
-                          contentStyle={{
-                            backgroundColor: "#0f172a",
-                            borderRadius: "8px",
-                            border: "none",
-                            color: "#fff",
-                            fontSize: "11px",
-                            fontWeight: 600
-                          }}
-                        />
-                        <Area
-                          type="monotone"
-                          dataKey="score"
-                          stroke={primaryColor}
-                          strokeWidth={2}
-                          fillOpacity={1}
-                          fill="url(#scoreGradient)"
-                        />
-                      </AreaChart>
-                    </ResponsiveContainer>
-                  </div>
-                  <div className="flex items-center justify-between text-[11px] font-medium text-slate-500 pt-2 border-t border-slate-100 dark:border-slate-800">
-                    <span>Baseline: 50% Required</span>
-                    <span className="text-emerald-600 font-semibold flex items-center gap-1">
-                      <ShieldCheck className="w-3.5 h-3.5" /> High Academic Standing
+                  {progressData.length > 0 ? (
+                    <div className="h-44 w-full">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <AreaChart data={progressData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                          <defs>
+                            <linearGradient id="scoreGradient" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="5%" stopColor={primaryColor} stopOpacity={0.25} />
+                              <stop offset="95%" stopColor={primaryColor} stopOpacity={0.0} />
+                            </linearGradient>
+                          </defs>
+                          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" strokeOpacity={0.2} />
+                          <XAxis
+                            dataKey="month"
+                            axisLine={false}
+                            tickLine={false}
+                            tick={{ fontSize: 9, fontWeight: 600, fill: "#94a3b8" }}
+                          />
+                          <YAxis
+                            domain={[0, 100]}
+                            axisLine={false}
+                            tickLine={false}
+                            tick={{ fontSize: 9, fontWeight: 600, fill: "#94a3b8" }}
+                          />
+                          <Tooltip
+                            contentStyle={{
+                              backgroundColor: "#0f172a",
+                              borderRadius: "8px",
+                              border: "none",
+                              color: "#fff",
+                              fontSize: "11px",
+                              fontWeight: 600
+                            }}
+                            formatter={(val: any) => [`${val}%`, "Semester Score"]}
+                          />
+                          <Area
+                            type="monotone"
+                            dataKey="score"
+                            stroke={primaryColor}
+                            strokeWidth={2}
+                            fillOpacity={1}
+                            fill="url(#scoreGradient)"
+                          />
+                        </AreaChart>
+                      </ResponsiveContainer>
+                    </div>
+                  ) : (
+                    <div className="h-44 w-full flex flex-col items-center justify-center text-center p-4 rounded-xl border border-dashed border-slate-200 dark:border-slate-800 bg-slate-50/40 dark:bg-slate-800/20">
+                      <div className="p-2 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 mb-1.5">
+                        <Award className="h-5 w-5" />
+                      </div>
+                      <p className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                        Semester Evaluations In Progress
+                      </p>
+                      <p className="text-[10px] text-slate-400 max-w-xs mt-0.5 leading-normal">
+                        Your performance curve will plot here automatically as your semester marks and assessments are published by the center.
+                      </p>
+                    </div>
+                  )}
+
+                  <div className="flex items-center justify-between text-[11px] font-medium text-slate-500 pt-2 border-t border-slate-100 dark:border-slate-800 mt-1">
+                    <span>Attendance: {attendancePercent}% Recorded</span>
+                    <span className={cn("font-semibold flex items-center gap-1", attendancePercent >= 75 ? "text-emerald-600 dark:text-emerald-400" : "text-amber-600 dark:text-amber-400")}>
+                      <ShieldCheck className="w-3.5 h-3.5" /> 
+                      {attendancePercent >= 75 ? "Exam Eligible (>= 75%)" : "Attendance Low (< 75%)"}
                     </span>
                   </div>
                 </div>

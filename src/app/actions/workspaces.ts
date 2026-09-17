@@ -42,21 +42,23 @@ export async function createWorkspace(data: any) {
     }
 
     // 2. Check if user exists, or create user
-    let user = await db.user.findUnique({
+    const existingUser = await db.user.findUnique({
       where: { email: ownerEmail },
       include: { workspaceRoles: true }
     });
 
-    if (user) {
-      const hasAdminRole = user.workspaceRoles.some(role => role.role === "ADMIN");
+    if (existingUser) {
+      const hasAdminRole = existingUser.workspaceRoles.some(role => role.role === "ADMIN");
       if (hasAdminRole) {
         return { success: false, error: "This email is already registered to another institute. One email can only be used for one institute." };
       }
     }
 
-    if (!user) {
+    let ownerUserId: string;
+
+    if (!existingUser) {
       const passwordHash = await bcrypt.hash(ownerPassword, 10);
-      user = await db.user.create({
+      const created = await db.user.create({
         data: {
           name: ownerName,
           email: ownerEmail,
@@ -65,11 +67,15 @@ export async function createWorkspace(data: any) {
           role: "USER",
         },
       });
-    } else if (!user.username && centerCode) {
-      user = await db.user.update({
-        where: { id: user.id },
-        data: { username: centerCode }
-      });
+      ownerUserId = created.id;
+    } else {
+      ownerUserId = existingUser.id;
+      if (!existingUser.username && centerCode) {
+        await db.user.update({
+          where: { id: existingUser.id },
+          data: { username: centerCode }
+        });
+      }
     }
 
     // 3. Create Workspace with associated SiteSettings
@@ -107,7 +113,7 @@ export async function createWorkspace(data: any) {
     // 4. Create WorkspaceRole
     await db.workspaceRole.create({
       data: {
-        userId: user.id,
+        userId: ownerUserId,
         workspaceId: workspace.id,
         role: "ADMIN",
       },

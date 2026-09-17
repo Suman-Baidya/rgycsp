@@ -2,11 +2,46 @@ import { db } from "@/lib/prisma";
 import { Button } from "@/components/ui/button";
 import { AdminPageHeader } from "@/components/layout/AdminPageHeader";
 import { AdminDashboardCharts } from "@/components/admin/AdminDashboardCharts";
-import { Users, BookOpen, UserCheck, Wallet, Sparkles, Plus, ShieldAlert } from "lucide-react";
+import { 
+  GraduationCap, 
+  BookOpen, 
+  UserCheck, 
+  Wallet, 
+  Sparkles, 
+  Plus, 
+  ShieldAlert, 
+  ShieldCheck, 
+  BarChart3, 
+  ExternalLink, 
+  QrCode, 
+  Receipt, 
+  FileQuestion, 
+  Palette, 
+  ArrowRight,
+  Clock,
+  Building2,
+  CheckCircle2
+} from "lucide-react";
 import Link from "next/link";
 import { getServerTenantLink } from "@/lib/routing-server";
 import { auth } from "@/auth";
 import { StatCard } from "@/components/dashboard/StatCard";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+
+function formatRelativeTime(date: Date | string): string {
+  const now = new Date();
+  const diffInMs = now.getTime() - new Date(date).getTime();
+  const diffInMinutes = Math.floor(diffInMs / (1000 * 60));
+  const diffInHours = Math.floor(diffInMinutes / 60);
+  const diffInDays = Math.floor(diffInHours / 24);
+
+  if (diffInMinutes < 1) return "Just now";
+  if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
+  if (diffInHours < 24) return `${diffInHours}h ago`;
+  if (diffInDays < 7) return `${diffInDays}d ago`;
+  return new Date(date).toLocaleDateString("en-IN", { month: "short", day: "numeric" });
+}
 
 export default async function WorkspaceAdminDashboard({
   params
@@ -22,14 +57,16 @@ export default async function WorkspaceAdminDashboard({
         select: {
           studentProfiles: true,
           courses: true,
+          batches: true,
           roles: true,
+          admissionApps: true,
         }
       }
     }
   });
 
   if (!workspace) {
-    throw new Error("Workspace not found"); // Should be caught by layout notFound()
+    throw new Error("Workspace not found");
   }
 
   // Get user session and permissions
@@ -37,7 +74,11 @@ export default async function WorkspaceAdminDashboard({
   let userRole = "UNAUTHORIZED";
   let userPermissions: string[] = [];
   
-  if (session?.user?.role === "SUPER_ADMIN" || session?.user?.role === "SUPER_ADMIN_MANAGER" || session?.user?.email === process.env.DEVELOPER_EMAIL) {
+  if (
+    session?.user?.role === "SUPER_ADMIN" || 
+    session?.user?.role === "SUPER_ADMIN_MANAGER" || 
+    session?.user?.email === process.env.DEVELOPER_EMAIL
+  ) {
     userRole = "ADMIN";
   } else if (session?.user) {
     const roleRecord = await db.workspaceRole.findFirst({
@@ -54,21 +95,54 @@ export default async function WorkspaceAdminDashboard({
 
   const hasAccess = (page: string) => userRole === "ADMIN" || userPermissions.includes(page);
 
-  // Fetch trend data (Last 6 months of admissions)
-  const sixMonthsAgo = new Date();
-  sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+  // Time boundaries for dynamic month-over-month comparisons
+  const now = new Date();
+  const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  const sixMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 5, 1);
 
-  const [studentsByMonth, coursesWithBatches] = await Promise.all([
-    db.studentProfile.groupBy({
-      by: ['admissionDate'],
-      _count: { id: true },
-      where: { 
+  // Dynamic parallel data queries
+  const [
+    pendingAdmissionsCount,
+    unreviewedLeadsCount,
+    thisMonthAdmissionsCount,
+    lastMonthAdmissionsCount,
+    recentApplications,
+    coursesWithBatches,
+    sixMonthAdmissions
+  ] = await Promise.all([
+    db.admissionApplication.count({
+      where: { workspaceId: workspace.id, status: "PENDING" }
+    }),
+    db.visitorLead.count({
+      where: { workspaceId: workspace.id, status: "NEW" }
+    }),
+    db.studentProfile.count({
+      where: { workspaceId: workspace.id, admissionDate: { gte: thisMonthStart } }
+    }),
+    db.studentProfile.count({
+      where: {
         workspaceId: workspace.id,
-        admissionDate: { gte: sixMonthsAgo }
-      },
+        admissionDate: { gte: lastMonthStart, lt: thisMonthStart }
+      }
+    }),
+    db.admissionApplication.findMany({
+      where: { workspaceId: workspace.id },
+      orderBy: { createdAt: "desc" },
+      take: 5,
+      select: {
+        id: true,
+        applicationNo: true,
+        fullName: true,
+        mobile: true,
+        appliedCourse: true,
+        status: true,
+        createdAt: true,
+        course: { select: { title: true } }
+      }
     }),
     db.course.findMany({
-      where: { workspaceId: workspace.id },
+      where: { workspaceId: workspace.id, isActive: true },
       select: {
         title: true,
         batches: {
@@ -77,113 +151,424 @@ export default async function WorkspaceAdminDashboard({
           }
         }
       }
+    }),
+    db.studentProfile.findMany({
+      where: {
+        workspaceId: workspace.id,
+        admissionDate: { gte: sixMonthsAgo }
+      },
+      select: { admissionDate: true }
     })
   ]);
 
+  // If no online applications yet, fallback to recent student enrollments
+  let recentPipelineItems: {
+    id: string;
+    name: string;
+    subtext: string;
+    badgeText: string;
+    badgeStatus: "PENDING" | "APPROVED" | "REJECTED" | "ACTIVE";
+    timeText: string;
+  }[] = [];
+
+  if (recentApplications.length > 0) {
+    recentPipelineItems = recentApplications.map(app => ({
+      id: app.id,
+      name: app.fullName,
+      subtext: app.course?.title || app.appliedCourse || "General Course",
+      badgeText: app.status,
+      badgeStatus: app.status as any,
+      timeText: formatRelativeTime(app.createdAt)
+    }));
+  } else {
+    const recentStudents = await db.studentProfile.findMany({
+      where: { workspaceId: workspace.id },
+      orderBy: { admissionDate: "desc" },
+      take: 5,
+      select: {
+        id: true,
+        fullName: true,
+        enrollmentNo: true,
+        admissionDate: true,
+        status: true,
+        course: { select: { title: true } }
+      }
+    });
+
+    recentPipelineItems = recentStudents.map(student => ({
+      id: student.id,
+      name: student.fullName,
+      subtext: student.course?.title || `Roll: ${student.enrollmentNo}`,
+      badgeText: student.status || "ENROLLED",
+      badgeStatus: "APPROVED",
+      timeText: formatRelativeTime(student.admissionDate)
+    }));
+  }
+
+  // Calculate Month-over-Month growth rate
+  const growthRate = lastMonthAdmissionsCount > 0
+    ? Math.round(((thisMonthAdmissionsCount - lastMonthAdmissionsCount) / lastMonthAdmissionsCount) * 100)
+    : (thisMonthAdmissionsCount > 0 ? 100 : 0);
+
+  // Construct accurate 6-month historical admission trend
   const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
   const admissionTrend = Array.from({ length: 6 }).map((_, i) => {
     const d = new Date();
     d.setMonth(d.getMonth() - (5 - i));
-    const month = d.getMonth();
-    const count = studentsByMonth.filter(s => new Date(s.admissionDate).getMonth() === month).reduce((acc, curr) => acc + curr._count.id, 0);
-    return { name: monthNames[month], value: count };
+    const targetYear = d.getFullYear();
+    const targetMonth = d.getMonth();
+    const count = sixMonthAdmissions.filter(s => {
+      const adm = new Date(s.admissionDate);
+      return adm.getFullYear() === targetYear && adm.getMonth() === targetMonth;
+    }).length;
+    return { name: monthNames[targetMonth], value: count };
   });
 
-  const studentDistData = coursesWithBatches.length > 0 
-    ? coursesWithBatches.map(c => ({ 
-        name: c.title, 
-        value: c.batches.reduce((sum, b) => sum + b._count.students, 0) 
-      }))
-    : [{ name: "General", value: workspace._count.studentProfiles }];
+  // Calculate student distribution by course
+  const coursesWithStudents = coursesWithBatches.map(c => ({
+    name: c.title,
+    value: c.batches.reduce((sum, b) => sum + (b._count?.students || 0), 0)
+  })).filter(c => c.value > 0);
 
-  let stats = [];
-  if (hasAccess("students")) {
-    stats.push({ label: "Total Students", value: workspace._count.studentProfiles, icon: Users, color: "text-blue-600", bg: "bg-blue-50" });
-  }
-  if (hasAccess("courses")) {
-    stats.push({ label: "Active Courses", value: workspace._count.courses, icon: BookOpen, color: "text-emerald-600", bg: "bg-emerald-50" });
-  }
-  if (hasAccess("staff")) {
-    stats.push({ label: "Staff Members", value: workspace._count.roles, icon: UserCheck, color: "text-amber-600", bg: "bg-amber-50" });
-  }
-  if (hasAccess("wallet")) {
-    stats.push({ label: "AI Tokens", value: workspace.tokensBalance, icon: Sparkles, color: "text-purple-600", bg: "bg-purple-50" });
-  }
+  const studentDistData = coursesWithStudents.length > 0 
+    ? coursesWithStudents 
+    : (workspace._count.studentProfiles > 0 
+        ? [{ name: "General Enrolled", value: workspace._count.studentProfiles }] 
+        : []);
 
+  // Multi-tenant safe links adhering to AGENTS.md
   const studentLink = await getServerTenantLink("/admin/students", tenant);
+  const admissionsLink = await getServerTenantLink("/admin/admissions", tenant);
+  const analyticsLink = await getServerTenantLink("/admin/analytics", tenant);
+  const coursesLink = await getServerTenantLink("/admin/courses", tenant);
+  const attendanceLink = await getServerTenantLink("/admin/attendance", tenant);
+  const feesLink = await getServerTenantLink("/admin/fees", tenant);
+  const examsLink = await getServerTenantLink("/admin/exam-generator", tenant);
+  const walletLink = await getServerTenantLink("/admin/wallet", tenant);
+  const settingsLink = await getServerTenantLink("/admin/settings", tenant);
+  const publicSiteLink = await getServerTenantLink("/", tenant);
 
   return (
     <div className="space-y-4 sm:space-y-5 pb-8 w-full mx-auto">
+      {/* Header Toolbar */}
       <AdminPageHeader 
-        title="Institute Insights" 
-        description={`Welcome back to ${workspace.name}. Here's what's happening in your institute today.`}
+        title="Institute Overview" 
+        description="Real-time students, admissions, programs, and branch operations."
       >
         <div className="flex items-center gap-2">
-          {hasAccess("wallet") && (
-            <Button variant="outline" className="h-8 sm:h-9 px-3 rounded-lg text-xs font-semibold gap-1.5 border-slate-200 dark:border-slate-700">
-              <Wallet className="w-3.5 h-3.5" /> Buy Tokens
+          <Link href={analyticsLink}>
+            <Button 
+              variant="outline" 
+              className="h-8 sm:h-9 px-3 rounded-lg text-xs font-semibold gap-1.5 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800"
+            >
+              <BarChart3 className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
+              <span className="hidden xs:inline">Visitor</span> Analytics
             </Button>
+          </Link>
+
+          {(hasAccess("admissions") || hasAccess("students")) && (
+            <Link href={admissionsLink}>
+              <Button 
+                variant="outline" 
+                className="h-8 sm:h-9 px-3 rounded-lg text-xs font-semibold gap-1.5 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 relative"
+              >
+                <UserCheck className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                <span>Admissions</span>
+                {pendingAdmissionsCount > 0 && (
+                  <span className="ml-0.5 px-1.5 py-0.2 bg-amber-500 text-white text-[9px] font-bold rounded-full">
+                    {pendingAdmissionsCount}
+                  </span>
+                )}
+              </Button>
+            </Link>
           )}
+
           {hasAccess("students") && (
             <Link href={studentLink}>
               <Button className="h-8 sm:h-9 px-3.5 rounded-lg text-xs font-semibold gap-1.5 shadow-xs bg-primary text-primary-foreground">
-                <Plus className="w-3.5 h-3.5" /> New Student
+                <Plus className="w-3.5 h-3.5" />
+                <span>New Student</span>
               </Button>
             </Link>
           )}
         </div>
       </AdminPageHeader>
 
-      {/* Modern Stats Grid */}
+      {/* Top 4 Dynamic Metric Cards (Strictly 4 Cards) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        {stats.map((stat, i) => (
+        {/* Card 1: Active Learners */}
+        <StatCard
+          label="Active Students"
+          value={workspace._count.studentProfiles}
+          icon={<GraduationCap className="w-5 h-5 text-blue-600 dark:text-blue-400" />}
+          subtext={thisMonthAdmissionsCount > 0 ? `+${thisMonthAdmissionsCount} this month` : "Total registered"}
+          change={growthRate !== 0 ? `${growthRate > 0 ? "+" : ""}${growthRate}%` : undefined}
+          trend={growthRate >= 0 ? "up" : "down"}
+        />
+
+        {/* Card 2: Admissions & Inquiries Pipeline */}
+        <StatCard
+          label="Admissions & Leads"
+          value={pendingAdmissionsCount + unreviewedLeadsCount}
+          icon={<UserCheck className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />}
+          subtext={`${pendingAdmissionsCount} pending · ${unreviewedLeadsCount} inquiries`}
+          change={pendingAdmissionsCount > 0 ? `${pendingAdmissionsCount} Pending` : "Up to date"}
+          trend={pendingAdmissionsCount > 0 ? "up" : undefined}
+        />
+
+        {/* Card 3: Academic Programs & Batches */}
+        <StatCard
+          label="Academic Programs"
+          value={workspace._count.courses}
+          icon={<BookOpen className="w-5 h-5 text-violet-600 dark:text-violet-400" />}
+          subtext={`${workspace._count.batches} classroom batches`}
+          change={`${workspace._count.batches} Batches`}
+        />
+
+        {/* Card 4: Tokens & Wallet (or Staff if restricted) */}
+        {hasAccess("wallet") ? (
           <StatCard
-            key={i}
-            label={stat.label}
-            value={stat.value}
-            icon={<stat.icon className={`w-5 h-5 ${stat.color}`} />}
+            label="Tokens & Wallet"
+            value={`${workspace.tokensBalance} Tokens`}
+            icon={<Wallet className="w-5 h-5 text-amber-600 dark:text-amber-400" />}
+            subtext={`₹${workspace.walletBalance.toLocaleString("en-IN")} wallet balance`}
+            change="Active"
           />
-        ))}
+        ) : (
+          <StatCard
+            label="Staff & Faculty"
+            value={workspace._count.roles}
+            icon={<ShieldCheck className="w-5 h-5 text-amber-600 dark:text-amber-400" />}
+            subtext="Authorized members"
+            change="Protected"
+          />
+        )}
       </div>
 
-      {/* Reports Section */}
+      {/* Visual Analytics & Distribution Charts */}
       {hasAccess("students") || hasAccess("admissions") ? (
-        <AdminDashboardCharts admissionData={admissionTrend} studentDistData={studentDistData} />
+        <AdminDashboardCharts 
+          admissionData={admissionTrend} 
+          studentDistData={studentDistData} 
+        />
       ) : (
         <div className="p-4 sm:p-5 text-center border border-dashed border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50/50 dark:bg-slate-900/50">
           <ShieldAlert className="w-6 h-6 text-slate-400 mx-auto mb-1.5" />
-          <h3 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">Restricted View</h3>
+          <h3 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">Restricted Analytics</h3>
           <p className="text-xs font-medium text-slate-500 mt-1 max-w-sm mx-auto leading-normal">
-            You do not have permission to view detailed analytics and student charts. Please contact your administrator if you need access.
+            You do not have permission to view detailed student charts. Contact your branch administrator for access.
           </p>
         </div>
       )}
 
-      {/* Quick Actions / Welcome Card */}
-      <div className="relative overflow-hidden rounded-xl bg-slate-900 p-4 sm:p-5 text-white shadow-sm border border-slate-800">
-        <div className="absolute top-0 right-0 p-4 opacity-10 rotate-12 pointer-events-none">
-           <Sparkles className="w-32 h-32" />
-        </div>
-        <div className="relative z-10 max-w-2xl">
-          <h2 className="text-base sm:text-lg font-bold mb-1 tracking-tight">Your Institute is Growing!</h2>
-          <p className="text-slate-400 text-xs font-medium leading-normal mb-3">
-            You currently have {workspace._count.studentProfiles} students enrolled across {workspace._count.courses} active courses. 
-            Keep building your landing page or manage your staff members to optimize operations.
-          </p>
-          <div className="flex flex-wrap gap-2">
-            {hasAccess("settings") && (
-              <Button className="rounded-lg font-semibold bg-white text-slate-900 hover:bg-slate-100 h-8 sm:h-9 px-3 text-xs">
-                Launch Setup Guide
-              </Button>
-            )}
-            {hasAccess("settings") && (
-              <Link href={await getServerTenantLink("/admin/settings", tenant)}>
-                <Button variant="outline" className="rounded-lg font-semibold border-white/20 bg-transparent text-white hover:bg-white/10 hover:text-white h-8 sm:h-9 px-3 text-xs">
-                  Landing Page Settings
-                </Button>
+      {/* Production Operations Grid (2 Columns) */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 sm:gap-4">
+        {/* Left Column (7 cols): Recent Admissions & Pipeline */}
+        <div className="lg:col-span-7">
+          <Card className="rounded-xl border border-slate-200/80 dark:border-slate-800 shadow-sm overflow-hidden bg-white dark:bg-slate-900 h-full flex flex-col">
+            <CardHeader className="p-3.5 sm:p-4 border-b border-slate-100 dark:border-slate-800 flex flex-row items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="p-1 rounded-md bg-blue-500/10 text-blue-600 dark:text-blue-400">
+                  <Clock className="w-3.5 h-3.5" />
+                </div>
+                <div>
+                  <CardTitle className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
+                    Recent Admissions & Inquiries
+                  </CardTitle>
+                </div>
+              </div>
+              <Link 
+                href={admissionsLink} 
+                className="text-xs font-semibold text-primary hover:underline flex items-center gap-1"
+              >
+                View All <ArrowRight className="w-3 h-3" />
               </Link>
-            )}
-          </div>
+            </CardHeader>
+            <CardContent className="p-0 flex-1 flex flex-col justify-between">
+              {recentPipelineItems.length > 0 ? (
+                <div className="divide-y divide-slate-100 dark:divide-slate-800/60">
+                  {recentPipelineItems.map((item) => (
+                    <div 
+                      key={item.id} 
+                      className="flex items-center justify-between p-3 sm:p-3.5 hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors"
+                    >
+                      <div className="flex items-center gap-2.5 min-w-0 pr-2">
+                        <div className="h-8 w-8 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-xs flex items-center justify-center shrink-0 border border-slate-200/60 dark:border-slate-700/60">
+                          {item.name.charAt(0).toUpperCase()}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="font-semibold text-xs text-slate-900 dark:text-white truncate">
+                            {item.name}
+                          </p>
+                          <p className="text-[10px] font-medium text-slate-400 truncate">
+                            {item.subtext}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2.5 shrink-0">
+                        <Badge 
+                          className={`text-[9px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider border-none ${
+                            item.badgeStatus === "PENDING"
+                              ? "bg-amber-500/10 text-amber-600 dark:text-amber-400"
+                              : item.badgeStatus === "APPROVED" || item.badgeStatus === "ACTIVE"
+                              ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                              : "bg-red-500/10 text-red-600 dark:text-red-400"
+                          }`}
+                        >
+                          {item.badgeText}
+                        </Badge>
+                        <span className="text-[10px] font-medium text-slate-400 hidden xs:inline">
+                          {item.timeText}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="p-6 text-center flex flex-col items-center justify-center my-auto">
+                  <div className="p-3 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 mb-2">
+                    <UserCheck className="w-5 h-5" />
+                  </div>
+                  <p className="text-xs font-bold text-slate-900 dark:text-white">
+                    No Admissions Yet
+                  </p>
+                  <p className="text-[10px] text-slate-400 mt-0.5 max-w-xs">
+                    Prospective students will appear here as soon as they submit an online application or inquiry.
+                  </p>
+                  <Link href={publicSiteLink} target="_blank" className="mt-3">
+                    <Button variant="outline" className="h-7 px-2.5 rounded-lg text-[11px] font-semibold gap-1">
+                      Preview Public Portal <ExternalLink className="w-3 h-3" />
+                    </Button>
+                  </Link>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Right Column (5 cols): Institute Identity & Operational Hub */}
+        <div className="lg:col-span-5 space-y-3 sm:space-y-4">
+          {/* Institute Affiliation Card */}
+          <Card className="rounded-xl border border-slate-200/80 dark:border-slate-800 shadow-sm overflow-hidden bg-white dark:bg-slate-900">
+            <CardHeader className="p-3.5 sm:p-4 border-b border-slate-100 dark:border-slate-800 flex flex-row items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="p-1 rounded-md bg-purple-500/10 text-purple-600 dark:text-purple-400">
+                  <Building2 className="w-3.5 h-3.5" />
+                </div>
+                <CardTitle className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
+                  Center Identity
+                </CardTitle>
+              </div>
+              {workspace.centerCode && (
+                <Badge className="text-[9px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider bg-purple-500/10 text-purple-600 dark:text-purple-400 border-none">
+                  {workspace.centerCode}
+                </Badge>
+              )}
+            </CardHeader>
+            <CardContent className="p-3.5 sm:p-4 space-y-3">
+              <div>
+                <h4 className="text-xs font-bold text-slate-900 dark:text-white truncate">
+                  {workspace.name}
+                </h4>
+                <p className="text-[10px] text-slate-400 truncate">
+                  {workspace.district ? `${workspace.district}, ` : ""}{workspace.state || "Accredited Branch"}
+                </p>
+              </div>
+
+              <div className="flex items-center justify-between p-2 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 text-xs">
+                <div className="min-w-0 pr-2">
+                  <span className="text-[9px] font-bold uppercase tracking-wider text-slate-400 block">
+                    Public Subdomain
+                  </span>
+                  <span className="font-semibold text-slate-800 dark:text-slate-200 truncate block text-[11px]">
+                    {workspace.subdomain}.domain.com
+                  </span>
+                </div>
+                <Link href={publicSiteLink} target="_blank">
+                  <Button variant="ghost" size="sm" className="h-7 w-7 p-0 rounded-md text-slate-500 hover:text-primary">
+                    <ExternalLink className="w-3.5 h-3.5" />
+                  </Button>
+                </Link>
+              </div>
+
+              <div className="flex items-center justify-between pt-1">
+                <div className="flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-400">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+                  <span className="text-[11px] font-medium">
+                    {workspace.hasDocumentAuthority ? "Autonomous Certification" : "Central Accredited"}
+                  </span>
+                </div>
+                {hasAccess("wallet") && (
+                  <Link href={walletLink}>
+                    <Button variant="outline" className="h-7 px-2.5 rounded-md text-[11px] font-semibold gap-1">
+                      <Wallet className="w-3 h-3" /> Top-Up
+                    </Button>
+                  </Link>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Quick Operations Jump Grid */}
+          <Card className="rounded-xl border border-slate-200/80 dark:border-slate-800 shadow-sm overflow-hidden bg-white dark:bg-slate-900">
+            <CardHeader className="p-3.5 sm:p-4 border-b border-slate-100 dark:border-slate-800">
+              <CardTitle className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
+                Operational Shortcuts
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-3.5 sm:p-4">
+              <div className="grid grid-cols-2 gap-2">
+                <Link href={attendanceLink}>
+                  <div className="p-2.5 rounded-lg border border-slate-100 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-800/30 hover:bg-slate-100 dark:hover:bg-slate-800/70 transition-colors group cursor-pointer">
+                    <div className="flex items-center gap-2 mb-1">
+                      <QrCode className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400 group-hover:scale-110 transition-transform" />
+                      <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                        Attendance
+                      </span>
+                    </div>
+                    <p className="text-[9px] text-slate-400 font-medium">Smart QR Scanner</p>
+                  </div>
+                </Link>
+
+                <Link href={feesLink}>
+                  <div className="p-2.5 rounded-lg border border-slate-100 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-800/30 hover:bg-slate-100 dark:hover:bg-slate-800/70 transition-colors group cursor-pointer">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Receipt className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 group-hover:scale-110 transition-transform" />
+                      <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                        Fees Ledger
+                      </span>
+                    </div>
+                    <p className="text-[9px] text-slate-400 font-medium">Collections & Dues</p>
+                  </div>
+                </Link>
+
+                <Link href={examsLink}>
+                  <div className="p-2.5 rounded-lg border border-slate-100 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-800/30 hover:bg-slate-100 dark:hover:bg-slate-800/70 transition-colors group cursor-pointer">
+                    <div className="flex items-center gap-2 mb-1">
+                      <FileQuestion className="w-3.5 h-3.5 text-violet-600 dark:text-violet-400 group-hover:scale-110 transition-transform" />
+                      <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                        Exam Zone
+                      </span>
+                    </div>
+                    <p className="text-[9px] text-slate-400 font-medium">Paper Generator</p>
+                  </div>
+                </Link>
+
+                <Link href={settingsLink}>
+                  <div className="p-2.5 rounded-lg border border-slate-100 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-800/30 hover:bg-slate-100 dark:hover:bg-slate-800/70 transition-colors group cursor-pointer">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Palette className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 group-hover:scale-110 transition-transform" />
+                      <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                        Branding
+                      </span>
+                    </div>
+                    <p className="text-[9px] text-slate-400 font-medium">Public Website</p>
+                  </div>
+                </Link>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>

@@ -172,7 +172,7 @@ export async function placeOrder(workspaceId: string, cartItems: { variantId: st
       }
     });
 
-    await revalidateWorkspacePath(typeof workspaceId !== 'undefined' ? workspaceId : (typeof data !== 'undefined' ? data.workspaceId : null), "/admin/products");
+    await revalidateWorkspacePath(workspaceId, "/admin/products");
     revalidatePath(`/super-admin/products`);
     
     return { success: true, data: order };

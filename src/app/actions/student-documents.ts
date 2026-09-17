@@ -7,9 +7,9 @@ import { isValidIssueGap, isValidMarksheetGap, getRequiredMarksheetCount, getExp
 export async function getPendingDocumentRequestsCount() {
   try {
     const config = await db.registrationConfig.findFirst();
-    const hours = config?.autoIssueAfterRequestHours || 1;
+    const minutes = config?.autoIssueAfterRequestMinutes || 60;
     const thresholdDate = new Date();
-    thresholdDate.setHours(thresholdDate.getHours() - hours);
+    thresholdDate.setMinutes(thresholdDate.getMinutes() - minutes);
 
     const count = await db.studentProfile.count({
       where: {

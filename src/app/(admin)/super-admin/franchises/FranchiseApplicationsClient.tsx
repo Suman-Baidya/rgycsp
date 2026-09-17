@@ -122,7 +122,7 @@ export default function FranchiseApplicationsClient({
   const [wsCurrentPage, setWsCurrentPage] = useState(1);
   const [wsOpen, setWsOpen] = useState(false);
   const [isCreatingWorkspace, setIsCreatingWorkspace] = useState(false);
-  const [workspaceFormData, setWorkspaceFormData] = useState({
+  const DEFAULT_WORKSPACE_FORM_DATA = {
     name: "",
     subdomain: "",
     isSubdomainEnabled: true,
@@ -146,7 +146,9 @@ export default function FranchiseApplicationsClient({
     ownerPhotoUrl: "",
     signatureUrl: "",
     idProofUrl: ""
-  });
+  };
+
+  const [workspaceFormData, setWorkspaceFormData] = useState(DEFAULT_WORKSPACE_FORM_DATA);
 
   const wsItemsPerPage = 8;
   const [activeWsStep, setActiveWsStep] = useState<number>(0);
@@ -380,10 +382,7 @@ export default function FranchiseApplicationsClient({
       toast.success("Franchise center created successfully!");
       setWsOpen(false);
       router.refresh();
-      setWorkspaceFormData({ 
-        name: "", subdomain: "", ownerName: "", ownerEmail: "", 
-        ownerPassword: "", contactPhone: "", whatsapp: "", contactEmail: "", address: "", state: "", district: "", pinCode: "", primaryColor: "#3b82f6", brandDescription: "", centerCode: "" 
-      });
+      setWorkspaceFormData(DEFAULT_WORKSPACE_FORM_DATA);
     } else {
       toast.error(result.error || "Failed to create center");
     }

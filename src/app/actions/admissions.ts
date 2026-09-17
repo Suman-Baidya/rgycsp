@@ -155,7 +155,7 @@ export async function deleteDraftApplications(workspaceId: string, applicationId
       }
     });
     
-    await revalidateWorkspacePath(typeof workspaceId !== 'undefined' ? workspaceId : (typeof data !== 'undefined' ? data.workspaceId : null), "/admin/admissions", "layout");
+    await revalidateWorkspacePath(workspaceId, "/admin/admissions", "layout");
     return { success: true };
   } catch (error: any) {
     console.error("Delete draft error:", error);
@@ -233,8 +233,8 @@ export async function finalEnrollApplication(workspaceId: string, applicationId:
       });
     }
 
-    await revalidateWorkspacePath(typeof workspaceId !== 'undefined' ? workspaceId : (typeof data !== 'undefined' ? data.workspaceId : null), "/admin/admissions", "layout");
-    await revalidateWorkspacePath(typeof workspaceId !== 'undefined' ? workspaceId : (typeof data !== 'undefined' ? data.workspaceId : null), "/admin/students", "layout");
+    await revalidateWorkspacePath(workspaceId, "/admin/admissions", "layout");
+    await revalidateWorkspacePath(workspaceId, "/admin/students", "layout");
     return { success: true, studentId: student?.id };
   } catch (error: any) {
     console.error("Final Enroll error:", error);
@@ -320,7 +320,7 @@ export async function bulkRegisterStudentsAction(workspaceId: string, studentsDa
       }
     }
 
-    await revalidateWorkspacePath(typeof workspaceId !== 'undefined' ? workspaceId : (typeof data !== 'undefined' ? data.workspaceId : null), "/admin/admissions", "layout");
+    await revalidateWorkspacePath(workspaceId, "/admin/admissions", "layout");
     return { success: true, count: successCount };
   } catch (error: any) {
     console.error("Bulk registration error:", error);

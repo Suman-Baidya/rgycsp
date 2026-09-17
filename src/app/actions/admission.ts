@@ -311,9 +311,11 @@ export async function updateApplicationStatus(id: string, status: string, reject
       });
     }
 
-    await revalidateWorkspacePath(typeof workspaceId !== 'undefined' ? workspaceId : (typeof data !== 'undefined' ? data.workspaceId : null), "/admin", "layout");
-    await revalidateWorkspacePath(typeof workspaceId !== 'undefined' ? workspaceId : (typeof data !== 'undefined' ? data.workspaceId : null), "/admin/admissions");
-    await revalidateWorkspacePath(typeof workspaceId !== 'undefined' ? workspaceId : (typeof data !== 'undefined' ? data.workspaceId : null), "/admin/students");
+    if (application.workspaceId) {
+      await revalidateWorkspacePath(application.workspaceId, "/admin", "layout");
+      await revalidateWorkspacePath(application.workspaceId, "/admin/admissions");
+      await revalidateWorkspacePath(application.workspaceId, "/admin/students");
+    }
 
     return { success: true };
   } catch (error: any) {

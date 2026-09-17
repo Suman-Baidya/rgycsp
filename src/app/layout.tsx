@@ -59,6 +59,7 @@ export async function generateMetadata(): Promise<Metadata> {
 import { SessionProvider } from "@/components/providers/SessionProvider";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
 import { UserHeartbeat } from "@/components/providers/UserHeartbeat";
+import { VisitorTracker } from "@/components/analytics/VisitorTracker";
 import { auth } from "@/auth";
 import { OfflineIndicator } from "@/components/OfflineIndicator";
 import { TopProgressBar } from "@/components/layout/TopProgressBar";
@@ -78,6 +79,7 @@ export default async function RootLayout({
     >
       <body className="min-h-full flex flex-col font-sans" suppressHydrationWarning>
         <TopProgressBar />
+        <VisitorTracker />
         <SessionProvider session={session}>
           <UserHeartbeat />
           <OfflineIndicator />

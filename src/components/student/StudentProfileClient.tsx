@@ -91,8 +91,8 @@ export default function StudentProfileClient({
   const workspaceName = workspace?.name || settings?.siteName || "Academic Center";
   const centerCode = workspace?.centerCode || tenant.toUpperCase();
   const centerAddress = workspace?.address || settings?.address || "Institutional Campus";
-  const centerPhone = workspace?.phone || settings?.phone || "+91 98765 43210";
-  const centerEmail = workspace?.email || settings?.email || `admin@${tenant}.edu`;
+  const centerPhone = workspace?.phone || settings?.phone || "Contact Institute Office";
+  const centerEmail = workspace?.email || settings?.email || "support@rgycsp.org.in";
   const rollNumber = profile?.rollNo || profile?.registrationNo || profile?.enrollmentNo || "Pending";
 
   // Active navigation tab
@@ -571,7 +571,7 @@ export default function StudentProfileClient({
                 <InfoItem label="Mother's Name" value={profile?.motherName || "N/A"} icon={<Users className="w-3.5 h-3.5 text-slate-400" />} />
                 <InfoItem label="Date of Birth" value={formatDate(profile?.dob)} icon={<Calendar className="w-3.5 h-3.5 text-slate-400" />} />
                 <InfoItem label="Gender" value={profile?.gender || "Not Specified"} icon={<User className="w-3.5 h-3.5 text-slate-400" />} />
-                <InfoItem label="Blood Group" value={profile?.bloodGroup || "O+ (Default)"} icon={<Droplet className="w-3.5 h-3.5 text-rose-500" />} />
+                <InfoItem label="Blood Group" value={profile?.bloodGroup || "Not Specified"} icon={<Droplet className="w-3.5 h-3.5 text-rose-500" />} />
               </div>
 
               {/* Permanent Address */}
@@ -1140,11 +1140,11 @@ export default function StudentProfileClient({
                         </div>
                         <div>
                           <span className="text-slate-500 font-bold block text-[7px] uppercase">Blood Group</span>
-                          <span className="font-bold text-slate-900">{profile?.bloodGroup || "O+"}</span>
+                          <span className="font-bold text-slate-900">{profile?.bloodGroup || "Not Specified"}</span>
                         </div>
                         <div>
                           <span className="text-slate-500 font-bold block text-[7px] uppercase">Contact</span>
-                          <span className="font-bold text-slate-900">{profile?.phone || "+91 9876543210"}</span>
+                          <span className="font-bold text-slate-900">{profile?.phone || "Not Provided"}</span>
                         </div>
                       </div>
                     </div>
@@ -1152,7 +1152,7 @@ export default function StudentProfileClient({
                     {/* QR Code */}
                     <div className="p-1 rounded-md bg-white border border-slate-200 shrink-0 shadow-xs flex flex-col items-center">
                       <QRCodeSVG
-                        value={`https://${tenant}.abcdeduhub.com/verify/student/${profile?.enrollmentNo}`}
+                        value={typeof window !== "undefined" ? `${window.location.origin}/verify/student/${profile?.enrollmentNo || rollNumber}` : `https://${tenant}.rgycsp.org.in/verify/student/${profile?.enrollmentNo || rollNumber}`}
                         size={48}
                         level="M"
                       />
@@ -1162,7 +1162,7 @@ export default function StudentProfileClient({
 
                   {/* Bottom Strip */}
                   <div className="border-t border-slate-200 pt-1 flex items-center justify-between text-[7.5px] text-slate-500">
-                    <span>Valid: Session 2025–2026</span>
+                    <span>Valid: Session {profile?.session || `${new Date().getFullYear()}–${new Date().getFullYear() + 1}`}</span>
                     <span className="font-bold text-slate-800 uppercase">Authorized Signatory</span>
                   </div>
                 </div>
@@ -1185,7 +1185,7 @@ export default function StudentProfileClient({
                   <div className="border-t border-slate-300 pt-1 text-center space-y-0.5 text-[7px] text-slate-500">
                     <p className="font-bold text-slate-800 uppercase">{workspaceName}</p>
                     <p>{centerAddress} • Phone: {centerPhone}</p>
-                    <p>Web: {tenant}.abcdeduhub.com • Email: {centerEmail}</p>
+                    <p>Web: {typeof window !== "undefined" ? window.location.host : `${tenant}.rgycsp.org.in`} • Email: {centerEmail}</p>
                   </div>
                 </div>
               )}

@@ -30,10 +30,12 @@ export async function deleteApplication(applicationId: string) {
   try {
     const session = await auth();
     if (!session?.user) return { success: false, error: "Unauthorized" };
-    await db.admissionApplication.delete({
+    const deleted = await db.admissionApplication.delete({
       where: { id: applicationId }
     });
-    await revalidateWorkspacePath(typeof workspaceId !== 'undefined' ? workspaceId : (typeof data !== 'undefined' ? data.workspaceId : null), "/admin/students/applications");
+    if (deleted.workspaceId) {
+      await revalidateWorkspacePath(deleted.workspaceId, "/admin/students/applications");
+    }
     return { success: true };
   } catch (error: any) {
     console.error("Error deleting application:", error);
@@ -236,10 +238,12 @@ export async function approveApplication(applicationId: string, batchId: string)
       return { student, updatedApp };
     });
 
-    await revalidateWorkspacePath(typeof workspaceId !== 'undefined' ? workspaceId : (typeof data !== 'undefined' ? data.workspaceId : null), "/admin/students");
-    await revalidateWorkspacePath(typeof workspaceId !== 'undefined' ? workspaceId : (typeof data !== 'undefined' ? data.workspaceId : null), "/admin/students/applications");
-    await revalidateWorkspacePath(typeof workspaceId !== 'undefined' ? workspaceId : (typeof data !== 'undefined' ? data.workspaceId : null), "/admin/admissions");
-    await revalidateWorkspacePath(typeof workspaceId !== 'undefined' ? workspaceId : (typeof data !== 'undefined' ? data.workspaceId : null), "/admin", "layout");
+    if (result.updatedApp?.workspaceId) {
+      await revalidateWorkspacePath(result.updatedApp.workspaceId, "/admin/students");
+      await revalidateWorkspacePath(result.updatedApp.workspaceId, "/admin/students/applications");
+      await revalidateWorkspacePath(result.updatedApp.workspaceId, "/admin/admissions");
+      await revalidateWorkspacePath(result.updatedApp.workspaceId, "/admin", "layout");
+    }
     
     return { success: true, data: result.student };
   } catch (error: any) {
@@ -252,14 +256,16 @@ export async function rejectApplication(applicationId: string, reason: string) {
   try {
     const session = await auth();
     if (!session?.user) return { success: false, error: "Unauthorized" };
-    await db.admissionApplication.update({
+    const app = await db.admissionApplication.update({
       where: { id: applicationId },
       data: { status: "REJECTED", rejectionReason: reason }
     });
     
-    await revalidateWorkspacePath(typeof workspaceId !== 'undefined' ? workspaceId : (typeof data !== 'undefined' ? data.workspaceId : null), "/admin/students/applications");
-    await revalidateWorkspacePath(typeof workspaceId !== 'undefined' ? workspaceId : (typeof data !== 'undefined' ? data.workspaceId : null), "/admin/admissions");
-    await revalidateWorkspacePath(typeof workspaceId !== 'undefined' ? workspaceId : (typeof data !== 'undefined' ? data.workspaceId : null), "/admin", "layout");
+    if (app.workspaceId) {
+      await revalidateWorkspacePath(app.workspaceId, "/admin/students/applications");
+      await revalidateWorkspacePath(app.workspaceId, "/admin/admissions");
+      await revalidateWorkspacePath(app.workspaceId, "/admin", "layout");
+    }
     return { success: true };
   } catch (error: any) {
     console.error("Error rejecting application:", error);

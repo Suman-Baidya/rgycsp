@@ -15,6 +15,7 @@ export interface NotificationItem {
   badgeText?: string;
   badgeColor?: "amber" | "rose" | "emerald" | "blue" | "sky" | "purple" | "indigo" | "zinc";
   actionText?: string;
+  count?: number;
 }
 
 export type NotificationQueryOptions = {
@@ -308,7 +309,7 @@ export async function getNotifications(param?: string | NotificationQueryOptions
           if (studentProfile) {
             const pendingInvoices = await db.invoice.count({
               where: {
-                studentId: studentProfile.id,
+                studentProfileId: studentProfile.id,
                 status: "PENDING",
               },
             });

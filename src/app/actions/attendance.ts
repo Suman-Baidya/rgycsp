@@ -168,7 +168,7 @@ export async function saveAttendance(
     }
     // ----------------------------------------
 
-    await revalidateWorkspacePath(typeof workspaceId !== 'undefined' ? workspaceId : (typeof data !== 'undefined' ? data.workspaceId : null), "/admin/attendance");
+    await revalidateWorkspacePath(workspaceId, "/admin/attendance");
     return { success: true };
   } catch (error: any) {
     console.error("Error saving attendance:", error);
@@ -337,7 +337,7 @@ export async function markAttendanceByQR(
       }
     });
 
-    await revalidateWorkspacePath(typeof workspaceId !== 'undefined' ? workspaceId : (typeof data !== 'undefined' ? data.workspaceId : null), "/admin/attendance");
+    await revalidateWorkspacePath(workspaceId, "/admin/attendance");
     
     return { 
       success: true, 

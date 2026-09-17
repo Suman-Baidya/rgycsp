@@ -106,7 +106,7 @@ export async function updatePassword(data: {
         data: { passwordHash: hashed }
       });
       // Also update plain text password in StudentProfile if they are a student
-      if (user.role === "STUDENT") {
+      if ((user.role as string) === "STUDENT") {
         await tx.studentProfile.updateMany({
           where: { userId: userIdToUpdate },
           data: { loginPassword: data.newPassword }

@@ -21,7 +21,7 @@ export async function cleanupRejectedApplications(workspaceId: string) {
       }
     });
 
-    await revalidateWorkspacePath(typeof workspaceId !== 'undefined' ? workspaceId : (typeof data !== 'undefined' ? data.workspaceId : null), "/admin", "layout");
+    await revalidateWorkspacePath(workspaceId, "/admin", "layout");
     
     return { success: true, count: result.count };
   } catch (error: any) {

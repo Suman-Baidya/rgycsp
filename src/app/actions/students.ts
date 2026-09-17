@@ -318,7 +318,9 @@ export async function updateStudent(id: string, data: any) {
       return updatedProfile;
     });
 
-    await revalidateWorkspacePath(typeof workspaceId !== 'undefined' ? workspaceId : (typeof data !== 'undefined' ? data.workspaceId : null), "/admin/students", "page");
+    if (student?.workspaceId) {
+      await revalidateWorkspacePath(student.workspaceId, "/admin/students", "page");
+    }
     return { success: true, data: student };
   } catch (error: any) {
     console.error("Failed to update student:", error);
@@ -374,7 +376,9 @@ export async function adminUpdateStudentPassword(studentId: string, newPassword:
         });
       }
     });
-    await revalidateWorkspacePath(typeof workspaceId !== 'undefined' ? workspaceId : (typeof data !== 'undefined' ? data.workspaceId : null), "/admin/students");
+    if (student?.workspaceId) {
+      await revalidateWorkspacePath(student.workspaceId, "/admin/students");
+    }
     return { success: true };
   } catch (error: any) {
     return { success: false, error: error.message };

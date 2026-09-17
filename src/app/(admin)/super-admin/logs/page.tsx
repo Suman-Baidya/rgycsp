@@ -14,7 +14,8 @@ import {
   ChevronLeft,
   ChevronRight,
   Shield,
-  Filter
+  Filter,
+  Download
 } from "lucide-react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -58,9 +59,12 @@ export default function LogsPage() {
   useEffect(() => {
     const checkAuth = async () => {
       const devEmail = await getDeveloperEmail();
-      if (!session?.user?.email) return;
+      if (!session?.user) return;
       
-      if (session.user.email !== devEmail || !devEmail) {
+      const isDev = Boolean(devEmail && session.user.email === devEmail);
+      const isSuperAdmin = (session.user as any)?.role === "SUPER_ADMIN";
+
+      if (!isDev && !isSuperAdmin) {
         setIsAuthorized(false);
         router.push("/super-admin");
       } else {
@@ -119,6 +123,31 @@ export default function LogsPage() {
       log.level?.toLowerCase().includes(q)
     );
   }, [logs, searchQuery]);
+
+  const handleExportCSV = () => {
+    if (filteredLogs.length === 0) {
+      toast.info("No logs to export");
+      return;
+    }
+    const headers = ["ID", "Level", "Module", "Message", "User", "Timestamp"];
+    const rows = filteredLogs.map(l => [
+      l.id,
+      l.level,
+      l.module,
+      `"${(l.message || "").replace(/"/g, '""')}"`,
+      l.user || "SYSTEM",
+      new Date(l.createdAt).toISOString()
+    ]);
+    const csvContent = "data:text/csv;charset=utf-8," + [headers.join(","), ...rows.map(e => e.join(","))].join("\n");
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `system_audit_logs_${new Date().toISOString().split("T")[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    toast.success(`Exported ${filteredLogs.length} audit logs to CSV`);
+  };
 
   const totalPages = Math.max(1, Math.ceil(filteredLogs.length / itemsPerPage));
   const paginatedLogs = useMemo(() => {
@@ -229,6 +258,16 @@ export default function LogsPage() {
               </div>
 
               <div className="flex items-center gap-2">
+                <Button
+                  onClick={handleExportCSV}
+                  variant="outline"
+                  size="sm"
+                  className="h-8 sm:h-9 px-3 rounded-lg text-xs font-semibold gap-1.5 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300"
+                >
+                  <Download className="h-3.5 w-3.5" />
+                  <span>Export CSV</span>
+                </Button>
+
                 <DropdownMenu>
                   <DropdownMenuTrigger className="inline-flex items-center justify-center whitespace-nowrap text-xs h-8 sm:h-9 px-3 rounded-lg gap-1.5 font-semibold border border-rose-200 dark:border-rose-900/50 text-rose-600 dark:text-rose-400 bg-white dark:bg-slate-900 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-all focus:outline-none">
                     <Trash2 className="h-3.5 w-3.5" />
@@ -305,10 +344,8 @@ export default function LogsPage() {
                       </TableCell>
                       <TableCell className="px-3.5 py-2.5 max-w-[340px]">
                         <Tooltip>
-                          <TooltipTrigger asChild>
-                            <p className="text-xs text-slate-800 dark:text-slate-200 truncate cursor-default">
-                              {log.message}
-                            </p>
+                          <TooltipTrigger className="text-xs text-slate-800 dark:text-slate-200 truncate cursor-default block text-left w-full outline-none">
+                            {log.message}
                           </TooltipTrigger>
                           <TooltipContent className="max-w-md text-xs">
                             {log.message}

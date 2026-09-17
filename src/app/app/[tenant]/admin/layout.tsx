@@ -86,6 +86,7 @@ export default async function WorkspaceAdminLayout({
       if (section === "courses") requiredPermission = "courses";
       if (section === "exam-generator") requiredPermission = "exam-gen";
       if (section === "settings") requiredPermission = "settings";
+      if (section === "analytics") requiredPermission = "analytics";
 
       if (requiredPermission !== "profile") {
         if (requiredPermission === "staff" && userRole !== "ADMIN") {

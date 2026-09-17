@@ -87,7 +87,7 @@ export async function addStaff(
       }
     });
 
-    await revalidateWorkspacePath(typeof workspaceId !== 'undefined' ? workspaceId : (typeof data !== 'undefined' ? data.workspaceId : null), "/admin/staff", "page");
+    await revalidateWorkspacePath(workspaceId, "/admin/staff", "page");
     return { success: true, data: newRole };
   } catch (error: any) {
     console.error("Failed to add staff:", error);
@@ -104,9 +104,11 @@ export async function updateStaffRole(
 ) {
   try {
     const session = await auth();
-    const isSuperAdmin = session?.user?.role === "SUPER_ADMIN" || session?.user?.role === "SUPER_ADMIN_MANAGER" || session?.user?.email === process.env.DEVELOPER_EMAIL;
+    if (!session?.user?.id) {
+      return { success: false, error: "Unauthorized" };
+    }
 
-    if (data.role === "ADMIN" && !isSuperAdmin) {
+    if (data.role === "ADMIN" && session.user.role !== "SUPER_ADMIN") {
       return { success: false, error: "Only global admins can assign the ADMIN role." };
     }
 
@@ -117,7 +119,9 @@ export async function updateStaffRole(
         ...(data.permissions && { permissions: data.permissions })
       }
     });
-    await revalidateWorkspacePath(typeof workspaceId !== 'undefined' ? workspaceId : (typeof data !== 'undefined' ? data.workspaceId : null), "/admin/staff", "page");
+    if (updatedRole.workspaceId) {
+      await revalidateWorkspacePath(updatedRole.workspaceId, "/admin/staff", "page");
+    }
     return { success: true, data: updatedRole };
   } catch (error: any) {
     console.error("Failed to update staff:", error);
@@ -127,10 +131,12 @@ export async function updateStaffRole(
 
 export async function removeStaff(roleId: string) {
   try {
-    await db.workspaceRole.delete({
+    const deleted = await db.workspaceRole.delete({
       where: { id: roleId }
     });
-    await revalidateWorkspacePath(typeof workspaceId !== 'undefined' ? workspaceId : (typeof data !== 'undefined' ? data.workspaceId : null), "/admin/staff", "page");
+    if (deleted.workspaceId) {
+      await revalidateWorkspacePath(deleted.workspaceId, "/admin/staff", "page");
+    }
     return { success: true };
   } catch (error: any) {
     console.error("Failed to remove staff:", error);

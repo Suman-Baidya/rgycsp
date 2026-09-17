@@ -42,7 +42,7 @@ export async function updatePracticalConfig(workspaceId: string, data: { slotDur
       create: { workspaceId, ...data },
       update: data,
     });
-    await revalidateWorkspacePath(typeof workspaceId !== 'undefined' ? workspaceId : (typeof data !== 'undefined' ? data.workspaceId : null), "/admin/attendance", "page");
+    await revalidateWorkspacePath(workspaceId, "/admin/attendance", "page");
     return { success: true, config };
   } catch (error) {
     console.error("Error updating practical config:", error);
@@ -64,11 +64,11 @@ export async function createPracticalSlot(workspaceId: string, data: { startTime
         ...data,
       },
     });
-    await revalidateWorkspacePath(typeof workspaceId !== 'undefined' ? workspaceId : (typeof data !== 'undefined' ? data.workspaceId : null), "/admin/attendance", "page");
+    await revalidateWorkspacePath(workspaceId, "/admin/attendance", "page");
     return { success: true, slot };
   } catch (error) {
     console.error("Error creating slot:", error);
-    return { success: false, error: error.message || "Failed to create slot" };
+    return { success: false, error: (error as any).message || "Failed to create slot" };
   }
 }
 
@@ -77,7 +77,7 @@ export async function deletePracticalSlot(slotId: string, workspaceId: string) {
     await db.practicalSlot.delete({
       where: { id: slotId, workspaceId },
     });
-    await revalidateWorkspacePath(typeof workspaceId !== 'undefined' ? workspaceId : (typeof data !== 'undefined' ? data.workspaceId : null), "/admin/attendance", "page");
+    await revalidateWorkspacePath(workspaceId, "/admin/attendance", "page");
     return { success: true };
   } catch (error) {
     console.error("Error deleting slot:", error);
@@ -182,7 +182,7 @@ export async function assignStudentToSlot(workspaceId: string, enrollmentNo: str
       return { success: true, schedule };
     });
 
-    await revalidateWorkspacePath(typeof workspaceId !== 'undefined' ? workspaceId : (typeof data !== 'undefined' ? data.workspaceId : null), "/admin/attendance", "page");
+    await revalidateWorkspacePath(workspaceId, "/admin/attendance", "page");
     return result;
   } catch (error: any) {
     console.error("Error assigning student to slot:", error);
@@ -240,7 +240,7 @@ export async function updateStudentSchedule(scheduleId: string, workspaceId: str
       return { success: true, updated };
     });
 
-    await revalidateWorkspacePath(typeof workspaceId !== 'undefined' ? workspaceId : (typeof data !== 'undefined' ? data.workspaceId : null), "/admin/attendance", "page");
+    await revalidateWorkspacePath(workspaceId, "/admin/attendance", "page");
     return result;
   } catch (error: any) {
     console.error("Error updating schedule:", error);
@@ -253,7 +253,7 @@ export async function removeStudentFromSlot(scheduleId: string, workspaceId: str
     await db.studentPracticalSchedule.delete({
       where: { id: scheduleId, workspaceId },
     });
-    await revalidateWorkspacePath(typeof workspaceId !== 'undefined' ? workspaceId : (typeof data !== 'undefined' ? data.workspaceId : null), "/admin/attendance", "page");
+    await revalidateWorkspacePath(workspaceId, "/admin/attendance", "page");
     return { success: true };
   } catch (error) {
     console.error("Error removing schedule:", error);

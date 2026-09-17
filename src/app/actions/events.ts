@@ -56,8 +56,10 @@ export async function createEvent(data: any) {
       },
     });
 
-    await revalidateWorkspacePath(typeof workspaceId !== 'undefined' ? workspaceId : (typeof data !== 'undefined' ? data.workspaceId : null), "/", "layout");
-    await revalidateWorkspacePath(typeof workspaceId !== 'undefined' ? workspaceId : (typeof data !== 'undefined' ? data.workspaceId : null), "/events");
+    if (event.workspaceId) {
+      await revalidateWorkspacePath(event.workspaceId, "/", "layout");
+      await revalidateWorkspacePath(event.workspaceId, "/events");
+    }
     revalidatePath("/events");
     return { success: true, event };
   } catch (error: any) {
@@ -68,7 +70,7 @@ export async function createEvent(data: any) {
 
 export async function updateEvent(eventId: string, data: any) {
   try {
-    await db.event.update({
+    const updated = await db.event.update({
       where: { id: eventId },
       data: {
         workspaceId: data.workspaceId || null,
@@ -89,8 +91,10 @@ export async function updateEvent(eventId: string, data: any) {
       },
     });
 
-    await revalidateWorkspacePath(typeof workspaceId !== 'undefined' ? workspaceId : (typeof data !== 'undefined' ? data.workspaceId : null), "/", "layout");
-    await revalidateWorkspacePath(typeof workspaceId !== 'undefined' ? workspaceId : (typeof data !== 'undefined' ? data.workspaceId : null), "/events");
+    if (updated.workspaceId) {
+      await revalidateWorkspacePath(updated.workspaceId, "/", "layout");
+      await revalidateWorkspacePath(updated.workspaceId, "/events");
+    }
     revalidatePath("/events");
     return { success: true };
   } catch (error: any) {
@@ -101,12 +105,14 @@ export async function updateEvent(eventId: string, data: any) {
 
 export async function deleteEvent(eventId: string) {
   try {
-    await db.event.delete({
+    const deleted = await db.event.delete({
       where: { id: eventId },
     });
 
-    await revalidateWorkspacePath(typeof workspaceId !== 'undefined' ? workspaceId : (typeof data !== 'undefined' ? data.workspaceId : null), "/", "layout");
-    await revalidateWorkspacePath(typeof workspaceId !== 'undefined' ? workspaceId : (typeof data !== 'undefined' ? data.workspaceId : null), "/events");
+    if (deleted.workspaceId) {
+      await revalidateWorkspacePath(deleted.workspaceId, "/", "layout");
+      await revalidateWorkspacePath(deleted.workspaceId, "/events");
+    }
     revalidatePath("/events");
     return { success: true };
   } catch (error) {
