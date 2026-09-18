@@ -26,10 +26,7 @@ if (connectionString) {
   console.warn("PRISMA: DATABASE_URL is not set. Prisma will likely fail unless provided via config.");
 }
 
-if (globalThis.prisma) {
-  console.log("PRISMA: Clearing globalThis.prisma cache for schema update");
-  globalThis.prisma = undefined;
-}
+
 
 export const db =
   globalThis.prisma ||

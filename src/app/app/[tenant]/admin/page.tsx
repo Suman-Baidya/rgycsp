@@ -28,6 +28,7 @@ import { auth } from "@/auth";
 import { StatCard } from "@/components/dashboard/StatCard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { unstable_cache } from "next/cache";
 
 function formatRelativeTime(date: Date | string): string {
   const now = new Date();
@@ -43,6 +44,122 @@ function formatRelativeTime(date: Date | string): string {
   return new Date(date).toLocaleDateString("en-IN", { month: "short", day: "numeric" });
 }
 
+const getCachedWorkspaceWithCounts = unstable_cache(
+  async (subdomain: string) => {
+    return db.workspace.findUnique({
+      where: { subdomain },
+      include: {
+        _count: {
+          select: {
+            studentProfiles: true,
+            courses: true,
+            batches: true,
+            roles: true,
+            admissionApps: true,
+          }
+        }
+      }
+    });
+  },
+  ['franchise-workspace-with-counts'],
+  { revalidate: 30, tags: ['franchise-workspace'] }
+);
+
+const getCachedFranchiseDashboardMetrics = unstable_cache(
+  async (workspaceId: string) => {
+    const now = new Date();
+    const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const sixMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 5, 1);
+
+    const [
+      pendingAdmissionsCount,
+      unreviewedLeadsCount,
+      thisMonthAdmissionsCount,
+      lastMonthAdmissionsCount,
+      recentApplications,
+      coursesWithBatches,
+      sixMonthAdmissions,
+      recentStudents
+    ] = await Promise.all([
+      db.admissionApplication.count({
+        where: { workspaceId, status: "PENDING" }
+      }),
+      db.visitorLead.count({
+        where: { workspaceId, status: "NEW" }
+      }),
+      db.studentProfile.count({
+        where: { workspaceId, admissionDate: { gte: thisMonthStart } }
+      }),
+      db.studentProfile.count({
+        where: {
+          workspaceId,
+          admissionDate: { gte: lastMonthStart, lt: thisMonthStart }
+        }
+      }),
+      db.admissionApplication.findMany({
+        where: { workspaceId },
+        orderBy: { createdAt: "desc" },
+        take: 5,
+        select: {
+          id: true,
+          applicationNo: true,
+          fullName: true,
+          mobile: true,
+          appliedCourse: true,
+          status: true,
+          createdAt: true,
+          course: { select: { title: true } }
+        }
+      }),
+      db.course.findMany({
+        where: { workspaceId, isActive: true },
+        select: {
+          title: true,
+          batches: {
+            select: {
+              _count: { select: { students: true } }
+            }
+          }
+        }
+      }),
+      db.studentProfile.findMany({
+        where: {
+          workspaceId,
+          admissionDate: { gte: sixMonthsAgo }
+        },
+        select: { admissionDate: true }
+      }),
+      db.studentProfile.findMany({
+        where: { workspaceId },
+        orderBy: { admissionDate: "desc" },
+        take: 5,
+        select: {
+          id: true,
+          fullName: true,
+          enrollmentNo: true,
+          admissionDate: true,
+          status: true,
+          course: { select: { title: true } }
+        }
+      })
+    ]);
+
+    return {
+      pendingAdmissionsCount,
+      unreviewedLeadsCount,
+      thisMonthAdmissionsCount,
+      lastMonthAdmissionsCount,
+      recentApplications,
+      coursesWithBatches,
+      sixMonthAdmissions,
+      recentStudents
+    };
+  },
+  ['franchise-admin-metrics'],
+  { revalidate: 30, tags: ['franchise-metrics'] }
+);
+
 export default async function WorkspaceAdminDashboard({
   params
 }: {
@@ -50,20 +167,7 @@ export default async function WorkspaceAdminDashboard({
 }) {
   const { tenant } = await params;
   
-  const workspace = await db.workspace.findUnique({
-    where: { subdomain: tenant?.toLowerCase() },
-    include: {
-      _count: {
-        select: {
-          studentProfiles: true,
-          courses: true,
-          batches: true,
-          roles: true,
-          admissionApps: true,
-        }
-      }
-    }
-  });
+  const workspace = await getCachedWorkspaceWithCounts(tenant?.toLowerCase());
 
   if (!workspace) {
     throw new Error("Workspace not found");
@@ -95,71 +199,17 @@ export default async function WorkspaceAdminDashboard({
 
   const hasAccess = (page: string) => userRole === "ADMIN" || userPermissions.includes(page);
 
-  // Time boundaries for dynamic month-over-month comparisons
-  const now = new Date();
-  const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-  const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-  const sixMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 5, 1);
-
-  // Dynamic parallel data queries
-  const [
+  // Dynamic cached data queries
+  const {
     pendingAdmissionsCount,
     unreviewedLeadsCount,
     thisMonthAdmissionsCount,
     lastMonthAdmissionsCount,
     recentApplications,
     coursesWithBatches,
-    sixMonthAdmissions
-  ] = await Promise.all([
-    db.admissionApplication.count({
-      where: { workspaceId: workspace.id, status: "PENDING" }
-    }),
-    db.visitorLead.count({
-      where: { workspaceId: workspace.id, status: "NEW" }
-    }),
-    db.studentProfile.count({
-      where: { workspaceId: workspace.id, admissionDate: { gte: thisMonthStart } }
-    }),
-    db.studentProfile.count({
-      where: {
-        workspaceId: workspace.id,
-        admissionDate: { gte: lastMonthStart, lt: thisMonthStart }
-      }
-    }),
-    db.admissionApplication.findMany({
-      where: { workspaceId: workspace.id },
-      orderBy: { createdAt: "desc" },
-      take: 5,
-      select: {
-        id: true,
-        applicationNo: true,
-        fullName: true,
-        mobile: true,
-        appliedCourse: true,
-        status: true,
-        createdAt: true,
-        course: { select: { title: true } }
-      }
-    }),
-    db.course.findMany({
-      where: { workspaceId: workspace.id, isActive: true },
-      select: {
-        title: true,
-        batches: {
-          select: {
-            _count: { select: { students: true } }
-          }
-        }
-      }
-    }),
-    db.studentProfile.findMany({
-      where: {
-        workspaceId: workspace.id,
-        admissionDate: { gte: sixMonthsAgo }
-      },
-      select: { admissionDate: true }
-    })
-  ]);
+    sixMonthAdmissions,
+    recentStudents
+  } = await getCachedFranchiseDashboardMetrics(workspace.id);
 
   // If no online applications yet, fallback to recent student enrollments
   let recentPipelineItems: {
@@ -181,20 +231,6 @@ export default async function WorkspaceAdminDashboard({
       timeText: formatRelativeTime(app.createdAt)
     }));
   } else {
-    const recentStudents = await db.studentProfile.findMany({
-      where: { workspaceId: workspace.id },
-      orderBy: { admissionDate: "desc" },
-      take: 5,
-      select: {
-        id: true,
-        fullName: true,
-        enrollmentNo: true,
-        admissionDate: true,
-        status: true,
-        course: { select: { title: true } }
-      }
-    });
-
     recentPipelineItems = recentStudents.map(student => ({
       id: student.id,
       name: student.fullName,

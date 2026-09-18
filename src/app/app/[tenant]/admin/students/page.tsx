@@ -1,6 +1,8 @@
 import { db } from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import { getStudents } from "@/app/actions/students";
+import { getBatches } from "@/app/actions/batches";
+import { getCourses } from "@/app/actions/courses";
 import StudentsManagementClient from "./StudentsManagementClient";
 
 export default async function StudentsPage({
@@ -19,34 +21,27 @@ export default async function StudentsPage({
     notFound();
   }
 
-  const studentsResult = await getStudents(workspace.id);
-  
-  const batches = await db.batch.findMany({
-    where: { workspaceId: workspace.id },
-    include: {
-      course: { select: { title: true } },
-      _count: { select: { students: true } }
-    },
-    orderBy: { createdAt: "desc" }
-  });
+  const [studentsResult, batchesResult, coursesResult, paymentConfig] = await Promise.all([
+    getStudents(workspace!.id),
+    getBatches(workspace!.id),
+    getCourses(workspace!.id),
+    db.franchisePaymentConfig.findUnique({
+      where: { workspaceId: workspace!.id }
+    })
+  ]);
 
-  const courses = await db.course.findMany({
-    where: { workspaceId: workspace.id, isActive: true },
-    select: { id: true, title: true }
-  });
-
-  const paymentConfig = await db.franchisePaymentConfig.findUnique({
-    where: { workspaceId: workspace.id }
-  });
+  const courses = (coursesResult.data ?? [])
+    .filter((c: any) => c.isActive)
+    .map((c: any) => ({ id: c.id, title: c.title }));
 
   return (
     <StudentsManagementClient 
-      workspaceId={workspace.id}
+      workspaceId={workspace!.id}
       initialStudents={studentsResult.data ?? []}
-      batches={batches}
+      batches={batchesResult.data ?? []}
       courses={courses}
       paymentConfig={paymentConfig}
-      hasDocumentAuthority={workspace.hasDocumentAuthority}
+      hasDocumentAuthority={workspace!.hasDocumentAuthority}
     />
   );
 }

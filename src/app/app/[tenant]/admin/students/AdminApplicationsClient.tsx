@@ -38,6 +38,7 @@ import { cn } from "@/lib/utils";
 import { updateApplicationStatus } from "@/app/actions/admission";
 import Image from "next/image";
 import { ApplicationDetailsModal } from "./ApplicationDetailsModal";
+import { useDebounce } from "@/hooks/useDebounce";
 
 export function AdminApplicationsClient({ 
   workspaceId, 
@@ -48,6 +49,7 @@ export function AdminApplicationsClient({
 }: any) {
   const [data, setData] = useState(initialData);
   const [searchTerm, setSearchTerm] = useState("");
+  const debouncedSearch = useDebounce(searchTerm, 250);
   const [statusFilter, setStatusFilter] = useState<"ALL" | "PENDING" | "APPROVED" | "REJECTED">("ALL");
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedApp, setSelectedApp] = useState<any>(null);
@@ -62,18 +64,18 @@ export function AdminApplicationsClient({
   const itemsPerPage = 12;
 
   const filteredData = useMemo(() => {
+    const q = debouncedSearch.toLowerCase().trim();
     return data.filter((app: any) => {
       const matchStatus = statusFilter === "ALL" || app.status === statusFilter;
       if (!matchStatus) return false;
-      if (!searchTerm.trim()) return true;
-      const q = searchTerm.toLowerCase();
+      if (!q) return true;
       return (
         app.fullName?.toLowerCase().includes(q) ||
         app.applicationNo?.toLowerCase().includes(q) ||
         app.appliedCourse?.toLowerCase().includes(q)
       );
     });
-  }, [data, statusFilter, searchTerm]);
+  }, [data, statusFilter, debouncedSearch]);
 
   const totalPages = Math.max(1, Math.ceil(filteredData.length / itemsPerPage));
   const paginatedData = useMemo(() => {

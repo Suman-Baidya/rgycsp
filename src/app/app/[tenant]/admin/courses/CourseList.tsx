@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useState, useMemo, useEffect } from "react";
+import Image from "next/image";
+import { useDebounce } from "@/hooks/useDebounce";
 import {
   Search, BookOpen, Layers, Users, Eye,
   ArrowUpDown, CheckCircle2, XCircle, GraduationCap, 
@@ -36,6 +38,7 @@ export default function CourseList({
   tenant: string;
 }) {
   const [searchTerm, setSearchTerm] = useState("");
+  const debouncedSearchTerm = useDebounce(searchTerm, 250);
   const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' } | null>(null);
   
   // Edit / Pricing Modal state
@@ -66,7 +69,6 @@ export default function CourseList({
   const [mounted, setMounted] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
-  
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
 
   const categories = useMemo(() => {
@@ -86,10 +88,11 @@ export default function CourseList({
       result = result.filter(c => c.groupId === selectedCategory);
     }
     
-    if (searchTerm) {
+    if (debouncedSearchTerm) {
+      const q = debouncedSearchTerm.toLowerCase();
       result = result.filter(c => 
-        (c.name?.toLowerCase().includes(searchTerm.toLowerCase()) || false) ||
-        (c.short?.toLowerCase().includes(searchTerm.toLowerCase()) || false)
+        (c.name?.toLowerCase().includes(q) || false) ||
+        (c.short?.toLowerCase().includes(q) || false)
       );
     }
 
@@ -104,7 +107,7 @@ export default function CourseList({
     }
 
     return result;
-  }, [initialCourses, searchTerm, sortConfig, selectedCategory]);
+  }, [initialCourses, debouncedSearchTerm, sortConfig, selectedCategory]);
 
   const totalPages = Math.max(1, Math.ceil(processedCourses.length / itemsPerPage));
   const paginatedCourses = useMemo(() => {
@@ -274,9 +277,15 @@ export default function CourseList({
                     <td className="px-3.5 py-2.5 text-xs text-slate-400 font-medium">{serialNumber}</td>
                     <td className="px-3.5 py-2.5">
                       <div className="flex items-center gap-2.5">
-                        <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary shrink-0 overflow-hidden shadow-xs border border-slate-100 dark:border-slate-800">
+                        <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary shrink-0 overflow-hidden shadow-xs border border-slate-100 dark:border-slate-800 relative">
                           {globalCourse.banner ? (
-                            <img src={globalCourse.banner} alt={globalCourse.name} className="w-full h-full object-cover" />
+                            <Image 
+                              src={globalCourse.banner} 
+                              alt={globalCourse.name} 
+                              width={40} 
+                              height={40} 
+                              className="w-full h-full object-cover" 
+                            />
                           ) : (
                             <BookOpen className="w-4 h-4" />
                           )}
@@ -439,10 +448,12 @@ export default function CourseList({
           {/* Header Banner / Title */}
           <div className="relative bg-slate-900 text-white p-4 sm:p-5 overflow-hidden">
             {selectedView?.course?.banner && (
-              <img 
+              <Image 
                 src={selectedView.course.banner} 
                 alt="" 
-                className="absolute inset-0 w-full h-full object-cover opacity-20 filter blur-xs" 
+                fill
+                sizes="672px"
+                className="object-cover opacity-20 filter blur-xs" 
               />
             )}
             <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-3">

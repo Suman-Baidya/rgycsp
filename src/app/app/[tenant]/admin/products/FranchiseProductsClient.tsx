@@ -25,6 +25,8 @@ import { getPincodeDetails } from "@/app/actions/pincode";
 import { cn } from "@/lib/utils";
 import { ImageUpload } from "@/components/ui/ImageUpload";
 import { Card, CardContent } from "@/components/ui/card";
+import Image from "next/image";
+import { useDebounce } from "@/hooks/useDebounce";
 
 export default function FranchiseProductsClient({ 
   workspaceId,
@@ -41,6 +43,7 @@ export default function FranchiseProductsClient({
 }) {
   const [activeTab, setActiveTab] = useState<"store" | "orders" | "config">("store");
   const [searchTerm, setSearchTerm] = useState("");
+  const debouncedSearchTerm = useDebounce(searchTerm, 250);
   const [selectedCategory, setSelectedCategory] = useState("All");
   
   // Cart & Checkout State
@@ -78,7 +81,7 @@ export default function FranchiseProductsClient({
 
   React.useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm, activeTab, selectedCategory]);
+  }, [debouncedSearchTerm, activeTab, selectedCategory]);
 
   const activeProducts = useMemo(() => {
     return initialProducts.filter(p => p.isActive && p.variants?.length > 0);
@@ -93,22 +96,25 @@ export default function FranchiseProductsClient({
   }, [activeProducts]);
 
   const filteredProducts = useMemo(() => {
+    const query = debouncedSearchTerm.toLowerCase().trim();
     return activeProducts.filter(p => {
-      const matchesSearch = p.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
-        (p.description && p.description.toLowerCase().includes(searchTerm.toLowerCase()));
+      const matchesSearch = !query || p.title.toLowerCase().includes(query) || 
+        (p.description && p.description.toLowerCase().includes(query));
       const matchesCat = selectedCategory === "All" || p.category === selectedCategory;
       return matchesSearch && matchesCat;
     });
-  }, [activeProducts, searchTerm, selectedCategory]);
+  }, [activeProducts, debouncedSearchTerm, selectedCategory]);
 
   const filteredOrders = useMemo(() => {
+    const query = debouncedSearchTerm.toLowerCase().trim();
     return initialOrders.filter(o => {
       return (
-        o.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        o.items?.some((i: any) => i.productVariant?.product?.title.toLowerCase().includes(searchTerm.toLowerCase()))
+        !query ||
+        o.id.toLowerCase().includes(query) ||
+        o.items?.some((i: any) => i.productVariant?.product?.title.toLowerCase().includes(query))
       );
     });
-  }, [initialOrders, searchTerm]);
+  }, [initialOrders, debouncedSearchTerm]);
 
   const openProductModal = (product: any) => {
     setSelectedProduct(product);
@@ -528,10 +534,12 @@ export default function FranchiseProductsClient({
                     {/* Image Area */}
                     <div className="relative h-44 w-full bg-slate-50 dark:bg-slate-800/40 flex items-center justify-center overflow-hidden">
                       {product.image ? (
-                        <img 
+                        <Image 
                           src={product.image} 
                           alt={product.title} 
-                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" 
+                          fill
+                          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                          className="object-cover transition-transform duration-500 group-hover:scale-105" 
                         />
                       ) : (
                         <Package className="h-10 w-10 text-slate-300 dark:text-slate-600 transition-transform duration-500 group-hover:scale-110" />
@@ -754,12 +762,18 @@ export default function FranchiseProductsClient({
               {/* Product Top Header */}
               <div className="relative h-40 w-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center overflow-hidden">
                 {selectedProduct.image ? (
-                  <img src={selectedProduct.image} alt={selectedProduct.title} className="w-full h-full object-cover" />
+                  <Image 
+                    src={selectedProduct.image} 
+                    alt={selectedProduct.title} 
+                    fill
+                    sizes="(max-width: 768px) 100vw, 450px"
+                    className="object-cover" 
+                  />
                 ) : (
                   <Package className="h-10 w-10 text-slate-300 dark:text-slate-600" />
                 )}
                 {selectedProduct.category && (
-                  <span className="absolute top-2.5 left-2.5 text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-black/70 text-white backdrop-blur-md">
+                  <span className="absolute top-2.5 left-2.5 z-10 text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-black/70 text-white backdrop-blur-md">
                     {selectedProduct.category}
                   </span>
                 )}
@@ -976,8 +990,13 @@ export default function FranchiseProductsClient({
 
                 {initialConfig?.paymentQrCode ? (
                   <div className="flex flex-col items-center p-3 border border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50 dark:bg-slate-800/40">
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Headquarters Payment QR</p>
-                    <img src={initialConfig.paymentQrCode} alt="Payment QR Code" className="w-36 h-36 rounded-lg object-contain bg-white p-1.5 shadow-xs border border-slate-200" />
+                    <Image 
+                      src={initialConfig.paymentQrCode} 
+                      alt="Payment QR Code" 
+                      width={144}
+                      height={144}
+                      className="w-36 h-36 rounded-lg object-contain bg-white p-1.5 shadow-xs border border-slate-200" 
+                    />
                   </div>
                 ) : (
                   <div className="p-3 border border-amber-500/20 rounded-xl bg-amber-500/10 text-amber-600 text-xs font-medium text-center">
@@ -1067,9 +1086,15 @@ export default function FranchiseProductsClient({
                   {selectedOrder.items?.map((item: any) => (
                     <div key={item.id} className="flex items-center justify-between p-2.5 rounded-lg bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800 text-xs">
                       <div className="flex items-center gap-2.5">
-                        <div className="w-8 h-8 rounded-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 flex items-center justify-center overflow-hidden shrink-0">
+                        <div className="relative w-8 h-8 rounded-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 flex items-center justify-center overflow-hidden shrink-0">
                           {item.productVariant?.product?.image ? (
-                            <img src={item.productVariant.product.image} alt="" className="w-full h-full object-cover" />
+                            <Image 
+                              src={item.productVariant.product.image} 
+                              alt="" 
+                              fill
+                              sizes="32px"
+                              className="object-cover" 
+                            />
                           ) : (
                             <Package className="w-4 h-4 text-slate-400" />
                           )}

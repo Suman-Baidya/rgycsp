@@ -2,7 +2,6 @@
 
 import { db } from "@/lib/prisma";
 import { auth } from "@/auth";
-import * as XLSX from "xlsx";
 
 function getDateRanges(range: string = "30d") {
   const now = new Date();
@@ -772,6 +771,7 @@ export async function exportAnalyticsToExcel(filters: { workspaceId?: string; da
   ]);
 
   // Build workbook
+  const XLSX = await import("xlsx");
   const wb = XLSX.utils.book_new();
 
   // Sheet 1: Summary

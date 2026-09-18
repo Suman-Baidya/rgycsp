@@ -1,19 +1,32 @@
-export default function GlobalLoading() {
+import { Skeleton } from "@/components/ui/skeleton";
+
+export default function RootLoading() {
   return (
-    <div className="flex flex-col items-center justify-center min-h-[60vh] w-full p-8 font-sans">
-      <div className="relative flex items-center justify-center w-16 h-16">
-        {/* Outer Background Track */}
-        <div className="absolute inset-0 rounded-full border-2 border-slate-100 dark:border-zinc-800/50" />
-        {/* Outer Rotating Gradient Ring */}
-        <div className="absolute inset-0 rounded-full border-2 border-transparent border-t-primary border-r-primary/50 animate-spin" />
-        {/* Center Pulsing Core */}
-        <div className="w-3.5 h-3.5 rounded-full bg-primary animate-pulse shadow-sm shadow-primary/50" />
+    <div className="w-full min-h-[60vh] max-w-7xl mx-auto p-4 sm:p-6 md:p-8 space-y-8 animate-in fade-in duration-300">
+      {/* Hero Skeleton */}
+      <div className="space-y-4 text-center max-w-2xl mx-auto py-12">
+        <Skeleton className="h-6 w-32 mx-auto rounded-full" />
+        <Skeleton className="h-10 sm:h-12 w-3/4 mx-auto rounded-xl" />
+        <Skeleton className="h-4 w-full max-w-md mx-auto rounded-lg" />
+        <div className="flex justify-center gap-3 pt-4">
+          <Skeleton className="h-10 w-32 rounded-lg" />
+          <Skeleton className="h-10 w-32 rounded-lg" />
+        </div>
       </div>
 
-      <div className="mt-4 flex flex-col items-center gap-2">
-        <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400 animate-pulse">
-          Loading...
-        </p>
+      {/* Grid Showcase Skeleton */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 pt-6">
+        {[1, 2, 3, 4, 5, 6].map((i) => (
+          <div key={i} className="p-4 rounded-2xl border border-slate-100 dark:border-slate-800 space-y-3">
+            <Skeleton className="h-48 w-full rounded-xl" />
+            <Skeleton className="h-5 w-3/4 rounded" />
+            <Skeleton className="h-4 w-1/2 rounded" />
+            <div className="flex justify-between items-center pt-2">
+              <Skeleton className="h-6 w-20 rounded-full" />
+              <Skeleton className="h-8 w-24 rounded-lg" />
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );

@@ -42,10 +42,8 @@ export async function getNotifications(param?: string | NotificationQueryOptions
 
     // Resolve workspace ID from tenant if not explicitly provided
     if (!targetWorkspaceId && options.tenant && options.tenant !== "super-admin") {
-      const ws = await db.workspace.findUnique({
-        where: { subdomain: options.tenant.toLowerCase() },
-        select: { id: true },
-      });
+      const { getWorkspaceByTenant } = await import("@/lib/workspace");
+      const ws = await getWorkspaceByTenant(options.tenant);
       if (ws) {
         targetWorkspaceId = ws.id;
       }

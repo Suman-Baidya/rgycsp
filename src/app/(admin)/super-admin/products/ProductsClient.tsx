@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
+import { useDebounce } from "@/hooks/useDebounce";
 import {
   Search,
   Plus,
@@ -81,6 +82,7 @@ export default function ProductsClient({
 }) {
   const [activeTab, setActiveTab] = useState<"catalog" | "orders" | "config">("catalog");
   const [searchTerm, setSearchTerm] = useState("");
+  const debouncedSearchTerm = useDebounce(searchTerm, 250);
   const [open, setOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -118,7 +120,7 @@ export default function ProductsClient({
 
   React.useEffect(() => {
     setCurrentPageOrders(1);
-  }, [searchTerm, activeTab]);
+  }, [debouncedSearchTerm, activeTab]);
 
   const [formData, setFormData] = useState({
     title: "",
@@ -152,20 +154,27 @@ export default function ProductsClient({
     }
   };
 
-  const filteredProducts = initialProducts.filter((p) =>
-    p.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (p.category && p.category.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
-
-  const filteredOrders = initialOrders.filter((o) => {
-    const term = searchTerm.toLowerCase();
-    const franchiseName = o.workspace?.name?.toLowerCase() || "";
-    const orderId = o.id?.toLowerCase() || "";
-    const itemsMatch = o.items?.some((item: any) =>
-      item.productVariant?.product?.title?.toLowerCase().includes(term)
+  const filteredProducts = useMemo(() => {
+    if (!debouncedSearchTerm.trim()) return initialProducts;
+    const term = debouncedSearchTerm.toLowerCase().trim();
+    return initialProducts.filter((p) =>
+      p.title?.toLowerCase().includes(term) ||
+      (p.category && p.category.toLowerCase().includes(term))
     );
-    return franchiseName.includes(term) || orderId.includes(term) || itemsMatch;
-  });
+  }, [initialProducts, debouncedSearchTerm]);
+
+  const filteredOrders = useMemo(() => {
+    if (!debouncedSearchTerm.trim()) return initialOrders;
+    const term = debouncedSearchTerm.toLowerCase().trim();
+    return initialOrders.filter((o) => {
+      const franchiseName = o.workspace?.name?.toLowerCase() || "";
+      const orderId = o.id?.toLowerCase() || "";
+      if (franchiseName.includes(term) || orderId.includes(term)) return true;
+      return o.items?.some((item: any) =>
+        item.productVariant?.product?.title?.toLowerCase().includes(term)
+      );
+    });
+  }, [initialOrders, debouncedSearchTerm]);
 
   const handleProductSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

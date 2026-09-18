@@ -14,6 +14,7 @@ import { Settings, Building2, Link as LinkIcon, Edit2, ShieldCheck, Shield, Netw
 import { AdminPageHeader } from "@/components/layout/AdminPageHeader";
 import { cn } from "@/lib/utils";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { useDebounce } from "@/hooks/useDebounce";
 
 export function StateManagerClient({ initialManagers, franchises, allWithdrawals = [] }: { initialManagers: any[], franchises: any[], allWithdrawals?: any[] }) {
   const [managers, setManagers] = useState(initialManagers);
@@ -26,6 +27,7 @@ export function StateManagerClient({ initialManagers, franchises, allWithdrawals
   
   // Search & Filters
   const [searchQuery, setSearchQuery] = useState("");
+  const debouncedSearch = useDebounce(searchQuery, 250);
   const [showOnlyLinked, setShowOnlyLinked] = useState(false);
   
   // Pagination
@@ -66,17 +68,18 @@ export function StateManagerClient({ initialManagers, franchises, allWithdrawals
   const historyWithdrawals = useMemo(() => allWithdrawals.filter(w => w.status !== 'PENDING'), [allWithdrawals]);
   const [withdrawalTab, setWithdrawalTab] = useState<"pending" | "history">("pending");
   const [historySearchQuery, setHistorySearchQuery] = useState("");
+  const debouncedHistorySearch = useDebounce(historySearchQuery, 250);
 
   const filteredHistoryWithdrawals = useMemo(() => {
-    if (!historySearchQuery) return historyWithdrawals;
-    const q = historySearchQuery.toLowerCase();
+    if (!debouncedHistorySearch) return historyWithdrawals;
+    const q = debouncedHistorySearch.toLowerCase().trim();
     return historyWithdrawals.filter(w => {
       const nameMatch = w.workspace?.name?.toLowerCase().includes(q) || false;
       const refMatch = w.workspace?.ownReferralId?.toLowerCase().includes(q) || false;
       const dateMatch = new Date(w.createdAt).toLocaleString().toLowerCase().includes(q) || false;
       return nameMatch || refMatch || dateMatch;
     });
-  }, [historyWithdrawals, historySearchQuery]);
+  }, [historyWithdrawals, debouncedHistorySearch]);
 
   const handlePromote = async () => {
     if (!promoteForm.workspaceId || !promoteForm.referralId) return toast.error("Please fill required fields");
@@ -212,11 +215,13 @@ export function StateManagerClient({ initialManagers, franchises, allWithdrawals
   
   // Memoized Lists & Pagination logic
   const filteredManagers = useMemo(() => {
+    const q = debouncedSearch.toLowerCase().trim();
+    if (!q) return managers;
     return managers.filter(m => 
-      m.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-      (m.ownReferralId && m.ownReferralId.toLowerCase().includes(searchQuery.toLowerCase()))
+      m.name?.toLowerCase().includes(q) || 
+      (m.ownReferralId && m.ownReferralId.toLowerCase().includes(q))
     );
-  }, [managers, searchQuery]);
+  }, [managers, debouncedSearch]);
 
   const totalPagesManagers = Math.ceil(filteredManagers.length / itemsPerPage);
   const paginatedManagers = useMemo(() => {
@@ -225,12 +230,14 @@ export function StateManagerClient({ initialManagers, franchises, allWithdrawals
   }, [filteredManagers, currentPageManagers, itemsPerPage]);
 
   const filteredHierarchy = useMemo(() => {
+    const q = debouncedSearch.toLowerCase().trim();
     return normalFranchises.filter(f => {
-      const matchesSearch = f.name.toLowerCase().includes(searchQuery.toLowerCase()) || f.subdomain.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesLink = showOnlyLinked ? f.referredBy !== null : true;
-      return matchesSearch && matchesLink;
+      if (!matchesLink) return false;
+      if (!q) return true;
+      return f.name?.toLowerCase().includes(q) || f.subdomain?.toLowerCase().includes(q);
     });
-  }, [normalFranchises, searchQuery, showOnlyLinked]);
+  }, [normalFranchises, debouncedSearch, showOnlyLinked]);
 
   const totalPagesHierarchy = Math.ceil(filteredHierarchy.length / itemsPerPage);
   const paginatedHierarchy = useMemo(() => {
@@ -250,9 +257,9 @@ export function StateManagerClient({ initialManagers, franchises, allWithdrawals
     return filteredHistoryWithdrawals.slice(start, start + itemsPerPageWithdrawals);
   }, [filteredHistoryWithdrawals, currentPageHistory]);
 
-  React.useEffect(() => { setCurrentPageManagers(1); }, [searchQuery, itemsPerPage]);
-  React.useEffect(() => { setCurrentPageHierarchy(1); }, [searchQuery, showOnlyLinked, itemsPerPage]);
-  React.useEffect(() => { setCurrentPageHistory(1); }, [historySearchQuery]);
+  React.useEffect(() => { setCurrentPageManagers(1); }, [debouncedSearch, itemsPerPage]);
+  React.useEffect(() => { setCurrentPageHierarchy(1); }, [debouncedSearch, showOnlyLinked, itemsPerPage]);
+  React.useEffect(() => { setCurrentPageHistory(1); }, [debouncedHistorySearch]);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(amount);

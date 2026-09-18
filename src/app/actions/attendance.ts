@@ -129,41 +129,56 @@ export async function saveAttendance(
       const absentStudentIds = records.filter(r => r.status === "ABSENT").map(r => r.studentId);
       
       if (absentStudentIds.length > 0) {
-        for (const studentId of absentStudentIds) {
-          const statsResult = await getStudentAttendanceStats(studentId);
-          if (statsResult.success && statsResult.data) {
-             const stat = type === "THEORY" ? statsResult.data.THEORY : statsResult.data.PRACTICAL;
-             if (stat.totalDays > 0 && stat.percentage < threshold) {
-               const profile = await db.studentProfile.findUnique({ where: { id: studentId }, select: { userId: true, fullName: true } });
-               if (profile) {
-                 // Send to Admin (userId is null for workspace admins)
-                 await db.notification.create({
-                   data: {
-                     workspaceId,
-                     title: "Low Attendance Alert",
-                     message: `Student ${profile.fullName}'s ${type.toLowerCase()} attendance has dropped to ${stat.percentage}%.`,
-                     type: "WARNING",
-                     link: `/app/${settings?.workspace?.subdomain}/admin/students/${studentId}`
-                   }
-                 });
-                 
-                 // Send to Student if they have a userId
-                 if (profile.userId) {
-                   await db.notification.create({
-                     data: {
-                       workspaceId,
-                       userId: profile.userId,
-                       title: "Low Attendance Alert",
-                       message: `Your ${type.toLowerCase()} attendance has dropped to ${stat.percentage}%. Please ensure you attend upcoming classes.`,
-                       type: "WARNING",
-                       link: "/student/attendance"
-                     }
-                   });
-                 }
-               }
-             }
-          }
-        }
+        const profiles = await db.studentProfile.findMany({
+          where: { id: { in: absentStudentIds } },
+          select: { id: true, userId: true, fullName: true }
+        });
+        const profileMap = new Map(profiles.map(p => [p.id, p]));
+
+        await Promise.all(
+          absentStudentIds.map(async (studentId) => {
+            try {
+              const statsResult = await getStudentAttendanceStats(studentId);
+              if (statsResult.success && statsResult.data) {
+                const stat = type === "THEORY" ? statsResult.data.THEORY : statsResult.data.PRACTICAL;
+                if (stat.totalDays > 0 && stat.percentage < threshold) {
+                  const profile = profileMap.get(studentId);
+                  if (profile) {
+                    const alertPromises = [
+                      db.notification.create({
+                        data: {
+                          workspaceId,
+                          title: "Low Attendance Alert",
+                          message: `Student ${profile.fullName}'s ${type.toLowerCase()} attendance has dropped to ${stat.percentage}%.`,
+                          type: "WARNING",
+                          link: `/app/${settings?.workspace?.subdomain}/admin/students/${studentId}`
+                        }
+                      })
+                    ];
+
+                    if (profile.userId) {
+                      alertPromises.push(
+                        db.notification.create({
+                          data: {
+                            workspaceId,
+                            userId: profile.userId,
+                            title: "Low Attendance Alert",
+                            message: `Your ${type.toLowerCase()} attendance has dropped to ${stat.percentage}%. Please ensure you attend upcoming classes.`,
+                            type: "WARNING",
+                            link: "/student/attendance"
+                          }
+                        })
+                      );
+                    }
+                    await Promise.all(alertPromises);
+                  }
+                }
+              }
+            } catch (err) {
+              console.error(`Failed to process low attendance alert for student ${studentId}:`, err);
+            }
+          })
+        );
       }
     }
     // ----------------------------------------

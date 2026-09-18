@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
+import { useDebounce } from "@/hooks/useDebounce";
 import { 
   Building2, 
   Clock, 
@@ -116,8 +117,8 @@ export default function FranchiseApplicationsClient({
     return `${protocol}//${subdomain}.${rootDomain}${path}`;
   };
 
-  // Workspace / Active Centers State
   const [searchWorkspace, setSearchWorkspace] = useState("");
+  const debouncedSearchWorkspace = useDebounce(searchWorkspace, 250);
   const [statusFilter, setStatusFilter] = useState("All");
   const [wsCurrentPage, setWsCurrentPage] = useState(1);
   const [wsOpen, setWsOpen] = useState(false);
@@ -155,6 +156,7 @@ export default function FranchiseApplicationsClient({
 
   // Franchise Applications State
   const [searchTerm, setSearchTerm] = useState<string>("");
+  const debouncedSearchTerm = useDebounce(searchTerm, 250);
   const [filterStatus, setFilterStatus] = useState<string>("ALL");
   const [selectedApp, setSelectedApp] = useState<any>(null);
   const [detailsOpen, setDetailsOpen] = useState<boolean>(false);
@@ -327,16 +329,19 @@ export default function FranchiseApplicationsClient({
   const activeFranchises = initialWorkspaces.filter(ws => ws.isActive !== false).length;
   
   // Filter applications logic
-  const filteredApps = initialApplications.filter(app => {
-    const matchesSearch = 
-      app.centerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      app.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      app.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (app.username && app.username.toLowerCase().includes(searchTerm.toLowerCase()));
+  const filteredApps = useMemo(() => {
+    const q = debouncedSearchTerm.toLowerCase().trim();
+    return initialApplications.filter(app => {
+      const matchesSearch = !q ||
+        app.centerName.toLowerCase().includes(q) ||
+        app.fullName.toLowerCase().includes(q) ||
+        app.email.toLowerCase().includes(q) ||
+        (app.username && app.username.toLowerCase().includes(q));
 
-    if (filterStatus === "ALL") return matchesSearch;
-    return app.status === filterStatus && matchesSearch;
-  });
+      if (filterStatus === "ALL") return matchesSearch;
+      return app.status === filterStatus && matchesSearch;
+    });
+  }, [initialApplications, debouncedSearchTerm, filterStatus]);
 
   const appTotalPages = Math.ceil(filteredApps.length / appItemsPerPage);
   const paginatedApps = filteredApps.slice((appCurrentPage - 1) * appItemsPerPage, appCurrentPage * appItemsPerPage);
@@ -345,20 +350,24 @@ export default function FranchiseApplicationsClient({
   const totalPlatformStudents = initialWorkspaces.reduce((acc, ws) => acc + (ws._count?.studentProfiles || 0), 0);
 
   // Filter workspaces logic
-  const filteredWorkspaces = initialWorkspaces.filter(ws => {
-    const searchLower = searchWorkspace.toLowerCase();
-    const matchesSearch = 
-      ws.name.toLowerCase().includes(searchLower) || 
-      ws.subdomain.toLowerCase().includes(searchLower) ||
-      ws.roles?.[0]?.user?.name?.toLowerCase().includes(searchLower) ||
-      ws.roles?.[0]?.user?.email?.toLowerCase().includes(searchLower) ||
-      ws.roles?.[0]?.user?.username?.toLowerCase().includes(searchLower);
-    
-    const wsStatus = ws.isActive !== false ? "active" : "inactive";
-    const matchesStatus = statusFilter === "All" || wsStatus === statusFilter;
+  const filteredWorkspaces = useMemo(() => {
+    const searchLower = debouncedSearchWorkspace.toLowerCase().trim();
+    return initialWorkspaces.filter(ws => {
+      const wsStatus = ws.isActive !== false ? "active" : "inactive";
+      const matchesStatus = statusFilter === "All" || wsStatus === statusFilter;
+      if (!matchesStatus) return false;
 
-    return matchesSearch && matchesStatus;
-  });
+      if (!searchLower) return true;
+
+      return (
+        ws.name?.toLowerCase().includes(searchLower) || 
+        ws.subdomain?.toLowerCase().includes(searchLower) ||
+        ws.roles?.[0]?.user?.name?.toLowerCase().includes(searchLower) ||
+        ws.roles?.[0]?.user?.email?.toLowerCase().includes(searchLower) ||
+        ws.roles?.[0]?.user?.username?.toLowerCase().includes(searchLower)
+      );
+    });
+  }, [initialWorkspaces, debouncedSearchWorkspace, statusFilter]);
 
   // Workspace pagination logic
   const wsTotalPages = Math.ceil(filteredWorkspaces.length / wsItemsPerPage);
@@ -369,7 +378,7 @@ export default function FranchiseApplicationsClient({
 
   useEffect(() => {
     setWsCurrentPage(1);
-  }, [searchWorkspace, statusFilter]);
+  }, [debouncedSearchWorkspace, statusFilter]);
 
   // Handle manual workspace provisioning
   const handleCreateWorkspace = async (e: React.FormEvent) => {

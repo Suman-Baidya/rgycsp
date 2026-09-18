@@ -14,9 +14,6 @@ export default async function StaffPage({
     where: { subdomain: tenant?.toLowerCase() }
   });
 
-  console.log("STAFF PAGE HIT - params.tenant:", tenant);
-  console.log("Workspace found:", !!workspace);
-
   if (!workspace) notFound();
 
   const staffResult = await getStaff(workspace.id);

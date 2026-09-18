@@ -11,8 +11,10 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
+import Image from "next/image";
 import { cn } from "@/lib/utils";
 import CourseDetailsModal from "@/app/courses/CourseDetailsModal";
+import { useDebounce } from "@/hooks/useDebounce";
 
 interface Course {
   id?: string;
@@ -37,14 +39,18 @@ export function CoursesList({ initialCourses }: { initialCourses: Course[] }) {
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [detailsCourse, setDetailsCourse] = useState<any>(null);
 
+  const debouncedSearch = useDebounce(search, 250);
   const categories = ["All", ...Array.from(new Set(initialCourses.map(c => c.category).filter(Boolean)))];
 
-  const filteredCourses = initialCourses.filter(course => {
-    const matchesSearch = course.title.toLowerCase().includes(search.toLowerCase()) || 
-                         course.description.toLowerCase().includes(search.toLowerCase());
-    const matchesCategory = selectedCategory === "All" || course.category === selectedCategory;
-    return matchesSearch && matchesCategory;
-  });
+  const filteredCourses = React.useMemo(() => {
+    return initialCourses.filter(course => {
+      const q = debouncedSearch.toLowerCase();
+      const matchesSearch = !q || course.title.toLowerCase().includes(q) || 
+                           (course.description && course.description.toLowerCase().includes(q));
+      const matchesCategory = selectedCategory === "All" || course.category === selectedCategory;
+      return matchesSearch && matchesCategory;
+    });
+  }, [initialCourses, debouncedSearch, selectedCategory]);
 
   return (
     <div className="space-y-12">
@@ -128,10 +134,13 @@ export function CoursesList({ initialCourses }: { initialCourses: Course[] }) {
               {viewMode === "grid" ? (
                 <Card className="group overflow-hidden border-border/40 hover:border-primary/30 transition-all hover:shadow-2xl hover:shadow-primary/5 rounded-[2.5rem] bg-white dark:bg-zinc-900 flex flex-col h-full">
                   <div className="relative aspect-[16/10] overflow-hidden">
-                    <img 
+                    <Image 
                       src={course.image || "https://images.unsplash.com/photo-1509228468518-180dd48a5f5f?q=80&w=2070"} 
                       alt={course.title} 
-                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
+                      fill
+                      loading="lazy"
+                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                      className="object-cover transition-transform duration-700 group-hover:scale-110" 
                     />
                     <div className="absolute top-6 left-6">
                       <span className="bg-white/90 dark:bg-zinc-900/90 backdrop-blur-md text-primary px-4 py-1.5 rounded-full text-[10px] font-black tracking-[0.2em] shadow-xl uppercase border border-white/20">
@@ -218,11 +227,14 @@ export function CoursesList({ initialCourses }: { initialCourses: Course[] }) {
                 </Card>
               ) : (
                 <Card className="group overflow-hidden border-border/40 hover:border-primary/30 transition-all hover:shadow-2xl hover:shadow-primary/5 rounded-[2.5rem] bg-white dark:bg-zinc-900 flex flex-col md:flex-row h-full">
-                  <div className="relative w-full md:w-80 overflow-hidden">
-                    <img 
+                  <div className="relative w-full md:w-80 min-h-[200px] overflow-hidden">
+                    <Image 
                       src={course.image || "https://images.unsplash.com/photo-1509228468518-180dd48a5f5f?q=80&w=2070"} 
                       alt={course.title} 
-                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
+                      fill
+                      loading="lazy"
+                      sizes="(max-width: 768px) 100vw, 320px"
+                      className="object-cover transition-transform duration-700 group-hover:scale-110" 
                     />
                     <div className="absolute top-6 left-6">
                       <span className="bg-white/90 dark:bg-zinc-900/90 backdrop-blur-md text-primary px-3 py-1 rounded-full text-[8px] font-black tracking-widest shadow-lg uppercase border border-white/20">

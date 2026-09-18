@@ -2,6 +2,7 @@ import { db } from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import { getStudents } from "@/app/actions/students";
 import { getPendingFeePayments } from "@/app/actions/payments";
+import { getCachedGlobalSettings } from "@/lib/settings";
 import FeesManagementClient from "./FeesManagementClient";
 
 export default async function FeesPage({
@@ -21,20 +22,23 @@ export default async function FeesPage({
     return null;
   }
 
-  const studentsResult = await getStudents(workspace.id);
-  const pendingFeesResult = await getPendingFeePayments(workspace.id);
-  
-  const paymentConfig = await db.franchisePaymentConfig.findUnique({
-    where: { workspaceId: workspace.id }
-  });
-
-  const siteSettings = await db.siteSettings.findUnique({
-    where: { workspaceId: workspace.id }
-  });
-
-  const globalSiteSettings = await db.siteSettings.findFirst({
-    where: { workspaceId: null }
-  });
+  const [
+    studentsResult,
+    pendingFeesResult,
+    paymentConfig,
+    siteSettings,
+    globalSiteSettings
+  ] = await Promise.all([
+    getStudents(workspace.id),
+    getPendingFeePayments(workspace.id),
+    db.franchisePaymentConfig.findUnique({
+      where: { workspaceId: workspace.id }
+    }),
+    db.siteSettings.findUnique({
+      where: { workspaceId: workspace.id }
+    }),
+    getCachedGlobalSettings()
+  ]);
 
   const workspaceInfo = {
     name: siteSettings?.siteName || workspace.name,

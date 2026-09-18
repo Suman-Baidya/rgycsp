@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
+import { useDebounce } from "@/hooks/useDebounce";
 import { UserPlus, Search, ShieldCheck, Mail, Shield, Eye, Pencil, Loader2, BookOpen, Users, LayoutDashboard, Calendar, Wallet, Settings, GraduationCap, ShoppingCart, Activity, Ban, Trash2, MoreVertical, MoreHorizontal, UserCircle, MapPin, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -50,6 +51,7 @@ export default function StaffList({
   initialStaff: any[];
 }) {
   const [searchTerm, setSearchTerm] = useState("");
+  const debouncedSearch = useDebounce(searchTerm, 250);
   const [open, setOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -73,10 +75,14 @@ export default function StaffList({
     permissions: [] as string[]
   });
 
-  const filteredStaff = initialStaff.filter(s => 
-    s.user.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    s.user.email?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredStaff = useMemo(() => {
+    if (!debouncedSearch.trim()) return initialStaff;
+    const query = debouncedSearch.toLowerCase().trim();
+    return initialStaff.filter(s => 
+      s.user?.name?.toLowerCase().includes(query) ||
+      s.user?.email?.toLowerCase().includes(query)
+    );
+  }, [initialStaff, debouncedSearch]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

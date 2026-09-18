@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { AdminPageHeader } from "@/components/layout/AdminPageHeader";
 import { UserPlus, FileText, Settings, BarChart, Layers, Trash2, CheckCircle2, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -35,8 +35,8 @@ export default function AdmissionsDashboardClient({
   const [editingOnlineApp, setEditingOnlineApp] = useState<any>(null);
   const [confirmCleanup, setConfirmCleanup] = useState(false);
 
-  const draftsCount = applications.filter(a => a.status === "DRAFT").length;
-  const approvedCount = applications.filter(a => a.status === "APPROVED").length;
+  const draftsCount = useMemo(() => applications.filter(a => a.status === "DRAFT").length, [applications]);
+  const approvedCount = useMemo(() => applications.filter(a => a.status === "APPROVED").length, [applications]);
 
   const handleCleanupClick = () => {
     setConfirmCleanup(true);

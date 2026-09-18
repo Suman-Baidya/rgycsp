@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
+import { useDebounce } from "@/hooks/useDebounce";
 import { 
   Plus, 
   Search, 
@@ -88,6 +89,7 @@ export default function StudentList({
   hasDocumentAuthority?: boolean;
 }) {
   const [searchTerm, setSearchTerm] = useState("");
+  const debouncedSearchTerm = useDebounce(searchTerm, 250);
   const [open, setOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState<any>(null);
@@ -561,7 +563,7 @@ export default function StudentList({
 
   const filteredStudents = useMemo(() => {
     return initialStudents.filter((s: any) => {
-      const term = searchTerm.toLowerCase().trim();
+      const term = debouncedSearchTerm.toLowerCase().trim();
       const matchesSearch = !term ||
                             s.fullName?.toLowerCase().includes(term) ||
                             s.enrollmentNo?.toLowerCase().includes(term) ||
@@ -572,7 +574,7 @@ export default function StudentList({
       const matchesBatch = selectedBatchId === "all" || s.batchId === selectedBatchId;
       return matchesSearch && matchesStatus && matchesBatch;
     });
-  }, [initialStudents, searchTerm, status, selectedBatchId]);
+  }, [initialStudents, debouncedSearchTerm, status, selectedBatchId]);
 
   const totalPages = Math.max(1, Math.ceil(filteredStudents.length / itemsPerPage));
   const paginatedStudents = useMemo(() => {

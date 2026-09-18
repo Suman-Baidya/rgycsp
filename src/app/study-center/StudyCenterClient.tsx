@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
+import { useDebounce } from "@/hooks/useDebounce";
 import { Search, Building2, ChevronRight, ChevronLeft, MapPin, Globe, CheckCircle2, Clock, BookOpen } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -15,7 +16,7 @@ import {
 } from "@/components/ui/table";
 import { motion, AnimatePresence } from "framer-motion";
 import { getTenantLink } from "@/lib/routing";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   Dialog,
   DialogContent,
@@ -48,9 +49,11 @@ interface StudyCenterClientProps {
 
 export function StudyCenterClient({ initialCenters, contentSection }: StudyCenterClientProps) {
   const [searchQuery, setSearchQuery] = useState("");
+  const debouncedSearchQuery = useDebounce(searchQuery, 250);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
   const pathname = usePathname();
+  const router = useRouter();
 
   const [selectedCenterId, setSelectedCenterId] = useState<string | null>(null);
   const [selectedCenterName, setSelectedCenterName] = useState("");
@@ -58,6 +61,7 @@ export function StudyCenterClient({ initialCenters, contentSection }: StudyCente
   const [isCoursesLoading, setIsCoursesLoading] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [courseSearch, setCourseSearch] = useState("");
+  const debouncedCourseSearch = useDebounce(courseSearch, 250);
 
   const getSubdomainUrl = (subdomain: string) => {
     if (typeof window === "undefined") return `/app/${subdomain}`;
@@ -80,7 +84,7 @@ export function StudyCenterClient({ initialCenters, contentSection }: StudyCente
   const handleFindCourse = async (center: Center) => {
     if (center.isSubdomainEnabled) {
       // Normal routing to their landing page
-      window.location.href = getTenantLink("/courses", center.subdomain, pathname);
+      router.push(getTenantLink("/courses", center.subdomain, pathname));
       return;
     }
 
@@ -101,9 +105,9 @@ export function StudyCenterClient({ initialCenters, contentSection }: StudyCente
   };
 
   const filteredCenters = useMemo(() => {
-    if (!searchQuery) return initialCenters;
+    if (!debouncedSearchQuery.trim()) return initialCenters;
     
-    const query = searchQuery.toLowerCase().trim();
+    const query = debouncedSearchQuery.toLowerCase().trim();
     return initialCenters.filter(center => 
       (center.name && center.name.toLowerCase().includes(query)) ||
       (center.centerCode && center.centerCode.toLowerCase().includes(query)) ||
@@ -112,11 +116,20 @@ export function StudyCenterClient({ initialCenters, contentSection }: StudyCente
       (center.state && center.state.toLowerCase().includes(query)) ||
       (center.siteSettings?.address && center.siteSettings.address.toLowerCase().includes(query))
     );
-  }, [initialCenters, searchQuery]);
+  }, [initialCenters, debouncedSearchQuery]);
+
+  const filteredModalCourses = useMemo(() => {
+    if (!debouncedCourseSearch.trim()) return courses;
+    const q = debouncedCourseSearch.toLowerCase().trim();
+    return courses.filter(c => 
+      c.title?.toLowerCase().includes(q) || 
+      c.category?.toLowerCase().includes(q)
+    );
+  }, [courses, debouncedCourseSearch]);
 
   React.useEffect(() => {
     setCurrentPage(1);
-  }, [searchQuery]);
+  }, [debouncedSearchQuery]);
 
   const totalPages = Math.max(1, Math.ceil(filteredCenters.length / itemsPerPage));
   const paginatedCenters = filteredCenters.slice(
@@ -381,9 +394,9 @@ export function StudyCenterClient({ initialCenters, contentSection }: StudyCente
                 <div className="animate-spin rounded-full h-10 w-10 border-b-4 border-primary"></div>
                 <p className="text-slate-500 font-medium animate-pulse">Loading curriculum...</p>
               </div>
-            ) : courses.filter(c => c.title.toLowerCase().includes(courseSearch.toLowerCase()) || c.category.toLowerCase().includes(courseSearch.toLowerCase())).length > 0 ? (
+            ) : filteredModalCourses.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {courses.filter(c => c.title.toLowerCase().includes(courseSearch.toLowerCase()) || c.category.toLowerCase().includes(courseSearch.toLowerCase())).map(course => (
+                {filteredModalCourses.map(course => (
                   <div key={course.id} className="relative group overflow-hidden border border-slate-200/60 dark:border-slate-800/60 rounded-2xl p-5 bg-white dark:bg-slate-900/40 hover:border-primary/40 transition-all duration-300 hover:shadow-lg hover:shadow-primary/5 flex flex-col h-full">
                     <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-[40px] -z-10 group-hover:bg-primary/10 transition-colors duration-500"></div>
                     

@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
+import { useDebounce } from "@/hooks/useDebounce";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -22,6 +23,7 @@ export default function StudentsResultTab({ students, courses, batches }: { stud
   const [selectedBatch, setSelectedBatch] = useState<string>("all");
   const [selectedCourse, setSelectedCourse] = useState<string>("all");
   const [search, setSearch] = useState("");
+  const debouncedSearch = useDebounce(search, 250);
   const [marksState, setMarksState] = useState<Record<string, { marksObtained: number, maxMarks: number }>>({});
   const [isSaving, setIsSaving] = useState<Record<string, boolean>>({});
   const [openDialogs, setOpenDialogs] = useState<Record<string, boolean>>({});
@@ -30,14 +32,17 @@ export default function StudentsResultTab({ students, courses, batches }: { stud
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [search, selectedBatch, selectedCourse]);
+  }, [debouncedSearch, selectedBatch, selectedCourse]);
 
-  const filteredStudents = students.filter(s => {
-    if (selectedBatch !== "all" && s.batchId !== selectedBatch) return false;
-    if (selectedCourse !== "all" && s.courseId !== selectedCourse) return false;
-    if (search && !s.user?.name?.toLowerCase().includes(search.toLowerCase()) && !s.fullName?.toLowerCase().includes(search.toLowerCase())) return false;
-    return true;
-  });
+  const filteredStudents = useMemo(() => {
+    const q = debouncedSearch.toLowerCase().trim();
+    return students.filter(s => {
+      if (selectedBatch !== "all" && s.batchId !== selectedBatch) return false;
+      if (selectedCourse !== "all" && s.courseId !== selectedCourse) return false;
+      if (q && !s.user?.name?.toLowerCase().includes(q) && !s.fullName?.toLowerCase().includes(q)) return false;
+      return true;
+    });
+  }, [students, selectedBatch, selectedCourse, debouncedSearch]);
 
   const totalPages = Math.ceil(filteredStudents.length / itemsPerPage);
   const paginatedStudents = filteredStudents.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);

@@ -24,12 +24,16 @@ interface ChartProps {
 const COLORS = ["#4f46e5", "#06b6d4", "#10b981", "#f59e0b", "#ec4899", "#8b5cf6"];
 
 export function AdminDashboardCharts({ admissionData, studentDistData }: ChartProps) {
-  const totalStudentsInDist = (studentDistData || []).reduce(
-    (acc, curr) => acc + (Number(curr.value) || 0),
-    0
-  );
+  const totalStudentsInDist = React.useMemo(() => {
+    return (studentDistData || []).reduce(
+      (acc, curr) => acc + (Number(curr.value) || 0),
+      0
+    );
+  }, [studentDistData]);
 
-  const activeDistData = (studentDistData || []).filter((d) => d.value > 0);
+  const activeDistData = React.useMemo(() => {
+    return (studentDistData || []).filter((d) => d.value > 0);
+  }, [studentDistData]);
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4">

@@ -51,6 +51,7 @@ import {
 import { getTenantLink } from "@/lib/routing";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { useDebounce } from "@/hooks/useDebounce";
 
 interface StudentNoticesClientProps {
   notices?: any[];
@@ -166,6 +167,7 @@ export default function StudentNoticesClient({
 
   // Search, Category, and Sorting state
   const [search, setSearch] = useState("");
+  const debouncedSearch = useDebounce(search, 250);
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [sortBy, setSortBy] = useState<"newest" | "oldest">("newest");
   const [currentPage, setCurrentPage] = useState(1);
@@ -185,12 +187,14 @@ export default function StudentNoticesClient({
 
   // Filtered and Sorted notices
   const filteredNotices = useMemo(() => {
+    const query = debouncedSearch.toLowerCase().trim();
     let result = allNotices.filter((notice: any) => {
       const matchesSearch =
-        notice.title?.toLowerCase().includes(search.toLowerCase()) ||
-        notice.description?.toLowerCase().includes(search.toLowerCase()) ||
-        notice.category?.toLowerCase().includes(search.toLowerCase()) ||
-        notice.department?.toLowerCase().includes(search.toLowerCase());
+        !query ||
+        notice.title?.toLowerCase().includes(query) ||
+        notice.description?.toLowerCase().includes(query) ||
+        notice.category?.toLowerCase().includes(query) ||
+        notice.department?.toLowerCase().includes(query);
 
       const matchesCategory =
         selectedCategory === "all" ||
@@ -206,7 +210,7 @@ export default function StudentNoticesClient({
     });
 
     return result;
-  }, [allNotices, search, selectedCategory, sortBy]);
+  }, [allNotices, debouncedSearch, selectedCategory, sortBy]);
 
   // Metrics Calculation
   const metrics = useMemo(() => {

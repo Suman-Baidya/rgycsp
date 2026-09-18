@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState, useTransition } from "react";
+import React, { useState, useMemo, useTransition } from "react";
+import { useDebounce } from "@/hooks/useDebounce";
 import {
   Users,
   Globe,
@@ -128,6 +129,7 @@ export function SuperAdminAnalyticsClient({ initialData }: SuperAdminAnalyticsPr
   const [data, setData] = useState(initialData);
   const [leads, setLeads] = useState<LeadItem[]>(initialData.recentLeads);
   const [searchQuery, setSearchQuery] = useState("");
+  const debouncedSearch = useDebounce(searchQuery, 250);
   const [leadStatusFilter, setLeadStatusFilter] = useState("ALL");
   const [isPending, startTransition] = useTransition();
   const [isExporting, startExport] = useTransition();
@@ -266,26 +268,30 @@ export function SuperAdminAnalyticsClient({ initialData }: SuperAdminAnalyticsPr
     });
   };
 
-  // Filtered Leads
-  const filteredLeads = leads.filter((lead) => {
-    const q = searchQuery.toLowerCase();
-    const matchesSearch =
-      lead.name.toLowerCase().includes(q) ||
-      (lead.phone && lead.phone.includes(q)) ||
-      lead.workspaceName.toLowerCase().includes(q) ||
-      (lead.intent && lead.intent.toLowerCase().includes(q));
-
-    const matchesStatus = leadStatusFilter === "ALL" || lead.status === leadStatusFilter;
-    return matchesSearch && matchesStatus;
-  });
+  // Filtered Leads (debounced + memoized)
+  const filteredLeads = useMemo(() => {
+    const q = debouncedSearch.toLowerCase();
+    return leads.filter((lead) => {
+      if (leadStatusFilter !== "ALL" && lead.status !== leadStatusFilter) return false;
+      if (!q) return true;
+      return (
+        lead.name.toLowerCase().includes(q) ||
+        (lead.phone && lead.phone.includes(q)) ||
+        lead.workspaceName.toLowerCase().includes(q) ||
+        (lead.intent && lead.intent.toLowerCase().includes(q))
+      );
+    });
+  }, [leads, debouncedSearch, leadStatusFilter]);
 
   const storageDisplayMB = (data.storageStats.estimatedSizeKB / 1024).toFixed(2);
 
-  // Peak activity calculation
+  // Peak activity calculation (memoized)
   const hourlyData = data.hourlyActivity || [];
-  const peakHourItem = hourlyData.length > 0
-    ? [...hourlyData].sort((a, b) => b.views - a.views)[0]
-    : null;
+  const peakHourItem = useMemo(
+    () => (hourlyData.length > 0 ? [...hourlyData].sort((a, b) => b.views - a.views)[0] : null),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [data.hourlyActivity]
+  );
 
   return (
     <div className={`space-y-4 sm:space-y-5 pb-8 w-full mx-auto transition-opacity duration-200 ${isPending ? "opacity-75 pointer-events-none" : "opacity-100"}`}>

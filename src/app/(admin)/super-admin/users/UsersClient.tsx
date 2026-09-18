@@ -82,6 +82,7 @@ import {
 } from "@/components/ui/dialog";
 import { createGlobalUser, updateGlobalUserPermissions, restrictUser, deleteUser, changeUserPassword } from "@/app/actions/users";
 import { Checkbox } from "@/components/ui/checkbox";
+import { useDebounce } from "@/hooks/useDebounce";
 
 export default function UsersClient({ initialUsers }: { initialUsers: any[] }) {
   const [mounted, setMounted] = useState(false);
@@ -90,6 +91,7 @@ export default function UsersClient({ initialUsers }: { initialUsers: any[] }) {
   
   // Search, Filter & Pagination State
   const [searchQuery, setSearchQuery] = useState("");
+  const debouncedSearch = useDebounce(searchQuery, 250);
   const [typeFilter, setTypeFilter] = useState("All User"); // All User, All Staff, All Admin
   const [statusFilter, setStatusFilter] = useState("All"); // active, inactive
   const [currentPage, setCurrentPage] = useState(1);
@@ -312,31 +314,32 @@ export default function UsersClient({ initialUsers }: { initialUsers: any[] }) {
 
   // Sorting & Filtering logic
   const filteredUsers = useMemo(() => {
+    const searchLower = debouncedSearch.toLowerCase().trim();
+
     return initialUsers.filter(user => {
       const isStudent = !!user.studentProfile;
       if (isStudent) return false; // Hide students from the table view
 
-      const searchLower = searchQuery.toLowerCase();
+      const isAdmin = user.role === "SUPER_ADMIN";
+      const isStaff = user.workspaceRoles?.length > 0;
+
+      if (typeFilter === "All Staff" && !isStaff) return false;
+      if (typeFilter === "All Admin" && !isAdmin) return false;
+
+      if (!searchLower) return true;
+
       const workspaceMatch = user.workspaceRoles?.some((wr: any) => 
         wr.workspace?.name?.toLowerCase().includes(searchLower)
       );
 
-      const matchesSearch = 
+      return (
         user.name?.toLowerCase().includes(searchLower) || 
         user.email?.toLowerCase().includes(searchLower) ||
         user.username?.toLowerCase().includes(searchLower) ||
-        workspaceMatch;
-      
-      const isAdmin = user.role === "SUPER_ADMIN";
-      const isStaff = user.workspaceRoles?.length > 0;
-
-      let matchesType = true;
-      if (typeFilter === "All Staff") matchesType = isStaff;
-      if (typeFilter === "All Admin") matchesType = isAdmin;
-
-      return matchesSearch && matchesType;
+        workspaceMatch
+      );
     });
-  }, [initialUsers, searchQuery, typeFilter]);
+  }, [initialUsers, debouncedSearch, typeFilter]);
 
   // Pagination
   const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
@@ -347,7 +350,7 @@ export default function UsersClient({ initialUsers }: { initialUsers: any[] }) {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchQuery, typeFilter, statusFilter]);
+  }, [debouncedSearch, typeFilter, statusFilter]);
 
   if (!mounted) return null;
 

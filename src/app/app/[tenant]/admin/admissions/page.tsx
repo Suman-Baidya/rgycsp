@@ -37,13 +37,15 @@ export default async function AdmissionsPage({
 
   if (!workspace) notFound();
 
-  const configResult = await getAdmissionConfig(workspace.id);
-  const pendingCount = await db.admissionApplication.count({
-    where: { 
-      workspaceId: workspace.id,
-      status: "PENDING"
-    }
-  });
+  const [configResult, pendingCount] = await Promise.all([
+    getAdmissionConfig(workspace.id),
+    db.admissionApplication.count({
+      where: { 
+        workspaceId: workspace.id,
+        status: "PENDING"
+      }
+    })
+  ]);
 
   return (
     <AdmissionsDashboardClient 

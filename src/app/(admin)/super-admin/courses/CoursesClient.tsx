@@ -122,13 +122,13 @@ export default function CoursesClient({
   useEffect(() => {
     if (!isMounted.current) {
       isMounted.current = true;
-      fetchGroups();
-      fetchStats();
+      if (!initialGroups?.length) fetchGroups();
+      if (!initialStats) fetchStats();
       return;
     }
     const timeout = setTimeout(fetchCourses, 300);
     return () => clearTimeout(timeout);
-  }, [search, group, page, fetchCourses, fetchGroups, fetchStats]);
+  }, [search, group, page, fetchCourses, fetchGroups, fetchStats, initialGroups, initialStats]);
 
   const handleDeleteClick = (course: any) => {
     setCourseToDelete(course);

@@ -43,6 +43,7 @@ import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } f
 import { StatCard } from "@/components/dashboard/StatCard";
 import { AdminPageHeader } from "@/components/layout/AdminPageHeader";
 import Link from "next/link";
+import { useDebounce } from "@/hooks/useDebounce";
 
 const COLORS = [
   "#8b5cf6", // Violet
@@ -120,11 +121,16 @@ export default function SuperAdminOverviewClient({
   threatCheckCount
 }: SuperAdminOverviewClientProps) {
   const [searchQuery, setSearchQuery] = React.useState("");
+  const debouncedSearch = useDebounce(searchQuery, 250);
 
-  const filteredActivity = recentActivity.filter(act => 
-    act.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    act.message.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredActivity = React.useMemo(() => {
+    const q = debouncedSearch.toLowerCase().trim();
+    if (!q) return recentActivity;
+    return recentActivity.filter(act => 
+      act.title.toLowerCase().includes(q) ||
+      act.message.toLowerCase().includes(q)
+    );
+  }, [recentActivity, debouncedSearch]);
 
   return (
     <div className="space-y-4 sm:space-y-5 pb-8 w-full mx-auto">

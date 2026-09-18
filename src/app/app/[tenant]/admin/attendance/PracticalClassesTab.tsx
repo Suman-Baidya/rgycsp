@@ -27,7 +27,6 @@ export default function PracticalClassesTab({ workspaceId }: { workspaceId: stri
   }, [schedules]);
   const [isLoading, setIsLoading] = useState(true);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const [searchQuery, setSearchQuery] = useState("");
 
   // Configuration Modal
   const [isConfiguring, setIsConfiguring] = useState(false);

@@ -1,6 +1,10 @@
 import { db } from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
+import { getCachedGlobalSettings } from "@/lib/settings";
+import { getStudents } from "@/app/actions/students";
+import { getCourses } from "@/app/actions/courses";
+import { getBatches } from "@/app/actions/batches";
 import ExamGeneratorClient from "./ExamGeneratorClient";
 
 export default async function AIExamGeneratorPage({
@@ -16,57 +20,44 @@ export default async function AIExamGeneratorPage({
     select: { id: true, tokensBalance: true, name: true, logoUrl: true }
   });
 
-  const superAdminSettings = await db.siteSettings.findFirst({
-    where: { workspaceId: null }
-  });
-  const superAdminName = superAdminSettings?.siteName || "RGYCSP";
-
   if (!workspace) notFound();
 
-  const exams = await db.exam.findMany({
-    where: { workspaceId: workspace.id },
-    include: {
-      shifts: {
-        include: { _count: { select: { enrollments: true } } }
+  const [
+    superAdminSettings,
+    exams,
+    coursesResult,
+    batchesResult,
+    studentsResult,
+    chapters
+  ] = await Promise.all([
+    getCachedGlobalSettings(),
+    db.exam.findMany({
+      where: { workspaceId: workspace.id },
+      include: {
+        shifts: { include: { _count: { select: { enrollments: true } } } },
+        course: { select: { title: true } }
       },
-      course: { select: { title: true } }
-    },
-    orderBy: { createdAt: "desc" }
-  });
-
-  const courses = await db.course.findMany({
-    where: { workspaceId: workspace.id, isActive: true },
-    select: { id: true, title: true, topics: true }
-  });
-
-  const batches = await db.batch.findMany({
-    where: { workspaceId: workspace.id },
-    select: { id: true, name: true, courseId: true }
-  });
-
-  const students = await db.studentProfile.findMany({
-    where: { workspaceId: workspace.id },
-    include: {
-      semesters: {
-        include: { marks: true }
+      orderBy: { createdAt: "desc" }
+    }),
+    getCourses(workspace.id),
+    getBatches(workspace.id),
+    getStudents(workspace.id),
+    db.chapter.findMany({
+      where: { workspaceId: workspace.id },
+      include: {
+        questions: { orderBy: { createdAt: "desc" } },
+        _count: { select: { questions: true } }
       },
-      user: true,
-      batch: true,
-      course: true,
-      workspace: true,
-      examEnrollments: true
-    },
-    orderBy: { createdAt: "desc" }
-  });
+      orderBy: { createdAt: "desc" }
+    })
+  ]);
 
-  const chapters = await db.chapter.findMany({
-    where: { workspaceId: workspace.id },
-    include: {
-      questions: { orderBy: { createdAt: "desc" } },
-      _count: { select: { questions: true } }
-    },
-    orderBy: { createdAt: "desc" }
-  });
+  const superAdminName = superAdminSettings?.siteName || "RGYCSP";
+  const courses = (coursesResult.data ?? [])
+    .filter((c: any) => c.isActive)
+    .map((c: any) => ({ id: c.id, title: c.title, topics: c.topics }));
+  const batches = (batchesResult.data ?? [])
+    .map((b: any) => ({ id: b.id, name: b.name, courseId: b.courseId }));
 
   return (
     <Suspense fallback={<div className="p-10 flex justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div></div>}>
@@ -78,7 +69,7 @@ export default async function AIExamGeneratorPage({
         exams={exams}
         courses={courses}
         batches={batches}
-        students={students}
+        students={studentsResult.data ?? []}
         chapters={chapters}
       />
     </Suspense>

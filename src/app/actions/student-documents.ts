@@ -1,12 +1,20 @@
 "use server";
 
 import { db } from "@/lib/prisma";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, unstable_cache } from "next/cache";
 import { isValidIssueGap, isValidMarksheetGap, getRequiredMarksheetCount, getExpectedUnitsForSemester } from "@/lib/course-utils";
+
+const getCachedRegistrationConfig = unstable_cache(
+  async () => {
+    return await db.registrationConfig.findFirst();
+  },
+  ["global-registration-config"],
+  { revalidate: 1800, tags: ["registration-config"] }
+);
 
 export async function getPendingDocumentRequestsCount() {
   try {
-    const config = await db.registrationConfig.findFirst();
+    const config = await getCachedRegistrationConfig();
     const minutes = config?.autoIssueAfterRequestMinutes || 60;
     const thresholdDate = new Date();
     thresholdDate.setMinutes(thresholdDate.getMinutes() - minutes);

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
+import { useDebounce } from "@/hooks/useDebounce";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -70,6 +71,7 @@ export default function StudentFeesClient({
 
   const [filterStatus, setFilterStatus] = useState<string>("ALL");
   const [searchQuery, setSearchQuery] = useState("");
+  const debouncedSearchQuery = useDebounce(searchQuery, 250);
   const [copiedUpi, setCopiedUpi] = useState(false);
   const [copiedBank, setCopiedBank] = useState(false);
 
@@ -86,19 +88,25 @@ export default function StudentFeesClient({
 
   // Filtered invoices
   const filteredInvoices = useMemo(() => {
+    const q = debouncedSearchQuery.trim().toLowerCase();
+    const qUpper = debouncedSearchQuery.trim().toUpperCase();
+
     return invoices.filter((inv) => {
       const matchesStatus = filterStatus === "ALL" || inv.status === filterStatus;
+      if (!matchesStatus) return false;
+      if (!q) return true;
+
       const refId = inv.id?.slice(-8).toUpperCase() || "";
-      const feeType = inv.feeType || "";
-      const notes = inv.notes || "";
-      const matchesSearch =
-        searchQuery === "" ||
-        refId.includes(searchQuery.toUpperCase()) ||
-        feeType.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        notes.toLowerCase().includes(searchQuery.toLowerCase());
-      return matchesStatus && matchesSearch;
+      const feeType = inv.feeType?.toLowerCase() || "";
+      const notes = inv.notes?.toLowerCase() || "";
+
+      return (
+        refId.includes(qUpper) ||
+        feeType.includes(q) ||
+        notes.includes(q)
+      );
     });
-  }, [invoices, filterStatus, searchQuery]);
+  }, [invoices, filterStatus, debouncedSearchQuery]);
 
   const totalPages = Math.max(1, Math.ceil(filteredInvoices.length / pageSize));
   const paginatedInvoices = useMemo(() => {

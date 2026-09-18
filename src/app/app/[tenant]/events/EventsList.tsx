@@ -8,18 +8,22 @@ import { Input } from "@/components/ui/input";
 import { Calendar, MapPin, Clock, Search, SlidersHorizontal, ArrowUpDown, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
+import Image from "next/image";
+import { useDebounce } from "@/hooks/useDebounce";
 
 export function EventsList({ events }: { events: any[] }) {
   const [filter, setFilter] = useState("All");
   const [sort, setSort] = useState("newest");
   const [search, setSearch] = useState("");
+  const debouncedSearch = useDebounce(search, 250);
 
   const categories = ["All", ...Array.from(new Set(events.map(e => e.category).filter(Boolean)))];
 
   const filteredEvents = events
     .filter(e => {
-      const matchesSearch = e.title.toLowerCase().includes(search.toLowerCase()) || 
-                           (e.category && e.category.toLowerCase().includes(search.toLowerCase()));
+      const q = debouncedSearch.toLowerCase();
+      const matchesSearch = !q || e.title.toLowerCase().includes(q) || 
+                           (e.category && e.category.toLowerCase().includes(q));
       const matchesFilter = filter === "All" || e.category === filter;
       return matchesSearch && matchesFilter;
     })
@@ -86,10 +90,13 @@ export function EventsList({ events }: { events: any[] }) {
             >
               <Card className="group overflow-hidden border-border/40 hover:border-primary/30 transition-all hover:shadow-2xl hover:shadow-primary/5 rounded-[2.5rem] bg-white dark:bg-zinc-900 h-full flex flex-col">
                 <div className="relative aspect-[16/10] overflow-hidden">
-                  <img 
+                  <Image 
                     src={event.image || "https://images.unsplash.com/photo-1514525253361-bee8718a74a2?q=80&w=2070"} 
                     alt={event.title} 
-                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
+                    fill
+                    loading="lazy"
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                    className="object-cover transition-transform duration-700 group-hover:scale-110" 
                   />
                   <div className="absolute top-6 left-6">
                     <div className="bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md px-5 py-4 rounded-3xl text-center shadow-xl border border-white/20 min-w-[80px]">

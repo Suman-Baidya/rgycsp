@@ -2,6 +2,7 @@
 
 import React, { useState, useMemo, useRef } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import {
   User,
@@ -1108,9 +1109,11 @@ export default function StudentProfileClient({
                     {/* Student Photo */}
                     <div className="w-18 h-22 sm:w-20 sm:h-24 rounded-lg overflow-hidden border-2 border-slate-900 bg-slate-100 shadow-sm shrink-0 flex items-center justify-center">
                       {student?.image || profile?.admissionApp?.photoUrl ? (
-                        <img
+                        <Image
                           src={student?.image || profile?.admissionApp?.photoUrl}
                           alt="Student"
+                          width={80}
+                          height={96}
                           className="w-full h-full object-cover"
                         />
                       ) : (

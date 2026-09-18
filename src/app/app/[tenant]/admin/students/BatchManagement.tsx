@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { useDebounce } from "@/hooks/useDebounce";
 import { useRouter } from "next/navigation";
 import { 
   Plus, 
@@ -50,6 +51,7 @@ export default function BatchManagement({
   const router = useRouter();
   const [batches, setBatches] = useState(initialBatches);
   const [search, setSearch] = useState("");
+  const debouncedSearch = useDebounce(search, 250);
   const [courseFilter, setCourseFilter] = useState("all");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -70,8 +72,8 @@ export default function BatchManagement({
   });
 
   const filteredBatches = useMemo(() => {
+    const q = debouncedSearch.toLowerCase().trim();
     return batches.filter(b => {
-      const q = search.toLowerCase();
       const matchesSearch = 
         !q ||
         b.name?.toLowerCase().includes(q) ||
@@ -85,7 +87,7 @@ export default function BatchManagement({
 
       return matchesSearch && matchesCourse;
     });
-  }, [batches, search, courseFilter]);
+  }, [batches, debouncedSearch, courseFilter]);
 
   const handleOpenModal = (batch?: any) => {
     if (batch) {

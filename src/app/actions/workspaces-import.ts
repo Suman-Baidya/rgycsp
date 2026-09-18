@@ -9,6 +9,23 @@ export async function importWorkspacesCSV(rows: any[]) {
   let successCount = 0;
   let failureCount = 0;
 
+  // Batch pre-fetch existing subdomains and users to eliminate N+1 queries
+  const incomingSubdomains = rows.map(r => r.subdomain?.trim().toLowerCase()).filter(Boolean);
+  const incomingEmails = rows.map(r => r.ownerEmail?.trim().toLowerCase()).filter(Boolean);
+
+  const [existingWorkspaces, existingUsers] = await Promise.all([
+    db.workspace.findMany({
+      where: { subdomain: { in: incomingSubdomains } },
+      select: { subdomain: true },
+    }),
+    db.user.findMany({
+      where: { email: { in: incomingEmails } },
+    }),
+  ]);
+
+  const existingSubdomainsSet = new Set(existingWorkspaces.map(w => w.subdomain.toLowerCase()));
+  const existingUsersMap = new Map(existingUsers.filter(u => u.email).map(u => [u.email!.toLowerCase(), u]));
+
   for (const [index, row] of rows.entries()) {
     try {
       const { 
@@ -39,12 +56,10 @@ export async function importWorkspacesCSV(rows: any[]) {
         continue;
       }
 
-      // Check if subdomain exists
-      const existingWorkspace = await db.workspace.findUnique({
-        where: { subdomain },
-      });
+      const normalizedSubdomain = subdomain.trim().toLowerCase();
 
-      if (existingWorkspace) {
+      // Check if subdomain exists in memory
+      if (existingSubdomainsSet.has(normalizedSubdomain)) {
         results.push({ 
           row: index + 1, 
           success: false, 
@@ -57,10 +72,8 @@ export async function importWorkspacesCSV(rows: any[]) {
       // Generate centerCode if not provided
       const codeToUse = centerCode || `WB-${String(Math.floor(100 + Math.random() * 900))}`;
 
-      // Check if user exists, or create user
-      let user = await db.user.findUnique({
-        where: { email: ownerEmail },
-      });
+      // Check if user exists in memory, or create user
+      let user = existingUsersMap.get(ownerEmail.trim().toLowerCase());
 
       if (!user) {
         const passwordHash = await bcrypt.hash(ownerPassword, 10);

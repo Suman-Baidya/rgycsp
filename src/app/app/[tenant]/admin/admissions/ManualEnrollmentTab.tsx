@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
+import { useDebounce } from "@/hooks/useDebounce";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
@@ -36,6 +37,7 @@ export default function ManualEnrollmentTab({
   const [selectedDraftIds, setSelectedDraftIds] = useState<string[]>([]);
   
   const [searchTerm, setSearchTerm] = useState("");
+  const debouncedSearchTerm = useDebounce(searchTerm, 250);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
   
@@ -50,11 +52,15 @@ export default function ManualEnrollmentTab({
     isOpen: false, title: "", description: "", actionLabel: "", actionVariant: "default", onConfirm: () => {}
   });
 
-  const filteredDrafts = drafts.filter(draft => 
-    (draft.fullName || "").toLowerCase().includes(searchTerm.toLowerCase()) || 
-    (draft.applicationNo || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (draft.mobile || "").includes(searchTerm)
-  );
+  const filteredDrafts = useMemo(() => {
+    if (!debouncedSearchTerm.trim()) return drafts;
+    const q = debouncedSearchTerm.toLowerCase().trim();
+    return drafts.filter(draft => 
+      (draft.fullName || "").toLowerCase().includes(q) || 
+      (draft.applicationNo || "").toLowerCase().includes(q) ||
+      (draft.mobile || "").includes(q)
+    );
+  }, [drafts, debouncedSearchTerm]);
 
   const totalPages = Math.ceil(filteredDrafts.length / itemsPerPage);
   const paginatedDrafts = filteredDrafts.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);

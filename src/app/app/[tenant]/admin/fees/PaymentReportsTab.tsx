@@ -23,7 +23,6 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { getPaymentsReport, getStudentInvoices } from "@/app/actions/payments";
 import { toast } from "sonner";
-import * as XLSX from "xlsx";
 import { cn } from "@/lib/utils";
 
 const ITEMS_PER_PAGE = 12;
@@ -104,28 +103,34 @@ export default function PaymentReportsTab({
     return filteredInvoices.slice(start, start + ITEMS_PER_PAGE);
   }, [filteredInvoices, currentPage]);
 
-  const handleExport = () => {
+  const handleExport = async () => {
     if (filteredInvoices.length === 0) {
       toast.error("No data to export");
       return;
     }
 
-    const exportData = filteredInvoices.map(inv => ({
-      "Payment Date": new Date(inv.paidDate).toLocaleDateString('en-GB'),
-      "Student Name": inv.student?.fullName || "N/A",
-      "Enrollment No": inv.student?.enrollmentNo || "N/A",
-      "Amount": inv.amount,
-      "Fee Type": inv.feeType,
-      "Payment Method": inv.paymentMethod || "N/A",
-      "Notes": inv.notes || ""
-    }));
+    try {
+      const XLSX = await import("xlsx");
+      const exportData = filteredInvoices.map(inv => ({
+        "Payment Date": new Date(inv.paidDate).toLocaleDateString('en-GB'),
+        "Student Name": inv.student?.fullName || "N/A",
+        "Enrollment No": inv.student?.enrollmentNo || "N/A",
+        "Amount": inv.amount,
+        "Fee Type": inv.feeType,
+        "Payment Method": inv.paymentMethod || "N/A",
+        "Notes": inv.notes || ""
+      }));
 
-    const worksheet = XLSX.utils.json_to_sheet(exportData);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Payments");
-    
-    XLSX.writeFile(workbook, `Payment_Report_${filterMode}_${new Date().toISOString().split('T')[0]}.xlsx`);
-    toast.success("Excel report exported successfully");
+      const worksheet = XLSX.utils.json_to_sheet(exportData);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Payments");
+      
+      XLSX.writeFile(workbook, `Payment_Report_${filterMode}_${new Date().toISOString().split('T')[0]}.xlsx`);
+      toast.success("Excel report exported successfully");
+    } catch (err) {
+      console.error("Failed to export excel:", err);
+      toast.error("Failed to export excel file");
+    }
   };
 
   const downloadReceipt = async (invoice: any) => {

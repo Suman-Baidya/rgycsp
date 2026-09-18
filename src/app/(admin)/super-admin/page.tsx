@@ -2,8 +2,8 @@ import React from "react";
 import { db } from "@/lib/prisma";
 import SuperAdminOverviewClient from "./SuperAdminOverviewClient";
 
-function formatTimeAgo(date: Date) {
-  const seconds = Math.floor((new Date().getTime() - date.getTime()) / 1000);
+function formatTimeAgo(date: Date | string) {
+  const seconds = Math.floor((new Date().getTime() - new Date(date).getTime()) / 1000);
   if (seconds < 60) return "just now";
   let interval = Math.floor(seconds / 31536000);
   if (interval >= 1) return `${interval}y ago`;
@@ -18,18 +18,82 @@ function formatTimeAgo(date: Date) {
   return "just now";
 }
 
+import { unstable_cache } from "next/cache";
+
+const getCachedOverviewMetrics = unstable_cache(
+  async () => {
+    const now = new Date();
+    const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+
+    const [
+      totalWorkspaces,
+      activeCenters,
+      totalStudents,
+      tokensSum,
+      recentNotifications,
+      allWorkspaces,
+      thisMonthStudents,
+      lastMonthStudents,
+      thisMonthTokens,
+      lastMonthTokens,
+      statesGroup,
+      totalLeadsCount
+    ] = await Promise.all([
+      db.workspace.count(),
+      db.workspace.count({ where: { isActive: true } }),
+      db.studentProfile.count(),
+      db.workspace.aggregate({ _sum: { tokensBalance: true } }),
+      db.notification.findMany({ take: 5, orderBy: { createdAt: "desc" } }),
+      db.workspace.findMany({ select: { createdAt: true, tokensBalance: true } }),
+      db.studentProfile.count({ where: { admissionDate: { gte: thisMonthStart } } }),
+      db.studentProfile.count({ where: { admissionDate: { gte: lastMonthStart, lt: thisMonthStart } } }),
+      db.walletTransaction.aggregate({
+        where: { createdAt: { gte: thisMonthStart }, type: "CREDIT" },
+        _sum: { amount: true }
+      }),
+      db.walletTransaction.aggregate({
+        where: { createdAt: { gte: lastMonthStart, lt: thisMonthStart }, type: "CREDIT" },
+        _sum: { amount: true }
+      }),
+      db.workspace.groupBy({
+        by: ['state'],
+        _count: { id: true },
+        where: { state: { not: null } },
+        orderBy: { _count: { id: 'desc' } },
+        take: 4
+      }),
+      db.visitorLead.count()
+    ]);
+
+    return {
+      totalWorkspaces,
+      activeCenters,
+      totalStudents,
+      tokensSum,
+      recentNotifications,
+      allWorkspaces,
+      thisMonthStudents,
+      lastMonthStudents,
+      thisMonthTokens,
+      lastMonthTokens,
+      statesGroup,
+      totalLeadsCount,
+      thisMonthStart: thisMonthStart.toISOString(),
+      lastMonthStart: lastMonthStart.toISOString(),
+    };
+  },
+  ["super-admin-overview-metrics"],
+  { revalidate: 60, tags: ["super-admin-overview"] }
+);
+
 export default async function SuperAdminOverviewPage() {
   const now = new Date();
-  const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-  const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-
-  // Measure genuine database round-trip latency
   const dbStart = Date.now();
-  await db.$queryRaw`SELECT 1`;
+  const metrics = await getCachedOverviewMetrics();
   const dbLatencyMs = Math.max(14, Date.now() - dbStart);
 
-  // Fetch live metrics from DB in parallel
-  const [
+  const {
     totalWorkspaces,
     activeCenters,
     totalStudents,
@@ -41,33 +105,9 @@ export default async function SuperAdminOverviewPage() {
     thisMonthTokens,
     lastMonthTokens,
     statesGroup,
-    totalLeadsCount
-  ] = await Promise.all([
-    db.workspace.count(),
-    db.workspace.count({ where: { isActive: true } }),
-    db.studentProfile.count(),
-    db.workspace.aggregate({ _sum: { tokensBalance: true } }),
-    db.notification.findMany({ take: 5, orderBy: { createdAt: "desc" } }),
-    db.workspace.findMany({ select: { createdAt: true, tokensBalance: true } }),
-    db.studentProfile.count({ where: { admissionDate: { gte: thisMonthStart } } }),
-    db.studentProfile.count({ where: { admissionDate: { gte: lastMonthStart, lt: thisMonthStart } } }),
-    db.walletTransaction.aggregate({
-      where: { createdAt: { gte: thisMonthStart }, type: "CREDIT" },
-      _sum: { amount: true }
-    }),
-    db.walletTransaction.aggregate({
-      where: { createdAt: { gte: lastMonthStart, lt: thisMonthStart }, type: "CREDIT" },
-      _sum: { amount: true }
-    }),
-    db.workspace.groupBy({
-      by: ['state'],
-      _count: { id: true },
-      where: { state: { not: null } },
-      orderBy: { _count: { id: 'desc' } },
-      take: 4
-    }),
-    db.visitorLead.count()
-  ]);
+    totalLeadsCount,
+  } = metrics;
+  const lastMonthStart = new Date(metrics.lastMonthStart);
   
   const totalTokens = tokensSum._sum.tokensBalance ?? 0;
 

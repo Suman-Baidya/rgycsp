@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { useDebounce } from "@/hooks/useDebounce";
 import {
    Sparkles, BrainCircuit, Settings2, FileText, CheckCircle2, AlertCircle, Loader2, Plus, UploadCloud, Save, BookOpen, ChevronLeft, ChevronRight, Search, Edit2, Trash2
 } from "lucide-react";
@@ -23,6 +24,7 @@ export default function QuestionPapersTab({ workspaceId, workspaceTokens, course
    const [selectedCourseFilter, setSelectedCourseFilter] = useState("all");
    const [selectedChapterFilter, setSelectedChapterFilter] = useState("all");
    const [searchQuery, setSearchQuery] = useState("");
+   const debouncedSearchQuery = useDebounce(searchQuery, 250);
    const itemsPerPage = 20;
 
    // Selection State
@@ -87,11 +89,11 @@ export default function QuestionPapersTab({ workspaceId, workspaceTokens, course
 
    // Filter questions for table
    const filteredQuestions = useMemo(() => {
+      const query = debouncedSearchQuery.toLowerCase().trim();
       return allQuestions.filter(q => {
          if (selectedCourseFilter !== "all" && q.courseId !== selectedCourseFilter) return false;
          if (selectedChapterFilter !== "all" && q.chapterId !== selectedChapterFilter) return false;
-         if (searchQuery.trim() !== "") {
-            const query = searchQuery.toLowerCase();
+         if (query !== "") {
             return (
                q.questionText?.toLowerCase().includes(query) ||
                q.courseName?.toLowerCase().includes(query) ||
@@ -100,7 +102,7 @@ export default function QuestionPapersTab({ workspaceId, workspaceTokens, course
          }
          return true;
       });
-   }, [allQuestions, selectedCourseFilter, selectedChapterFilter, searchQuery]);
+   }, [allQuestions, selectedCourseFilter, selectedChapterFilter, debouncedSearchQuery]);
 
    // Pagination logic
    const totalPages = Math.ceil(filteredQuestions.length / itemsPerPage) || 1;

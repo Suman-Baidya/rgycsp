@@ -1,16 +1,13 @@
-import { db } from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import { headers } from "next/headers";
 import { auth } from "@/auth";
 import type { Metadata } from "next";
+import { getWorkspaceByTenant } from "@/lib/workspace";
 
 export async function generateMetadata({ params }: { params: Promise<{ tenant: string }> }): Promise<Metadata> {
   const { tenant } = await params;
   
-  const workspace = await db.workspace.findUnique({
-    where: { subdomain: tenant?.toLowerCase() },
-    include: { siteSettings: true }
-  });
+  const workspace = await getWorkspaceByTenant(tenant);
 
   if (!workspace || !workspace.siteSettings) {
     return {};
@@ -51,9 +48,7 @@ export default async function TenantLayout({
   console.log(">>> [DEBUG] REACHED TenantLayout for tenant:", tenant);
   
   // Verify the tenant exists before rendering anything on this subdomain
-  const workspace = await db.workspace.findUnique({
-    where: { subdomain: tenant?.toLowerCase() }
-  });
+  const workspace = await getWorkspaceByTenant(tenant);
 
   if (!workspace || !workspace.isActive) {
     notFound();

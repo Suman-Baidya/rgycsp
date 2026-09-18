@@ -6,16 +6,14 @@ import StudentsClient from "./StudentsClient";
 export const dynamic = "force-dynamic";
 
 export default async function SuperAdminStudentsPage() {
-  // Fetch all students
-  const studentsRes = await getAllPlatformStudents();
+  const [studentsRes, wsRes, initialConfig] = await Promise.all([
+    getAllPlatformStudents(),
+    getWorkspaces(),
+    getRegistrationConfig()
+  ]);
+
   const initialStudents = studentsRes.data ?? [];
-
-  // Fetch active workspaces (franchise centers)
-  const wsRes = await getWorkspaces();
   const initialWorkspaces = wsRes.data ?? [];
-
-  // Fetch registration config
-  const initialConfig = await getRegistrationConfig();
 
   return (
     <div className="w-full">

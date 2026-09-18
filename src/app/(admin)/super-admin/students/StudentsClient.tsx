@@ -46,6 +46,7 @@ const BulkDocumentGenerator = dynamic(() => import("@/components/documents/BulkD
 import { getDocumentStatus } from "@/lib/document-utils";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { ManageResultModal } from "@/components/students/ManageResultModal";
+import { useDebounce } from "@/hooks/useDebounce";
 
 interface StudentsClientProps {
   initialStudents: any[];
@@ -58,6 +59,7 @@ export default function StudentsClient({ initialStudents, initialWorkspaces, ini
   const { update } = useSession();
 
   const [searchTerm, setSearchTerm] = useState("");
+  const debouncedSearch = useDebounce(searchTerm, 250);
   const [statusFilter, setStatusFilter] = useState("REGISTERED");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
@@ -396,17 +398,34 @@ export default function StudentsClient({ initialStudents, initialWorkspaces, ini
   }, [initialStudents, configData]);
 
   const filteredStudents = useMemo(() => {
+    const searchLower = debouncedSearch.toLowerCase().trim();
+
     return initialStudents.filter(s => {
-      const searchLower = searchTerm.toLowerCase();
+      let matchesStatus = false;
+      if (statusFilter === "PAUSED") {
+        matchesStatus = s.isActive === false;
+      } else {
+        matchesStatus = s.status === statusFilter && s.isActive !== false;
+      }
+      if (!matchesStatus) return false;
+
+      if (showRequestsOnly && statusFilter === "REGISTERED") {
+        if (!s.documentIssueRequestedAt) return false;
+        const certStatus = getDocumentStatus(s, null, configData as any);
+        if (certStatus.finalCertApproved || certStatus.finalCertIssued || certStatus.isCertAuto) {
+          return false;
+        }
+      }
+
+      if (!searchLower) return true;
+
       const dobStr = s.dob ? new Date(s.dob).toLocaleDateString('en-GB') : "";
       const adminDateStr = s.admissionDate ? new Date(s.admissionDate).toLocaleDateString('en-GB') : "";
-      
-      // Get all registration numbers for this student as a string array
       const regNos = s.registrations ? s.registrations.map((r: any) => r.registrationNo?.toLowerCase() || "") : [];
 
-      const matchesSearch =
-        s.fullName.toLowerCase().includes(searchLower) ||
-        s.enrollmentNo.toLowerCase().includes(searchLower) ||
+      return (
+        s.fullName?.toLowerCase().includes(searchLower) ||
+        s.enrollmentNo?.toLowerCase().includes(searchLower) ||
         regNos.some((r: string) => r.includes(searchLower)) ||
         (s.applicationId && s.applicationId.toLowerCase().includes(searchLower)) ||
         (s.phone && s.phone.includes(searchLower)) ||
@@ -414,29 +433,10 @@ export default function StudentsClient({ initialStudents, initialWorkspaces, ini
         (s.workspace?.name && s.workspace.name.toLowerCase().includes(searchLower)) ||
         (s.workspace?.centerCode && s.workspace.centerCode.toLowerCase().includes(searchLower)) ||
         dobStr.includes(searchLower) ||
-        adminDateStr.includes(searchLower);
-
-      let matchesStatus = false;
-      if (statusFilter === "PAUSED") {
-        matchesStatus = s.isActive === false;
-      } else {
-        matchesStatus = s.status === statusFilter && s.isActive !== false;
-      }
-
-      let matchesRequest = true;
-      if (showRequestsOnly && statusFilter === "REGISTERED") {
-        matchesRequest = false;
-        if (s.documentIssueRequestedAt) {
-          const certStatus = getDocumentStatus(s, null, configData as any);
-          if (!(certStatus.finalCertApproved || certStatus.finalCertIssued || certStatus.isCertAuto)) {
-            matchesRequest = true;
-          }
-        }
-      }
-
-      return matchesSearch && matchesStatus && matchesRequest;
+        adminDateStr.includes(searchLower)
+      );
     });
-  }, [initialStudents, searchTerm, statusFilter, showRequestsOnly, configData]);
+  }, [initialStudents, debouncedSearch, statusFilter, showRequestsOnly, configData]);
 
   const totalPages = Math.ceil(filteredStudents.length / itemsPerPage);
   const paginatedStudents = filteredStudents.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);

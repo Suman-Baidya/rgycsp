@@ -200,6 +200,7 @@ model WorkspaceRole {
   updatedAt DateTime @default(now()) @updatedAt
 
   @@unique([userId, workspaceId])
+  @@index([workspaceId])
 }
 
 enum WorkspaceRoleType {
@@ -257,6 +258,9 @@ model Course {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([workspaceId])
+  @@index([isActive])
 }
 
 model Batch {
@@ -280,6 +284,9 @@ model Batch {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([workspaceId])
+  @@index([courseId])
 }
 
 // ============================================
@@ -411,6 +418,11 @@ model StudentProfile {
   updatedAt DateTime @updatedAt
 
   @@unique([workspaceId, enrollmentNo])
+  @@index([workspaceId])
+  @@index([batchId])
+  @@index([courseId])
+  @@index([status])
+  @@index([fullName])
 }
 
 // ============================================
@@ -433,6 +445,9 @@ model Attendance {
   updatedAt DateTime @updatedAt
 
   @@unique([studentProfileId, date, type])
+  @@index([workspaceId, date])
+  @@index([studentProfileId])
+  @@index([status])
 }
 
 enum AttendanceStatus {
@@ -474,6 +489,10 @@ model Invoice {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([workspaceId, status])
+  @@index([studentProfileId])
+  @@index([createdAt])
 }
 
 enum PaymentStatus {
@@ -638,6 +657,10 @@ model AdmissionApplication {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([workspaceId, status])
+  @@index([courseId])
+  @@index([createdAt])
 }
 
 enum ApplicationStatus {
@@ -680,6 +703,10 @@ model Notification {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([userId, isRead])
+  @@index([workspaceId])
+  @@index([createdAt])
 }
 
 model PushSubscription {
@@ -760,6 +787,9 @@ model FranchiseApplication {
   rejectionReason String?           @db.Text
   createdAt       DateTime          @default(now())
   updatedAt       DateTime          @updatedAt
+
+  @@index([status])
+  @@index([createdAt])
 }
 
 // ============================================
@@ -828,6 +858,9 @@ model WalletTransaction {
   workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
+
+  @@index([workspaceId, status])
+  @@index([createdAt])
 }
 
 enum TransactionType {
@@ -955,6 +988,9 @@ model ProductOrder {
 
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+
+  @@index([workspaceId, status])
+  @@index([createdAt])
 }
 
 model ProductOrderItem {
@@ -1189,6 +1225,10 @@ model SystemLog {
   message   String
   user      String?  // Optional user identifier or email
   createdAt DateTime @default(now())
+
+  @@index([level])
+  @@index([createdAt])
+  @@index([module])
 }
 
 // ============================================

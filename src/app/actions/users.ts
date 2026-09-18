@@ -19,7 +19,17 @@ export async function getUsers() {
 
     const users = await db.user.findMany({
       where: whereClause,
-      include: {
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        username: true,
+        role: true,
+        isActive: true,
+        image: true,
+        systemPermissions: true,
+        lastSeen: true,
+        createdAt: true,
         workspaceRoles: {
           include: {
             workspace: {

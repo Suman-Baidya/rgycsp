@@ -14,6 +14,14 @@ export async function getLogs(filter = "ALL") {
       where: whereClause,
       orderBy: { createdAt: 'desc' },
       take: 200, // Limit to 200 to prevent overwhelming the UI
+      select: {
+        id: true,
+        level: true,
+        module: true,
+        message: true,
+        user: true,
+        createdAt: true,
+      }
     });
     
     return logs;

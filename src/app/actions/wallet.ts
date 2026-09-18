@@ -1,17 +1,25 @@
 "use server";
 
 import { db as prisma } from "@/lib/prisma";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag, unstable_cache } from "next/cache";
 
 // ============================================
 // Super Admin Actions
 // ============================================
 
-export async function getRegistrationFeeConfig() {
-  try {
-    const config = await prisma.registrationFeeConfig.findMany({
+const getCachedRegistrationFeeConfig = unstable_cache(
+  async () => {
+    return prisma.registrationFeeConfig.findMany({
       orderBy: { duration: 'asc' }
     });
+  },
+  ['wallet-registration-fee-config'],
+  { revalidate: 300, tags: ['fee-config'] }
+);
+
+export async function getRegistrationFeeConfig() {
+  try {
+    const config = await getCachedRegistrationFeeConfig();
     return { success: true, data: config };
   } catch (error: any) {
     return { success: false, error: error.message };
@@ -20,8 +28,6 @@ export async function getRegistrationFeeConfig() {
 
 export async function updateRegistrationFeeConfig(data: { id?: string, duration: string, amount: number }[]) {
   try {
-    // Basic sync: delete those not in list, update existing, create new
-    // For simplicity, let's just clear and recreate if not many, or use upsert.
     const currentConfigs = await prisma.registrationFeeConfig.findMany();
     const currentIds = currentConfigs.map(c => c.id);
     
@@ -34,19 +40,22 @@ export async function updateRegistrationFeeConfig(data: { id?: string, duration:
       });
     }
 
-    for (const item of data) {
-      if (item.id) {
-        await prisma.registrationFeeConfig.update({
-          where: { id: item.id },
-          data: { duration: item.duration, amount: item.amount }
-        });
-      } else {
-        await prisma.registrationFeeConfig.create({
-          data: { duration: item.duration, amount: item.amount }
-        });
-      }
-    }
+    await Promise.all(
+      data.map(item => {
+        if (item.id) {
+          return prisma.registrationFeeConfig.update({
+            where: { id: item.id },
+            data: { duration: item.duration, amount: item.amount }
+          });
+        } else {
+          return prisma.registrationFeeConfig.create({
+            data: { duration: item.duration, amount: item.amount }
+          });
+        }
+      })
+    );
 
+    revalidateTag("fee-config");
     revalidatePath("/(admin)/super-admin/wallet", "page");
     return { success: true };
   } catch (error: any) {
@@ -54,14 +63,23 @@ export async function updateRegistrationFeeConfig(data: { id?: string, duration:
   }
 }
 
-export async function getWalletPaymentConfig() {
-  try {
+const getCachedWalletPaymentConfig = unstable_cache(
+  async () => {
     let config = await prisma.walletPaymentConfig.findFirst();
     if (!config) {
       config = await prisma.walletPaymentConfig.create({
         data: {}
       });
     }
+    return config;
+  },
+  ['wallet-payment-config'],
+  { revalidate: 300, tags: ['wallet-payment-config'] }
+);
+
+export async function getWalletPaymentConfig() {
+  try {
+    const config = await getCachedWalletPaymentConfig();
     return { success: true, data: config };
   } catch (error: any) {
     return { success: false, error: error.message };
@@ -89,12 +107,14 @@ export async function updateWalletPaymentConfig(id: string, data: {
         where: { id: existing.id },
         data
       });
+      revalidateTag("wallet-payment-config");
       revalidatePath('/super-admin/wallet');
       return { success: true, data: updated };
     } else {
       const created = await prisma.walletPaymentConfig.create({
         data
       });
+      revalidateTag("wallet-payment-config");
       revalidatePath('/super-admin/wallet');
       return { success: true, data: created };
     }

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
+import { useDebounce } from "@/hooks/useDebounce";
 import {
   CheckCircle2,
   XCircle,
@@ -76,6 +77,7 @@ export default function StudentAttendanceClient({
   const [viewMode, setViewMode] = useState<"ALL" | "THEORY" | "PRACTICAL">("ALL");
   const [statusFilter, setStatusFilter] = useState<string>("ALL");
   const [searchQuery, setSearchQuery] = useState("");
+  const debouncedSearchQuery = useDebounce(searchQuery, 250);
   const [timeRange, setTimeRange] = useState("6m");
   const [showSchedule, setShowSchedule] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
@@ -98,16 +100,20 @@ export default function StudentAttendanceClient({
 
   // Filtering records by status and search
   const filteredRecords = useMemo(() => {
+    const q = debouncedSearchQuery.toLowerCase().trim();
     return baseRecords.filter((rec: any) => {
       const matchesStatus = statusFilter === "ALL" || rec.status === statusFilter;
+      if (!matchesStatus) return false;
+      if (!q) return true;
+
       const recDate = new Date(rec.date).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
-      const matchesSearch = searchQuery === "" || 
-        recDate.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (rec.remarks && rec.remarks.toLowerCase().includes(searchQuery.toLowerCase())) ||
-        rec.type.toLowerCase().includes(searchQuery.toLowerCase());
-      return matchesStatus && matchesSearch;
+      return (
+        recDate.toLowerCase().includes(q) ||
+        (rec.remarks && rec.remarks.toLowerCase().includes(q)) ||
+        (rec.type && rec.type.toLowerCase().includes(q))
+      );
     });
-  }, [baseRecords, statusFilter, searchQuery]);
+  }, [baseRecords, statusFilter, debouncedSearchQuery]);
 
   // Pagination calculation
   const totalPages = Math.max(1, Math.ceil(filteredRecords.length / pageSize));

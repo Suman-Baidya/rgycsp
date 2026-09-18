@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Plus_Jakarta_Sans, Inter } from "next/font/google";
 import "./globals.css";
-import { db } from "@/lib/prisma";
+import { getCachedGlobalSettings } from "@/lib/settings";
 
 const plusJakartaSans = Plus_Jakarta_Sans({
   variable: "--font-heading",
@@ -16,9 +16,7 @@ const inter = Inter({
 export async function generateMetadata(): Promise<Metadata> {
   let globalSettings = null;
   try {
-    globalSettings = await db.siteSettings.findFirst({
-      where: { workspaceId: null },
-    });
+    globalSettings = await getCachedGlobalSettings();
   } catch (error) {
     console.error("Error fetching global site settings for metadata:", error);
   }

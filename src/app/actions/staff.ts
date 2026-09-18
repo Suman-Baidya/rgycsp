@@ -2,26 +2,22 @@
 
 import { revalidateWorkspacePath } from "@/lib/revalidate";
 
-
 import { db } from "@/lib/prisma";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag, unstable_cache } from "next/cache";
 import { auth } from "@/auth";
 import bcrypt from "bcryptjs";
 
 export async function getStaff(workspaceId: string) {
   try {
-    const staff = await db.workspaceRole.findMany({
-      where: { 
-        workspaceId,
-        role: { notIn: ["STUDENT", "PARENT"] }
-      },
-      include: {
-        user: {
-          select: { name: true, email: true }
-        }
-      },
-      orderBy: { createdAt: "desc" }
-    });
+    const staff = await unstable_cache(
+      () => db.workspaceRole.findMany({
+        where: { workspaceId, role: { notIn: ["STUDENT", "PARENT"] } },
+        include: { user: { select: { name: true, email: true } } },
+        orderBy: { createdAt: "desc" }
+      }),
+      [`staff-${workspaceId}`],
+      { revalidate: 60, tags: [`staff-${workspaceId}`] }
+    )();
     return { success: true, data: staff };
   } catch (error: any) {
     console.error("Failed to fetch staff:", error);
@@ -87,6 +83,7 @@ export async function addStaff(
       }
     });
 
+    (revalidateTag as any)(`staff-${workspaceId}`);
     await revalidateWorkspacePath(workspaceId, "/admin/staff", "page");
     return { success: true, data: newRole };
   } catch (error: any) {
@@ -120,6 +117,7 @@ export async function updateStaffRole(
       }
     });
     if (updatedRole.workspaceId) {
+      (revalidateTag as any)(`staff-${updatedRole.workspaceId}`);
       await revalidateWorkspacePath(updatedRole.workspaceId, "/admin/staff", "page");
     }
     return { success: true, data: updatedRole };
@@ -135,6 +133,7 @@ export async function removeStaff(roleId: string) {
       where: { id: roleId }
     });
     if (deleted.workspaceId) {
+      (revalidateTag as any)(`staff-${deleted.workspaceId}`);
       await revalidateWorkspacePath(deleted.workspaceId, "/admin/staff", "page");
     }
     return { success: true };

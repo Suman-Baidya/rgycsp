@@ -2,9 +2,8 @@
 
 import { revalidateWorkspacePath } from "@/lib/revalidate";
 
-
 import { db } from "@/lib/prisma";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag, unstable_cache } from "next/cache";
 import { auth } from "@/auth";
 import bcrypt from "bcryptjs";
 
@@ -13,25 +12,29 @@ export async function getStudents(workspaceId: string) {
     const session = await auth();
     if (!session?.user) return { success: false, error: "Unauthorized" };
 
-    const students = await db.studentProfile.findMany({
-      where: { workspaceId },
-      include: {
-        batch: {
-          select: { name: true }
+    const students = await unstable_cache(
+      () => db.studentProfile.findMany({
+        where: { workspaceId },
+        include: {
+          batch: {
+            select: { name: true }
+          },
+          course: {
+            select: { title: true, duration: true }
+          },
+          admissionApp: {
+            select: { appliedCourse: true, createdAt: true, email: true, photoUrl: true, signatureUrl: true, idProofUrl: true }
+          },
+          invoices: { select: { amount: true, status: true } },
+          attendances: { select: { status: true } },
+          registrations: true,
+          semesters: { include: { marks: true } }
         },
-        course: {
-          select: { title: true, duration: true }
-        },
-        admissionApp: {
-          select: { appliedCourse: true, createdAt: true, email: true, photoUrl: true, signatureUrl: true, idProofUrl: true }
-        },
-        invoices: { select: { amount: true, status: true } },
-        attendances: { select: { status: true } },
-        registrations: true,
-        semesters: { include: { marks: true } }
-      },
-      orderBy: { createdAt: "desc" }
-    });
+        orderBy: { createdAt: "desc" }
+      }),
+      [`students-${workspaceId}`],
+      { revalidate: 30, tags: [`students-${workspaceId}`] }
+    )();
     return { success: true, data: students };
   } catch (error: any) {
     console.error("Failed to fetch students:", error);
@@ -148,6 +151,7 @@ export async function createStudent(workspaceId: string, data: any) {
       }
     });
 
+    (revalidateTag as any)(`students-${workspaceId}`);
     await revalidateWorkspacePath(typeof workspaceId !== 'undefined' ? workspaceId : (typeof data !== 'undefined' ? data.workspaceId : null), "/admin/students", "page");
     return { success: true, data: student };
   } catch (error: any) {
@@ -319,6 +323,7 @@ export async function updateStudent(id: string, data: any) {
     });
 
     if (student?.workspaceId) {
+      (revalidateTag as any)(`students-${student.workspaceId}`);
       await revalidateWorkspacePath(student.workspaceId, "/admin/students", "page");
     }
     return { success: true, data: student };
@@ -427,6 +432,7 @@ export async function deleteStudent(id: string) {
     }
 
     revalidatePath("/");
+    (revalidateTag as any)(`students-${(student as any)?.workspaceId || ""}`);
     return { success: true };
   } catch (error: any) {
     console.error("Delete Student Error:", error);

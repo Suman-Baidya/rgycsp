@@ -768,7 +768,9 @@ export default function WalletDashboardClient({
                   {/* Header Section (Company Info) */}
                   <div className="flex flex-col items-start mb-12">
                     {globalSettings?.logoUrl ? (
-                      <img src={globalSettings.logoUrl} alt="Logo" className="h-20 md:h-24 w-auto object-contain mb-4" />
+                      <div className="relative h-20 md:h-24 w-48 mb-4">
+                        <Image src={globalSettings.logoUrl} alt="Logo" fill sizes="200px" className="object-contain object-left" />
+                      </div>
                     ) : (
                       <div className="h-20 w-20 md:h-24 md:w-24 rounded-full flex items-center justify-center mb-4" style={{ backgroundColor: '#0f2940' }}>
                         <ShieldCheck className="h-10 w-10 md:h-12 md:w-12 text-white" />

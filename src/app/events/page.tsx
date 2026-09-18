@@ -5,21 +5,16 @@ import { db } from "@/lib/prisma";
 import { auth } from "@/auth";
 import { Calendar, Clock, MapPin, ArrowRight, Video, Users, ListTodo, Images } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { EventsListClient } from "@/components/events/EventsListClient";
+import { getCachedGlobalSettings } from "@/lib/settings";
 
 export default async function EventsPage() {
   const session = await auth();
-  const settings = await db.siteSettings.findFirst({
-    where: { workspaceId: null },
-    include: {
-      sections: {
-        orderBy: { order: "asc" }
-      }
-    }
-  });
+  const settings = await getCachedGlobalSettings(true);
 
   if (!settings) {
     return <div>Site configuration missing. Please check the dashboard.</div>;
@@ -67,10 +62,13 @@ export default async function EventsPage() {
                   </div>
                   <div className="w-full lg:w-1/2 aspect-square lg:aspect-auto relative overflow-hidden bg-slate-100 dark:bg-zinc-800">
                     {featuredEvent.image ? (
-                      <img 
+                      <Image 
                         src={featuredEvent.image} 
                         alt={featuredEvent.title} 
-                        className="w-full h-full object-cover group- transition-transform duration-700"
+                        fill
+                        priority
+                        className="object-cover group-hover:scale-105 transition-transform duration-700"
+                        sizes="(max-width: 1024px) 100vw, 50vw"
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/20 to-primary/5">

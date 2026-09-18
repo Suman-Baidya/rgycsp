@@ -2,29 +2,28 @@
 
 import { revalidateWorkspacePath } from "@/lib/revalidate";
 
-
 import { db } from "@/lib/prisma";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag, unstable_cache } from "next/cache";
 
 export async function getGlobalCoursesForFranchise(workspaceId: string) {
   try {
-    const globalCourses = await db.globalCourse.findMany({
-      where: { isActive: true },
-      include: {
-        courses: {
-          where: { workspaceId },
-          include: {
-            batches: {
-              select: { id: true, name: true }
-            },
-            _count: {
-              select: { admissionApps: true }
+    const globalCourses = await unstable_cache(
+      () => db.globalCourse.findMany({
+        where: { isActive: true },
+        include: {
+          courses: {
+            where: { workspaceId },
+            include: {
+              batches: { select: { id: true, name: true } },
+              _count: { select: { admissionApps: true } }
             }
           }
-        }
-      },
-      orderBy: { createdAt: "desc" }
-    });
+        },
+        orderBy: { createdAt: "desc" }
+      }),
+      [`global-courses-franchise-${workspaceId}`],
+      { revalidate: 60, tags: [`courses-${workspaceId}`, "global-courses"] }
+    )();
     return { success: true, data: globalCourses };
   } catch (error: any) {
     console.error("Failed to fetch global courses:", error);
@@ -179,15 +178,15 @@ export async function updateFranchiseCoursePricing(
 
 export async function getCourses(workspaceId: string) {
   try {
-    const courses = await db.course.findMany({
-      where: { workspaceId },
-      include: {
-        batches: {
-          select: { id: true, name: true }
-        }
-      },
-      orderBy: { createdAt: "desc" }
-    });
+    const courses = await unstable_cache(
+      () => db.course.findMany({
+        where: { workspaceId },
+        include: { batches: { select: { id: true, name: true } } },
+        orderBy: { createdAt: "desc" },
+      }),
+      [`courses-${workspaceId}`],
+      { revalidate: 60, tags: [`courses-${workspaceId}`, "courses"] }
+    )();
     return { success: true, data: courses };
   } catch (error: any) {
     console.error("Failed to fetch courses:", error);
@@ -218,6 +217,7 @@ export async function createCourse(workspaceId: string, data: any) {
       }
     });
 
+    (revalidateTag as any)(`courses-${workspaceId}`);
     await revalidateWorkspacePath(typeof workspaceId !== 'undefined' ? workspaceId : (typeof data !== 'undefined' ? data.workspaceId : null), "/admin/courses", "page");
     return { success: true, data: course };
   } catch (error: any) {
@@ -250,6 +250,7 @@ export async function updateCourse(courseId: string, data: any) {
     });
 
     if (course.workspaceId) {
+      (revalidateTag as any)(`courses-${course.workspaceId}`);
       await revalidateWorkspacePath(course.workspaceId, "/admin/courses", "page");
     }
     return { success: true, data: course };
@@ -266,6 +267,7 @@ export async function deleteCourse(courseId: string) {
     });
 
     if (course.workspaceId) {
+      (revalidateTag as any)(`courses-${course.workspaceId}`);
       await revalidateWorkspacePath(course.workspaceId, "/admin/courses", "page");
     }
     return { success: true };

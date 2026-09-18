@@ -30,6 +30,7 @@ import { useRouter } from "next/navigation";
 import { getLogs, clearLogs, getDeveloperEmail } from "@/app/actions/logs";
 import { toast } from "sonner";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { useDebounce } from "@/hooks/useDebounce";
 
 const SEVERITY_TABS = [
   { id: "ALL", label: "All Logs" },
@@ -43,6 +44,7 @@ export default function LogsPage() {
   const [mounted, setMounted] = useState(false);
   const [filter, setFilter] = useState("ALL");
   const [searchQuery, setSearchQuery] = useState("");
+  const debouncedSearch = useDebounce(searchQuery, 250);
   const [logs, setLogs] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
@@ -113,8 +115,8 @@ export default function LogsPage() {
 
   // Filtered and Paginated Logs
   const filteredLogs = useMemo(() => {
-    if (!searchQuery.trim()) return logs;
-    const q = searchQuery.toLowerCase();
+    if (!debouncedSearch.trim()) return logs;
+    const q = debouncedSearch.toLowerCase();
     return logs.filter((log) => 
       log.message?.toLowerCase().includes(q) ||
       log.module?.toLowerCase().includes(q) ||
@@ -122,7 +124,7 @@ export default function LogsPage() {
       log.user?.toLowerCase().includes(q) ||
       log.level?.toLowerCase().includes(q)
     );
-  }, [logs, searchQuery]);
+  }, [logs, debouncedSearch]);
 
   const handleExportCSV = () => {
     if (filteredLogs.length === 0) {

@@ -4,21 +4,18 @@ import { db } from "@/lib/prisma";
 import { auth } from "@/auth";
 import { Calendar, Clock, MapPin, ArrowLeft, Video, Users, ListTodo, Images } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { notFound } from "next/navigation";
+import { getCachedGlobalSettings } from "@/lib/settings";
 
 export default async function EventDetailsPage(props: { params: Promise<{ id: string }> }) {
   const params = await props.params;
   const session = await auth();
   
   const [settings, event] = await Promise.all([
-    db.siteSettings.findFirst({
-      where: { workspaceId: null },
-      include: {
-        sections: { orderBy: { order: "asc" } }
-      }
-    }),
+    getCachedGlobalSettings(true),
     db.event.findUnique({
       where: { id: params.id },
       include: {
@@ -58,7 +55,14 @@ export default async function EventDetailsPage(props: { params: Promise<{ id: st
         <section className="relative pt-32 pb-20 lg:pt-48 lg:pb-32 overflow-hidden bg-slate-900">
           {event.image ? (
             <>
-              <img src={event.image} alt={event.title} className="absolute inset-0 w-full h-full object-cover opacity-40" />
+              <Image 
+                src={event.image} 
+                alt={event.title} 
+                fill
+                priority
+                sizes="100vw"
+                className="object-cover opacity-40" 
+              />
               <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/80 to-transparent" />
             </>
           ) : (
@@ -192,7 +196,14 @@ export default async function EventDetailsPage(props: { params: Promise<{ id: st
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                   {gallery.map((imgUrl, idx) => (
                     <div key={idx} className="aspect-square rounded-2xl overflow-hidden bg-slate-100 dark:bg-zinc-800 group relative">
-                      <img src={imgUrl} alt={`Gallery Image ${idx + 1}`} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                      <Image 
+                        src={imgUrl} 
+                        alt={`Gallery Image ${idx + 1}`} 
+                        fill
+                        loading="lazy"
+                        sizes="(max-width: 768px) 50vw, 33vw"
+                        className="object-cover group-hover:scale-110 transition-transform duration-500" 
+                      />
                       <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors" />
                     </div>
                   ))}
@@ -218,7 +229,13 @@ export default async function EventDetailsPage(props: { params: Promise<{ id: st
                     {guests.map((guest, idx) => (
                       <div key={idx} className="flex items-center gap-4 bg-slate-50 dark:bg-zinc-950 p-3 rounded-2xl border border-slate-100 dark:border-zinc-800">
                         {guest.image ? (
-                          <img src={guest.image} alt={guest.name} className="w-12 h-12 rounded-full object-cover" />
+                          <Image 
+                            src={guest.image} 
+                            alt={guest.name} 
+                            width={48} 
+                            height={48} 
+                            className="w-12 h-12 rounded-full object-cover shrink-0" 
+                          />
                         ) : (
                           <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold">
                             {guest.name?.charAt(0)}

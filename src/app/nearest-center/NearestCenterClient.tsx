@@ -8,6 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { MapPin, Search, ArrowRight, Building2, Phone, ExternalLink, Loader2 } from "lucide-react";
 import { findNearestCenters } from "@/app/actions/nearest-center";
 import Link from "next/link";
+import Image from "next/image";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -109,7 +110,13 @@ export default function NearestCenterClient() {
                         <div className="p-6 md:w-64 bg-slate-50 dark:bg-zinc-800/50 border-b md:border-b-0 md:border-r border-slate-100 dark:border-zinc-800 flex flex-col items-center justify-center text-center space-y-4">
                           <div className="w-20 h-20 bg-white dark:bg-zinc-900 rounded-2xl shadow-sm border p-2 flex items-center justify-center">
                             {center.logoUrl ? (
-                              <img src={center.logoUrl} alt={center.name} className="max-w-full max-h-full object-contain" />
+                              <Image 
+                                src={center.logoUrl} 
+                                alt={center.name} 
+                                width={80} 
+                                height={80} 
+                                className="max-w-full max-h-full object-contain" 
+                              />
                             ) : (
                               <Building2 className="w-8 h-8 text-slate-300" />
                             )}

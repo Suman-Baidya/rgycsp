@@ -1,10 +1,8 @@
 "use server";
 
 import { revalidateWorkspacePath } from "@/lib/revalidate";
-
-
 import { db } from "@/lib/prisma";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag, unstable_cache } from "next/cache";
 
 export async function createBatch(data: { 
   workspaceId: string; 
@@ -34,6 +32,7 @@ export async function createBatch(data: {
       },
     });
 
+    revalidateTag(`batches-${data.workspaceId}`);
     await revalidateWorkspacePath(data.workspaceId, "/admin", "layout");
     return { success: true, data: batch };
   } catch (error: any) {
@@ -60,6 +59,7 @@ export async function updateBatch(id: string, data: {
     });
 
     if (batch.workspaceId) {
+      revalidateTag(`batches-${batch.workspaceId}`);
       await revalidateWorkspacePath(batch.workspaceId, "/admin", "layout");
     }
     return { success: true, data: batch };
@@ -88,6 +88,7 @@ export async function deleteBatch(id: string) {
     });
 
     if (batch.workspaceId) {
+      revalidateTag(`batches-${batch.workspaceId}`);
       await revalidateWorkspacePath(batch.workspaceId, "/admin", "layout");
     }
     return { success: true };
@@ -99,18 +100,26 @@ export async function deleteBatch(id: string) {
 
 export async function getBatches(workspaceId: string) {
   try {
-    const batches = await db.batch.findMany({
-      where: { workspaceId },
-      include: {
-        course: {
-          select: { title: true }
-        },
-        _count: {
-          select: { students: true }
-        }
+    const getCachedBatches = unstable_cache(
+      async () => {
+        return db.batch.findMany({
+          where: { workspaceId },
+          include: {
+            course: {
+              select: { title: true }
+            },
+            _count: {
+              select: { students: true }
+            }
+          },
+          orderBy: { createdAt: "desc" }
+        });
       },
-      orderBy: { createdAt: "desc" }
-    });
+      [`batches-list-${workspaceId}`],
+      { revalidate: 60, tags: [`batches-${workspaceId}`] }
+    );
+
+    const batches = await getCachedBatches();
     return { success: true, data: batches };
   } catch (error: any) {
     console.error("Failed to fetch batches:", error);

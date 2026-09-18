@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import { Download, Loader2, FileCheck2, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import jsPDF from "jspdf";
 
 export default function PrintExamPaperClient({
   exam,
@@ -26,6 +25,7 @@ export default function PrintExamPaperClient({
   const generatePDF = async () => {
     setIsGenerating(true);
     try {
+      const { default: jsPDF } = await import("jspdf");
       // Initialize A4 PDF
       const doc = new jsPDF({
         orientation: "portrait",

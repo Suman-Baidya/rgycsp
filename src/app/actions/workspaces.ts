@@ -2,7 +2,7 @@
 
 import { db } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag, unstable_cache } from "next/cache";
 
 export async function createWorkspace(data: any) {
   try {
@@ -119,6 +119,7 @@ export async function createWorkspace(data: any) {
       },
     });
 
+    (revalidateTag as any)("workspaces");
     revalidatePath("/(admin)/super-admin", "page");
     revalidatePath("/(admin)/super-admin/franchises", "page");
     return { success: true, workspaceId: workspace.id };
@@ -128,8 +129,8 @@ export async function createWorkspace(data: any) {
   }
 }
 
-export async function getWorkspaces() {
-  try {
+const _getWorkspaces = unstable_cache(
+  async () => {
     const workspaces = await db.workspace.findMany({
       include: {
         roles: {
@@ -151,7 +152,15 @@ export async function getWorkspaces() {
       },
       orderBy: { createdAt: "desc" },
     });
+    return workspaces;
+  },
+  ["workspaces-list"],
+  { revalidate: 30, tags: ["workspaces"] }
+);
 
+export async function getWorkspaces() {
+  try {
+    const workspaces = await _getWorkspaces();
     return { success: true, data: workspaces };
   } catch (error: any) {
     console.error("Failed to fetch workspaces:", error);
@@ -264,6 +273,7 @@ export async function updateCenterConfig(workspaceId: string, data: any) {
       });
     }
 
+    (revalidateTag as any)("workspaces");
     revalidatePath("/(admin)/super-admin", "page");
     revalidatePath("/(admin)/super-admin/franchises", "page");
     return { success: true };
@@ -279,6 +289,7 @@ export async function toggleWorkspaceStatus(workspaceId: string, isActive: boole
       where: { id: workspaceId },
       data: { isActive }
     });
+    (revalidateTag as any)("workspaces");
     revalidatePath("/(admin)/super-admin", "page");
     revalidatePath("/(admin)/super-admin/franchises", "page");
     return { success: true };
@@ -294,6 +305,7 @@ export async function deleteWorkspace(workspaceId: string) {
     await db.workspace.delete({
       where: { id: workspaceId }
     });
+    (revalidateTag as any)("workspaces");
     revalidatePath("/(admin)/super-admin", "page");
     revalidatePath("/(admin)/super-admin/franchises", "page");
     return { success: true };
