@@ -43,15 +43,22 @@ export default {
     },
     async redirect({ url, baseUrl }) {
       // Allows relative paths
-      if (url.startsWith("/")) return `${baseUrl}${url}`
-      // Allows absolute URLs that match the current origin (including subdomains)
-      // This is crucial for multi-tenant setups
-      const urlHost = new URL(url).host;
-      const baseHost = new URL(baseUrl).host;
-      if (urlHost.endsWith(baseHost) || baseHost.endsWith(urlHost)) {
-        return url
+      if (url.startsWith("/")) return `${baseUrl}${url}`;
+      try {
+        const urlHost = new URL(url).host.split(':')[0];
+        const baseHost = new URL(baseUrl).host.split(':')[0];
+        if (urlHost.endsWith(baseHost) || baseHost.endsWith(urlHost)) {
+          return url;
+        }
+        const rawRoot = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "";
+        const rootDomain = rawRoot.replace(/^https?:\/\//, '').replace(/\/.*$/, '').trim().split(':')[0];
+        if (rootDomain && (urlHost === rootDomain || urlHost.endsWith(`.${rootDomain}`))) {
+          return url;
+        }
+      } catch {
+        // Fallback for malformed URLs
       }
-      return baseUrl
+      return baseUrl;
     }
   },
   session: { strategy: "jwt" } // Use JWT for Edge compatibility and lower DB overhead

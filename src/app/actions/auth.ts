@@ -9,18 +9,23 @@ export async function getPostLoginRedirect(currentHost: string, currentPath: str
   if (!session?.user) return "/login";
 
   const user = session.user;
-  const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "localhost:3000";
+  const rawRoot = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "localhost:3000";
+  const rootDomain = rawRoot.replace(/^https?:\/\//, '').replace(/\/.*$/, '').trim();
+  const cleanCurrentHost = currentHost.split(',')[0].trim();
+  const hostWithoutPort = cleanCurrentHost.split(':')[0];
+  const rootWithoutPort = rootDomain.split(':')[0];
   
+  const isRoot = hostWithoutPort === rootWithoutPort || cleanCurrentHost === "localhost:3000" || hostWithoutPort === "www." + rootWithoutPort;
+
   // 1. Handle Super Admin
   if (user.role === "SUPER_ADMIN" || user.role === "SUPER_ADMIN_MANAGER") {
     // If they are on a subdomain, we might want to take them to the global dashboard
     // but the most reliable way is /super-admin on the root domain.
-    const isRoot = currentHost === rootDomain || currentHost === "localhost:3000" || currentHost === "www." + rootDomain;
     if (isRoot) {
       return "/super-admin";
     }
     // Return absolute URL for super admin if on subdomain
-    const protocol = currentHost.includes("localhost") ? "http" : "https";
+    const protocol = cleanCurrentHost.includes("localhost") ? "http" : "https";
     return `${protocol}://${rootDomain}/super-admin`;
   }
 
@@ -35,11 +40,11 @@ export async function getPostLoginRedirect(currentHost: string, currentPath: str
     include: { workspace: true }
   });
 
-  const currentTenant = currentHost.replace(`.${rootDomain}`, "").toLowerCase();
+  const currentTenant = hostWithoutPort.replace(`.${rootWithoutPort}`, "").toLowerCase();
 
   // If they are logging in from the main site, they should stay on the main site
   // unless they explicitly navigated to a workspace subdomain.
-  const isOnMainSite = currentHost === rootDomain || currentHost === "localhost:3000" || currentHost === "www." + rootDomain;
+  const isOnMainSite = isRoot;
   
   if (isOnMainSite) {
     if (workspaceRoles.length > 0) {

@@ -5,6 +5,7 @@ import { WorkspaceFooter } from "@/components/layout/WorkspaceFooter";
 import { CustomThemeStyle } from "@/components/providers/CustomThemeStyle";
 import { WorkspacePageHeader } from "@/components/layout/WorkspacePageHeader";
 import { auth } from "@/auth";
+import { getServerTenantLink } from "@/lib/routing-server";
 import AdmissionLandingClient from "./AdmissionLandingClient";
 
 export default async function AdmissionPage({
@@ -70,7 +71,7 @@ export default async function AdmissionPage({
             title="Admission Portal" 
             description={`Welcome to ${workspace.name} Admission Hub. Choose an option below to proceed.`}
             breadcrumbs={[
-              { name: "Admission", href: `/app/${tenant}/admission` }
+              { name: "Admission", href: await getServerTenantLink("/admission", tenant) }
             ]}
             bgImage={workspace.siteSettings.pageHeaderBanner || undefined}
             statusTitle="ENROLL"

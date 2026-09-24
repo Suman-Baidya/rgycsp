@@ -21,17 +21,20 @@ export default auth((req) => {
     }
   }
 
-  // Get hostname of request
-  const hostname = req.headers.get("host") || "";
+  // Get hostname of request (supports reverse proxies like Dokploy / Traefik via x-forwarded-host)
+  const rawHost = req.headers.get("x-forwarded-host") || req.headers.get("host") || "";
+  const hostname = rawHost.split(',')[0].trim();
   const cleanHost = hostname.split(':')[0];
   
   // 1. Detect the root domain dynamically
-  const rootEnv = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "";
+  const rawRootEnv = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "";
+  const cleanRootEnv = rawRootEnv.replace(/^https?:\/\//, '').replace(/\/.*$/, '').trim();
+  const rootDomainWithoutPort = cleanRootEnv.split(':')[0];
   let localDomain = "";
   
-  if (rootEnv && cleanHost.endsWith(rootEnv.split(':')[0])) {
+  if (rootDomainWithoutPort && (cleanHost === rootDomainWithoutPort || cleanHost.endsWith(`.${rootDomainWithoutPort}`))) {
     // Priority 1: Use explicit Root Domain ENV if current host matches it
-    localDomain = rootEnv.split(':')[0];
+    localDomain = rootDomainWithoutPort;
   } else if (cleanHost.includes('localhost') || cleanHost.includes('127.0.0.1')) {
     // Priority 2: Localhost development
     const parts = cleanHost.split('.');
@@ -46,8 +49,19 @@ export default auth((req) => {
       // Handles project.vercel.app or branch.project.vercel.app
       localDomain = parts.length > 3 ? parts.slice(1).join('.') : cleanHost;
     } else {
-      // tenant.domain.com -> domain.com
-      localDomain = parts.length >= 3 ? parts.slice(-2).join('.') : cleanHost;
+      // Check common two-part TLDs (e.g. .co.in, .org.in, .edu.in, .co.uk, .com.au)
+      const twoPartSLDs = ['co', 'org', 'edu', 'ac', 'gov', 'net', 'com', 'res', 'gen'];
+      if (parts.length >= 3) {
+        const secondLast = parts[parts.length - 2];
+        const last = parts[parts.length - 1];
+        if (twoPartSLDs.includes(secondLast) && last.length <= 3) {
+          localDomain = parts.length === 3 ? cleanHost : parts.slice(-3).join('.');
+        } else {
+          localDomain = parts.length >= 3 ? parts.slice(-2).join('.') : cleanHost;
+        }
+      } else {
+        localDomain = cleanHost;
+      }
     }
   }
 

@@ -18,7 +18,8 @@ export default async function WorkspaceLoginPage({
   // If already logged in, intelligently redirect based on role
   if (session) {
     const headersList = await headers();
-    const host = headersList.get("host") || "";
+    const rawHost = headersList.get("x-forwarded-host") || headersList.get("host") || "";
+    const host = rawHost.split(',')[0].trim();
     const pathname = headersList.get("x-pathname") || `/app/${tenant}/login`;
     const redirectUrl = await getPostLoginRedirect(host, pathname);
     redirect(redirectUrl);

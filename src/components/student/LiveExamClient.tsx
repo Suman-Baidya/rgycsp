@@ -7,7 +7,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
 import { Timer, CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
+import { getTenantLink } from "@/lib/routing";
 
 export default function LiveExamClient({
   settings,
@@ -21,6 +22,7 @@ export default function LiveExamClient({
   studentProfileId: string
 }) {
   const router = useRouter();
+  const pathname = usePathname();
   const primaryColor = settings?.primaryColor || "#0f172a";
   
   const [answers, setAnswers] = useState<Record<string, string>>({});
@@ -75,7 +77,7 @@ export default function LiveExamClient({
       const res = await submitExam(exam.id, exam.workspaceId, answers);
       if (res.success) {
         toast.success("Exam submitted successfully!");
-        router.push(`/app/${tenant}/student/exams`);
+        router.push(getTenantLink("/student/exams", tenant, pathname));
         router.refresh();
       } else {
         toast.error(res.error);

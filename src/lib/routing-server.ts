@@ -7,7 +7,8 @@ import { getTenantLink, getRoutingConfig } from "./routing";
 export async function getServerRoutingContext() {
   const headersList = await headers();
   const pathname = headersList.get('x-pathname') || "/";
-  const host = headersList.get('host') || "";
+  const rawHost = headersList.get('x-forwarded-host') || headersList.get('host') || "";
+  const host = rawHost.split(',')[0].trim();
   return { pathname, host };
 }
 

@@ -34,7 +34,15 @@ const nextConfig: NextConfig = {
       "framer-motion",
     ],
     serverActions: {
-      allowedOrigins: ['localhost:3000', '*.localhost:3000', '*.vercel.app'],
+      allowedOrigins: [
+        'localhost:3000',
+        '*.localhost:3000',
+        '*.vercel.app',
+        ...(process.env.NEXT_PUBLIC_ROOT_DOMAIN ? [
+          process.env.NEXT_PUBLIC_ROOT_DOMAIN.replace(/^https?:\/\//, '').replace(/\/.*$/, '').trim(),
+          `*.${process.env.NEXT_PUBLIC_ROOT_DOMAIN.replace(/^https?:\/\//, '').replace(/\/.*$/, '').trim().split(':')[0]}`
+        ] : [])
+      ],
       bodySizeLimit: '25mb'
     }
   },

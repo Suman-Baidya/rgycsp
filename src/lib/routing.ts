@@ -41,13 +41,15 @@ export function getRoutingConfig(pathname: string, hostname?: string, tenantOver
   }
 
   if (hostname) {
-    const rootEnv = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "";
-    const cleanHost = hostname.split(':')[0]; // Remove port if present
+    const rawRootEnv = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "";
+    const cleanRootEnv = rawRootEnv.replace(/^https?:\/\//, '').replace(/\/.*$/, '').trim();
+    const rootDomainWithoutPort = cleanRootEnv.split(':')[0];
+    const cleanHost = hostname.split(',')[0].trim().split(':')[0]; // Remove port and split proxies
     
     // 1. Detect localDomain dynamically just like proxy.ts
     let localDomain = "";
-    if (rootEnv && cleanHost.endsWith(rootEnv.split(':')[0])) {
-      localDomain = rootEnv.split(':')[0];
+    if (rootDomainWithoutPort && (cleanHost === rootDomainWithoutPort || cleanHost.endsWith(`.${rootDomainWithoutPort}`))) {
+      localDomain = rootDomainWithoutPort;
     } else if (cleanHost.includes('localhost') || cleanHost.includes('127.0.0.1')) {
       const parts = cleanHost.split('.');
       localDomain = parts.length > 1 ? parts.slice(1).join('.') : cleanHost;
@@ -59,7 +61,18 @@ export function getRoutingConfig(pathname: string, hostname?: string, tenantOver
       if (cleanHost.includes("vercel.app")) {
         localDomain = parts.length > 3 ? parts.slice(1).join('.') : cleanHost;
       } else {
-        localDomain = parts.length >= 3 ? parts.slice(-2).join('.') : cleanHost;
+        const twoPartSLDs = ['co', 'org', 'edu', 'ac', 'gov', 'net', 'com', 'res', 'gen'];
+        if (parts.length >= 3) {
+          const secondLast = parts[parts.length - 2];
+          const last = parts[parts.length - 1];
+          if (twoPartSLDs.includes(secondLast) && last.length <= 3) {
+            localDomain = parts.length === 3 ? cleanHost : parts.slice(-3).join('.');
+          } else {
+            localDomain = parts.length >= 3 ? parts.slice(-2).join('.') : cleanHost;
+          }
+        } else {
+          localDomain = cleanHost;
+        }
       }
     }
     

@@ -1,7 +1,9 @@
 import 'dotenv/config'; // Updated: 2026-04-29T09:26:00Z
-import { Pool, neonConfig } from '@neondatabase/serverless';
+import { neonConfig } from '@neondatabase/serverless';
 import { PrismaNeon } from '@prisma/adapter-neon';
+import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient } from '@prisma/client';
+import pg from 'pg';
 import ws from 'ws';
 
 // Required for compatibility with certain environments (e.g. Node vs Edge)
@@ -18,11 +20,19 @@ if (process.env.NODE_ENV === "development") {
   console.log("PRISMA: Initializing with host segment:", maskedUrl);
 }
 
-let prismaArgs = {};
-if (connectionString) {
-  const adapter = new PrismaNeon({ connectionString });
-  prismaArgs = { adapter };
-} else {
+let prismaArgs: { adapter?: any } = {};
+if (!globalThis.prisma && connectionString) {
+  const isNeon = connectionString.includes('neon.tech');
+  if (isNeon) {
+    const adapter = new PrismaNeon({ connectionString });
+    prismaArgs = { adapter };
+  } else {
+    // Standard PostgreSQL (Local Docker / Dokploy on VPS)
+    const pool = new pg.Pool({ connectionString });
+    const adapter = new PrismaPg(pool);
+    prismaArgs = { adapter };
+  }
+} else if (!connectionString && !globalThis.prisma) {
   console.warn("PRISMA: DATABASE_URL is not set. Prisma will likely fail unless provided via config.");
 }
 

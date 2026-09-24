@@ -9,15 +9,18 @@ import { getPostLoginRedirect } from "@/app/actions/auth";
 export default async function LoginPage() {
   const session = await auth();
   const headersList = await headers();
-  const host = headersList.get("host") || "";
+  const rawHost = headersList.get("x-forwarded-host") || headersList.get("host") || "";
+  const host = rawHost.split(',')[0].trim();
+  const cleanHost = host.split(':')[0];
   const pathname = headersList.get("x-pathname") || "/login";
   
-  const localDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "localhost:3000";
+  const rawRoot = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "localhost:3000";
+  const localDomain = rawRoot.replace(/^https?:\/\//, '').replace(/\/.*$/, '').trim().split(':')[0];
   
   // Detect tenant from subdomain
   let tenant = "";
-  if (host.endsWith(`.${localDomain}`)) {
-    tenant = host.replace(`.${localDomain}`, "").toLowerCase();
+  if (cleanHost.endsWith(`.${localDomain}`)) {
+    tenant = cleanHost.replace(`.${localDomain}`, "").toLowerCase();
     if (tenant === "www") tenant = "";
   }
 

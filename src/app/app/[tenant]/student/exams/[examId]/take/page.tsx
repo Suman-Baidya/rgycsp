@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { getServerTenantLink } from "@/lib/routing-server";
 import { getExamToTake } from "@/app/actions/student-exam";
 import LiveExamClient from "@/components/student/LiveExamClient";
+import Link from "next/link";
 
 export default async function TakeExamPage({
   params
@@ -25,9 +26,9 @@ export default async function TakeExamPage({
               <p className="text-slate-500 dark:text-slate-400 font-medium leading-relaxed">{result.error}</p>
            </div>
            <div className="pt-4 flex flex-col gap-3">
-             <a href={`/app/${tenant}/student/exams`} className="w-full">
+             <Link href={await getServerTenantLink("/student/exams", tenant)} className="w-full">
                <button className="w-full h-12 rounded-xl font-bold border-2">Return to Exams</button>
-             </a>
+             </Link>
            </div>
         </div>
       </div>
