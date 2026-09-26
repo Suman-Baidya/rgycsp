@@ -32,7 +32,7 @@ export async function createBatch(data: {
       },
     });
 
-    revalidateTag(`batches-${data.workspaceId}`);
+    (revalidateTag as any)(`batches-${data.workspaceId}`);
     await revalidateWorkspacePath(data.workspaceId, "/admin", "layout");
     return { success: true, data: batch };
   } catch (error: any) {
@@ -59,7 +59,7 @@ export async function updateBatch(id: string, data: {
     });
 
     if (batch.workspaceId) {
-      revalidateTag(`batches-${batch.workspaceId}`);
+      (revalidateTag as any)(`batches-${batch.workspaceId}`);
       await revalidateWorkspacePath(batch.workspaceId, "/admin", "layout");
     }
     return { success: true, data: batch };
@@ -88,7 +88,7 @@ export async function deleteBatch(id: string) {
     });
 
     if (batch.workspaceId) {
-      revalidateTag(`batches-${batch.workspaceId}`);
+      (revalidateTag as any)(`batches-${batch.workspaceId}`);
       await revalidateWorkspacePath(batch.workspaceId, "/admin", "layout");
     }
     return { success: true };

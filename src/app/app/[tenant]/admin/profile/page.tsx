@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { getServerTenantLink } from "@/lib/routing-server";
 import { AdminPageHeader } from "@/components/layout/AdminPageHeader";
 import { ProfileForm } from "./ProfileForm";
+import { isDeveloperEmail } from "@/lib/developer";
 
 export const metadata = {
   title: "Account Profile | ABCD Admin",
@@ -28,7 +29,8 @@ export default async function ProfilePage(props: { params: Promise<{ tenant: str
 
   const isGlobalAdmin = session?.user?.role === "SUPER_ADMIN" || 
                         session?.user?.role === "SUPER_ADMIN_MANAGER" || 
-                        session?.user?.email === process.env.DEVELOPER_EMAIL;
+                        isDeveloperEmail(session?.user?.email) ||
+                        !!session?.user?.isDeveloper;
 
   // Find the currently logged in user's role in this workspace
   const userRole = await db.workspaceRole.findFirst({

@@ -13,11 +13,22 @@ export default async function AdmissionPage({
   searchParams
 }: {
   params: Promise<{ tenant: string }>;
-  searchParams: Promise<{ courseId?: string, fromGlobal?: string, view?: string }>;
+  searchParams: Promise<{ 
+    courseId?: string; 
+    fromGlobal?: string; 
+    view?: string; 
+    name?: string; 
+    phone?: string; 
+    email?: string; 
+    pincode?: string; 
+  }>;
 }) {
   const { tenant } = await params;
-  const { courseId, fromGlobal, view } = await searchParams;
-  const currentView = view || (courseId ? "form" : "choice");
+  const resolvedParams = await searchParams;
+  const { courseId, fromGlobal, view, name, phone, email, pincode } = resolvedParams;
+  
+  // If student arrived from an inquiry/lead redirect, automatically open the application form directly
+  const currentView = view || (courseId || name || phone ? "form" : "choice");
 
   const workspace = await db.workspace.findUnique({
     where: { subdomain: tenant?.toLowerCase() },
@@ -91,6 +102,7 @@ export default async function AdmissionPage({
             initialCourseId={courseId}
             fromGlobal={fromGlobal}
             currentView={currentView}
+            prefillData={{ name, phone, email, pincode }}
           />
         </div>
       </main>

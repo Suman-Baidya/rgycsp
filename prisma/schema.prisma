@@ -33,6 +33,7 @@ model User {
   notifications       Notification[]
   pushSubscriptions   PushSubscription[]
   passkeyCredentials  PasskeyCredential[]
+  accessLogs          UserAccessLog[]
 }
 
 enum SystemRole {
@@ -152,6 +153,7 @@ model SiteSettings {
   navbarConfig   Json? // { showNavbar, showTopBar, showMenus, ctaPrimary: {text, link}, ctaSecondary: {text, link} }
   floatingConfig Json? // { enableWhatsApp, enableChatbot, chatbotName, welcomeMessage }
   attendanceConfig Json? // { enableAlerts: boolean, threshold: number }
+  routingConfig    Json? // { routingMode: 'SUBDIRECTORY' | 'SUBDOMAIN' | 'BOTH', enableSubdomains: boolean, enableSubdirectories: boolean, autoRedirectSubdomain: boolean, defaultUrlMode: string }
 
   globalIdCardAccess    Boolean @default(true)
   globalAdmitCardAccess Boolean @default(true)
@@ -539,6 +541,28 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
+}
+
+model UserAccessLog {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ipAddress   String?
+  city        String?
+  state       String?
+  country     String?  @default("India")
+  device      String?  // Desktop, Mobile, Tablet
+  browser     String?  // Chrome, Firefox, Safari, Edge, etc.
+  os          String?  // Windows 11, macOS, Android, iOS, Linux
+  userAgent   String?  @db.Text
+  action      String   @default("LOGIN") // LOGIN, SESSION_RESUME, LOGOUT, PASSWORD_CHANGE, ROLE_UPDATE, STATUS_CHANGE
+  status      String   @default("SUCCESS") // SUCCESS, FAILED, BLOCKED
+  location    String?  // e.g. "Kolkata, West Bengal, India"
+  metadata    Json?
+  createdAt   DateTime @default(now())
+
+  @@index([userId, createdAt])
+  @@index([createdAt])
 }
 
 model Event {

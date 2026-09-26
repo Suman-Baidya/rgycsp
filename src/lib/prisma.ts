@@ -20,30 +20,42 @@ if (process.env.NODE_ENV === "development") {
   console.log("PRISMA: Initializing with host segment:", maskedUrl);
 }
 
-let prismaArgs: { adapter?: any } = {};
-if (!globalThis.prisma && connectionString) {
-  const isNeon = connectionString.includes('neon.tech');
-  if (isNeon) {
-    const adapter = new PrismaNeon({ connectionString });
-    prismaArgs = { adapter };
+function createPrismaClient(): PrismaClient {
+  let prismaArgs: { adapter?: any } = {};
+  if (connectionString) {
+    const isNeon = connectionString.includes('neon.tech');
+    if (isNeon) {
+      const adapter = new PrismaNeon({ connectionString });
+      prismaArgs = { adapter };
+    } else {
+      // Standard PostgreSQL (Local Docker / Dokploy on VPS)
+      const pool = new pg.Pool({ connectionString });
+      const adapter = new PrismaPg(pool);
+      prismaArgs = { adapter };
+    }
   } else {
-    // Standard PostgreSQL (Local Docker / Dokploy on VPS)
-    const pool = new pg.Pool({ connectionString });
-    const adapter = new PrismaPg(pool);
-    prismaArgs = { adapter };
+    console.warn("PRISMA: DATABASE_URL is not set. Prisma will likely fail unless provided via config.");
   }
-} else if (!connectionString && !globalThis.prisma) {
-  console.warn("PRISMA: DATABASE_URL is not set. Prisma will likely fail unless provided via config.");
-}
 
-
-
-export const db =
-  globalThis.prisma ||
-  new PrismaClient({
+  return new PrismaClient({
     ...prismaArgs,
     log: process.env.NODE_ENV === "development" ? ["query", "error", "warn"] : ["error"],
   });
+}
+
+// In development, attempt to refresh cached client if new models are added
+if (process.env.NODE_ENV !== "production" && globalThis.prisma && !(globalThis.prisma as any).userAccessLog) {
+  try {
+    const updatedClient = createPrismaClient();
+    if ((updatedClient as any).userAccessLog) {
+      globalThis.prisma = updatedClient;
+    }
+  } catch (err) {
+    console.warn("PRISMA: Retaining existing client instance:", err);
+  }
+}
+
+export const db = globalThis.prisma || createPrismaClient();
 
 if (process.env.NODE_ENV !== "production") globalThis.prisma = db;
 

@@ -182,6 +182,31 @@ export async function getNotifications(param?: string | NotificationQueryOptions
       } catch (err) {
         console.error("Error checking pending student document requests:", err);
       }
+
+      // (e) New Contact Enquiries & Marketing Leads
+      try {
+        const pendingEnquiries = await db.visitorLead.count({
+          where: { status: "NEW" },
+        });
+        if (pendingEnquiries > 0) {
+          sidebarNotices.push({
+            id: "sidebar-enquiries-pending",
+            title: "New Enquiries & Leads",
+            message: `${pendingEnquiries} new student/contact lead${pendingEnquiries > 1 ? "s" : ""} received and awaiting contact.`,
+            type: "INFO",
+            link: "/super-admin/enquiries",
+            isRead: false,
+            createdAt: new Date().toISOString(),
+            category: "sidebar",
+            badgeText: `${pendingEnquiries} New`,
+            badgeColor: "rose",
+            actionText: "View Leads",
+            count: pendingEnquiries,
+          });
+        }
+      } catch (err) {
+        console.error("Error checking pending enquiries count:", err);
+      }
     }
 
     // ==========================================================
@@ -249,6 +274,37 @@ export async function getNotifications(param?: string | NotificationQueryOptions
         }
       } catch (err) {
         console.error("Error checking workspace fee clearances:", err);
+      }
+
+      // (c) New Workspace Leads & Enquiries
+      try {
+        const pendingWorkspaceEnquiries = await db.visitorLead.count({
+          where: {
+            workspaceId: targetWorkspaceId,
+            status: "NEW",
+          },
+        });
+        if (pendingWorkspaceEnquiries > 0) {
+          const enquiriesHref = options.tenant
+            ? `/app/${options.tenant}/admin/enquiries`
+            : `/admin/enquiries`;
+          sidebarNotices.push({
+            id: "sidebar-enquiries-pending",
+            title: "New Study Center Enquiries",
+            message: `${pendingWorkspaceEnquiries} prospective student lead${pendingWorkspaceEnquiries > 1 ? "s" : ""} received.`,
+            type: "INFO",
+            link: enquiriesHref,
+            isRead: false,
+            createdAt: new Date().toISOString(),
+            category: "sidebar",
+            badgeText: `${pendingWorkspaceEnquiries} New`,
+            badgeColor: "rose",
+            actionText: "Follow Up",
+            count: pendingWorkspaceEnquiries,
+          });
+        }
+      } catch (err) {
+        console.error("Error checking workspace enquiries count:", err);
       }
     }
 

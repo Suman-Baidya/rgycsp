@@ -146,8 +146,8 @@ export async function importWorkspacesCSV(rows: any[]) {
   }
 
   if (successCount > 0) {
-    revalidatePath("/(admin)/super-admin", "page");
-    revalidatePath("/(admin)/super-admin/franchises", "page");
+    revalidatePath("/super-admin", "page");
+    revalidatePath("/super-admin/franchises", "page");
   }
 
   return { 

@@ -55,8 +55,8 @@ export async function updateRegistrationFeeConfig(data: { id?: string, duration:
       })
     );
 
-    revalidateTag("fee-config");
-    revalidatePath("/(admin)/super-admin/wallet", "page");
+    (revalidateTag as any)("fee-config");
+    revalidatePath("/super-admin/wallet", "page");
     return { success: true };
   } catch (error: any) {
     return { success: false, error: error.message };
@@ -107,14 +107,14 @@ export async function updateWalletPaymentConfig(id: string, data: {
         where: { id: existing.id },
         data
       });
-      revalidateTag("wallet-payment-config");
+      (revalidateTag as any)("wallet-payment-config");
       revalidatePath('/super-admin/wallet');
       return { success: true, data: updated };
     } else {
       const created = await prisma.walletPaymentConfig.create({
         data
       });
-      revalidateTag("wallet-payment-config");
+      (revalidateTag as any)("wallet-payment-config");
       revalidatePath('/super-admin/wallet');
       return { success: true, data: created };
     }
@@ -216,7 +216,7 @@ export async function approveRechargeRequest(transactionId: string) {
       });
     });
 
-    revalidatePath("/(admin)/super-admin/wallet", "page");
+    revalidatePath("/super-admin/wallet", "page");
     // Also revalidate the tenant wallet page, but we don't have the tenant in path directly here.
     return { success: true };
   } catch (error: any) {
@@ -295,7 +295,7 @@ export async function directRecharge(workspaceId: string, amount: number, reason
       });
     });
 
-    revalidatePath("/(admin)/super-admin/wallet", "page");
+    revalidatePath("/super-admin/wallet", "page");
     return { success: true };
   } catch (error: any) {
     return { success: false, error: error.message };
@@ -334,7 +334,7 @@ export async function manualDeductWallet(workspaceId: string, amount: number, re
       });
     });
 
-    revalidatePath("/(admin)/super-admin/wallet", "page");
+    revalidatePath("/super-admin/wallet", "page");
     return { success: true };
   } catch (error: any) {
     return { success: false, error: error.message };
@@ -377,7 +377,7 @@ export async function savePlatformFeeConfig(data: { id?: string, name: string, a
       });
     }
     revalidatePath("/super-admin/wallet");
-    revalidatePath("/(admin)/super-admin/token-economy");
+    revalidatePath("/super-admin/token-economy");
     return { success: true };
   } catch (error: any) {
     return { success: false, error: error.message };
@@ -388,7 +388,7 @@ export async function deletePlatformFeeConfig(id: string) {
   try {
     await prisma.platformFeeConfig.delete({ where: { id } });
     revalidatePath("/super-admin/wallet");
-    revalidatePath("/(admin)/super-admin/token-economy");
+    revalidatePath("/super-admin/token-economy");
     return { success: true };
   } catch (error: any) {
     return { success: false, error: error.message };
@@ -426,7 +426,7 @@ export async function rejectRechargeRequest(transactionId: string, reason?: stri
       });
     });
 
-    revalidatePath("/(admin)/super-admin/wallet", "page");
+    revalidatePath("/super-admin/wallet", "page");
     return { success: true };
   } catch (error: any) {
     return { success: false, error: error.message };
@@ -480,7 +480,7 @@ export async function deleteRejectedTransaction(transactionId: string) {
       where: { id: transactionId }
     });
 
-    revalidatePath("/(admin)/super-admin/wallet", "page");
+    revalidatePath("/super-admin/wallet", "page");
     return { success: true };
   } catch (error: any) {
     return { success: false, error: error.message };

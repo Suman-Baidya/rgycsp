@@ -120,8 +120,8 @@ export async function createWorkspace(data: any) {
     });
 
     (revalidateTag as any)("workspaces");
-    revalidatePath("/(admin)/super-admin", "page");
-    revalidatePath("/(admin)/super-admin/franchises", "page");
+    revalidatePath("/super-admin", "page");
+    revalidatePath("/super-admin/franchises", "page");
     return { success: true, workspaceId: workspace.id };
   } catch (error: any) {
     console.error("Failed to create workspace:", error);
@@ -177,12 +177,16 @@ export async function updateCenterConfig(workspaceId: string, data: any) {
       centerCode, // username of the admin
       ownerName,
       ownerEmail,
+      password,
+      newPassword,
       contactPhone,
       address,
       logoUrl,
       signatureUrl,
       idProofUrl
     } = data;
+
+    const rawPassword = password || newPassword;
 
     // Check if new subdomain is taken by another workspace
     if (subdomain) {
@@ -263,19 +267,73 @@ export async function updateCenterConfig(workspaceId: string, data: any) {
         }
       }
 
+      const updateUserData: any = {
+        name: ownerName,
+        email: ownerEmail,
+        username: centerCode
+      };
+
+      if (rawPassword && typeof rawPassword === "string" && rawPassword.trim().length > 0) {
+        updateUserData.passwordHash = await bcrypt.hash(rawPassword.trim(), 10);
+      }
+
       await db.user.update({
         where: { id: adminRole.userId },
-        data: {
-          name: ownerName,
-          email: ownerEmail,
-          username: centerCode
+        data: updateUserData
+      });
+    } else if (ownerEmail) {
+      // Edge case: If no admin user is assigned yet to this workspace, find or create one
+      let user = await db.user.findFirst({
+        where: { email: ownerEmail }
+      });
+      if (!user) {
+        const passwordHash = (rawPassword && typeof rawPassword === "string" && rawPassword.trim().length > 0)
+          ? await bcrypt.hash(rawPassword.trim(), 10)
+          : await bcrypt.hash("12345678", 10);
+        user = await db.user.create({
+          data: {
+            name: ownerName || name,
+            email: ownerEmail,
+            username: centerCode,
+            passwordHash,
+            role: "USER"
+          }
+        });
+      } else {
+        const updateUserData: any = {
+          name: ownerName || user.name,
+          username: centerCode || user.username
+        };
+        if (rawPassword && typeof rawPassword === "string" && rawPassword.trim().length > 0) {
+          updateUserData.passwordHash = await bcrypt.hash(rawPassword.trim(), 10);
+        }
+        user = await db.user.update({
+          where: { id: user.id },
+          data: updateUserData
+        });
+      }
+
+      await db.workspaceRole.upsert({
+        where: {
+          userId_workspaceId: {
+            userId: user.id,
+            workspaceId: workspace.id
+          }
+        },
+        create: {
+          userId: user.id,
+          workspaceId: workspace.id,
+          role: "ADMIN"
+        },
+        update: {
+          role: "ADMIN"
         }
       });
     }
 
     (revalidateTag as any)("workspaces");
-    revalidatePath("/(admin)/super-admin", "page");
-    revalidatePath("/(admin)/super-admin/franchises", "page");
+    revalidatePath("/super-admin", "page");
+    revalidatePath("/super-admin/franchises", "page");
     return { success: true };
   } catch (error: any) {
     console.error("Failed to update center config:", error);
@@ -290,8 +348,8 @@ export async function toggleWorkspaceStatus(workspaceId: string, isActive: boole
       data: { isActive }
     });
     (revalidateTag as any)("workspaces");
-    revalidatePath("/(admin)/super-admin", "page");
-    revalidatePath("/(admin)/super-admin/franchises", "page");
+    revalidatePath("/super-admin", "page");
+    revalidatePath("/super-admin/franchises", "page");
     return { success: true };
   } catch (error: any) {
     return { success: false, error: error.message || "Failed to update workspace status" };
@@ -306,8 +364,8 @@ export async function deleteWorkspace(workspaceId: string) {
       where: { id: workspaceId }
     });
     (revalidateTag as any)("workspaces");
-    revalidatePath("/(admin)/super-admin", "page");
-    revalidatePath("/(admin)/super-admin/franchises", "page");
+    revalidatePath("/super-admin", "page");
+    revalidatePath("/super-admin/franchises", "page");
     return { success: true };
   } catch (error: any) {
     return { success: false, error: error.message || "Failed to delete workspace" };
@@ -334,7 +392,7 @@ export async function toggleDocumentAuthority(workspaceId: string, status: boole
       where: { id: workspaceId },
       data: { hasDocumentAuthority: status }
     });
-    revalidatePath("/(admin)/super-admin/franchises", "page");
+    revalidatePath("/super-admin/franchises", "page");
     return { success: true, data: updated };
   } catch (error: any) {
     console.error("Failed to toggle document authority:", error);

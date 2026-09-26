@@ -5,6 +5,7 @@ declare module "next-auth" {
     user: {
       id: string;
       role: string;
+      isActive?: boolean;
       systemPermissions?: any;
       isDeveloper?: boolean;
       originalUserId?: string;
@@ -13,6 +14,7 @@ declare module "next-auth" {
 
   interface User {
     role: string;
+    isActive?: boolean;
     isDeveloper?: boolean;
     systemPermissions?: any;
   }
@@ -22,6 +24,7 @@ declare module "next-auth/jwt" {
   interface JWT {
     id?: string;
     role?: string;
+    isActive?: boolean;
     systemPermissions?: any;
     isDeveloper?: boolean;
     impersonatedUserId?: string;

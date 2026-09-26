@@ -1,11 +1,19 @@
-"use client"
+"use client";
 
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import { Button, buttonVariants } from "@/components/ui/button"
-import { cn } from "@/lib/utils"
-import { MapPin, Phone, Mail, Rocket } from "lucide-react"
-import Link from "next/link"
+import React, { useState, useEffect } from "react";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import { MapPin, Phone, Mail, Rocket, Send, CheckCircle2 } from "lucide-react";
+import Link from "next/link";
+import { toast } from "sonner";
+import { submitContactForm } from "@/app/actions/enquiries";
+import { 
+  validateFullName, 
+  validateMobileNumber, 
+  validateEmailAddress 
+} from "@/lib/contact-validation";
 
 export function ContactSection({ data, settings }: { data?: any, settings?: any }) {
    const content = data?.content || {};
@@ -18,9 +26,93 @@ export function ContactSection({ data, settings }: { data?: any, settings?: any 
    const address = settings?.address || "Kolkata, West Bengal, India - 700001";
 
    const showPhone = content.showPhone !== false;
-   const showEmail = true; // Email always shown as primary
    const showAddress = content.showAddress !== false;
    const buttonText = content.buttonText || "Submit Request";
+
+   // Interactive Form State with Anti-Bot Protection
+   const [firstName, setFirstName] = useState("");
+   const [lastName, setLastName] = useState("");
+   const [email, setEmail] = useState("");
+   const [phone, setPhone] = useState("");
+   const [instituteName, setInstituteName] = useState("");
+   const [message, setMessage] = useState("");
+   // Anti-Bot Honeypot field (hidden from humans, bots will fill this)
+   const [honeypot, setHoneypot] = useState("");
+   const [formRenderTime, setFormRenderTime] = useState<number>(0);
+   const [isSubmitting, setIsSubmitting] = useState(false);
+   const [isSubmitted, setIsSubmitted] = useState(false);
+
+   useEffect(() => {
+      setFormRenderTime(Date.now());
+   }, []);
+
+   const handleSubmit = async (e: React.FormEvent) => {
+      e.preventDefault();
+
+      // Strict Name Validation
+      const fullName = `${firstName.trim()} ${lastName.trim()}`.trim();
+      const nameCheck = validateFullName(fullName);
+      if (!nameCheck.isValid) {
+         toast.error(nameCheck.error || "Please provide your genuine full name.");
+         return;
+      }
+
+      // Strict Email Validation
+      const emailCheck = validateEmailAddress(email);
+      if (!emailCheck.isValid) {
+         toast.error(emailCheck.error || "Please provide a valid email address.");
+         return;
+      }
+
+      // Strict Phone Validation (if provided)
+      let formattedPhone = phone.trim();
+      if (formattedPhone) {
+         const phoneCheck = validateMobileNumber(formattedPhone);
+         if (!phoneCheck.isValid) {
+            toast.error(phoneCheck.error || "Please enter a valid 10-digit mobile number.");
+            return;
+         }
+         formattedPhone = phoneCheck.cleanPhone;
+      }
+
+      setIsSubmitting(true);
+      toast.loading("Sending your message...", { id: "contact-submit" });
+
+      try {
+         const res = await submitContactForm({
+            name: nameCheck.cleanName,
+            email: emailCheck.cleanEmail,
+            phone: formattedPhone || undefined,
+            organization: instituteName.trim() || undefined,
+            subject: "Platform Demo & Institute Inquiry",
+            message: message.trim(),
+            workspaceId: null, // Global
+            honeypot,
+            formRenderTime,
+         });
+
+         if (res.success) {
+            toast.success("Message Delivered!", {
+               id: "contact-submit",
+               description: res.message || "Our onboarding specialist will get back to you shortly."
+            });
+            setIsSubmitted(true);
+            setFirstName("");
+            setLastName("");
+            setEmail("");
+            setPhone("");
+            setInstituteName("");
+            setMessage("");
+            setHoneypot("");
+         } else {
+            toast.error(res.error || "Failed to deliver message", { id: "contact-submit" });
+         }
+      } catch (err: any) {
+         toast.error("An error occurred. Please try again later.", { id: "contact-submit" });
+      } finally {
+         setIsSubmitting(false);
+      }
+   };
 
    return (
       <section id="support" className="py-24 px-6 bg-transparent">
@@ -111,38 +203,118 @@ export function ContactSection({ data, settings }: { data?: any, settings?: any 
             {/* Form Side */}
             <div className="flex-1">
                <div className="bg-background border rounded-[2rem] p-10 shadow-2xl shadow-primary/5">
-                  <h3 className="text-2xl font-black mb-8 tracking-tight">Send a Message</h3>
-                  <form className="space-y-6">
-                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                        <div className="space-y-2">
-                           <label className="text-[10px] font-black tracking-widest text-muted-foreground ml-1">First Name</label>
-                           <Input placeholder="John" className="h-14 bg-zinc-50 dark:bg-zinc-900 rounded-xl border-border/40 focus:border-primary/50 transition-all" />
+                  <h3 className="text-2xl font-black mb-2 tracking-tight">Send a Message</h3>
+                  <p className="text-xs text-muted-foreground mb-8">Fill in your details below and our team will connect with you.</p>
+
+                  {isSubmitted ? (
+                     <div className="py-12 flex flex-col items-center justify-center text-center space-y-4">
+                        <div className="w-16 h-16 rounded-full bg-emerald-500/10 text-emerald-600 flex items-center justify-center">
+                           <CheckCircle2 className="w-8 h-8" />
                         </div>
-                        <div className="space-y-2">
-                           <label className="text-[10px] font-black tracking-widest text-muted-foreground ml-1">Last Name</label>
-                           <Input placeholder="Doe" className="h-14 bg-zinc-50 dark:bg-zinc-900 rounded-xl border-border/40 focus:border-primary/50 transition-all" />
+                        <h4 className="text-xl font-bold text-slate-900 dark:text-white">Message Sent Successfully!</h4>
+                        <p className="text-xs text-slate-500 max-w-sm">
+                           Thank you for contacting us. We have received your inquiry and will reach out via email or phone shortly.
+                        </p>
+                        <Button 
+                           variant="outline" 
+                           onClick={() => setIsSubmitted(false)}
+                           className="h-9 px-4 text-xs font-semibold rounded-lg mt-2"
+                        >
+                           Send Another Message
+                        </Button>
+                     </div>
+                  ) : (
+                     <form onSubmit={handleSubmit} className="space-y-5">
+                        {/* Hidden Honeypot Field (Anti-Bot Trap) */}
+                        <div style={{ position: "absolute", left: "-9999px", opacity: 0, height: 0, overflow: "hidden" }} aria-hidden="true">
+                           <input 
+                              type="text" 
+                              name="_hp_company_check" 
+                              value={honeypot} 
+                              onChange={(e) => setHoneypot(e.target.value)} 
+                              tabIndex={-1} 
+                              autoComplete="off" 
+                           />
                         </div>
-                     </div>
 
-                     <div className="space-y-2">
-                        <label className="text-[10px] font-black tracking-widest text-muted-foreground ml-1">Email Address</label>
-                        <Input type="email" placeholder="john@institute.edu" className="h-14 bg-zinc-50 dark:bg-zinc-900 rounded-xl border-border/40 focus:border-primary/50 transition-all" />
-                     </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                           <div className="space-y-1.5">
+                              <label className="text-[10px] font-bold tracking-widest uppercase text-muted-foreground ml-1">First Name *</label>
+                              <Input 
+                                 required
+                                 value={firstName}
+                                 onChange={(e) => setFirstName(e.target.value.replace(/[^a-zA-Z\s.'-]/g, "").slice(0, 30))}
+                                 placeholder="John" 
+                                 className="h-12 bg-zinc-50 dark:bg-zinc-900 rounded-xl border-border/40 focus:border-primary/50 text-xs sm:text-sm transition-all" 
+                              />
+                           </div>
+                           <div className="space-y-1.5">
+                              <label className="text-[10px] font-bold tracking-widest uppercase text-muted-foreground ml-1">Last Name</label>
+                              <Input 
+                                 value={lastName}
+                                 onChange={(e) => setLastName(e.target.value.replace(/[^a-zA-Z\s.'-]/g, "").slice(0, 30))}
+                                 placeholder="Doe" 
+                                 className="h-12 bg-zinc-50 dark:bg-zinc-900 rounded-xl border-border/40 focus:border-primary/50 text-xs sm:text-sm transition-all" 
+                              />
+                           </div>
+                        </div>
 
-                     <div className="space-y-2">
-                        <label className="text-[10px] font-black tracking-widest text-muted-foreground ml-1">Institute Name</label>
-                        <Input placeholder="ABCD High School" className="h-14 bg-zinc-50 dark:bg-zinc-900 rounded-xl border-border/40 focus:border-primary/50 transition-all" />
-                     </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                           <div className="space-y-1.5">
+                              <label className="text-[10px] font-bold tracking-widest uppercase text-muted-foreground ml-1">Email Address *</label>
+                              <Input 
+                                 required
+                                 type="email" 
+                                 value={email}
+                                 onChange={(e) => setEmail(e.target.value)}
+                                 placeholder="john@institute.edu" 
+                                 className="h-12 bg-zinc-50 dark:bg-zinc-900 rounded-xl border-border/40 focus:border-primary/50 text-xs sm:text-sm transition-all" 
+                              />
+                           </div>
+                           <div className="space-y-1.5">
+                              <label className="text-[10px] font-bold tracking-widest uppercase text-muted-foreground ml-1">Phone / WhatsApp</label>
+                              <Input 
+                                 type="tel"
+                                 value={phone}
+                                 onChange={(e) => setPhone(e.target.value.replace(/[^\d+]/g, "").slice(0, 13))}
+                                 placeholder="+91 98765 43210" 
+                                 className="h-12 bg-zinc-50 dark:bg-zinc-900 rounded-xl border-border/40 focus:border-primary/50 text-xs sm:text-sm transition-all" 
+                              />
+                           </div>
+                        </div>
 
-                     <div className="space-y-2">
-                        <label className="text-[10px] font-black tracking-widest text-muted-foreground ml-1">Your Needs</label>
-                        <Textarea placeholder="How can we help scale your workflow?" className="min-h-[140px] bg-zinc-50 dark:bg-zinc-900 rounded-xl border-border/40 focus:border-primary/50 transition-all" />
-                     </div>
+                        <div className="space-y-1.5">
+                           <label className="text-[10px] font-bold tracking-widest uppercase text-muted-foreground ml-1">Institute / Organization Name</label>
+                           <Input 
+                              value={instituteName}
+                              onChange={(e) => setInstituteName(e.target.value)}
+                              placeholder="e.g. National Computer Academy" 
+                              className="h-12 bg-zinc-50 dark:bg-zinc-900 rounded-xl border-border/40 focus:border-primary/50 text-xs sm:text-sm transition-all" 
+                           />
+                        </div>
 
-                     <Button size="lg" className="w-full h-16 text-lg font-black bg-primary text-primary-foreground mt-6 rounded-2xl shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all">
-                        {buttonText}
-                     </Button>
-                  </form>
+                        <div className="space-y-1.5">
+                           <label className="text-[10px] font-bold tracking-widest uppercase text-muted-foreground ml-1">Your Requirements / Message *</label>
+                           <Textarea 
+                              required
+                              value={message}
+                              onChange={(e) => setMessage(e.target.value)}
+                              placeholder="How can we help scale your institution or franchise network?" 
+                              className="min-h-[120px] bg-zinc-50 dark:bg-zinc-900 rounded-xl border-border/40 focus:border-primary/50 text-xs sm:text-sm transition-all" 
+                           />
+                        </div>
+
+                        <Button 
+                           type="submit"
+                           disabled={isSubmitting}
+                           size="lg" 
+                           className="w-full h-14 text-sm font-bold bg-primary text-primary-foreground mt-4 rounded-xl shadow-lg shadow-primary/20 hover:scale-[1.01] active:scale-95 transition-all gap-2"
+                        >
+                           <Send className="w-4 h-4" />
+                           {isSubmitting ? "Sending Request..." : buttonText}
+                        </Button>
+                     </form>
+                  )}
                </div>
             </div>
          </div>

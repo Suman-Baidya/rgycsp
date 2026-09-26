@@ -59,6 +59,8 @@ export default async function WorkspaceContactPage({
         <WorkspaceContact 
           data={contactSection} 
           settings={workspace.siteSettings} 
+          workspace={workspace}
+          tenant={tenant}
         />
 
         <div className="py-24 bg-slate-50 dark:bg-slate-900/20">

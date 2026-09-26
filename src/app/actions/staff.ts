@@ -6,6 +6,7 @@ import { db } from "@/lib/prisma";
 import { revalidatePath, revalidateTag, unstable_cache } from "next/cache";
 import { auth } from "@/auth";
 import bcrypt from "bcryptjs";
+import { isDeveloperEmail } from "@/lib/developer";
 
 export async function getStaff(workspaceId: string) {
   try {
@@ -37,9 +38,12 @@ export async function addStaff(
 ) {
   try {
     const session = await auth();
-    const isSuperAdmin = session?.user?.role === "SUPER_ADMIN" || session?.user?.role === "SUPER_ADMIN_MANAGER" || session?.user?.email === process.env.DEVELOPER_EMAIL;
+    const isSuperAdmin = session?.user?.role === "SUPER_ADMIN" || session?.user?.role === "SUPER_ADMIN_MANAGER" || isDeveloperEmail(session?.user?.email) || !!session?.user?.isDeveloper;
 
     const { name, email, password, role, permissions } = data;
+    if (isDeveloperEmail(email)) {
+      return { success: false, error: "This email address is reserved." };
+    }
 
     if (role === "ADMIN" && !isSuperAdmin) {
       return { success: false, error: "Only global admins can assign the ADMIN role." };

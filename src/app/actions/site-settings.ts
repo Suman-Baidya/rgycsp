@@ -68,7 +68,7 @@ export async function updateSiteSettings(data: any) {
     (revalidateTag as any)("site-settings");
     revalidatePath("/", "layout");
     revalidatePath("/");
-    revalidatePath("/(admin)/super-admin/settings");
+    revalidatePath("/super-admin/settings");
     await revalidateWorkspacePath(typeof workspaceId !== 'undefined' ? workspaceId : null, "/admin/settings");
     await revalidateWorkspacePath(typeof workspaceId !== 'undefined' ? workspaceId : null, "/", "layout");
     
@@ -97,7 +97,7 @@ export async function updateLandingSection(sectionId: string, data: any) {
 
     (revalidateTag as any)("site-settings");
     revalidatePath("/");
-    revalidatePath("/(admin)/super-admin/settings");
+    revalidatePath("/super-admin/settings");
     const targetWorkspaceId = data?.workspaceId || null;
     await revalidateWorkspacePath(targetWorkspaceId, "/admin/settings");
     await revalidateWorkspacePath(targetWorkspaceId, "/", "layout");
@@ -212,7 +212,7 @@ export async function syncAllSections(settingsId: string, sectionTypes: string[]
 
     if (!skipRevalidate) {
       revalidatePath("/");
-      revalidatePath("/(admin)/super-admin/settings");
+      revalidatePath("/super-admin/settings");
     }
     return { success: true, created: missingTypes.length };
   } catch (error) {

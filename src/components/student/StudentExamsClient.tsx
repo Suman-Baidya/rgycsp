@@ -33,6 +33,20 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { getTenantLink } from "@/lib/routing";
 import { cn } from "@/lib/utils";
+import {
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  RadarChart,
+  PolarGrid,
+  PolarAngleAxis,
+  PolarRadiusAxis,
+  Radar
+} from "recharts";
 
 interface StudentExamsClientProps {
   settings?: any;

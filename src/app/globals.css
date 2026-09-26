@@ -161,20 +161,32 @@
   }
 
   /* Premium Scrollbar */
+  .custom-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(100, 116, 139, 0.25) transparent;
+  }
   .custom-scrollbar::-webkit-scrollbar {
     width: 6px;
     height: 6px;
   }
   .custom-scrollbar::-webkit-scrollbar-track {
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 10px;
+    background: transparent;
   }
   .custom-scrollbar::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.3);
-    border-radius: 10px;
+    background: rgba(100, 116, 139, 0.25);
+    border-radius: 9999px;
   }
   .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.5);
+    background: rgba(100, 116, 139, 0.45);
+  }
+  .dark .custom-scrollbar {
+    scrollbar-color: rgba(148, 163, 184, 0.3) transparent;
+  }
+  .dark .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(148, 163, 184, 0.3);
+  }
+  .dark .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(148, 163, 184, 0.5);
   }
   
   .scrollbar-hide::-webkit-scrollbar {

@@ -17,7 +17,7 @@ import { ImageUpload } from "@/components/ui/ImageUpload";
 import { toast } from "sonner";
 import { ArrowRight, ArrowLeft, CheckCircle2, Download, Copy, Loader2, Mail, ShieldCheck, Calculator, RefreshCw, IndianRupee } from "lucide-react";
 import Link from "next/link";
-import { useParams, usePathname } from "next/navigation";
+import { useParams, usePathname, useSearchParams } from "next/navigation";
 import { cn } from "@/lib/utils";
 
 // Form Schema
@@ -57,11 +57,26 @@ const formSchema = z.object({
   customData: z.record(z.string(), z.any()).optional(),
 });
 
-export default function AdmissionFormClient({ workspaceId, workspaceName, config, courses, initialCourseId, fromGlobal }: any) {
+export default function AdmissionFormClient({ 
+  workspaceId, 
+  workspaceName, 
+  config, 
+  courses, 
+  initialCourseId, 
+  fromGlobal,
+  prefillData 
+}: any) {
   const showVerification = config?.enableEmailVerification !== false;
   const [step, setStep] = useState(showVerification ? 0 : 1); // Respect config
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [successData, setSuccessData] = useState<any>(null);
+
+  // Search parameters & prefill data from lead funnel
+  const searchParams = useSearchParams();
+  const prefillName = prefillData?.name || searchParams.get("name") || "";
+  const prefillPhone = prefillData?.phone || searchParams.get("phone") || "";
+  const prefillEmail = prefillData?.email || searchParams.get("email") || "";
+  const prefillPin = prefillData?.pincode || searchParams.get("pincode") || searchParams.get("pin") || "";
 
   // Verification States
   const [isOtpSent, setIsOtpSent] = useState(false);
@@ -77,10 +92,6 @@ export default function AdmissionFormClient({ workspaceId, workspaceName, config
     setCaptcha({ q: `${n1} + ${n2}`, a: n1 + n2 });
   };
 
-  useEffect(() => {
-    generateCaptcha();
-  }, []);
-
   const pathname = usePathname();
   const params = useParams();
   const tenant = params.tenant as string;
@@ -93,14 +104,37 @@ export default function AdmissionFormClient({ workspaceId, workspaceName, config
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      fullName: "", fatherName: "", motherName: "", guardianPhone: "", dob: "", gender: "", bloodGroup: "", religion: "", caste: "",
-      vill: "", po: "", ps: "", dist: "", pin: "", state: "",
-      mobile: "", whatsapp: "", email: "",
+      fullName: prefillName, 
+      fatherName: "", motherName: "", guardianPhone: "", dob: "", gender: "", bloodGroup: "", religion: "", caste: "",
+      vill: "", po: "", ps: "", dist: "", 
+      pin: prefillPin, 
+      state: "",
+      mobile: prefillPhone, 
+      whatsapp: prefillPhone, 
+      email: prefillEmail,
       qualName: "", qualYear: "", qualPercent: "", qualBoard: "",
       photoUrl: "", signatureUrl: "", idProofUrl: "", courseId: "", paymentType: "ONE_TIME", appliedCourse: "",
       customData: {}
     }
   });
+
+  useEffect(() => {
+    generateCaptcha();
+
+    // Auto-fetch location details if 6-digit PIN code was pre-filled
+    if (prefillPin && prefillPin.length === 6) {
+      getPincodeDetails(prefillPin).then((res) => {
+        if (res.success) {
+          form.setValue("dist", res.district || "");
+          form.setValue("state", res.state || "");
+        }
+      }).catch(console.error);
+    }
+
+    if (prefillName || prefillPhone) {
+      toast.info("Welcome! Your information from the inquiry has been pre-filled for convenience.");
+    }
+  }, []);
 
   // Automatically select course if initialCourseId is provided
   useState(() => {

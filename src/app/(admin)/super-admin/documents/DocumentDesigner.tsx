@@ -819,6 +819,7 @@ export default function DocumentDesigner() {
                 <SelectItem value="STUDENT_ID" className="text-xs">Student ID Card</SelectItem>
                 <SelectItem value="STAFF_ID" className="text-xs">Staff ID Card</SelectItem>
                 <SelectItem value="FRANCHISE_ID" className="text-xs">Franchise ID</SelectItem>
+                <SelectItem value="VISITING_CARD" className="text-xs">Visiting Card</SelectItem>
                 <SelectItem value="NOTICE_PAD" className="text-xs">Notice Pad</SelectItem>
                 <SelectItem value="FRANCHISE_CERTIFICATE" className="text-xs">Franchise Certificate</SelectItem>
               </SelectContent>
@@ -1020,6 +1021,7 @@ export default function DocumentDesigner() {
                       <SelectItem value="STUDENT_ID" className="text-xs">Student ID Card</SelectItem>
                       <SelectItem value="STAFF_ID" className="text-xs">Staff Id Card</SelectItem>
                       <SelectItem value="FRANCHISE_ID" className="text-xs">Franchise Owner ID</SelectItem>
+                      <SelectItem value="VISITING_CARD" className="text-xs">Visiting Card</SelectItem>
                       <SelectItem value="NOTICE_PAD" className="text-xs">Notice Pad</SelectItem>
                       <SelectItem value="FRANCHISE_CERTIFICATE" className="text-xs">Franchises Certificate</SelectItem>
                     </SelectContent>

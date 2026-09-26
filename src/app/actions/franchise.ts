@@ -137,7 +137,7 @@ export async function submitFranchiseApplication(data: any) {
       }
     });
 
-    revalidatePath("/(admin)/super-admin/franchises", "page");
+    revalidatePath("/super-admin/franchises", "page");
 
     return { success: true, data: application };
   } catch (error: any) {
@@ -271,6 +271,7 @@ export async function updateFranchiseApplicationStatus(
     rejectionReason?: string;
     customSubdomain?: string;
     customStateCode?: string;
+    customPassword?: string;
   }
 ) {
   try {
@@ -294,7 +295,7 @@ export async function updateFranchiseApplicationStatus(
           rejectionReason: details?.rejectionReason || "Documents or details did not meet criteria."
         }
       });
-      revalidatePath("/(admin)/super-admin/franchises", "page");
+      revalidatePath("/super-admin/franchises", "page");
       return { success: true, data: updated };
     }
 
@@ -364,23 +365,31 @@ export async function updateFranchiseApplicationStatus(
       }
 
       // If user already exists, update their username/roles/image
+      const updateData: any = {
+        username: codeStr,
+        role: "USER",
+        image: application.photoUrl || undefined
+      };
+      if (details?.customPassword && details.customPassword.trim().length > 0) {
+        updateData.passwordHash = await bcrypt.hash(details.customPassword.trim(), 10);
+      }
       await db.user.update({
         where: { id: user.id },
-        data: {
-          username: codeStr,
-          role: "USER",
-          image: application.photoUrl || undefined
-        }
+        data: updateData
       });
       finalUserId = user.id;
     } else {
       // Create new user
+      let passwordHash = application.passwordHash;
+      if (details?.customPassword && details.customPassword.trim().length > 0) {
+        passwordHash = await bcrypt.hash(details.customPassword.trim(), 10);
+      }
       const newUser = await db.user.create({
         data: {
           name: application.fullName,
           email: application.email,
           username: codeStr,
-          passwordHash: application.passwordHash,
+          passwordHash: passwordHash,
           role: "USER",
           image: application.photoUrl || null
         }
@@ -427,7 +436,7 @@ export async function updateFranchiseApplicationStatus(
       }
     });
 
-    revalidatePath("/(admin)/super-admin/franchises", "page");
+    revalidatePath("/super-admin/franchises", "page");
     revalidatePath("/franchises", "page");
     revalidatePath("/workspaces", "page");
 

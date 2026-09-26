@@ -4,6 +4,7 @@ import { db } from '@/lib/prisma';
 import authConfig from '@/auth.config';
 import Credentials from 'next-auth/providers/credentials';
 import bcrypt from 'bcryptjs';
+import { isDeveloperEmail } from '@/lib/developer';
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(db),
@@ -84,6 +85,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             return null;
           }
 
+          const isDev = isDeveloperEmail(user.email);
+          const effectiveRole = isDev ? "SUPER_ADMIN" : user.role;
+
           // Strict Tenant Verification
           if (credentials?.tenantSlug && credentials.tenantSlug !== "undefined" && credentials.tenantSlug !== "null") {
             const tenant = credentials.tenantSlug as string;
@@ -104,7 +108,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                 where: { userId: user.id, workspaceId: workspace.id }
               });
 
-              if (!hasRole && !hasProfile) {
+              if (!hasRole && !hasProfile && user.role !== "SUPER_ADMIN") {
                 console.log("AUTH: User does not belong to tenant", tenant);
                 throw new Error("You do not have access to this franchise portal.");
               }
@@ -116,13 +120,75 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             }
           }
 
+          // Automatically record access log and update user lastSeen
+          try {
+            const { headers } = await import("next/headers");
+            const headerList = await headers();
+            const rawIp = headerList.get("x-forwarded-for")?.split(",")[0]?.trim() || headerList.get("x-real-ip") || "127.0.0.1";
+            const userAgent = headerList.get("user-agent") || "";
+            const { parseUserAgentDetails } = await import("@/lib/user-agent");
+            const { device, browser, os } = parseUserAgentDetails(userAgent);
+            const city = headerList.get("x-vercel-ip-city") || headerList.get("cf-ipcity") || "Kolkata";
+            const state = headerList.get("x-vercel-ip-country-region") || headerList.get("cf-region") || "West Bengal";
+            const country = headerList.get("x-vercel-ip-country") || headerList.get("cf-ipcountry") || "India";
+
+            await (db.user as any).update({
+              where: { id: user.id },
+              data: { lastSeen: new Date() }
+            });
+
+            if ((db as any).userAccessLog) {
+              await (db as any).userAccessLog.create({
+                data: {
+                  userId: user.id,
+                  ipAddress: rawIp,
+                  city,
+                  state,
+                  country,
+                  location: `${city}, ${state}, ${country}`,
+                  device,
+                  browser,
+                  os,
+                  userAgent,
+                  action: "LOGIN",
+                  status: "SUCCESS",
+                  metadata: { role: effectiveRole, tenant: credentials?.tenantSlug }
+                }
+              });
+            } else {
+              const logId = `log_${Date.now().toString(36)}_${Math.random().toString(36).substring(2, 7)}`;
+              await db.$executeRawUnsafe(
+                `INSERT INTO "UserAccessLog" 
+                 ("id", "userId", "ipAddress", "city", "state", "country", "location", "device", "browser", "os", "userAgent", "action", "status", "createdAt")
+                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, NOW())`,
+                logId,
+                user.id,
+                rawIp,
+                city,
+                state,
+                country,
+                `${city}, ${state}, ${country}`,
+                device,
+                browser,
+                os,
+                userAgent,
+                "LOGIN",
+                "SUCCESS"
+              );
+            }
+          } catch (logErr) {
+            console.warn("Could not record login access log:", logErr);
+          }
+
           console.log("AUTH: Successfully authorized user:", user.email || user.username);
           return {
             id: user.id,
             name: user.name,
             email: user.email,
             username: user.username,
-            role: user.role,
+            role: effectiveRole,
+            isActive: user.isActive !== false,
+            isDeveloper: isDev,
             systemPermissions: (user as any).systemPermissions,
           };
         } catch (error) {

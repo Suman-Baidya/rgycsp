@@ -27,6 +27,7 @@ import {
   IndianRupee,
   GraduationCap,
   BarChart2,
+  MessageSquareQuote
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -38,7 +39,9 @@ export function WorkspaceSidebar({
   workspaceBase,
   admissionsCount = 0,
   pendingFeesCount = 0,
+  pendingEnquiriesCount = 0,
   isStateManager = false,
+  isSubdomainEnabled = true,
   userRole = "ADMIN",
   userPermissions = []
 }: { 
@@ -46,7 +49,9 @@ export function WorkspaceSidebar({
   workspaceBase?: string;
   admissionsCount?: number;
   pendingFeesCount?: number;
+  pendingEnquiriesCount?: number;
   isStateManager?: boolean;
+  isSubdomainEnabled?: boolean;
   userRole?: string;
   userPermissions?: string[];
 }) {
@@ -79,6 +84,7 @@ export function WorkspaceSidebar({
   const allNavItems = [
     { id: "dashboard", name: "Overview", href: generateLink(WORKSPACE_ROUTES.ADMIN), icon: LayoutDashboard },
     { id: "analytics", name: "Visitor Analytics", href: generateLink(WORKSPACE_ROUTES.ADMIN_ANALYTICS), icon: BarChart2 },
+    ...(isSubdomainEnabled ? [{ id: "enquiries", name: "Enquiries", href: generateLink(WORKSPACE_ROUTES.ADMIN_ENQUIRIES), icon: MessageSquareQuote }] : []),
     { id: "wallet", name: "Wallet", href: generateLink(WORKSPACE_ROUTES.ADMIN_WALLET), icon: Wallet },
     { id: "staff", name: "Staff & Roles", href: generateLink(WORKSPACE_ROUTES.ADMIN_STAFF), icon: UserCheck },
     { id: "students", name: "Students", href: generateLink(WORKSPACE_ROUTES.ADMIN_STUDENTS), icon: Users },
@@ -114,6 +120,12 @@ export function WorkspaceSidebar({
 
   const mainNavItems = navItems.slice(0, 4);
   const moreNavItems = navItems.slice(4);
+
+  const activeGradient = isStateManager
+    ? "bg-gradient-to-r from-amber-600 to-orange-600 text-white shadow-[0_4px_16px_rgba(217,119,6,0.35)] font-semibold"
+    : userRole === "STAFF"
+    ? "bg-gradient-to-r from-indigo-600 to-violet-600 text-white shadow-[0_4px_16px_rgba(79,70,229,0.35)] font-semibold"
+    : "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-[0_4px_16px_rgba(37,99,235,0.35)] font-semibold";
 
   return (
     <>
@@ -179,26 +191,29 @@ export function WorkspaceSidebar({
         </div>
 
         {/* Navigation */}
-        <nav className={cn("flex-1 py-4 space-y-1.5 overflow-y-auto overflow-x-hidden", isCollapsed ? "px-2 scrollbar-hide" : "px-4 custom-scrollbar")}>
+        <nav className={cn("flex-1 py-3 space-y-1 overflow-y-auto overflow-x-hidden", isCollapsed ? "px-2 scrollbar-hide" : "px-3 custom-scrollbar")}>
           {navItems.map((item) => {
             const isActive = isActivePath(pathname, item.href);
+            const Icon = item.icon;
             
             return (
               <TenantNavLink
                 key={item.name}
                 href={item.href}
-                className={cn(
-                  "relative flex items-center justify-between px-3 py-2.5 rounded-xl transition-all duration-200 group overflow-hidden",
-                  isActive 
-                    ? "bg-white/10 text-white shadow-sm ring-1 ring-white/20 font-semibold" 
-                    : "hover:bg-white/5 hover:text-white",
-                  isCollapsed ? "justify-center h-10 w-10 mx-auto" : ""
-                )}
+                className="block w-full"
               >
-                <div className="flex items-center gap-3 w-full">
-                  <item.icon className={cn(
-                    "h-5 w-5 transition-colors",
-                    isActive ? "text-white" : "text-zinc-400 group-hover:text-white"
+                <div
+                  className={cn(
+                    "flex items-center gap-3 transition-all duration-200 group relative overflow-hidden",
+                    isActive 
+                      ? activeGradient 
+                      : "hover:bg-white/5 hover:text-white text-zinc-400",
+                    isCollapsed ? "justify-center h-10 w-10 mx-auto rounded-xl" : "px-3 py-2.5 rounded-xl"
+                  )}
+                >
+                  <Icon className={cn(
+                    "h-5 w-5 flex-shrink-0 transition-colors",
+                    isActive ? "text-white" : "group-hover:text-white text-zinc-400"
                   )} />
                   
                   {!isCollapsed && (
@@ -208,37 +223,51 @@ export function WorkspaceSidebar({
                       className="font-medium whitespace-nowrap flex-1 flex justify-between items-center pr-2"
                     >
                       <span>{item.name}</span>
-                      {item.name === "Admissions" && admissionsCount > 0 && (
+                      {item.id === "enquiries" && pendingEnquiriesCount > 0 && (
                         <span className="h-5 min-w-5 px-1.5 bg-red-500 text-white text-[10px] font-black rounded flex items-center justify-center animate-pulse shadow-[0_0_10px_rgba(239,68,68,0.5)]">
+                          {pendingEnquiriesCount}
+                        </span>
+                      )}
+                      {item.name === "Admissions" && admissionsCount > 0 && (
+                        <span className="h-5 min-w-5 px-1.5 bg-amber-500 text-white text-[10px] font-black rounded flex items-center justify-center animate-pulse shadow-[0_0_10px_rgba(245,158,11,0.5)]">
                           {admissionsCount}
                         </span>
                       )}
                       {item.id === "fees" && pendingFeesCount > 0 && (
-                        <span className="h-5 min-w-5 px-1.5 bg-red-500 text-white text-[10px] font-black rounded flex items-center justify-center animate-pulse shadow-[0_0_10px_rgba(239,68,68,0.5)]">
+                        <span className="h-5 min-w-5 px-1.5 bg-rose-500 text-white text-[10px] font-black rounded flex items-center justify-center animate-pulse shadow-[0_0_10px_rgba(244,63,94,0.5)]">
                           {pendingFeesCount}
                         </span>
                       )}
                     </motion.span>
                   )}
 
-                  {isCollapsed && item.name === "Admissions" && admissionsCount > 0 && (
+                  {isCollapsed && item.id === "enquiries" && pendingEnquiriesCount > 0 && (
                     <div className="absolute top-2 right-2 w-2.5 h-2.5 bg-red-500 rounded-full animate-pulse shadow-[0_0_10px_rgba(239,68,68,0.5)] border-2 border-zinc-950"></div>
                   )}
 
+                  {isCollapsed && item.name === "Admissions" && admissionsCount > 0 && (
+                    <div className="absolute top-2 right-2 w-2.5 h-2.5 bg-amber-500 rounded-full animate-pulse shadow-[0_0_10px_rgba(245,158,11,0.5)] border-2 border-zinc-950"></div>
+                  )}
+
                   {isCollapsed && item.id === "fees" && pendingFeesCount > 0 && (
-                    <div className="absolute top-2 right-2 w-2.5 h-2.5 bg-red-500 rounded-full animate-pulse shadow-[0_0_10px_rgba(239,68,68,0.5)] border-2 border-zinc-950"></div>
+                    <div className="absolute top-2 right-2 w-2.5 h-2.5 bg-rose-500 rounded-full animate-pulse shadow-[0_0_10px_rgba(244,63,94,0.5)] border-2 border-zinc-950"></div>
                   )}
 
                   {isCollapsed && (
                     <div className="absolute left-full ml-4 px-2 py-1 bg-zinc-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50 whitespace-nowrap border border-white/10 shadow-xl flex items-center gap-2">
                       {item.name}
-                      {item.name === "Admissions" && admissionsCount > 0 && (
+                      {item.id === "enquiries" && pendingEnquiriesCount > 0 && (
                         <div className="ml-auto flex h-5 min-w-[20px] items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white">
+                          {pendingEnquiriesCount}
+                        </div>
+                      )}
+                      {item.name === "Admissions" && admissionsCount > 0 && (
+                        <div className="ml-auto flex h-5 min-w-[20px] items-center justify-center rounded-full bg-amber-500 px-1 text-[10px] font-bold text-white">
                           {admissionsCount}
                         </div>
                       )}
                       {item.id === "fees" && pendingFeesCount > 0 && (
-                        <div className="ml-auto flex h-5 min-w-[20px] items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white">
+                        <div className="ml-auto flex h-5 min-w-[20px] items-center justify-center rounded-full bg-rose-500 px-1 text-[10px] font-bold text-white">
                           {pendingFeesCount}
                         </div>
                       )}
@@ -251,7 +280,7 @@ export function WorkspaceSidebar({
         </nav>
 
         {/* Footer */}
-        <div className={cn("border-t border-white/5 transition-all duration-300", isCollapsed ? "p-2" : "p-4")}>
+        <div className={cn("border-t border-white/5 transition-all duration-300", isCollapsed ? "p-2" : "p-3")}>
           <div 
             onClick={async () => {
               const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "localhost:3000";
@@ -260,8 +289,8 @@ export function WorkspaceSidebar({
               window.location.href = `${protocol}://${rootDomain}/`;
             }}
             className={cn(
-              "flex items-center gap-3 rounded-xl hover:bg-red-500/10 hover:text-red-500 transition-all cursor-pointer group relative overflow-hidden",
-              isCollapsed ? "justify-center h-12 w-12 mx-auto" : "px-3 py-3"
+              "flex items-center gap-3 rounded-xl hover:bg-red-500/10 hover:text-red-500 transition-all cursor-pointer group relative overflow-hidden text-zinc-400",
+              isCollapsed ? "justify-center h-10 w-10 mx-auto rounded-xl" : "px-3 py-2.5"
             )}
           >
             <LogOut className="h-5 w-5 flex-shrink-0" />
@@ -269,7 +298,7 @@ export function WorkspaceSidebar({
               <motion.span 
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
-                className="font-medium"
+                className="font-medium whitespace-nowrap"
               >
                 Logout
               </motion.span>
@@ -352,14 +381,14 @@ export function WorkspaceSidebar({
               className="fixed bottom-[72px] left-0 right-0 z-[65] bg-white dark:bg-zinc-950 border-t border-slate-200/80 dark:border-white/10 rounded-t-[28px] overflow-hidden flex flex-col max-h-[70vh] lg:hidden shadow-[0_-12px_40px_rgba(0,0,0,0.15)] dark:shadow-[0_-12px_40px_rgba(0,0,0,0.5)]"
             >
               <div className="w-10 h-1.5 bg-slate-300 dark:bg-zinc-700 rounded-full mx-auto mt-3 mb-2" />
-              <div className="flex-1 overflow-y-auto p-4 space-y-1.5 custom-scrollbar">
+              <div className="flex-1 overflow-y-auto p-3 space-y-1 custom-scrollbar">
                 {moreNavItems.map((item) => {
                   const isActive = isActivePath(pathname, item.href);
                   
                   return (
                     <TenantNavLink key={item.name} href={item.href} className="block w-full">
                       <div className={cn(
-                        "flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200",
+                        "flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200",
                         isActive 
                           ? "bg-sky-500/15 text-sky-700 dark:text-sky-300 font-semibold" 
                           : "hover:bg-slate-100 dark:hover:bg-white/5 text-slate-700 dark:text-zinc-300"
@@ -380,7 +409,7 @@ export function WorkspaceSidebar({
                   );
                 })}
               </div>
-              <div className="p-4 border-t border-slate-100 dark:border-white/5 bg-slate-50/50 dark:bg-zinc-950/50">
+              <div className="p-3 border-t border-slate-100 dark:border-white/5 bg-slate-50/50 dark:bg-zinc-950/50">
                 <div 
                   onClick={async () => {
                     const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "localhost:3000";
@@ -388,7 +417,7 @@ export function WorkspaceSidebar({
                     await signOut({ redirect: false });
                     window.location.href = `${protocol}://${rootDomain}/`;
                   }}
-                  className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-red-500/10 bg-red-500/5 text-red-600 dark:text-red-400 transition-all cursor-pointer font-medium text-sm"
+                  className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-red-500/10 bg-red-500/5 text-red-600 dark:text-red-400 transition-all cursor-pointer font-medium text-sm"
                 >
                   <LogOut className="h-5 w-5 shrink-0" />
                   <span>Logout</span>

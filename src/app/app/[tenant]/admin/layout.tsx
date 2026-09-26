@@ -10,6 +10,7 @@ import { getServerTenantLink, getServerWorkspaceBase } from "@/lib/routing-serve
 import { db } from "@/lib/prisma";
 import { getPendingApplicationsCount } from "@/app/actions/admin-applications";
 import { getPendingFeePaymentsCount } from "@/app/actions/payments";
+import { getPendingEnquiriesCount } from "@/app/actions/enquiries";
 
 export default async function WorkspaceAdminLayout({
   children,
@@ -23,7 +24,7 @@ export default async function WorkspaceAdminLayout({
   
   const workspace = await db.workspace.findUnique({
     where: { subdomain: tenant?.toLowerCase() },
-    select: { id: true, isStateManager: true, walletBalance: true, name: true, centerCode: true }
+    select: { id: true, isStateManager: true, walletBalance: true, name: true, centerCode: true, isSubdomainEnabled: true }
   });
 
   if (!workspace) {
@@ -32,13 +33,15 @@ export default async function WorkspaceAdminLayout({
 
   let admissionsCount = 0;
   let pendingFeesCount = 0;
+  let pendingEnquiriesCount = 0;
   let userRole = "UNAUTHORIZED";
   let userPermissions: string[] = [];
 
   if (workspace && session?.user) {
-    const [countResult, feesCountResult] = await Promise.all([
+    const [countResult, feesCountResult, enquiriesCount] = await Promise.all([
       getPendingApplicationsCount(workspace.id),
-      getPendingFeePaymentsCount(workspace.id)
+      getPendingFeePaymentsCount(workspace.id),
+      workspace.isSubdomainEnabled ? getPendingEnquiriesCount(workspace.id) : Promise.resolve(0)
     ]);
     if (countResult.success) {
       admissionsCount = countResult.data ?? 0;
@@ -46,6 +49,7 @@ export default async function WorkspaceAdminLayout({
     if (feesCountResult.success) {
       pendingFeesCount = feesCountResult.count ?? 0;
     }
+    pendingEnquiriesCount = enquiriesCount;
 
     if (session.user.role === "SUPER_ADMIN") {
       userRole = "ADMIN"; // Super Admin gets full access in franchises
@@ -72,27 +76,36 @@ export default async function WorkspaceAdminLayout({
 
   if (userRole === "UNAUTHORIZED") {
     redirect(await getServerTenantLink("/login", tenant));
-  } else if (userRole !== "ADMIN") {
+  } else {
     const parts = currentPath.split('/');
     const adminIndex = parts.indexOf("admin");
     
     if (adminIndex !== -1 && parts.length > adminIndex + 1) {
       const section = parts[adminIndex + 1];
-      let requiredPermission = section;
-      if (section === "staff") requiredPermission = "staff";
-      if (section === "wallet") requiredPermission = "wallet";
-      if (section === "admissions") requiredPermission = "admissions";
-      if (section === "attendance") requiredPermission = "attendance";
-      if (section === "courses") requiredPermission = "courses";
-      if (section === "exam-generator") requiredPermission = "exam-gen";
-      if (section === "settings") requiredPermission = "settings";
-      if (section === "analytics") requiredPermission = "analytics";
 
-      if (requiredPermission !== "profile") {
-        if (requiredPermission === "staff" && userRole !== "ADMIN") {
-          redirect(await getServerTenantLink("/admin", tenant));
-        } else if (!userPermissions.includes(requiredPermission)) {
-          redirect(await getServerTenantLink("/admin", tenant));
+      // If subdomain is disabled for this franchise, enquiries page is strictly disallowed
+      if (section === "enquiries" && !workspace.isSubdomainEnabled) {
+        redirect(await getServerTenantLink("/admin", tenant));
+      }
+
+      if (userRole !== "ADMIN") {
+        let requiredPermission = section;
+        if (section === "staff") requiredPermission = "staff";
+        if (section === "wallet") requiredPermission = "wallet";
+        if (section === "admissions") requiredPermission = "admissions";
+        if (section === "attendance") requiredPermission = "attendance";
+        if (section === "courses") requiredPermission = "courses";
+        if (section === "exam-generator") requiredPermission = "exam-gen";
+        if (section === "settings") requiredPermission = "settings";
+        if (section === "analytics") requiredPermission = "analytics";
+        if (section === "enquiries") requiredPermission = "enquiries";
+
+        if (requiredPermission !== "profile") {
+          if (requiredPermission === "staff") {
+            redirect(await getServerTenantLink("/admin", tenant));
+          } else if (!userPermissions.includes(requiredPermission)) {
+            redirect(await getServerTenantLink("/admin", tenant));
+          }
         }
       }
     }
@@ -108,7 +121,9 @@ export default async function WorkspaceAdminLayout({
         workspaceBase={workspaceBase} 
         admissionsCount={admissionsCount} 
         pendingFeesCount={pendingFeesCount}
+        pendingEnquiriesCount={pendingEnquiriesCount}
         isStateManager={workspace?.isStateManager || false}
+        isSubdomainEnabled={workspace?.isSubdomainEnabled ?? true}
         userRole={userRole}
         userPermissions={userPermissions}
       />

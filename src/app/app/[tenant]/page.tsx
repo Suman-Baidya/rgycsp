@@ -233,7 +233,14 @@ export default async function InstituteLandingPage({
 
         {isSectionActive("faq") && <div id="faq"><WorkspaceFaq data={getSectionData("faq")} /></div>}
         
-        {isSectionActive("contact") && <WorkspaceContact data={getSectionData("contact")} settings={mergedSettings} />}
+        {isSectionActive("contact") && (
+          <WorkspaceContact 
+            data={getSectionData("contact")} 
+            settings={mergedSettings} 
+            workspace={workspace}
+            tenant={tenant}
+          />
+        )}
         </div>
       </main>
 

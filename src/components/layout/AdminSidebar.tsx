@@ -24,7 +24,8 @@ import {
   BookOpen,
   MapPinned,
   ShoppingCart,
-  BarChart2
+  BarChart2,
+  MessageSquareQuote
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -35,10 +36,12 @@ import { getPendingOrdersCount } from "@/app/actions/product-order";
 import { getPendingWalletRequestsCount } from "@/app/actions/wallet";
 import { getDeveloperEmail } from "@/app/actions/logs";
 import { getPendingDocumentRequestsCount } from "@/app/actions/student-documents";
+import { getPendingEnquiriesCount } from "@/app/actions/enquiries";
 
 const navItems = [
   { name: "Overview", href: "/", icon: LayoutDashboard },
   { name: "Visitor Analytics", href: "/analytics", icon: BarChart2 },
+  { name: "Enquiries & Leads", href: "/enquiries", icon: MessageSquareQuote },
   { name: "Wallet Economy", href: "/wallet", icon: Coins },
   { name: "Franchises", href: "/franchises", icon: Building2 },
   { name: "State Managers", href: "/state-managers", icon: MapPinned },
@@ -70,6 +73,7 @@ export function AdminSidebar({
   const [pendingOrders, setPendingOrders] = useState(0);
   const [pendingWalletRequests, setPendingWalletRequests] = useState(0);
   const [pendingDocumentRequests, setPendingDocumentRequests] = useState(0);
+  const [pendingEnquiries, setPendingEnquiries] = useState(0);
 
   // Session data passed from server layout
   const [developerEmail, setDeveloperEmail] = useState("");
@@ -92,15 +96,16 @@ export function AdminSidebar({
     fetchDevEmail();
   }, []);
 
-  // Fetch pending applications and orders count periodically
+  // Fetch pending applications, orders, and enquiries count periodically
   useEffect(() => {
     const fetchPendingCount = async () => {
       try {
-        const [franchiseCount, ordersResult, walletResult, docRequestsResult] = await Promise.all([
+        const [franchiseCount, ordersResult, walletResult, docRequestsResult, enquiriesCount] = await Promise.all([
           getPendingFranchiseCount(),
           getPendingOrdersCount(),
           getPendingWalletRequestsCount(),
-          getPendingDocumentRequestsCount()
+          getPendingDocumentRequestsCount(),
+          getPendingEnquiriesCount()
         ]);
         setPendingApplications(franchiseCount);
         if (ordersResult.success && ordersResult.count !== undefined) {
@@ -112,6 +117,7 @@ export function AdminSidebar({
         if (docRequestsResult.success && docRequestsResult.count !== undefined) {
           setPendingDocumentRequests(docRequestsResult.count);
         }
+        setPendingEnquiries(enquiriesCount);
       } catch (e) {
         console.error(e);
       }
@@ -226,6 +232,11 @@ export function AdminSidebar({
                       className="font-medium whitespace-nowrap flex-1 flex justify-between items-center pr-2"
                     >
                       <span>{item.name}</span>
+                      {item.href === "/enquiries" && pendingEnquiries > 0 && (
+                        <span className="h-5 min-w-5 px-1.5 bg-red-500 text-white text-[10px] font-black rounded flex items-center justify-center animate-pulse shadow-[0_0_10px_rgba(239,68,68,0.5)]">
+                          {pendingEnquiries}
+                        </span>
+                      )}
                       {item.href === "/franchises" && pendingApplications > 0 && (
                         <span className="h-5 min-w-5 px-1.5 bg-amber-500 text-white text-[10px] font-black rounded flex items-center justify-center animate-pulse shadow-[0_0_10px_rgba(245,158,11,0.5)]">
                           {pendingApplications}
@@ -256,6 +267,10 @@ export function AdminSidebar({
                     />
                   )}
 
+                  {isCollapsed && item.href === "/enquiries" && pendingEnquiries > 0 && (
+                    <div className="absolute top-2 right-2 w-2.5 h-2.5 bg-red-500 rounded-full animate-pulse shadow-[0_0_10px_rgba(239,68,68,0.5)] border-2 border-zinc-950"></div>
+                  )}
+
                   {isCollapsed && item.href === "/franchises" && pendingApplications > 0 && (
                     <div className="absolute top-2 right-2 w-2.5 h-2.5 bg-amber-500 rounded-full animate-pulse shadow-[0_0_10px_rgba(245,158,11,0.5)] border-2 border-zinc-950"></div>
                   )}
@@ -275,6 +290,11 @@ export function AdminSidebar({
                   {isCollapsed && (
                     <div className="absolute left-full ml-4 px-2 py-1 bg-zinc-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50 whitespace-nowrap border border-white/10 shadow-xl flex items-center gap-2">
                       {item.name}
+                      {item.href === "/enquiries" && pendingEnquiries > 0 && (
+                        <div className="ml-auto flex h-5 min-w-[20px] items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white">
+                          {pendingEnquiries}
+                        </div>
+                      )}
                       {item.href === "/franchises" && pendingApplications > 0 && (
                         <div className="ml-auto flex h-5 min-w-[20px] items-center justify-center rounded-full bg-amber-500 px-1 text-[10px] font-bold text-white">
                           {pendingApplications}

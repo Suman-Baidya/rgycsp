@@ -34,23 +34,25 @@ export function ConfirmDialog({
 }: ConfirmDialogProps) {
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent className="rounded-2xl border-none shadow-2xl bg-white dark:bg-slate-900">
+      <AlertDialogContent className="rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xl bg-white dark:bg-slate-900 max-w-md p-5 sm:p-6">
         <AlertDialogHeader>
-          <AlertDialogTitle className="text-xl font-bold">{title}</AlertDialogTitle>
-          <AlertDialogDescription className="text-slate-500 text-sm">
+          <AlertDialogTitle className="text-base sm:text-lg font-bold text-slate-900 dark:text-white leading-tight">
+            {title}
+          </AlertDialogTitle>
+          <AlertDialogDescription className="text-slate-500 dark:text-slate-400 text-xs sm:text-sm mt-1 leading-relaxed">
             {description}
           </AlertDialogDescription>
         </AlertDialogHeader>
-        <AlertDialogFooter className="mt-6">
-          <AlertDialogCancel className="rounded-xl font-bold h-11 px-8 border-slate-200 dark:border-slate-800">
+        <AlertDialogFooter className="mt-5 flex items-center justify-end gap-2">
+          <AlertDialogCancel className="rounded-lg font-semibold h-8 sm:h-9 px-4 text-xs border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300">
             {cancelText}
           </AlertDialogCancel>
           <AlertDialogAction
             onClick={onConfirm}
             className={cn(
-              "rounded-xl font-bold h-11 px-8 text-white transition-all shadow-lg",
+              "rounded-lg font-semibold h-8 sm:h-9 px-4 text-xs text-white transition-all shadow-sm",
               destructive
-                ? "bg-red-600 hover:bg-red-700 shadow-red-500/20"
+                ? "bg-rose-600 hover:bg-rose-700 shadow-rose-500/20"
                 : "bg-primary hover:bg-primary/90 shadow-primary/20"
             )}
           >

@@ -75,6 +75,7 @@ export default function PracticalClassesTab({ workspaceId }: { workspaceId: stri
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
   const [enrollmentNo, setEnrollmentNo] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Add Slot
   const [isAddingSlot, setIsAddingSlot] = useState(false);

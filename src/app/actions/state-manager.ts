@@ -143,7 +143,7 @@ export async function promoteToStateManager(workspaceId: string, referralId: str
       }
     });
 
-    revalidatePath("/(admin)/super-admin/state-managers", "page");
+    revalidatePath("/super-admin/state-managers", "page");
     return { success: true };
   } catch (error: any) {
     return { success: false, error: error.message };
@@ -169,7 +169,7 @@ export async function updateStateManagerConfig(workspaceId: string, data: { refe
       }
     });
 
-    revalidatePath("/(admin)/super-admin/state-managers", "page");
+    revalidatePath("/super-admin/state-managers", "page");
     return { success: true };
   } catch (error: any) {
     return { success: false, error: error.message };
@@ -255,7 +255,7 @@ export async function assignReferralToFranchise(workspaceId: string, appliedRefe
       });
     }
 
-    revalidatePath("/(admin)/super-admin/state-managers", "page");
+    revalidatePath("/super-admin/state-managers", "page");
     return { success: true };
   } catch (error: any) {
     return { success: false, error: error.message };
@@ -272,7 +272,7 @@ export async function updateFranchiseCommissionSettings(workspaceId: string, con
       where: { id: workspaceId },
       data: config
     });
-    revalidatePath("/(admin)/super-admin/state-managers", "page");
+    revalidatePath("/super-admin/state-managers", "page");
     return { success: true };
   } catch (error: any) {
     return { success: false, error: error.message };
@@ -310,7 +310,7 @@ export async function clearPendingCommissions(workspaceId: string) {
       });
     });
 
-    revalidatePath("/(admin)/super-admin/state-managers", "page");
+    revalidatePath("/super-admin/state-managers", "page");
     return { success: true, amountCleared: totalAmount };
   } catch (error: any) {
     return { success: false, error: error.message };
@@ -333,7 +333,7 @@ export async function revokeStateManager(workspaceId: string) {
       data: { referredById: null, appliedReferralId: null }
     });
 
-    revalidatePath("/(admin)/super-admin/state-managers", "page");
+    revalidatePath("/super-admin/state-managers", "page");
     return { success: true };
   } catch (error: any) {
     return { success: false, error: error.message };
@@ -519,7 +519,7 @@ export async function approveCommissionWithdrawal(transactionId: string) {
     if (res.count === 0) {
       throw new Error("Transaction not found or already processed.");
     }
-    revalidatePath("/(admin)/super-admin/state-managers", "page");
+    revalidatePath("/super-admin/state-managers", "page");
     return { success: true };
   } catch (error: any) {
     return { success: false, error: error.message };
@@ -551,7 +551,7 @@ export async function rejectCommissionWithdrawal(transactionId: string, reason: 
       });
     });
 
-    revalidatePath("/(admin)/super-admin/state-managers", "page");
+    revalidatePath("/super-admin/state-managers", "page");
     return { success: true };
   } catch (error: any) {
     return { success: false, error: error.message };

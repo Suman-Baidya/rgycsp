@@ -6,6 +6,8 @@ import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import { db } from "@/lib/prisma";
 
+import { isDeveloperEmail } from "@/lib/developer";
+
 export default async function AdminLayout({
   children,
 }: {
@@ -22,7 +24,9 @@ export default async function AdminLayout({
     where: { id: session.user.id },
   });
 
-  if (!dbUser || !(dbUser as any).isActive || (dbUser.role !== "SUPER_ADMIN" && dbUser.role !== "SUPER_ADMIN_MANAGER")) {
+  const isDev = isDeveloperEmail(dbUser?.email) || isDeveloperEmail(session?.user?.email) || !!session?.user?.isDeveloper;
+
+  if (!dbUser || !(dbUser as any).isActive || (!isDev && dbUser.role !== "SUPER_ADMIN" && dbUser.role !== "SUPER_ADMIN_MANAGER")) {
     redirect("/");
   }
 
@@ -66,15 +70,15 @@ export default async function AdminLayout({
   return (
     <div className="flex h-screen overflow-hidden bg-background text-foreground transition-colors duration-300">
       <AdminSidebar 
-        serverRole={dbUser.role} 
+        serverRole={isDev ? "SUPER_ADMIN" : dbUser.role} 
         serverPermissions={permissions} 
         serverEmail={session?.user?.email ?? undefined}
-        serverIsDeveloper={session?.user?.isDeveloper ?? false}
+        serverIsDeveloper={isDev}
       />
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         <SuperAdminHeader 
           user={{ name: dbUser.name, email: dbUser.email, image: (dbUser as any).image }} 
-          role={dbUser.role}
+          role={isDev ? "SUPER_ADMIN" : dbUser.role}
         />
         <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-6 pb-24 lg:pb-6 custom-scrollbar">
           <div className="max-w-[1600px] mx-auto">

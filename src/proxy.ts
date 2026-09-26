@@ -1,6 +1,7 @@
 import NextAuth from 'next-auth';
 import authConfig from './auth.config';
 import { NextResponse } from 'next/server';
+import { isDeveloperEmail } from './lib/developer';
 
 const { auth } = NextAuth(authConfig);
 
@@ -8,15 +9,35 @@ export default auth((req) => {
   const url = req.nextUrl;
   const isLoggedIn = !!req.auth;
   const userRole = req.auth?.user?.role;
+  const userEmail = req.auth?.user?.email;
+  const isDev = Boolean(req.auth?.user?.isDeveloper || isDeveloperEmail(userEmail));
+  const isRestricted = isLoggedIn && req.auth?.user?.isActive === false && !isDev;
   const isSuperAdminRoute = url.pathname.startsWith('/super-admin');
+  const isAction = req.headers.has('next-action') || req.headers.get('accept')?.includes('text/x-component');
+
+  // Intercept Restricted Users
+  if (isRestricted) {
+    if (url.pathname !== '/account-restricted' && !url.pathname.startsWith('/api/auth')) {
+      if (isAction) {
+        return new NextResponse("Account Restricted", { status: 403 });
+      }
+      return NextResponse.redirect(new URL('/account-restricted', req.url));
+    }
+  }
 
   // Handle Protected Routes
   if (isSuperAdminRoute) {
     if (!isLoggedIn) {
+      if (isAction) {
+        return new NextResponse("Unauthorized", { status: 401 });
+      }
       return NextResponse.redirect(new URL('/login', req.url));
     }
-    if (userRole !== 'SUPER_ADMIN' && userRole !== 'SUPER_ADMIN_MANAGER' && !req.auth?.user?.isDeveloper) {
+    if (userRole !== 'SUPER_ADMIN' && userRole !== 'SUPER_ADMIN_MANAGER' && !isDev) {
       // If logged in but not a super admin, manager, or developer, redirect to root or error
+      if (isAction) {
+        return new NextResponse("Forbidden", { status: 403 });
+      }
       return NextResponse.redirect(new URL('/', req.url));
     }
   }
@@ -93,6 +114,17 @@ export default auth((req) => {
     });
   }
 
+  // Read platform routing configuration from cookie or env var
+  const routingCookie = req.cookies.get("platform_routing_mode")?.value;
+  const subdomainDisabledCookie = req.cookies.get("platform_routing_subdomain")?.value === "0";
+  const envRoutingMode = process.env.NEXT_PUBLIC_DEFAULT_ROUTING_MODE?.toUpperCase();
+  
+  // Subdirectory-only is active if explicitly set, or subdomain is disabled, or configured via env
+  const isSubdirectoryOnly = 
+    routingCookie === "SUBDIRECTORY" || 
+    subdomainDisabledCookie || 
+    (!routingCookie && envRoutingMode === "SUBDIRECTORY");
+
   // 1. Handle root domain and specific bypasses
   if (
     cleanHost === localDomain ||
@@ -101,6 +133,7 @@ export default auth((req) => {
   ) {
     const requestHeaders = new Headers(req.headers);
     requestHeaders.set('x-pathname', url.pathname);
+    requestHeaders.set('x-routing-mode', isSubdirectoryOnly ? 'SUBDIRECTORY' : (routingCookie || 'BOTH'));
     
     return NextResponse.next({
       request: {
@@ -113,11 +146,29 @@ export default auth((req) => {
   if (cleanHost.endsWith(`.${localDomain}`)) {
     const tenant = cleanHost.replace(`.${localDomain}`, "").toLowerCase();
     
+    // If subdomains are disabled on the platform (e.g. Vercel free tier without wildcard DNS),
+    // redirect incoming subdomain traffic to canonical root domain subdirectory URL
+    if (isSubdirectoryOnly) {
+      if (tenant === 'super-admin') {
+        const redirectUrl = new URL(`/super-admin${path === "/" ? "" : path}`, `https://${localDomain}`);
+        return NextResponse.redirect(redirectUrl, 307);
+      }
+      if (tenant === 'franchises' || tenant === 'franchise') {
+        const redirectUrl = new URL(`/franchises${path === "/" ? "" : path}`, `https://${localDomain}`);
+        return NextResponse.redirect(redirectUrl, 307);
+      }
+      if (tenant !== 'www' && tenant !== 'admin') {
+        const redirectUrl = new URL(`/app/${tenant}${path === "/" ? "" : path}`, `https://${localDomain}`);
+        return NextResponse.redirect(redirectUrl, 307);
+      }
+    }
+
     // Special case: Super Admin Subdomain
     if (tenant === 'super-admin') {
       const rewriteUrl = new URL(`/super-admin${path === "/" ? "" : path}`, req.url);
       const requestHeaders = new Headers(req.headers);
       requestHeaders.set('x-pathname', url.pathname);
+      requestHeaders.set('x-routing-mode', routingCookie || 'BOTH');
       
       return NextResponse.rewrite(rewriteUrl, {
         request: {

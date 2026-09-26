@@ -14,7 +14,8 @@ export async function findNearestCenters(pinCode: string) {
     let centers = await db.workspace.findMany({
       where: { 
         pinCode,
-        isActive: true
+        isActive: true,
+        isSubdomainEnabled: true
       },
       include: {
         siteSettings: true
@@ -28,7 +29,8 @@ export async function findNearestCenters(pinCode: string) {
         centers = await db.workspace.findMany({
           where: {
             district: locationRes.district,
-            isActive: true
+            isActive: true,
+            isSubdomainEnabled: true
           },
           include: {
             siteSettings: true
@@ -40,7 +42,8 @@ export async function findNearestCenters(pinCode: string) {
           centers = await db.workspace.findMany({
             where: {
               state: locationRes.state,
-              isActive: true
+              isActive: true,
+              isSubdomainEnabled: true
             },
             include: {
               siteSettings: true

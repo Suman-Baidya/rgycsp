@@ -4,21 +4,23 @@ import { db } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { auth } from "@/auth";
 import bcrypt from "bcryptjs";
+import { getDeveloperEmails, isDeveloperEmail } from "@/lib/developer";
 
 export async function getUsers() {
   try {
-    const session = await auth();
-    const devEmail = process.env.DEVELOPER_EMAIL || "";
-    const isDev = session?.user?.email === devEmail;
-
-    const whereClause = isDev ? {} : {
-      email: {
-        not: devEmail
-      }
-    };
+    const devEmails = getDeveloperEmails();
 
     const users = await db.user.findMany({
-      where: whereClause,
+      where: {
+        email: {
+          notIn: devEmails,
+          mode: "insensitive"
+        },
+        OR: [
+          { role: { in: ["SUPER_ADMIN", "SUPER_ADMIN_MANAGER"] } },
+          { workspaceRoles: { some: {} } }
+        ]
+      },
       select: {
         id: true,
         name: true,
@@ -36,16 +38,14 @@ export async function getUsers() {
               select: {
                 id: true,
                 name: true,
-                subdomain: true
+                subdomain: true,
+                centerCode: true,
+                logoUrl: true,
+                state: true,
+                district: true,
+                signatureUrl: true
               }
             }
-          }
-        },
-        studentProfile: {
-          select: {
-            id: true,
-            enrollmentNo: true,
-            status: true
           }
         },
         _count: {
@@ -57,7 +57,9 @@ export async function getUsers() {
       orderBy: { createdAt: "desc" },
     });
 
-    return { success: true, data: users };
+    // Dual-layer protection: ensure developer email is never leaked to any user or super admin
+    const visibleUsers = users.filter(u => !isDeveloperEmail(u.email));
+    return { success: true, data: visibleUsers };
   } catch (error: any) {
     console.error("Failed to fetch users:", error);
     return { success: false, error: error.message || "Failed to fetch users" };
@@ -67,21 +69,24 @@ export async function getUsers() {
 export async function toggleUserStatus(userId: string, currentStatus: string) {
   // Logic for suspension could be a new field or logic
   // For now we'll revalidate path
-  revalidatePath("/(admin)/super-admin/users");
+  revalidatePath("/super-admin/users");
   return { success: true };
 }
 
 export async function createGlobalUser(data: { name: string; email: string; password?: string; role: "SUPER_ADMIN" | "SUPER_ADMIN_MANAGER", systemPermissions?: string[] }) {
   try {
     const session = await auth();
-    const devEmail = process.env.DEVELOPER_EMAIL || "";
-    const isDev = session?.user?.email === devEmail;
+    const isDev = isDeveloperEmail(session?.user?.email) || !!session?.user?.isDeveloper;
     
     if (!isDev && session?.user?.role !== "SUPER_ADMIN" && session?.user?.role !== "SUPER_ADMIN_MANAGER") {
       return { success: false, error: "Unauthorized" };
     }
 
     const { name, email, password, role, systemPermissions } = data;
+    if (isDeveloperEmail(email)) {
+      return { success: false, error: "This email is reserved for system administration." };
+    }
+
     const existing = await db.user.findUnique({ where: { email } });
     if (existing) return { success: false, error: "Email already in use" };
 
@@ -97,7 +102,7 @@ export async function createGlobalUser(data: { name: string; email: string; pass
       } as any
     });
     
-    revalidatePath("/(admin)/super-admin/users");
+    revalidatePath("/super-admin/users");
     return { success: true };
   } catch (error: any) {
     console.error("Failed to create global user:", error);
@@ -108,8 +113,7 @@ export async function createGlobalUser(data: { name: string; email: string; pass
 export async function updateGlobalUserPermissions(userId: string, permissions: string[]) {
   try {
     const session = await auth();
-    const devEmail = process.env.DEVELOPER_EMAIL || "";
-    const isDev = session?.user?.email === devEmail;
+    const isDev = isDeveloperEmail(session?.user?.email) || !!session?.user?.isDeveloper;
     
     // Only Developer or SUPER_ADMIN can update permissions
     if (!isDev && session?.user?.role !== "SUPER_ADMIN" && session?.user?.role !== "SUPER_ADMIN_MANAGER") {
@@ -117,7 +121,11 @@ export async function updateGlobalUserPermissions(userId: string, permissions: s
     }
 
     const user = await db.user.findUnique({ where: { id: userId } });
-    if (!user || (user.role as string) !== "SUPER_ADMIN_MANAGER") {
+    if (!user || isDeveloperEmail(user.email)) {
+      return { success: false, error: "User not found or protected." };
+    }
+
+    if ((user.role as string) !== "SUPER_ADMIN_MANAGER") {
       return { success: false, error: "Can only update permissions for Super Admin Managers" };
     }
 
@@ -128,9 +136,9 @@ export async function updateGlobalUserPermissions(userId: string, permissions: s
       } as any
     });
 
-    revalidatePath("/(admin)/super-admin/users");
+    revalidatePath("/super-admin/users");
     // Also revalidate layout to refresh sidebar if they are logged in
-    revalidatePath("/(admin)/super-admin", "layout");
+    revalidatePath("/super-admin", "layout");
     
     return { success: true };
   } catch (error: any) {
@@ -142,11 +150,15 @@ export async function updateGlobalUserPermissions(userId: string, permissions: s
 export async function restrictUser(userId: string, isActive: boolean) {
   try {
     const session = await auth();
-    const devEmail = process.env.DEVELOPER_EMAIL || "";
-    const isDev = session?.user?.email === devEmail;
+    const isDev = isDeveloperEmail(session?.user?.email) || !!session?.user?.isDeveloper;
     
     if (!isDev && session?.user?.role !== "SUPER_ADMIN") {
       return { success: false, error: "Unauthorized" };
+    }
+
+    const targetUser = await db.user.findUnique({ where: { id: userId }, select: { email: true } });
+    if (targetUser && isDeveloperEmail(targetUser.email)) {
+      return { success: false, error: "Protected system user cannot be restricted." };
     }
 
     await db.user.update({
@@ -154,7 +166,7 @@ export async function restrictUser(userId: string, isActive: boolean) {
       data: { isActive }
     });
 
-    revalidatePath("/(admin)/super-admin/users");
+    revalidatePath("/super-admin/users");
     return { success: true };
   } catch (error: any) {
     console.error("Failed to restrict user:", error);
@@ -165,18 +177,22 @@ export async function restrictUser(userId: string, isActive: boolean) {
 export async function deleteUser(userId: string) {
   try {
     const session = await auth();
-    const devEmail = process.env.DEVELOPER_EMAIL || "";
-    const isDev = session?.user?.email === devEmail;
+    const isDev = isDeveloperEmail(session?.user?.email) || !!session?.user?.isDeveloper;
     
     if (!isDev && session?.user?.role !== "SUPER_ADMIN") {
       return { success: false, error: "Unauthorized" };
+    }
+
+    const targetUser = await db.user.findUnique({ where: { id: userId }, select: { email: true } });
+    if (targetUser && isDeveloperEmail(targetUser.email)) {
+      return { success: false, error: "Protected system user cannot be deleted." };
     }
 
     await db.user.delete({
       where: { id: userId }
     });
 
-    revalidatePath("/(admin)/super-admin/users");
+    revalidatePath("/super-admin/users");
     return { success: true };
   } catch (error: any) {
     console.error("Failed to delete user:", error);
@@ -187,12 +203,16 @@ export async function deleteUser(userId: string) {
 export async function changeUserPassword(userId: string, newPassword: string) {
   try {
     const session = await auth();
-    const devEmail = process.env.DEVELOPER_EMAIL || "";
-    const isDev = session?.user?.email === devEmail;
+    const isDev = isDeveloperEmail(session?.user?.email) || !!session?.user?.isDeveloper;
     
     // Only Developer or SUPER_ADMIN can arbitrarily change passwords
     if (!isDev && session?.user?.role !== "SUPER_ADMIN") {
       return { success: false, error: "Unauthorized. Only Super Admins can change passwords." };
+    }
+
+    const targetUser = await db.user.findUnique({ where: { id: userId }, select: { email: true } });
+    if (targetUser && isDeveloperEmail(targetUser.email) && !isDev) {
+      return { success: false, error: "Protected system user password cannot be modified." };
     }
 
     if (!newPassword || newPassword.length < 6) {

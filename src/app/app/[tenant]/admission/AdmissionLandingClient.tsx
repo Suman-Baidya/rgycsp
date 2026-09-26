@@ -10,7 +10,17 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { useCallback } from "react";
 
-export default function AdmissionLandingClient({ workspaceId, workspaceName, config, courses, logoUrl, initialCourseId, fromGlobal, currentView }: any) {
+export default function AdmissionLandingClient({ 
+  workspaceId, 
+  workspaceName, 
+  config, 
+  courses, 
+  logoUrl, 
+  initialCourseId, 
+  fromGlobal, 
+  currentView,
+  prefillData 
+}: any) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -37,6 +47,7 @@ export default function AdmissionLandingClient({ workspaceId, workspaceName, con
           courses={courses} 
           initialCourseId={initialCourseId}
           fromGlobal={fromGlobal}
+          prefillData={prefillData}
         />
       </div>
     );

@@ -9,31 +9,25 @@ export async function getServerRoutingContext() {
   const pathname = headersList.get('x-pathname') || "/";
   const rawHost = headersList.get('x-forwarded-host') || headersList.get('host') || "";
   const host = rawHost.split(',')[0].trim();
-  return { pathname, host };
+  const routingMode = headersList.get('x-routing-mode') || "";
+  return { pathname, host, routingMode };
 }
 
 /**
  * Generates a tenant-aware link in a Server Component context.
  */
 export async function getServerTenantLink(path: string, tenant: string): Promise<string> {
-  const { pathname, host } = await getServerRoutingContext();
-  // Pass host to getTenantLink implicitly via getRoutingConfig inside it
-  // But wait, getTenantLink in routing.ts uses window.location.host.
-  // We need to ensure it uses the server host if window is undefined.
-  
-  // Actually, let's just call getTenantLink and it will use getRoutingConfig.
-  // We need to make sure getRoutingConfig inside getTenantLink can see the host.
-  // Currently getTenantLink does: typeof window !== 'undefined' ? window.location.host : undefined
-  
-  // So we should probably export a version that takes config or just pass the parameters.
-  return getTenantLink(path, tenant, pathname, host); 
+  const { pathname, host, routingMode } = await getServerRoutingContext();
+  const forcedMode = routingMode === "SUBDIRECTORY" ? "subdirectory" : undefined;
+  return getTenantLink(path, tenant, pathname, host, forcedMode); 
 }
 
 /**
  * Checks if the current request is in Subdirectory Mode.
  */
 export async function isSubdirectoryMode(): Promise<boolean> {
-  const { pathname, host } = await getServerRoutingContext();
+  const { pathname, host, routingMode } = await getServerRoutingContext();
+  if (routingMode === "SUBDIRECTORY") return true;
   const config = getRoutingConfig(pathname, host);
   return config.mode === "subdirectory";
 }

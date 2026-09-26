@@ -1880,8 +1880,37 @@ function ContactContentEditor({ content, setContent, settings, mediaFolderBase }
         </div>
       </div>
 
+      <div className="p-3 bg-white dark:bg-slate-900 rounded-xl border border-slate-200/70 dark:border-slate-800 shadow-xs space-y-1">
+        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Inquiry Form Subtitle</span>
+        <Input value={content.formSubtitle || ""} onChange={(e) => setContent({ ...content, formSubtitle: e.target.value })} placeholder="Fill in your details below and our campus counselor will connect with you." className="h-8 text-xs font-medium rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700" />
+      </div>
+
+      {/* CTA Card Banner Customization */}
+      <div className="p-3.5 bg-slate-50 dark:bg-slate-850/50 rounded-xl border border-slate-200/70 dark:border-slate-800 space-y-3">
+        <div className="flex items-center justify-between">
+          <span className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">Quick Admission CTA Banner</span>
+          <Switch checked={content.ctaBox?.show !== false} onCheckedChange={(val) => setContent({ ...content, ctaBox: { ...(content.ctaBox || {}), show: val } })} />
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="space-y-1">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Banner Title</span>
+            <Input value={content.ctaBox?.title || ""} onChange={(e) => setContent({ ...content, ctaBox: { ...(content.ctaBox || {}), title: e.target.value } })} placeholder="Quick 60s Admission Check" className="h-8 text-xs font-medium rounded-lg bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700" />
+          </div>
+          <div className="space-y-1">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Button Text</span>
+            <Input value={content.ctaBox?.buttonText || ""} onChange={(e) => setContent({ ...content, ctaBox: { ...(content.ctaBox || {}), buttonText: e.target.value } })} placeholder="Start Quick Check" className="h-8 text-xs font-semibold text-primary rounded-lg bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700" />
+          </div>
+        </div>
+
+        <div className="space-y-1">
+          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Banner Description</span>
+          <Input value={content.ctaBox?.description || ""} onChange={(e) => setContent({ ...content, ctaBox: { ...(content.ctaBox || {}), description: e.target.value } })} placeholder="Check course eligibility instantly" className="h-8 text-xs font-normal rounded-lg bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700" />
+        </div>
+      </div>
+
       <div className="p-3 bg-blue-50/50 dark:bg-blue-950/20 rounded-xl border border-blue-200/60 dark:border-blue-900/40 text-center">
-        <p className="text-xs text-blue-700 dark:text-blue-300 font-medium">Contact details are managed in the <span className="font-bold">Branding</span> tab to maintain consistency across the site.</p>
+        <p className="text-xs text-blue-700 dark:text-blue-300 font-medium">Contact phone, email, and address are managed in the <span className="font-bold">Branding</span> tab to maintain consistency across the site.</p>
       </div>
     </div>
   );

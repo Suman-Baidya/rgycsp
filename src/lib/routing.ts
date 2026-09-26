@@ -15,13 +15,24 @@ export interface RoutingConfig {
  * Single source of truth for routing configuration.
  * Detects mode and tenant from hostname and pathname.
  */
-export function getRoutingConfig(pathname: string, hostname?: string, tenantOverride?: string): RoutingConfig {
+export function getRoutingConfig(
+  pathname: string, 
+  hostname?: string, 
+  tenantOverride?: string,
+  forcedMode?: RoutingMode
+): RoutingConfig {
   let mode: RoutingMode = "root";
   let tenant: string | null = tenantOverride || null;
   let workspaceBase = "";
 
   const isSubdirectoryPath = pathname.startsWith('/app/');
   const isSuperAdminPath = pathname.startsWith('/super-admin');
+
+  // Check client-side cookie for forced routing mode
+  const isClientForcedSubdirectory = typeof document !== 'undefined' && 
+    (document.cookie.includes("platform_routing_mode=SUBDIRECTORY") || document.cookie.includes("platform_routing_subdomain=0"));
+
+  const effectiveForcedMode = forcedMode || (isClientForcedSubdirectory ? "subdirectory" : undefined);
 
   // Helper to construct the base path
   const setSubdirectoryMode = (tenantVal: string | null) => {
@@ -33,6 +44,12 @@ export function getRoutingConfig(pathname: string, hostname?: string, tenantOver
       workspaceBase = tenant ? `/app/${tenant}` : "";
     }
   };
+
+  // If forced to subdirectory mode and tenant is provided, prioritize it
+  if (effectiveForcedMode === "subdirectory" && tenantOverride) {
+    setSubdirectoryMode(tenantOverride);
+    return { mode, tenant, workspaceBase };
+  }
 
   // Eagerly detect mode from pathname or tenant override
   if (tenantOverride === "super-admin" || isSuperAdminPath) {
@@ -106,12 +123,19 @@ export function getRoutingConfig(pathname: string, hostname?: string, tenantOver
  * Generates a public link within a workspace context.
  * e.g., /app/tenant/courses (Subdirectory) or /courses (Subdomain)
  */
-export function getTenantLink(path: string, tenant: string, pathname: string, hostname?: string): string {
+export function getTenantLink(
+  path: string, 
+  tenant: string, 
+  pathname: string, 
+  hostname?: string,
+  forcedMode?: RoutingMode
+): string {
   // Use centralized config to determine the correct prefix
   const { workspaceBase } = getRoutingConfig(
     pathname, 
     hostname || (typeof window !== 'undefined' ? window.location.host : undefined), 
-    tenant
+    tenant,
+    forcedMode
   );
   
   // Clean the path
@@ -141,6 +165,7 @@ export const WORKSPACE_ROUTES = {
   LOGIN: "/login",
   ADMIN: "/admin",
   ADMIN_ANALYTICS: "/admin/analytics",
+  ADMIN_ENQUIRIES: "/admin/enquiries",
   ADMIN_STAFF: "/admin/staff",
   ADMIN_STUDENTS: "/admin/students",
   ADMIN_FEES: "/admin/fees",

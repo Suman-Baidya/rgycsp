@@ -17,6 +17,9 @@ interface ImageUploadProps {
   label?: string;
   maxSizeK?: number; // In KB
   rawUpload?: boolean; // When true, bypasses canvas downscaling & compression to preserve 100% lossless print quality
+  compact?: boolean;
+  hideFootnote?: boolean;
+  className?: string;
 }
 
 export function ImageUpload({ 
@@ -26,7 +29,10 @@ export function ImageUpload({
   folder = "RGYCSP/Uncategorized", 
   label,
   maxSizeK = 10240, // Default 10MB
-  rawUpload = false
+  rawUpload = false,
+  compact = false,
+  hideFootnote = false,
+  className
 }: ImageUploadProps) {
   const [isUploading, setIsUploading] = useState(false);
 
@@ -155,8 +161,12 @@ export function ImageUpload({
   const displaySize = maxSizeK >= 1024 ? `${(maxSizeK / 1024).toFixed(0)}MB` : `${maxSizeK}KB`;
 
   return (
-    <div className="space-y-4 w-full">
-      {label && <p className="text-sm font-semibold text-foreground/80">{label}</p>}
+    <div className={cn(compact ? "space-y-2" : "space-y-4", "w-full", className)}>
+      {label && (
+        <p className={cn(compact ? "text-xs font-bold text-slate-700 dark:text-slate-300" : "text-sm font-semibold text-foreground/80")}>
+          {label}
+        </p>
+      )}
       
       {!value ? (
         <div className="relative group w-full">
@@ -168,20 +178,24 @@ export function ImageUpload({
             disabled={isUploading}
           />
           <div className={cn(
-            "h-32 w-full rounded-2xl border-2 border-dashed border-border/60 bg-muted/5 flex flex-col items-center justify-center gap-2 transition-all group-hover:border-primary/40 group-hover:bg-primary/5",
+            compact 
+              ? "h-24 w-full rounded-xl border-2 border-dashed border-border/60 bg-muted/5 flex flex-col items-center justify-center gap-1.5 transition-all group-hover:border-primary/40 group-hover:bg-primary/5"
+              : "h-32 w-full rounded-2xl border-2 border-dashed border-border/60 bg-muted/5 flex flex-col items-center justify-center gap-2 transition-all group-hover:border-primary/40 group-hover:bg-primary/5",
             isUploading && "opacity-50 pointer-events-none"
           )}>
             {isUploading ? (
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              <Loader2 className={cn(compact ? "h-5 w-5" : "h-8 w-8", "animate-spin text-primary")} />
             ) : (
               <>
-                <div className="p-3 bg-white dark:bg-zinc-900 rounded-full shadow-sm border">
-                  <Upload className="h-6 w-6 text-primary" />
+                <div className={cn(compact ? "p-1.5 rounded-lg" : "p-3 rounded-full", "bg-white dark:bg-zinc-900 shadow-sm border")}>
+                  <Upload className={cn(compact ? "h-4 w-4" : "h-6 w-6", "text-primary")} />
                 </div>
-                <div className="text-center px-4">
-                  <p className="text-sm font-bold">Click to upload or drag and drop</p>
-                  <p className="text-[10px] text-muted-foreground uppercase tracking-widest mt-1">
-                    {rawUpload ? `Lossless Print Resolution (Max ${displaySize})` : `Images only (Max ${displaySize})`}
+                <div className="text-center px-2">
+                  <p className={cn(compact ? "text-xs font-semibold leading-tight text-slate-800 dark:text-slate-200" : "text-sm font-bold")}>
+                    {compact ? "Click to upload" : "Click to upload or drag and drop"}
+                  </p>
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider mt-0.5">
+                    {rawUpload ? `Lossless (Max ${displaySize})` : `Max ${displaySize}`}
                   </p>
                 </div>
               </>
@@ -189,27 +203,33 @@ export function ImageUpload({
           </div>
         </div>
       ) : (
-        <div className="relative w-full max-w-sm aspect-video rounded-2xl overflow-hidden border-2 border-primary/20 bg-muted/30 group shadow-xl">
+        <div className={cn(
+          "relative w-full rounded-xl overflow-hidden border-2 border-primary/20 bg-muted/30 group shadow-md",
+          compact ? "aspect-video max-h-24" : "max-w-sm aspect-video rounded-2xl shadow-xl"
+        )}>
           <NextImage src={value} alt="Preview" fill className="object-contain" />
-          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
+          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
              <Button
               type="button"
               variant="destructive"
-              className="rounded-xl font-bold"
+              size={compact ? "sm" : "default"}
+              className={cn(compact ? "h-7 text-xs px-2.5 rounded-lg font-semibold" : "rounded-xl font-bold")}
               onClick={() => onRemove ? onRemove() : onChange("")}
             >
-              <X className="h-4 w-4 mr-2" /> Remove Image
+              <X className={cn(compact ? "h-3.5 w-3.5 mr-1" : "h-4 w-4 mr-2")} /> Remove
             </Button>
           </div>
         </div>
       )}
       
-      <p className="text-[10px] text-muted-foreground italic">
-        {rawUpload
-          ? `* 100% Original High-Definition Quality preserved without compression (Print-Ready, Max ${displaySize}).`
-          : `* Image will be automatically optimized and compressed to under ${displaySize}.`
-        }
-      </p>
+      {!hideFootnote && (
+        <p className="text-[10px] text-muted-foreground italic">
+          {rawUpload
+            ? `* 100% Original High-Definition Quality preserved without compression (Print-Ready, Max ${displaySize}).`
+            : `* Image will be automatically optimized and compressed to under ${displaySize}.`
+          }
+        </p>
+      )}
     </div>
   );
 }

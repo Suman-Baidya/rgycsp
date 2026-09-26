@@ -2,6 +2,7 @@ import { db } from "@/lib/prisma";
 import { Button } from "@/components/ui/button";
 import { AdminPageHeader } from "@/components/layout/AdminPageHeader";
 import { AdminDashboardCharts } from "@/components/admin/AdminDashboardCharts";
+import { isDeveloperEmail } from "@/lib/developer";
 import { 
   GraduationCap, 
   BookOpen, 
@@ -181,7 +182,8 @@ export default async function WorkspaceAdminDashboard({
   if (
     session?.user?.role === "SUPER_ADMIN" || 
     session?.user?.role === "SUPER_ADMIN_MANAGER" || 
-    session?.user?.email === process.env.DEVELOPER_EMAIL
+    isDeveloperEmail(session?.user?.email) ||
+    !!session?.user?.isDeveloper
   ) {
     userRole = "ADMIN";
   } else if (session?.user) {

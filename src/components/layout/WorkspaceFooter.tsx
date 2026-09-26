@@ -14,6 +14,7 @@ import { cn } from "@/lib/utils";
 
 import { useState, useEffect } from "react";
 import { getWorkspaceRole } from "@/app/actions/student";
+import { submitNewsletterSubscription } from "@/app/actions/enquiries";
 
 export function WorkspaceFooter({ settings, tenant: propTenant, user }: { settings?: any; tenant?: string; user?: any }) {
   const pathname = usePathname();
@@ -93,15 +94,32 @@ export function WorkspaceFooter({ settings, tenant: propTenant, user }: { settin
   const footerNavItems = prioritized.length >= 4 ? prioritized.slice(0, 6) : visibleNavItems.slice(0, 6);
 
   const [newsletterEmail, setNewsletterEmail] = useState("");
+  const [newsletterHoneypot, setNewsletterHoneypot] = useState("");
   const [isSubscribed, setIsSubscribed] = useState(false);
+  const [isSubmittingNewsletter, setIsSubmittingNewsletter] = useState(false);
 
-  const handleSubscribe = (e: React.FormEvent) => {
+  const handleSubscribe = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newsletterEmail || !newsletterEmail.includes("@")) {
       return;
     }
-    setIsSubscribed(true);
-    setNewsletterEmail("");
+    setIsSubmittingNewsletter(true);
+    try {
+      const res = await submitNewsletterSubscription(
+        newsletterEmail, 
+        settings?.workspaceId || null, 
+        newsletterHoneypot
+      );
+      if (res.success) {
+        setIsSubscribed(true);
+        setNewsletterEmail("");
+        setNewsletterHoneypot("");
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsSubmittingNewsletter(false);
+    }
   };
 
   if (!mounted) return null;
@@ -125,6 +143,16 @@ export function WorkspaceFooter({ settings, tenant: propTenant, user }: { settin
           </div>
           <div className="lg:col-span-6">
              <form onSubmit={handleSubscribe} className="flex flex-col sm:flex-row gap-2.5 max-w-lg lg:ml-auto w-full">
+                <div style={{ position: "absolute", left: "-9999px", opacity: 0, height: 0, overflow: "hidden" }} aria-hidden="true">
+                   <input 
+                      type="text" 
+                      name="_hp_news_trap" 
+                      value={newsletterHoneypot} 
+                      onChange={(e) => setNewsletterHoneypot(e.target.value)} 
+                      tabIndex={-1} 
+                      autoComplete="off" 
+                   />
+                </div>
                 <div className="relative flex-1 group">
                    <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500 group-focus-within:text-primary transition-colors" />
                    <Input 

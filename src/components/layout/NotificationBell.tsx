@@ -18,7 +18,8 @@ import {
   ShoppingCart,
   Coins,
   ChevronRight,
-  GraduationCap
+  GraduationCap,
+  MessageSquareQuote
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
@@ -194,6 +195,9 @@ export function NotificationBell({
     }
     if (item.id === "sidebar-fees-pending" || item.id === "student-invoice-pending") {
       return <Wallet className="w-4 h-4 text-rose-500" />;
+    }
+    if (item.id === "sidebar-enquiries-pending") {
+      return <MessageSquareQuote className="w-4 h-4 text-rose-500" />;
     }
     if (item.id.startsWith("student-notice-")) {
       return <GraduationCap className="w-4 h-4 text-emerald-500" />;

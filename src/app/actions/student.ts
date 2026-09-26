@@ -4,6 +4,7 @@ import { db } from "@/lib/prisma";
 import { auth } from "@/auth";
 import { getDocumentStatus } from "@/lib/document-utils";
 import { cookies } from "next/headers";
+import { isDeveloperEmail } from "@/lib/developer";
 
 export async function getStudentProfile(workspaceId: string, overrideProfileId?: string) {
   try {
@@ -19,7 +20,8 @@ export async function getStudentProfile(workspaceId: string, overrideProfileId?:
     if (effectiveProfileId) {
       const isGlobalAdmin = session.user.role === "SUPER_ADMIN" || 
                             session.user.role === "SUPER_ADMIN_MANAGER" || 
-                            session.user.email === process.env.DEVELOPER_EMAIL;
+                            isDeveloperEmail(session.user.email) ||
+                            !!session.user.isDeveloper;
       
       let isFranchiseAdmin = false;
       if (!isGlobalAdmin) {
@@ -124,7 +126,8 @@ export async function getStudentDashboardData(workspaceId: string, studentProfil
 
     const isGlobalAdmin = session.user.role === "SUPER_ADMIN" || 
                           session.user.role === "SUPER_ADMIN_MANAGER" || 
-                          session.user.email === process.env.DEVELOPER_EMAIL;
+                          isDeveloperEmail(session.user.email) ||
+                          !!session.user.isDeveloper;
     
     let isFranchiseAdmin = false;
     if (!isGlobalAdmin) {
