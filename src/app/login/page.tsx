@@ -19,7 +19,8 @@ export default async function LoginPage() {
   
   // Detect tenant from subdomain
   let tenant = "";
-  if (cleanHost.endsWith(`.${localDomain}`)) {
+  const isIp = /^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(cleanHost) || cleanHost === '::1';
+  if (!isIp && cleanHost.endsWith(`.${localDomain}`)) {
     tenant = cleanHost.replace(`.${localDomain}`, "").toLowerCase();
     if (tenant === "www") tenant = "";
   }

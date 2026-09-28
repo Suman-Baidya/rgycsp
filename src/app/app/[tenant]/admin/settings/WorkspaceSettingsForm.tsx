@@ -23,6 +23,7 @@ import { createEvent, updateEvent, deleteEvent } from "@/app/actions/events";
 import { createGalleryItem, updateGalleryItem, deleteGalleryItem } from "@/app/actions/gallery";
 import { toast } from "sonner";
 import { ImageUpload } from "@/components/ui/ImageUpload";
+import { EventEditorDialog } from "@/components/events/EventEditorDialog";
 import { cn } from "@/lib/utils";
 import { ThemeContrastIndicator } from "@/components/theme/ThemeContrastIndicator";
 
@@ -1917,6 +1918,7 @@ function ContactContentEditor({ content, setContent, settings, mediaFolderBase }
 }
 
 function EventsManagement({ workspaceId, events, mediaFolderBase }: any) {
+  const router = useRouter();
   const [isAdding, setIsAdding] = useState(false);
   const [editingEvent, setEditingEvent] = useState<any>(null);
   const [search, setSearch] = useState("");
@@ -1930,27 +1932,6 @@ function EventsManagement({ workspaceId, events, mediaFolderBase }: any) {
       (e.category && e.category.toLowerCase().includes(searchLower));
   });
 
-  const handleSave = async (formData: any) => {
-    setIsProcessing(true);
-    try {
-      if (editingEvent) {
-        const res = await updateEvent(editingEvent.id, formData);
-        if (res.success) toast.success("Event updated successfully");
-        else toast.error(res.error || "Update failed");
-      } else {
-        const res = await createEvent({ ...formData, workspaceId });
-        if (res.success) toast.success("Event created successfully");
-        else toast.error(res.error || "Creation failed");
-      }
-      setIsAdding(false);
-      setEditingEvent(null);
-    } catch (err) {
-      toast.error("Operation failed");
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-
   const handleDeleteClick = (event: any) => {
     setEventToDelete(event);
   };
@@ -1962,6 +1943,7 @@ function EventsManagement({ workspaceId, events, mediaFolderBase }: any) {
       const res = await deleteEvent(eventToDelete.id);
       if (res.success) toast.success("Event deleted");
       else toast.error(res.error || "Delete failed");
+      router.refresh();
     } catch (err) {
       toast.error("Delete failed");
     } finally {
@@ -1969,25 +1951,6 @@ function EventsManagement({ workspaceId, events, mediaFolderBase }: any) {
       setEventToDelete(null);
     }
   };
-
-  if (isAdding || editingEvent) {
-    return (
-      <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-200">
-        <div className="flex items-center justify-between p-3.5 sm:p-4 bg-white dark:bg-slate-900 rounded-xl border border-slate-200/80 dark:border-slate-800 shadow-xs">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
-              <Calendar className="w-4 h-4" />
-            </div>
-            <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white">{editingEvent ? "Edit Event" : "Create New Event"}</h3>
-          </div>
-          <Button variant="ghost" size="icon" onClick={() => { setIsAdding(false); setEditingEvent(null); }} className="h-7 w-7 rounded-lg text-slate-400 hover:text-slate-600">
-            <X className="w-4 h-4" />
-          </Button>
-        </div>
-        <EventForm initialData={editingEvent} onSave={handleSave} isProcessing={isProcessing} mediaFolderBase={mediaFolderBase} />
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-4 animate-in fade-in duration-200">
@@ -2063,6 +2026,21 @@ function EventsManagement({ workspaceId, events, mediaFolderBase }: any) {
         onConfirm={confirmDelete}
         confirmText="Delete"
         destructive={true}
+      />
+
+      <EventEditorDialog
+        open={isAdding || !!editingEvent}
+        onOpenChange={(open) => {
+          if (!open) {
+            setIsAdding(false);
+            setEditingEvent(null);
+          }
+        }}
+        event={editingEvent}
+        onSaveSuccess={() => router.refresh()}
+        isSuperAdmin={false}
+        currentWorkspaceId={workspaceId}
+        allEvents={events}
       />
     </div>
   );

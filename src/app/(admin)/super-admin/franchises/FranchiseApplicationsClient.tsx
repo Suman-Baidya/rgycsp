@@ -81,7 +81,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { AdminPageHeader } from "@/components/layout/AdminPageHeader";
 import { updateFranchiseApplicationStatus } from "@/app/actions/franchise";
-import { createWorkspace, updateCenterConfig, toggleWorkspaceStatus, deleteWorkspace, toggleDocumentAuthority } from "@/app/actions/workspaces";
+import { createWorkspace, updateCenterConfig, toggleWorkspaceStatus, deleteWorkspace, toggleDocumentAuthority, toggleFranchiseDocumentIssuance } from "@/app/actions/workspaces";
 import { importWorkspacesCSV } from "@/app/actions/workspaces-import";
 import { ImageUpload } from "@/components/ui/ImageUpload";
 import { getRootDomain } from "@/lib/domain";
@@ -689,6 +689,26 @@ export default function FranchiseApplicationsClient({
         router.refresh();
       } else {
         toast.error(res.error || "Failed to update authority power.", { id: loadingToast });
+      }
+    } catch (err) {
+      toast.error("Something went wrong.", { id: loadingToast });
+    }
+  };
+
+  const handleToggleDocIssuance = async (workspaceId: string, currentStatus: boolean) => {
+    const loadingToast = toast.loading(currentStatus ? "Revoking document issuance..." : "Issuing documents to Franchise Admin Profile...");
+    try {
+      const res = await toggleFranchiseDocumentIssuance(workspaceId, !currentStatus);
+      if (res.success) {
+        toast.success(
+          !currentStatus 
+            ? "Documents officially issued! Franchise Admin can now view & download them in their Profile."
+            : "Document issuance revoked. Documents hidden from Franchise Admin.",
+          { id: loadingToast }
+        );
+        router.refresh();
+      } else {
+        toast.error(res.error || "Failed to update document issuance status.", { id: loadingToast });
       }
     } catch (err) {
       toast.error("Something went wrong.", { id: loadingToast });
@@ -2368,17 +2388,60 @@ export default function FranchiseApplicationsClient({
                                   <Button 
                                     variant="ghost" 
                                     size="icon" 
-                                    className="h-7 w-7 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 hover:text-primary transition-colors"
-                                    title="Franchise Documents & ID Card"
+                                    className={cn(
+                                      "h-7 w-7 rounded-md transition-colors relative",
+                                      ws.registrationCertificateApproved 
+                                        ? "text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 dark:hover:bg-emerald-950/30" 
+                                        : "text-slate-500 hover:text-primary hover:bg-slate-100 dark:hover:bg-slate-800"
+                                    )}
+                                    title={ws.registrationCertificateApproved ? "Franchise Documents (Issued to Profile)" : "Franchise Documents (Not Issued)"}
                                   >
-                                    <IdCard className="h-3.5 w-3.5" />
+                                    <FileText className="h-3.5 w-3.5" />
+                                    {ws.registrationCertificateApproved && (
+                                      <span className="absolute top-1 right-1 h-1.5 w-1.5 rounded-full bg-emerald-500 ring-1 ring-white" />
+                                    )}
                                   </Button>
                                 }
                               />
-                              <DropdownMenuContent align="end" className="w-[200px] rounded-xl border border-slate-200 dark:border-slate-800 p-1.5 shadow-xl bg-white dark:bg-slate-900">
-                                <DropdownMenuLabel className="px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                                  Franchise Documents
-                                </DropdownMenuLabel>
+                              <DropdownMenuContent align="end" className="w-[230px] rounded-xl border border-slate-200 dark:border-slate-800 p-1.5 shadow-xl bg-white dark:bg-slate-900">
+                                <div className="flex items-center justify-between px-2 py-1">
+                                  <DropdownMenuLabel className="p-0 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                                    Franchise Documents
+                                  </DropdownMenuLabel>
+                                  <Badge className={cn(
+                                    "text-[9px] font-bold px-1.5 py-0 border-none uppercase tracking-wider",
+                                    ws.registrationCertificateApproved 
+                                      ? "bg-emerald-500/10 text-emerald-600" 
+                                      : "bg-slate-100 text-slate-500 dark:bg-slate-800"
+                                  )}>
+                                    {ws.registrationCertificateApproved ? "Issued" : "Pending"}
+                                  </Badge>
+                                </div>
+
+                                <DropdownMenuItem 
+                                  onClick={() => handleToggleDocIssuance(ws.id, !!ws.registrationCertificateApproved)}
+                                  className={cn(
+                                    "gap-2 text-xs font-semibold py-2 cursor-pointer rounded-lg my-1",
+                                    ws.registrationCertificateApproved 
+                                      ? "text-amber-700 bg-amber-500/10 hover:bg-amber-500/20 dark:text-amber-300" 
+                                      : "text-emerald-700 bg-emerald-500/10 hover:bg-emerald-500/20 dark:text-emerald-300"
+                                  )}
+                                >
+                                  {ws.registrationCertificateApproved ? (
+                                    <>
+                                      <ShieldOff className="h-3.5 w-3.5 text-amber-600 shrink-0" />
+                                      <span>Revoke Issuance</span>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <CheckCircle className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
+                                      <span>Issue Documents to Admin</span>
+                                    </>
+                                  )}
+                                </DropdownMenuItem>
+
+                                <DropdownMenuSeparator className="my-1 bg-slate-100 dark:bg-slate-800" />
+
                                 <DropdownMenuItem 
                                   onClick={() => handleOpenDocModal(ws, "FRANCHISE_CERTIFICATE")}
                                   className="gap-2 text-xs font-semibold py-2 cursor-pointer"
@@ -2452,28 +2515,6 @@ export default function FranchiseApplicationsClient({
                                   onClick={() => handleOpenEditConfig(ws)}
                                 >
                                   <Settings className="h-3.5 w-3.5 text-slate-400" /> Center Config
-                                </DropdownMenuItem>
-                                <DropdownMenuSeparator className="my-1 bg-slate-50 dark:bg-slate-800" />
-                                <DropdownMenuItem 
-                                  className="gap-2 rounded-md py-2 text-xs font-semibold cursor-pointer"
-                                  onClick={() => handleOpenDocModal(ws, "FRANCHISE_CERTIFICATE")}
-                                >
-                                  <Award className="h-3.5 w-3.5 text-amber-500 shrink-0" />
-                                  <span className="truncate">Franchise Certificate</span>
-                                </DropdownMenuItem>
-                                <DropdownMenuItem 
-                                  className="gap-2 rounded-md py-2 text-xs font-semibold cursor-pointer"
-                                  onClick={() => handleOpenDocModal(ws, "FRANCHISE_ID")}
-                                >
-                                  <IdCard className="h-3.5 w-3.5 text-blue-500 shrink-0" />
-                                  <span className="truncate">Franchise ID Card</span>
-                                </DropdownMenuItem>
-                                <DropdownMenuItem 
-                                  className="gap-2 rounded-md py-2 text-xs font-semibold cursor-pointer"
-                                  onClick={() => handleOpenDocModal(ws, "VISITING_CARD")}
-                                >
-                                  <CreditCard className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
-                                  <span className="truncate">Visiting Card</span>
                                 </DropdownMenuItem>
                                 <DropdownMenuSeparator className="my-1 bg-slate-50 dark:bg-slate-800" />
                                 <DropdownMenuItem 
@@ -3146,6 +3187,33 @@ export default function FranchiseApplicationsClient({
               <p className="text-xs text-slate-400">
                 {selectedWsForDoc?.name} &bull; Code: {selectedWsForDoc?.centerCode || "N/A"}
               </p>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Badge className={cn(
+                "text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 border-none",
+                selectedWsForDoc?.registrationCertificateApproved 
+                  ? "bg-emerald-500/20 text-emerald-300" 
+                  : "bg-slate-800 text-slate-400"
+              )}>
+                {selectedWsForDoc?.registrationCertificateApproved ? "Issued to Profile" : "Not Issued"}
+              </Badge>
+              <Button 
+                size="sm"
+                variant="outline"
+                onClick={async () => {
+                  if (selectedWsForDoc) {
+                    await handleToggleDocIssuance(selectedWsForDoc.id, !!selectedWsForDoc.registrationCertificateApproved);
+                    setSelectedWsForDoc((prev: any) => ({ 
+                      ...prev, 
+                      registrationCertificateApproved: !prev?.registrationCertificateApproved 
+                    }));
+                  }
+                }}
+                className="h-7 text-xs px-2.5 font-semibold bg-white/10 hover:bg-white/20 border-white/20 text-white"
+              >
+                {selectedWsForDoc?.registrationCertificateApproved ? "Revoke Issuance" : "Issue to Profile"}
+              </Button>
             </div>
           </div>
 

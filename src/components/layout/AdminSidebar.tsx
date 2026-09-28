@@ -25,7 +25,8 @@ import {
   MapPinned,
   ShoppingCart,
   BarChart2,
-  MessageSquareQuote
+  MessageSquareQuote,
+  CalendarDays
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -42,6 +43,7 @@ const navItems = [
   { name: "Overview", href: "/", icon: LayoutDashboard },
   { name: "Visitor Analytics", href: "/analytics", icon: BarChart2 },
   { name: "Enquiries & Leads", href: "/enquiries", icon: MessageSquareQuote },
+  { name: "Events & Notice", href: "/events-notices", icon: CalendarDays },
   { name: "Wallet Economy", href: "/wallet", icon: Coins },
   { name: "Franchises", href: "/franchises", icon: Building2 },
   { name: "State Managers", href: "/state-managers", icon: MapPinned },

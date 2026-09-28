@@ -142,3 +142,23 @@ All Super Admin and Workspace Admin dashboard management pages MUST adhere stric
 - **Inputs**: `h-8 sm:h-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700`
 - **Buttons**: `h-8 sm:h-9 text-xs rounded-lg font-semibold`
 
+## 8. Multi-Tenant Routing & 404 Troubleshooting Guide (CRITICAL)
+> [!WARNING]
+> **The "Lost in Space" 404 Bug on Franchise Dashboards**:
+> If Franchise Overview loads at `/app/[tenant]/admin` but clicking sidebar menu links (e.g. Visitor Analytics, Enquiries, Wallet, Students, Courses) displays a 404 error page while Super Admin works fine, follow this quick diagnosis:
+
+### Root Cause:
+1. **IP Address & Localhost Misparsing**:
+   - In `src/proxy.ts` and `src/lib/routing.ts`, `127.0.0.1` (or any IPv4 address) must NEVER be split by `.` to detect subdomains.
+   - If `127.0.0.1` is split by `.`, `localDomain` becomes `"0.0.1"`, and the proxy extracts tenant `"127"`.
+   - The proxy then rewrites requests like `/admin/wallet` to `/app/127/admin/wallet`. Tenant `127` does not exist in the database, throwing `notFound()`.
+2. **Client/Server `workspaceBase` Mismatch**:
+   - When running on an IP address without proper detection, `routing.ts` falsely detected subdomain mode on the client (`workspaceBase = ""`), rendering links as `/admin/wallet` instead of `/app/[tenant]/admin/wallet`.
+   - On the server, `url.pathname.startsWith('/app/')` bypassed the proxy for the overview page, which is why Overview loaded, but subsequent sidebar links were rendered without the prefix and crashed when clicked.
+
+### Mandatory Rules for Routing & Sidebars:
+- **Priority 1 for Host Resolution**: Always check IPv4/IPv6 regex (`/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/`, `::1`) FIRST before any dot-splitting. IP addresses are always root hosts and can never have subdomains.
+- **Priority 2 for Localhost**: `cleanHost === 'localhost' || cleanHost.endsWith('.localhost')`.
+- **Sidebar Link Consistency**: In `WorkspaceSidebar.tsx` and `StudentSidebar.tsx`, `generateLink` MUST directly use the server-passed `workspaceBase` prop when provided (e.g. `workspaceBase !== undefined ? `${workspaceBase}${cleanPath}` : getTenantLink(...)`). This prevents any client/server hydration drift.
+- **Header Tracking**: `proxy.ts` must set `x-routing-mode: subdirectory` when bypassing `/app/` routes, and `x-routing-mode: subdomain` when rewriting tenant subdomains.
+

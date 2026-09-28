@@ -399,3 +399,31 @@ export async function toggleDocumentAuthority(workspaceId: string, status: boole
     return { success: false, error: "Failed to toggle document authority power" };
   }
 }
+
+export async function toggleFranchiseDocumentIssuance(workspaceId: string, status: boolean) {
+  try {
+    const updated = await db.workspace.update({
+      where: { id: workspaceId },
+      data: { registrationCertificateApproved: status }
+    });
+    revalidatePath("/super-admin/franchises", "page");
+    return { success: true, data: updated };
+  } catch (error: any) {
+    console.error("Failed to toggle franchise document issuance:", error);
+    return { success: false, error: "Failed to toggle document issuance status" };
+  }
+}
+
+export async function updateWorkspaceSignature(workspaceId: string, signatureUrl: string) {
+  try {
+    const updated = await db.workspace.update({
+      where: { id: workspaceId },
+      data: { signatureUrl }
+    });
+    return { success: true, data: updated };
+  } catch (error: any) {
+    console.error("Failed to update workspace signature:", error);
+    return { success: false, error: error.message || "Failed to update workspace signature" };
+  }
+}
+

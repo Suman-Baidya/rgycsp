@@ -92,8 +92,15 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           if (credentials?.tenantSlug && credentials.tenantSlug !== "undefined" && credentials.tenantSlug !== "null") {
             const tenant = credentials.tenantSlug as string;
             if (tenant !== 'super-admin') {
-              const workspace = await db.workspace.findUnique({
-                where: { subdomain: tenant }
+              const normalizedTenant = tenant.toLowerCase().trim();
+              const workspace = await db.workspace.findFirst({
+                where: {
+                  OR: [
+                    { subdomain: normalizedTenant },
+                    { centerCode: { equals: normalizedTenant, mode: 'insensitive' } },
+                    { id: tenant }
+                  ]
+                }
               });
 
               if (!workspace) {

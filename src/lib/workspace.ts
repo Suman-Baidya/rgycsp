@@ -2,11 +2,18 @@ import { db } from "@/lib/prisma";
 import { unstable_cache } from "next/cache";
 
 export const getWorkspaceByTenant = (tenant: string) => {
-  const normalized = tenant?.toLowerCase();
+  if (!tenant) return Promise.resolve(null);
+  const normalized = tenant.toLowerCase().trim();
   return unstable_cache(
     async () => {
-      return await db.workspace.findUnique({
-        where: { subdomain: normalized },
+      return await db.workspace.findFirst({
+        where: {
+          OR: [
+            { subdomain: normalized },
+            { centerCode: { equals: normalized, mode: 'insensitive' } },
+            { id: tenant }
+          ]
+        },
         include: {
           siteSettings: true,
           admissionConfig: true,

@@ -19,7 +19,8 @@ import {
   Coins,
   ChevronRight,
   GraduationCap,
-  MessageSquareQuote
+  MessageSquareQuote,
+  Megaphone
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
@@ -50,7 +51,7 @@ export function NotificationBell({
   const [isOpen, setIsOpen] = useState(false);
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
-  const [filter, setFilter] = useState<"all" | "sidebar" | "unread">("all");
+  const [filter, setFilter] = useState<"all" | "sidebar" | "notice" | "unread">("all");
   const [isLoading, setIsLoading] = useState(false);
   const [hasPushEnabled, setHasPushEnabled] = useState(false);
   const [isSubscribingPush, setIsSubscribingPush] = useState(false);
@@ -108,6 +109,7 @@ export function NotificationBell({
       if (res.success && res.notifications) {
         setNotifications(res.notifications);
         setUnreadCount(res.unreadCount);
+        // Live notifications loaded without popup countdown toast
       }
     } catch (e) {
       console.error("Failed to load notifications:", e);
@@ -121,6 +123,25 @@ export function NotificationBell({
     const interval = setInterval(() => loadNotifications(false), 30000); // 30s live poll
     return () => clearInterval(interval);
   }, [workspaceId, detectedPortal, detectedTenant]);
+
+  // Real-time synchronization when a student opens/reads a circular
+  useEffect(() => {
+    const handleNotificationRead = (event: Event) => {
+      const customEvent = event as CustomEvent<{ id?: string }>;
+      const noticeId = customEvent.detail?.id;
+      if (noticeId) {
+        setNotifications((prev) =>
+          prev.map((n) => (n.id === noticeId ? { ...n, isRead: true } : n))
+        );
+        setUnreadCount((prev) => Math.max(0, prev - 1));
+      } else {
+        loadNotifications(false);
+      }
+    };
+
+    window.addEventListener("notification-read", handleNotificationRead);
+    return () => window.removeEventListener("notification-read", handleNotificationRead);
+  }, []);
 
   // Click outside to close
   useEffect(() => {
@@ -181,6 +202,9 @@ export function NotificationBell({
   };
 
   const getTypeIcon = (item: NotificationItem) => {
+    if (item.category === "notice") {
+      return <Megaphone className={cn("w-4 h-4", item.type === "WARNING" ? "text-rose-500" : "text-amber-500")} />;
+    }
     if (item.id === "sidebar-franchise-pending") {
       return <Building2 className="w-4 h-4 text-amber-500" />;
     }
@@ -220,10 +244,12 @@ export function NotificationBell({
   };
 
   const sidebarCount = notifications.filter((n) => n.category === "sidebar").length;
+  const noticeCount = notifications.filter((n) => n.category === "notice").length;
 
   const filteredNotifications = notifications.filter((n) => {
     if (filter === "unread") return !n.isRead;
     if (filter === "sidebar") return n.category === "sidebar";
+    if (filter === "notice") return n.category === "notice";
     return true;
   });
 
@@ -338,9 +364,27 @@ export function NotificationBell({
                       : "text-muted-foreground hover:text-foreground"
                   )}
                 >
-                  <span>Sidebar Alerts</span>
+                  <span>Sidebar</span>
                   <span className="px-1 rounded-full bg-primary/10 text-primary text-[10px] font-bold">
                     {sidebarCount}
+                  </span>
+                </button>
+              )}
+
+              {noticeCount > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setFilter("notice")}
+                  className={cn(
+                    "px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer flex items-center gap-1",
+                    filter === "notice"
+                      ? "bg-slate-100 dark:bg-slate-800 text-foreground shadow-2xs"
+                      : "text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  <span>Circulars</span>
+                  <span className="px-1 rounded-full bg-amber-500/10 text-amber-600 text-[10px] font-bold">
+                    {noticeCount}
                   </span>
                 </button>
               )}

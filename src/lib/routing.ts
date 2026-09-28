@@ -65,15 +65,19 @@ export function getRoutingConfig(
     
     // 1. Detect localDomain dynamically just like proxy.ts
     let localDomain = "";
-    if (rootDomainWithoutPort && (cleanHost === rootDomainWithoutPort || cleanHost.endsWith(`.${rootDomainWithoutPort}`))) {
-      localDomain = rootDomainWithoutPort;
-    } else if (cleanHost.includes('localhost') || cleanHost.includes('127.0.0.1')) {
-      const parts = cleanHost.split('.');
-      localDomain = parts.length > 1 ? parts.slice(1).join('.') : cleanHost;
-    } else if (/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(cleanHost)) {
-      // It's an IP address
+    const isIp = /^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(cleanHost) || cleanHost === '::1' || cleanHost === '[::1]';
+
+    if (isIp) {
+      // Priority 1: IP Address (no subdomains possible)
       localDomain = cleanHost;
+    } else if (cleanHost === 'localhost' || cleanHost.endsWith('.localhost')) {
+      // Priority 2: Localhost development (e.g. localhost or tenant.localhost)
+      localDomain = 'localhost';
+    } else if (rootDomainWithoutPort && (cleanHost === rootDomainWithoutPort || cleanHost.endsWith(`.${rootDomainWithoutPort}`))) {
+      // Priority 3: Use explicit Root Domain ENV if current host matches it
+      localDomain = rootDomainWithoutPort;
     } else {
+      // Priority 4: Dynamic extraction from Vercel or Custom Domains
       const parts = cleanHost.split('.');
       if (cleanHost.includes("vercel.app")) {
         localDomain = parts.length > 3 ? parts.slice(1).join('.') : cleanHost;
@@ -174,6 +178,7 @@ export const WORKSPACE_ROUTES = {
   ADMIN_ATTENDANCE: "/admin/attendance",
   ADMIN_EXAM_GENERATOR: "/admin/exam-generator",
   ADMIN_SETTINGS: "/admin/settings",
+  ADMIN_EVENTS_NOTICES: "/admin/events-notices",
   ADMIN_PROFILE: "/admin/profile",
   ADMIN_STATE_MANAGER: "/admin/state-manager",
   ADMIN_PRODUCTS: "/admin/products",

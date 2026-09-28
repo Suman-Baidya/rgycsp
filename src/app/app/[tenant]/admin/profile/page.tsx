@@ -21,11 +21,23 @@ export default async function ProfilePage(props: { params: Promise<{ tenant: str
 
   const workspace = await db.workspace.findUnique({
     where: { subdomain: tenant.toLowerCase() },
+    include: {
+      siteSettings: true
+    }
   });
 
   if (!workspace) {
     redirect(await getServerTenantLink("/login", tenant));
   }
+
+  // Fetch active franchise document templates (Certificate, ID Card, Visiting Card)
+  const templates = await db.documentTemplate.findMany({
+    where: {
+      isActive: true,
+      type: { in: ["FRANCHISE_CERTIFICATE", "FRANCHISE_ID", "VISITING_CARD"] },
+      workspaceId: null
+    }
+  });
 
   const isGlobalAdmin = session?.user?.role === "SUPER_ADMIN" || 
                         session?.user?.role === "SUPER_ADMIN_MANAGER" || 
@@ -83,7 +95,13 @@ export default async function ProfilePage(props: { params: Promise<{ tenant: str
         description="Manage your personal identity and security preferences within this franchise."
       />
 
-      <ProfileForm user={user} roleName={roleName} tenant={tenant} />
+      <ProfileForm 
+        user={user} 
+        roleName={roleName} 
+        tenant={tenant} 
+        workspace={workspace} 
+        templates={templates} 
+      />
     </div>
   );
 }

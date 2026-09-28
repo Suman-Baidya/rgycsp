@@ -51,16 +51,24 @@ export async function createEvent(data: any) {
         guests: data.guests || [],
         programDetails: data.programDetails || [],
         galleryImages: data.galleryImages || [],
-        isFeatured: data.isFeatured || false,
+        isFeatured: Boolean(data.isFeatured),
         isActive: data.isActive !== false,
+        showOnFranchises: data.showOnFranchises !== false,
       },
     });
 
     if (event.workspaceId) {
       await revalidateWorkspacePath(event.workspaceId, "/", "layout");
       await revalidateWorkspacePath(event.workspaceId, "/events");
+      await revalidateWorkspacePath(event.workspaceId, "/admin/events-notices");
+      await revalidateWorkspacePath(event.workspaceId, "/admin/settings");
+    } else {
+      revalidatePath("/app/[tenant]/admin/events-notices");
     }
     revalidatePath("/events");
+    revalidatePath("/super-admin/events-notices");
+    revalidatePath("/super-admin/settings");
+    revalidatePath("/");
     return { success: true, event };
   } catch (error: any) {
     console.error("Failed to create event:", error);
@@ -73,29 +81,37 @@ export async function updateEvent(eventId: string, data: any) {
     const updated = await db.event.update({
       where: { id: eventId },
       data: {
-        workspaceId: data.workspaceId || null,
-        hostName: data.hostName,
-        title: data.title,
-        description: data.description,
-        date: new Date(data.date),
-        time: data.time,
-        location: data.location,
-        image: data.image,
-        videoUrl: data.videoUrl,
-        category: data.category,
-        guests: data.guests || [],
-        programDetails: data.programDetails || [],
-        galleryImages: data.galleryImages || [],
-        isFeatured: data.isFeatured,
-        isActive: data.isActive,
+        workspaceId: data.workspaceId !== undefined ? data.workspaceId : undefined,
+        hostName: data.hostName !== undefined ? data.hostName : undefined,
+        title: data.title !== undefined ? data.title : undefined,
+        description: data.description !== undefined ? data.description : undefined,
+        date: data.date ? new Date(data.date) : undefined,
+        time: data.time !== undefined ? data.time : undefined,
+        location: data.location !== undefined ? data.location : undefined,
+        image: data.image !== undefined ? data.image : undefined,
+        videoUrl: data.videoUrl !== undefined ? data.videoUrl : undefined,
+        category: data.category !== undefined ? data.category : undefined,
+        guests: data.guests !== undefined ? data.guests : undefined,
+        programDetails: data.programDetails !== undefined ? data.programDetails : undefined,
+        galleryImages: data.galleryImages !== undefined ? data.galleryImages : undefined,
+        isFeatured: data.isFeatured !== undefined ? Boolean(data.isFeatured) : undefined,
+        isActive: data.isActive !== undefined ? Boolean(data.isActive) : undefined,
+        showOnFranchises: data.showOnFranchises !== undefined ? Boolean(data.showOnFranchises) : undefined,
       },
     });
 
     if (updated.workspaceId) {
       await revalidateWorkspacePath(updated.workspaceId, "/", "layout");
       await revalidateWorkspacePath(updated.workspaceId, "/events");
+      await revalidateWorkspacePath(updated.workspaceId, "/admin/events-notices");
+      await revalidateWorkspacePath(updated.workspaceId, "/admin/settings");
+    } else {
+      revalidatePath("/app/[tenant]/admin/events-notices");
     }
     revalidatePath("/events");
+    revalidatePath("/super-admin/events-notices");
+    revalidatePath("/super-admin/settings");
+    revalidatePath("/");
     return { success: true };
   } catch (error: any) {
     console.error("Failed to update event:", error);
@@ -112,8 +128,15 @@ export async function deleteEvent(eventId: string) {
     if (deleted.workspaceId) {
       await revalidateWorkspacePath(deleted.workspaceId, "/", "layout");
       await revalidateWorkspacePath(deleted.workspaceId, "/events");
+      await revalidateWorkspacePath(deleted.workspaceId, "/admin/events-notices");
+      await revalidateWorkspacePath(deleted.workspaceId, "/admin/settings");
+    } else {
+      revalidatePath("/app/[tenant]/admin/events-notices");
     }
     revalidatePath("/events");
+    revalidatePath("/super-admin/events-notices");
+    revalidatePath("/super-admin/settings");
+    revalidatePath("/");
     return { success: true };
   } catch (error) {
     console.error("Failed to delete event:", error);

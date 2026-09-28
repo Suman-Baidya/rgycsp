@@ -36,6 +36,7 @@ export function PrintControlBar() {
         backgroundColor: "#ffffff",
         width: 794,
         height: 1123,
+        skipFonts: true,
       };
 
       // Capture Page 1

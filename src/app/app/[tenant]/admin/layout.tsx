@@ -22,14 +22,23 @@ export default async function WorkspaceAdminLayout({
   const session = await auth();
   const { tenant } = await params;
   
-  const workspace = await db.workspace.findUnique({
-    where: { subdomain: tenant?.toLowerCase() },
-    select: { id: true, isStateManager: true, walletBalance: true, name: true, centerCode: true, isSubdomainEnabled: true }
+  const normalizedTenant = tenant?.toLowerCase()?.trim();
+  const workspace = await db.workspace.findFirst({
+    where: {
+      OR: [
+        { subdomain: normalizedTenant },
+        { centerCode: { equals: normalizedTenant, mode: 'insensitive' } },
+        { id: tenant }
+      ]
+    },
+    select: { id: true, isStateManager: true, walletBalance: true, name: true, centerCode: true, isSubdomainEnabled: true, subdomain: true }
   });
 
   if (!workspace) {
     notFound();
   }
+
+  const canonicalTenant = workspace.subdomain;
 
   let admissionsCount = 0;
   let pendingFeesCount = 0;
@@ -75,7 +84,7 @@ export default async function WorkspaceAdminLayout({
   const currentPath = headersList.get("x-pathname") || "";
 
   if (userRole === "UNAUTHORIZED") {
-    redirect(await getServerTenantLink("/login", tenant));
+    redirect(await getServerTenantLink("/login", canonicalTenant));
   } else {
     const parts = currentPath.split('/');
     const adminIndex = parts.indexOf("admin");
@@ -85,7 +94,7 @@ export default async function WorkspaceAdminLayout({
 
       // If subdomain is disabled for this franchise, enquiries page is strictly disallowed
       if (section === "enquiries" && !workspace.isSubdomainEnabled) {
-        redirect(await getServerTenantLink("/admin", tenant));
+        redirect(await getServerTenantLink("/admin", canonicalTenant));
       }
 
       if (userRole !== "ADMIN") {
@@ -102,22 +111,22 @@ export default async function WorkspaceAdminLayout({
 
         if (requiredPermission !== "profile") {
           if (requiredPermission === "staff") {
-            redirect(await getServerTenantLink("/admin", tenant));
+            redirect(await getServerTenantLink("/admin", canonicalTenant));
           } else if (!userPermissions.includes(requiredPermission)) {
-            redirect(await getServerTenantLink("/admin", tenant));
+            redirect(await getServerTenantLink("/admin", canonicalTenant));
           }
         }
       }
     }
   }
 
-  const homeHref = await getServerTenantLink("/", tenant);
-  const workspaceBase = await getServerWorkspaceBase(tenant);
+  const homeHref = await getServerTenantLink("/", canonicalTenant);
+  const workspaceBase = await getServerWorkspaceBase(canonicalTenant);
 
   return (
     <div className="flex h-screen overflow-hidden bg-background text-foreground transition-colors duration-300">
       <WorkspaceSidebar 
-        tenant={tenant} 
+        tenant={canonicalTenant} 
         workspaceBase={workspaceBase} 
         admissionsCount={admissionsCount} 
         pendingFeesCount={pendingFeesCount}
@@ -130,8 +139,8 @@ export default async function WorkspaceAdminLayout({
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         <WorkspaceAdminHeader 
           tenantName={workspace.name}
-          tenant={tenant}
-          workspaceBase={workspaceBase}
+          tenant={canonicalTenant} 
+          workspaceBase={workspaceBase} 
           walletBalance={workspace.walletBalance}
           userName={session?.user?.name || "Admin"}
           userImage={session?.user?.image}
@@ -146,7 +155,7 @@ export default async function WorkspaceAdminLayout({
           </div>
         </main>
       </div>
-      <QuickActionFAB portal="admin" tenant={tenant} workspaceBase={workspaceBase} />
+      <QuickActionFAB portal="admin" tenant={canonicalTenant} workspaceBase={workspaceBase} />
     </div>
   );
 }

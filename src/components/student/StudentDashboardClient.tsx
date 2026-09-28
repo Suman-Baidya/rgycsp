@@ -2,7 +2,8 @@
 
 import React from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { markNotificationAsRead } from "@/app/actions/notifications";
 import {
   BookOpen,
   Calendar,
@@ -22,6 +23,7 @@ import {
   MessageSquare,
   GraduationCap,
   ShieldCheck,
+  Eye,
   Download,
   ArrowUpRight,
   CheckCircle,
@@ -65,6 +67,7 @@ export default function StudentDashboardClient({
   workspace
 }: StudentDashboardProps) {
   const pathname = usePathname();
+  const router = useRouter();
   const profile = student?.studentProfile || {};
   const batch = profile.batch;
   const course = profile.course || batch?.course;
@@ -72,6 +75,21 @@ export default function StudentDashboardClient({
   const centerName = workspace?.name || settings?.siteName || "Academic Center";
   const centerCode = workspace?.centerCode || settings?.centerCode || tenant?.toUpperCase();
   const primaryColor = settings?.primaryColor || "#0284c7";
+
+  // Track read notice IDs locally to sync with bell and clear the banner immediately
+  const [readNoticeIds, setReadNoticeIds] = React.useState<Set<string>>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const stored = localStorage.getItem("student_read_notices");
+        return stored ? new Set(JSON.parse(stored)) : new Set();
+      } catch (e) {
+        return new Set();
+      }
+    }
+    return new Set();
+  });
+
+
 
   const displayNotices = notices && notices.length > 0 ? notices.slice(0, 4) : [];
   const upcomingExams = dashboardData?.upcomingExams || [];
@@ -148,6 +166,8 @@ export default function StudentDashboardClient({
 
   return (
     <div className="space-y-4 sm:space-y-5 pb-8 w-full mx-auto">
+
+
       {/* 1. Executive Student Welcome Banner (Rule 7.1) */}
       <div className="relative overflow-hidden rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs">
         <div className="p-4 sm:p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">

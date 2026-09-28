@@ -16,6 +16,13 @@ const FORBIDDEN_PHONES = new Set([
   "1234567890", "0987654321", "9876543210", "0123456789", "9876501234"
 ]);
 
+// Disposable and dummy email domains to reject
+const FORBIDDEN_EMAIL_DOMAINS = new Set([
+  "mailinator.com", "tempmail.com", "10minutemail.com", "guerrillamail.com",
+  "throwawaymail.com", "yopmail.com", "sharklasers.com", "dispostable.com",
+  "test.com", "example.com", "fake.com", "sample.com", "trashmail.com"
+]);
+
 /**
  * Validates human full name:
  * - 3 to 60 characters
@@ -130,6 +137,11 @@ export function validateEmailAddress(email: string): { isValid: boolean; error?:
   const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
   if (!emailRegex.test(clean)) {
     return { isValid: false, error: "Please enter a valid email address (e.g., student@domain.com).", cleanEmail: clean };
+  }
+
+  const domain = clean.split("@")[1];
+  if (domain && FORBIDDEN_EMAIL_DOMAINS.has(domain)) {
+    return { isValid: false, error: "Please enter a genuine, active email address.", cleanEmail: clean };
   }
 
   return { isValid: true, cleanEmail: clean };

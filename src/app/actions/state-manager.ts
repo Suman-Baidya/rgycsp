@@ -28,7 +28,9 @@ export async function getStateManagers() {
         name: true,
         subdomain: true,
         ownReferralId: true,
+        walletBalance: true,
         // @ts-ignore: Prisma client cache issue with new schema fields
+        commissionBalance: true,
         commissionReleaseHours: true,
         _count: {
           select: { referredWorkspaces: true }
@@ -85,7 +87,9 @@ export async function getStateManagers() {
         name: m.name,
         subdomain: m.subdomain,
         ownReferralId: m.ownReferralId,
-        commissionReleaseHours: m.commissionReleaseHours,
+        commissionReleaseHours: m.commissionReleaseHours ?? 24,
+        walletBalance: m.walletBalance || 0,
+        commissionBalance: m.commissionBalance || 0,
         _count: m._count,
         totalEarned,
         totalPending,
@@ -114,7 +118,7 @@ export async function getAllFranchisesForAssignment() {
         referralCommissionExpiry: true,
         isReferralCommissionEnabled: true,
         referredBy: {
-          select: { name: true, ownReferralId: true }
+          select: { id: true, name: true, ownReferralId: true }
         }
       },
       orderBy: { name: 'asc' }
@@ -125,7 +129,7 @@ export async function getAllFranchisesForAssignment() {
   }
 }
 
-export async function promoteToStateManager(workspaceId: string, referralId: string) {
+export async function promoteToStateManager(workspaceId: string, referralId: string, commissionReleaseHours: number = 24) {
   try {
     const existing = await prisma.workspace.findUnique({
       where: { ownReferralId: referralId }
@@ -139,7 +143,9 @@ export async function promoteToStateManager(workspaceId: string, referralId: str
       where: { id: workspaceId },
       data: {
         isStateManager: true,
-        ownReferralId: referralId
+        ownReferralId: referralId,
+        // @ts-ignore
+        commissionReleaseHours: commissionReleaseHours || 24
       }
     });
 
@@ -169,8 +175,71 @@ export async function updateStateManagerConfig(workspaceId: string, data: { refe
       }
     });
 
+    // If referral ID was changed, sync appliedReferralId for all referred workspaces
+    if (data.referralId) {
+      await prisma.workspace.updateMany({
+        where: { referredById: workspaceId },
+        data: { appliedReferralId: data.referralId }
+      });
+    }
+
     revalidatePath("/super-admin/state-managers", "page");
     return { success: true };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+}
+
+export async function processDueCommissions() {
+  try {
+    const now = new Date();
+    const pendingCommissions = await prisma.walletTransaction.findMany({
+      where: {
+        isCommission: true,
+        status: 'PENDING',
+        releaseAt: {
+          lte: now
+        }
+      }
+    });
+
+    if (pendingCommissions.length === 0) {
+      return { success: true, processed: 0, message: "No pending commissions are currently due." };
+    }
+
+    let processedCount = 0;
+    for (const commission of pendingCommissions) {
+      try {
+        await prisma.$transaction(async (tx) => {
+          await tx.walletTransaction.update({
+            where: { id: commission.id },
+            data: { status: 'APPROVED' }
+          });
+
+          await tx.workspace.update({
+            where: { id: commission.workspaceId },
+            // @ts-ignore: Prisma client cache issue with new schema fields
+            data: { commissionBalance: { increment: commission.amount } }
+          });
+
+          await tx.notification.create({
+            data: {
+              workspaceId: commission.workspaceId,
+              title: "Commission Released",
+              message: `Your pending commission of ₹${commission.amount} has been released to your Commission Balance.`,
+              type: "SUCCESS",
+              link: "/admin/state-manager"
+            }
+          });
+        });
+        processedCount++;
+      } catch (err) {
+        console.error(`Error processing commission ${commission.id}:`, err);
+      }
+    }
+
+    revalidatePath("/super-admin/state-managers", "page");
+    return { success: true, processed: processedCount, totalFound: pendingCommissions.length };
   } catch (error: any) {
     return { success: false, error: error.message };
   }

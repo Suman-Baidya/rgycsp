@@ -18,7 +18,7 @@ export async function getServerRoutingContext() {
  */
 export async function getServerTenantLink(path: string, tenant: string): Promise<string> {
   const { pathname, host, routingMode } = await getServerRoutingContext();
-  const forcedMode = routingMode === "SUBDIRECTORY" ? "subdirectory" : undefined;
+  const forcedMode = routingMode?.toLowerCase() === "subdirectory" || pathname.startsWith('/app/') ? "subdirectory" : undefined;
   return getTenantLink(path, tenant, pathname, host, forcedMode); 
 }
 
@@ -27,7 +27,7 @@ export async function getServerTenantLink(path: string, tenant: string): Promise
  */
 export async function isSubdirectoryMode(): Promise<boolean> {
   const { pathname, host, routingMode } = await getServerRoutingContext();
-  if (routingMode === "SUBDIRECTORY") return true;
+  if (routingMode?.toLowerCase() === "subdirectory" || pathname.startsWith('/app/')) return true;
   const config = getRoutingConfig(pathname, host);
   return config.mode === "subdirectory";
 }
@@ -36,7 +36,14 @@ export async function isSubdirectoryMode(): Promise<boolean> {
  * Gets the workspace base prefix for the current server request.
  */
 export async function getServerWorkspaceBase(tenant: string): Promise<string> {
-  const { pathname, host } = await getServerRoutingContext();
-  const { workspaceBase } = getRoutingConfig(pathname, host, tenant);
+  const { pathname, host, routingMode } = await getServerRoutingContext();
+  if (routingMode?.toLowerCase() === "subdirectory" || pathname.startsWith('/app/')) {
+    return `/app/${tenant}`;
+  }
+  if (routingMode?.toLowerCase() === "subdomain") {
+    return "";
+  }
+  const forcedMode = routingMode?.toLowerCase() === "subdirectory" ? "subdirectory" : undefined;
+  const { workspaceBase } = getRoutingConfig(pathname, host, tenant, forcedMode);
   return workspaceBase;
 }

@@ -202,3 +202,22 @@ export async function saveExampleData(data: Record<string, string>, workspaceId:
     return { success: false, error: error.message };
   }
 }
+
+export async function getAllNoticepadTemplates(workspaceId: string | null = null) {
+  try {
+    return await db.documentTemplate.findMany({
+      where: {
+        type: "NOTICE_PAD",
+        isActive: true,
+        OR: [
+          { workspaceId: workspaceId },
+          { workspaceId: null },
+        ],
+      },
+      orderBy: { updatedAt: "desc" },
+    });
+  } catch (error) {
+    console.error("Failed to fetch noticepad templates:", error);
+    return [];
+  }
+}

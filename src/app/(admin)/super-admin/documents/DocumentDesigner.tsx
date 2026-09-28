@@ -115,13 +115,21 @@ const DEFAULT_DEMO_DATA: Record<string, string> = {
   staffRole: "Senior Developer",
   staffPhone: "1234567890",
 
-  // System & Notice
-  issueDate: "15/05/2024",
-  validUntil: "May 14, 2025",
+  // System & Noticepad Variables
+  issueDate: "27/09/2026",
+  validUntil: "26/09/2027",
   principalSign: "https://api.dicebear.com/7.x/bottts/svg?seed=principal",
-  noticeTitle: "Urgent Meeting Notice",
-  noticeBody: "All staff members are requested to attend the meeting at 4:00 PM.",
-  noticeDate: "June 28, 2026",
+  noticeTitle: "Annual Verification & Examination Schedule Directive",
+  noticeBody: "All registered candidates, center directors, and faculty members are hereby informed that the upcoming examinations and annual center verification audit will be conducted strictly as per the central board norms.\n\nAll candidate records, admit cards, and internal attendance logs must be submitted before the cutoff deadline.",
+  noticeDate: "27/09/2026",
+  noticeRefNo: "RGYCSP/HO/DIR/2026/088",
+  noticeRecipient: "All Franchise Center Directors & Affiliated Candidates",
+  issuerName: "Central Head Office Board of Examinations",
+  issuerRole: "Controller of Examinations & Central Secretary",
+  issuerSign: "https://api.dicebear.com/7.x/bottts/svg?seed=headsign",
+  superAdminSign: "https://api.dicebear.com/7.x/bottts/svg?seed=headsign",
+  franchiseAdminSign: "https://api.dicebear.com/7.x/bottts/svg?seed=ownersign",
+  officialSeal: "/logo.png",
 
   // Exam
   examName: "Final Semester Examination 2026",
@@ -133,6 +141,25 @@ const DEFAULT_DEMO_DATA: Record<string, string> = {
 };
 
 const VARIABLE_GROUPS = [
+  {
+    label: "Notice Pad Variables",
+    items: [
+      { id: "noticeTitle", label: "Notice / Circular Title" },
+      { id: "noticeBody", label: "Notice Content / Body" },
+      { id: "noticeDate", label: "Notice Date" },
+      { id: "noticeRefNo", label: "Circular Ref / Memo No" },
+      { id: "noticeRecipient", label: "Target Recipient / Audience" },
+      { id: "issuerName", label: "Issuing Authority / Center Name" },
+      { id: "issuerRole", label: "Signatory Role / Designation" },
+      { id: "issuerSign", label: "Official Signature (Auto Adaptive)" },
+      { id: "superAdminSign", label: "Super Admin / Head Office Sign" },
+      { id: "franchiseAdminSign", label: "Franchise Admin / Center Head Sign" },
+      { id: "officialSeal", label: "Official Stamp / Seal" },
+      { id: "issueDate", label: "General Issue Date" },
+      { id: "validUntil", label: "Valid Until Date" },
+      { id: "principalSign", label: "Principal / Controller Signature" },
+    ]
+  },
   {
     label: "Student Variables",
     items: [
@@ -212,17 +239,6 @@ const VARIABLE_GROUPS = [
       { id: "staffId", label: "Staff ID" },
       { id: "staffRole", label: "Staff Role" },
       { id: "staffPhone", label: "Staff Phone" },
-    ]
-  },
-  {
-    label: "System Variables",
-    items: [
-      { id: "issueDate", label: "Issue Date" },
-      { id: "validUntil", label: "Valid Until" },
-      { id: "principalSign", label: "Principal Signature" },
-      { id: "noticeTitle", label: "Notice Title" },
-      { id: "noticeBody", label: "Notice Body" },
-      { id: "noticeDate", label: "Notice Date" },
     ]
   },
   {
@@ -574,12 +590,27 @@ export default function DocumentDesigner() {
       }));
 
       // 2. Capture canvas with high scale for printing (300 DPI target)
-      const { toPng } = await import("html-to-image");
-      const imgData = await toPng(canvasRef.current, {
-        pixelRatio: 4,
-        backgroundColor: '#ffffff',
-        quality: 1.0,
-      });
+      let imgData: string | null = null;
+      try {
+        const { toPng } = await import("html-to-image");
+        imgData = await toPng(canvasRef.current, {
+          pixelRatio: 4,
+          backgroundColor: '#ffffff',
+          quality: 1.0,
+          skipFonts: true,
+        });
+      } catch (err) {
+        console.warn("html-to-image failed in DocumentDesigner, falling back to html2canvas:", err);
+        const html2canvas = (await import("html2canvas")).default;
+        const canvas = await html2canvas(canvasRef.current, {
+          scale: 4,
+          useCORS: true,
+          allowTaint: true,
+          backgroundColor: '#ffffff',
+          logging: false,
+        });
+        imgData = canvas.toDataURL("image/png");
+      }
       
       // 3. Create PDF with precise unit dimensions
       const { jsPDF } = await import("jspdf");

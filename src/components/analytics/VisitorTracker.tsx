@@ -25,16 +25,26 @@ function detectTenantFromUrl(pathname: string): string | null {
   if (pathname.startsWith("/app/")) {
     const parts = pathname.split("/");
     if (parts.length >= 3 && parts[2]) {
-      return parts[2];
+      return parts[2].toLowerCase();
     }
   }
 
   // 2. Subdomain check
-  const hostname = window.location.hostname;
+  const hostname = window.location.hostname.toLowerCase();
+  
+  // Local development subdomain: e.g. chandpara.localhost
+  if (hostname.endsWith(".localhost")) {
+    const sub = hostname.replace(/\.localhost$/, "");
+    if (sub && sub !== "www" && sub !== "app" && sub !== "admin" && sub !== "super-admin") {
+      return sub;
+    }
+  }
+
+  // Production subdomain: e.g. chandpara.rgycsp.tech
   const parts = hostname.split(".");
-  if (parts.length > 2 && !hostname.includes("localhost") && !/^\d+\.\d+\.\d+\.\d+$/.test(hostname)) {
+  if (parts.length > 2 && !/^\d+\.\d+\.\d+\.\d+$/.test(hostname)) {
     const sub = parts[0];
-    if (sub !== "www" && sub !== "app" && sub !== "admin") {
+    if (sub !== "www" && sub !== "app" && sub !== "admin" && sub !== "super-admin") {
       return sub;
     }
   }

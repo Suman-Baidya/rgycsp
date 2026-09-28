@@ -81,11 +81,14 @@ export async function submitContactForm(data: ContactFormInput) {
       }
     }
 
-    // 4. Rate-Limiting / Duplicate Submission Throttling (within last 45 seconds)
+    // 4. Rate-Limiting / Duplicate Submission Throttling (within last 5 minutes)
+    const duplicateOrConditions: any[] = [{ email: emailVal.cleanEmail }];
+    if (cleanPhone) duplicateOrConditions.push({ phone: cleanPhone });
+
     const recentDuplicate = await db.visitorLead.findFirst({
       where: {
-        email: emailVal.cleanEmail,
-        createdAt: { gte: new Date(Date.now() - 45 * 1000) }
+        OR: duplicateOrConditions,
+        createdAt: { gte: new Date(Date.now() - 5 * 60 * 1000) }
       }
     });
 
@@ -350,11 +353,14 @@ export async function submitCampaignLead(data: CampaignLeadInput) {
       cleanPin = pinVal.cleanPin;
     }
 
-    // 4. Rate-Limiting / Duplicate submission throttling (within last 45 seconds)
+    // 4. Rate-Limiting / Duplicate submission throttling (within last 5 minutes)
+    const campaignOrConditions: any[] = [{ phone: phoneVal.cleanPhone }];
+    if (cleanEmail) campaignOrConditions.push({ email: cleanEmail });
+
     const recentDuplicate = await db.visitorLead.findFirst({
       where: {
-        phone: phoneVal.cleanPhone,
-        createdAt: { gte: new Date(Date.now() - 45 * 1000) }
+        OR: campaignOrConditions,
+        createdAt: { gte: new Date(Date.now() - 5 * 60 * 1000) }
       }
     });
 

@@ -10,6 +10,7 @@ export async function updateProfile(data: {
   email?: string;
   username?: string;
   image?: string;
+  signatureUrl?: string | null;
   targetUserId?: string;
 }) {
   const session = await auth();
@@ -56,6 +57,7 @@ export async function updateProfile(data: {
         email: data.email,
         username: data.username,
         image: data.image,
+        signatureUrl: data.signatureUrl !== undefined ? data.signatureUrl : undefined,
       }
     });
 

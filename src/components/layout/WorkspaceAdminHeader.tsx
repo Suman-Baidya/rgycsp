@@ -102,7 +102,7 @@ export function WorkspaceAdminHeader({
         {/* Right side: Actions & Profile */}
         <div className="flex items-center gap-2.5 sm:gap-4 shrink-0">
           {/* Wallet Balance Widget */}
-          <Link 
+          <a 
             href={`${workspaceBase}/admin/wallet`} 
             className="flex items-center gap-1.5 sm:gap-2.5 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-xl bg-slate-100/80 dark:bg-slate-800/50 hover:bg-slate-200/70 dark:hover:bg-slate-800 border border-slate-200/60 dark:border-slate-700/50 transition-colors group cursor-pointer"
             title="Franchise Wallet"
@@ -118,10 +118,10 @@ export function WorkspaceAdminHeader({
                 {formatCurrency(walletBalance)}
               </span>
             </div>
-          </Link>
+          </a>
 
           {/* Profile Section */}
-          <Link 
+          <a 
             href={`${workspaceBase}/admin/profile`} 
             className="flex items-center gap-2.5 px-2.5 py-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800/60 transition-colors group cursor-pointer"
           >
@@ -140,7 +140,7 @@ export function WorkspaceAdminHeader({
                 {userName.substring(0, 2).toUpperCase()}
               </AvatarFallback>
             </Avatar>
-          </Link>
+          </a>
 
           {/* Notification Center & Theme Toggle */}
           <div className="flex items-center gap-1 sm:gap-2 border-l border-border/50 pl-2.5 sm:pl-3">

@@ -17,6 +17,7 @@ model User {
   email         String?    @unique // Made optional for students
   emailVerified DateTime?
   image         String?
+  signatureUrl  String?
   passwordHash  String?
   role               SystemRole @default(USER)
   systemPermissions  Json?
@@ -582,6 +583,7 @@ model Event {
   galleryImages  Json?    @default("[]") // Array of image URLs
   isFeatured     Boolean  @default(false)
   isActive       Boolean  @default(true)
+  showOnFranchises Boolean @default(true)
 
   workspace Workspace? @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
 
@@ -716,11 +718,18 @@ model Notification {
   workspaceId String?
   userId      String? // If null, it's a broadcast to all workspace admins
 
-  title   String
-  message String  @db.Text
-  type    String  @default("INFO") // INFO, SUCCESS, WARNING, ERROR, APPLICATION
-  link    String? // Actionable link (e.g., /admin/students/applications/123)
-  isRead  Boolean @default(false)
+  title          String
+  message        String    @db.Text
+  type           String    @default("INFO") // INFO, SUCCESS, WARNING, ERROR, APPLICATION
+  link           String?   // Actionable link (e.g., /admin/students/applications/123)
+  isRead         Boolean   @default(false)
+  refNo          String?
+  scheduledFor   DateTime?
+  status         String    @default("PUBLISHED") // PUBLISHED, SCHEDULED, DRAFT
+  targetAudience String?   // ALL_FRANCHISES, SPECIFIC_FRANCHISE, STUDENTS, STAFF, PUBLIC
+  priority       String?   @default("NORMAL")    // NORMAL, HIGH, URGENT
+  templateId     String?
+  category       String?   @default("General")   // Academic, Exams, Holidays, General
 
   workspace Workspace? @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   user      User?      @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -731,6 +740,7 @@ model Notification {
   @@index([userId, isRead])
   @@index([workspaceId])
   @@index([createdAt])
+  @@index([status])
 }
 
 model PushSubscription {

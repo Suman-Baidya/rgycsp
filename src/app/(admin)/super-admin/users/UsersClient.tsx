@@ -1137,7 +1137,7 @@ export default function UsersClient({ initialUsers, initialTemplates = [] }: Use
                                 ) : user.workspaceRoles && user.workspaceRoles.length > 0 ? (
                                   <div className="flex flex-wrap items-center gap-1.5">
                                     {user.workspaceRoles.slice(0, 1).map((wr: any) => {
-                                      const href = getTenantLink("/admin/dashboard", wr.workspace.subdomain || wr.workspace.id, pathname);
+                                      const href = getTenantLink("/admin", wr.workspace.subdomain || wr.workspace.id, pathname);
                                       const displayName = `${wr.workspace.name}${wr.workspace.centerCode ? ` (${wr.workspace.centerCode})` : ""}`;
                                       return (
                                         <Tooltip key={wr.id}>

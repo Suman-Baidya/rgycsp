@@ -27,7 +27,8 @@ import {
   IndianRupee,
   GraduationCap,
   BarChart2,
-  MessageSquareQuote
+  MessageSquareQuote,
+  CalendarDays
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -68,16 +69,20 @@ export function WorkspaceSidebar({
   // In Subdomain mode, workspaceBase is "". In Subdirectory mode, it's "/app/[tenant]"
   // This avoids a hydration mismatch between SSR and Client, which was causing Next.js 
   // to intercept `<a>` tag clicks and throw 404s.
-  const isSubdomainMode = workspaceBase === "";
+  const isSubdomainMode = workspaceBase !== undefined 
+    ? workspaceBase === "" 
+    : routingConfig.mode === "subdomain";
 
   const TenantNavLink = ({ href, children, className, onClick }: any) => {
-    if (isSubdomainMode) {
-      return <a href={href} className={className} onClick={onClick}>{children}</a>;
-    }
-    return <Link href={href} className={className} onClick={onClick}>{children}</Link>;
+    return <a href={href} className={className} onClick={onClick}>{children}</a>;
   };
 
   const generateLink = (path: string) => {
+    if (workspaceBase !== undefined) {
+      const cleanPath = path.startsWith('/') ? path : `/${path}`;
+      if (workspaceBase && cleanPath.startsWith(workspaceBase)) return cleanPath;
+      return `${workspaceBase}${cleanPath}`.replace(/\/+/g, '/');
+    }
     return getTenantLink(path, displayTenant, pathname);
   };
 
@@ -85,6 +90,7 @@ export function WorkspaceSidebar({
     { id: "dashboard", name: "Overview", href: generateLink(WORKSPACE_ROUTES.ADMIN), icon: LayoutDashboard },
     { id: "analytics", name: "Visitor Analytics", href: generateLink(WORKSPACE_ROUTES.ADMIN_ANALYTICS), icon: BarChart2 },
     ...(isSubdomainEnabled ? [{ id: "enquiries", name: "Enquiries", href: generateLink(WORKSPACE_ROUTES.ADMIN_ENQUIRIES), icon: MessageSquareQuote }] : []),
+    { id: "events-notices", name: "Events & Notice", href: generateLink(WORKSPACE_ROUTES.ADMIN_EVENTS_NOTICES), icon: CalendarDays },
     { id: "wallet", name: "Wallet", href: generateLink(WORKSPACE_ROUTES.ADMIN_WALLET), icon: Wallet },
     { id: "staff", name: "Staff & Roles", href: generateLink(WORKSPACE_ROUTES.ADMIN_STAFF), icon: UserCheck },
     { id: "students", name: "Students", href: generateLink(WORKSPACE_ROUTES.ADMIN_STUDENTS), icon: Users },

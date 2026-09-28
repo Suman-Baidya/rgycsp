@@ -394,9 +394,7 @@ export async function getNotifications(param?: string | NotificationQueryOptions
     }
 
     // ==========================================================
-    // 4. PERSONAL DATABASE NOTIFICATIONS ONLY
-    // We only fetch notifications explicitly targeted to this specific user (userId).
-    // Stale broadcast logs with userId: null are NOT included so they don't inflate counts.
+    // 4. PERSONAL & BROADCAST NOTIFICATIONS
     // ==========================================================
     let personalNotifications: any[] = [];
     try {
@@ -414,6 +412,75 @@ export async function getNotifications(param?: string | NotificationQueryOptions
       console.error("Error fetching personal db notifications:", err);
     }
 
+    // 5. Broadcast Circulars for Admin, Super Admin & Students
+    let broadcastCirculars: any[] = [];
+    if (activePortal === "admin" && targetWorkspaceId) {
+      try {
+        broadcastCirculars = await db.notification.findMany({
+          where: {
+            userId: null,
+            type: { in: ["CIRCULAR", "WARNING", "EVENT", "NOTICE"] },
+            OR: [
+              { 
+                workspaceId: targetWorkspaceId,
+                targetAudience: { in: ["STAFF", "ALL_FRANCHISES", "SPECIFIC_FRANCHISE"] },
+              },
+              { 
+                workspaceId: null,
+                targetAudience: { in: ["ALL_FRANCHISES", "SPECIFIC_FRANCHISE", "ALL", "PUBLIC"] },
+              },
+            ],
+            NOT: [
+              { targetAudience: "STUDENTS" },
+              { link: "/student/notices" },
+            ],
+          },
+          orderBy: { createdAt: "desc" },
+          take: 15,
+        });
+      } catch (err) {
+        console.error("Error fetching broadcast circular notifications:", err);
+      }
+    } else if (activePortal === "student") {
+      try {
+        const now = new Date();
+        broadcastCirculars = await db.notification.findMany({
+          where: {
+            userId: null,
+            status: "PUBLISHED",
+            type: { in: ["CIRCULAR", "WARNING", "EVENT", "NOTICE"] },
+            AND: [
+              {
+                OR: [
+                  ...(targetWorkspaceId ? [{ workspaceId: targetWorkspaceId }] : []),
+                  { workspaceId: null },
+                ],
+              },
+              {
+                targetAudience: { in: ["STUDENTS", "ALL", "PUBLIC"] },
+              },
+              {
+                OR: [
+                  { scheduledFor: null },
+                  { scheduledFor: { lte: now } },
+                ],
+              },
+            ],
+            NOT: {
+              targetAudience: { in: ["ALL_FRANCHISES", "SPECIFIC_FRANCHISE", "STAFF"] },
+            },
+          },
+          orderBy: { createdAt: "desc" },
+          take: 10,
+        });
+      } catch (err) {
+        console.error("Error fetching student broadcast notifications:", err);
+      }
+    } else if (activePortal === "super-admin") {
+      // Super Admin is the broadcasting authority (Head Office). They do not receive franchise circulars in their notification feed.
+      broadcastCirculars = [];
+    }
+
     const realPersonalNotifications: NotificationItem[] = personalNotifications.map((n) => ({
       id: n.id,
       title: n.title,
@@ -426,17 +493,43 @@ export async function getNotifications(param?: string | NotificationQueryOptions
       count: 1,
     }));
 
-    // Combine sidebar pending action items + personal notifications
-    const allNotifications = [...sidebarNotices, ...realPersonalNotifications];
+    const realBroadcastNotifications: NotificationItem[] = broadcastCirculars.map((n) => {
+      const isUrgent = n.type === "WARNING";
+      const isEvent = n.type === "EVENT";
+      const defaultLink = activePortal === "super-admin"
+        ? "/super-admin/events-notices"
+        : activePortal === "student"
+        ? (options.tenant ? `/app/${options.tenant}/student/notices` : `/student/notices`)
+        : (options.tenant ? `/app/${options.tenant}/admin/events-notices` : `/admin/events-notices`);
 
-    // Total unread count equals the exact sum of live sidebar pending badges + unread personal notifications
+      return {
+        id: n.id,
+        title: n.title,
+        message: n.message,
+        type: isUrgent ? "WARNING" : isEvent ? "INFO" : "INFO",
+        link: n.link || defaultLink,
+        isRead: n.isRead,
+        createdAt: n.createdAt.toISOString(),
+        category: "notice",
+        badgeText: isUrgent ? "URGENT" : isEvent ? "EVENT" : "CIRCULAR",
+        badgeColor: isUrgent ? "rose" : isEvent ? "sky" : "amber",
+        actionText: activePortal === "student" ? "Read Notice" : "View Directive",
+        count: n.isRead ? 0 : 1,
+      };
+    });
+
+    // Combine sidebar pending action items + broadcast circulars + personal notifications
+    const allNotifications = [...sidebarNotices, ...realBroadcastNotifications, ...realPersonalNotifications];
+
+    // Total unread count equals the exact sum of live sidebar pending badges + unread broadcast notices + unread personal notifications
     const sidebarPendingTotal = sidebarNotices
       .filter((n) => !n.isRead)
       .reduce((sum, item) => sum + (item.count !== undefined ? item.count : 1), 0);
 
+    const broadcastUnreadTotal = realBroadcastNotifications.filter((n) => !n.isRead).length;
     const personalUnreadTotal = realPersonalNotifications.filter((n) => !n.isRead).length;
 
-    const unreadCount = sidebarPendingTotal + personalUnreadTotal;
+    const unreadCount = sidebarPendingTotal + broadcastUnreadTotal + personalUnreadTotal;
 
     return {
       success: true,
@@ -444,6 +537,7 @@ export async function getNotifications(param?: string | NotificationQueryOptions
       unreadCount,
       sidebarCount: sidebarNotices.filter((n) => !n.isRead).length,
       systemCount: realPersonalNotifications.length,
+      noticeCount: broadcastUnreadTotal,
     };
   } catch (error) {
     console.error("Error fetching notifications:", error);
@@ -453,6 +547,7 @@ export async function getNotifications(param?: string | NotificationQueryOptions
       unreadCount: 0,
       sidebarCount: 0,
       systemCount: 0,
+      noticeCount: 0,
     };
   }
 }
@@ -484,6 +579,17 @@ export async function markAllNotificationsAsRead(workspaceId?: string) {
       await db.notification.updateMany({
         where: {
           userId: userId,
+          isRead: false,
+        },
+        data: { isRead: true },
+      });
+    }
+
+    if (workspaceId) {
+      await db.notification.updateMany({
+        where: {
+          workspaceId,
+          userId: null,
           isRead: false,
         },
         data: { isRead: true },

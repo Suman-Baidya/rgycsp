@@ -1,4 +1,4 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { headers } from "next/headers";
 import { auth } from "@/auth";
 import type { Metadata } from "next";
@@ -45,7 +45,6 @@ export default async function TenantLayout({
   params: Promise<{ tenant: string }>;
 }) {
   const { tenant } = await params;
-  console.log(">>> [DEBUG] REACHED TenantLayout for tenant:", tenant);
   
   // Verify the tenant exists before rendering anything on this subdomain
   const workspace = await getWorkspaceByTenant(tenant);
@@ -61,6 +60,13 @@ export default async function TenantLayout({
 
   if (isSubdomain && !workspace.isSubdomainEnabled && !isSuperAdmin) {
     notFound();
+  }
+
+  // Canonicalize subdirectory access: e.g. /app/WB-259/admin -> /app/chandpara/admin
+  if (!isSubdomain && tenant.toLowerCase() !== workspace.subdomain.toLowerCase()) {
+    const currentPath = reqHeaders.get("x-pathname") || `/app/${tenant}`;
+    const targetPath = currentPath.replace(new RegExp(`^/app/${tenant}(/|$)`, 'i'), `/app/${workspace.subdomain}$1`);
+    redirect(targetPath);
   }
 
   return (

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo, useRef } from "react";
+import React, { useState, useMemo, useRef, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -35,7 +35,9 @@ import {
   Stamp,
   BadgeCheck,
   HelpCircle,
-  Loader2
+  Loader2,
+  Layers,
+  MessageSquare
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -52,12 +54,17 @@ import { getTenantLink } from "@/lib/routing";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useDebounce } from "@/hooks/useDebounce";
+import { DocumentRenderer, DocumentRendererRef } from "@/components/documents/DocumentRenderer";
+import { markNotificationAsRead } from "@/app/actions/notifications";
+import { normalizeNoticeCategory } from "@/components/documents/NoticepadDocumentViewer";
 
 interface StudentNoticesClientProps {
   notices?: any[];
   settings?: any;
   tenant: string;
   workspace?: any;
+  noticepadTemplate?: any | null;
+  superAdminSignature?: string | null;
 }
 
 // Fallback institutional templates when center admin has not yet added custom notices
@@ -134,7 +141,9 @@ export default function StudentNoticesClient({
   notices: initialNotices = [],
   settings,
   tenant,
-  workspace
+  workspace,
+  noticepadTemplate = null,
+  superAdminSignature = null,
 }: StudentNoticesClientProps) {
   const pathname = usePathname();
   const primaryColor = settings?.primaryColor || "#0284c7";
@@ -153,12 +162,17 @@ export default function StudentNoticesClient({
       return initialNotices.map((n: any, idx: number) => ({
         id: n.id || `not-${idx + 101}`,
         title: n.title || "Official Announcement",
-        date: n.date || new Date().toISOString(),
-        category: n.category || "General",
+        date: n.date || n.createdAt || new Date().toISOString(),
+        category: normalizeNoticeCategory(n.category),
         priority: n.priority || "normal",
-        department: n.department || "Center Administration",
-        description: n.description || "Official announcement from the administration. For further instructions or queries, contact the center reception.",
+        department: n.department || (n.workspaceId ? "Center Administration" : "Central Head Office"),
+        description: n.message || n.description || "Official announcement from the administration. For further instructions or queries, contact the center reception.",
         link: n.link || "",
+        refNo: n.refNo || null,
+        publishedBy: n.publishedBy || null,
+        isHeadOffice: n.isHeadOffice || false,
+        scheduledFor: n.scheduledFor || null,
+        status: n.status || null,
         isTemplate: false
       }));
     }
@@ -175,12 +189,122 @@ export default function StudentNoticesClient({
 
   // Active notice modal state
   const [activeNotice, setActiveNotice] = useState<any | null>(null);
-  const [modalTab, setModalTab] = useState<"overview" | "a4">("overview");
+  const [modalTab, setModalTab] = useState<"template" | "overview">("template");
   const [copiedLink, setCopiedLink] = useState(false);
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
 
   // Hidden print reference for direct PDF generation
   const a4SheetRef = useRef<HTMLDivElement>(null);
+  const docRendererRef = useRef<DocumentRendererRef>(null);
+
+  // Track read notice IDs locally for immediate UI countdown & bell synchronisation
+  const [readNoticeIds, setReadNoticeIds] = useState<Set<string>>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const stored = localStorage.getItem("student_read_notices");
+        return stored ? new Set(JSON.parse(stored)) : new Set();
+      } catch (e) {
+        return new Set();
+      }
+    }
+    return new Set();
+  });
+
+  // Calculate unread notices for countdown alert
+  const unreadNotices = useMemo(() => {
+    return allNotices.filter((n: any) => !readNoticeIds.has(n.id));
+  }, [allNotices, readNoticeIds]);
+
+
+
+  // Auto-open notice if noticeId query param is provided in URL
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const urlParams = new URLSearchParams(window.location.search);
+      const targetId = urlParams.get("noticeId");
+      if (targetId && allNotices.length > 0) {
+        const match = allNotices.find((n: any) => n.id === targetId);
+        if (match) {
+          handleOpenNotice(match);
+        }
+      }
+    }
+  }, [allNotices]);
+
+  // Open Notice handler that marks read, clears banner notice, and automatically syncs with Notification Bell
+  const handleOpenNotice = async (notice: any) => {
+    setActiveNotice(notice);
+    setModalTab("template");
+    if (notice?.id) {
+      setReadNoticeIds((prev) => {
+        const next = new Set(prev).add(notice.id);
+        try {
+          localStorage.setItem("student_read_notices", JSON.stringify(Array.from(next)));
+        } catch (e) {}
+        return next;
+      });
+      try {
+        await markNotificationAsRead(notice.id);
+      } catch (e) {
+        // ignore
+      }
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(
+          new CustomEvent("notification-read", { detail: { id: notice.id } })
+        );
+      }
+    }
+  };
+
+  // Active signature resolution (Super Admin vs Franchise Admin)
+  const isNoticeFromHeadOffice =
+    activeNotice?.publishedBy === "Head Office" ||
+    activeNotice?.isHeadOffice ||
+    !activeNotice?.workspaceId;
+  const franchiseSign = workspace?.signatureUrl || workspace?.ownerSignatureUrl || "";
+  const activeSignature = isNoticeFromHeadOffice ? "" : franchiseSign;
+
+  // Format notice data for DocumentRenderer
+  const templateStudentData = useMemo(() => {
+    if (!activeNotice) return null;
+    const isHO =
+      activeNotice.publishedBy === "Head Office" ||
+      activeNotice.isHeadOffice ||
+      !activeNotice.workspaceId;
+    const currentSign = isHO ? "" : (workspace?.signatureUrl || workspace?.ownerSignatureUrl || "");
+
+    const dateStr = activeNotice.date
+      ? new Date(activeNotice.date).toLocaleDateString("en-GB", {
+          day: "numeric",
+          month: "long",
+          year: "numeric",
+        })
+      : "";
+
+    return {
+      id: activeNotice.id,
+      title: activeNotice.title,
+      noticeTitle: activeNotice.title,
+      message: activeNotice.description,
+      noticeBody: activeNotice.description,
+      date: activeNotice.date,
+      noticeDate: dateStr,
+      noticeRefNo: activeNotice.refNo || `${centerCode}/CIR/2026/${(activeNotice.id || "0000").slice(-4).toUpperCase()}`,
+      noticeRecipient: isHO
+        ? "To All Enrolled Students & Examination Candidates (Nationwide)"
+        : "All Enrolled Students & Concerned Candidates",
+      issuerName: isHO ? "Central Head Office Directorate" : workspaceName,
+      issuerRole: isHO ? "Central Secretary / Super Admin" : "Center Director / Authorized Head",
+      issuerSign: currentSign,
+      superAdminSign: "",
+      franchiseAdminSign: currentSign,
+      centerHeadSign: currentSign,
+      franchiseOwnerSign: currentSign,
+      officialSeal: workspace?.logoUrl || "/logo.png",
+      workspace: workspace || null,
+      isSuperAdmin: isHO,
+    };
+  }, [activeNotice, workspace, centerCode, workspaceName]);
 
   // Available categories
   const categories = ["all", "Academic", "Exams", "Holidays", "General"];
@@ -198,7 +322,7 @@ export default function StudentNoticesClient({
 
       const matchesCategory =
         selectedCategory === "all" ||
-        notice.category?.toLowerCase() === selectedCategory.toLowerCase();
+        normalizeNoticeCategory(notice.category) === normalizeNoticeCategory(selectedCategory);
 
       return matchesSearch && matchesCategory;
     });
@@ -216,10 +340,10 @@ export default function StudentNoticesClient({
   const metrics = useMemo(() => {
     const totalCount = allNotices.length;
     const academicCount = allNotices.filter((n) =>
-      /academic|course|batch|class/i.test(n.category || "")
+      normalizeNoticeCategory(n.category) === "Academic"
     ).length;
     const examCount = allNotices.filter((n) =>
-      /exam|test|admit|result/i.test(n.category || "")
+      normalizeNoticeCategory(n.category) === "Exams"
     ).length;
 
     const now = new Date();
@@ -313,7 +437,7 @@ export default function StudentNoticesClient({
 
   // Category border & badge colors
   const getCategoryTheme = (category: string = "", priority: string = "") => {
-    const cat = category.toLowerCase();
+    const cat = normalizeNoticeCategory(category);
     const prio = priority.toLowerCase();
 
     if (prio === "high" || prio === "urgent") {
@@ -324,7 +448,7 @@ export default function StudentNoticesClient({
         accent: "text-rose-600 dark:text-rose-400"
       };
     }
-    if (/exam|assessment|admit/i.test(cat)) {
+    if (cat === "Exams") {
       return {
         border: "border-purple-500",
         badge: "bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-200/50 dark:border-purple-800/30",
@@ -332,7 +456,7 @@ export default function StudentNoticesClient({
         accent: "text-purple-600 dark:text-purple-400"
       };
     }
-    if (/academic|curriculum|course|batch/i.test(cat)) {
+    if (cat === "Academic") {
       return {
         border: "border-emerald-500",
         badge: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-200/50 dark:border-emerald-800/30",
@@ -340,7 +464,7 @@ export default function StudentNoticesClient({
         accent: "text-emerald-600 dark:text-emerald-400"
       };
     }
-    if (/holiday|vacation|closure/i.test(cat)) {
+    if (cat === "Holidays") {
       return {
         border: "border-amber-500",
         badge: "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-200/50 dark:border-amber-800/30",
@@ -365,63 +489,67 @@ export default function StudentNoticesClient({
     }
   };
 
-  // Direct A4 PDF Generation using jspdf + html2canvas
+  const handleShareNotice = async (noticeToShare?: any) => {
+    const notice = noticeToShare || activeNotice;
+    if (!notice) return;
+    const title = notice.title || "Official Announcement";
+    const text = `${title} - Official Notice from ${workspaceName}`;
+    const url = typeof window !== "undefined" ? window.location.href : "";
+
+    if (typeof navigator !== "undefined" && navigator.share) {
+      try {
+        await navigator.share({
+          title,
+          text,
+          url,
+        });
+        toast.success("Notice shared successfully!");
+        return;
+      } catch (err: any) {
+        if (err.name !== "AbortError") {
+          console.error("Web share error:", err);
+        }
+      }
+    }
+
+    // Fallback: Copy link
+    handleCopyLink();
+  };
+
+  const handleWhatsAppShare = (noticeToShare?: any) => {
+    const notice = noticeToShare || activeNotice;
+    if (!notice) return;
+    const title = notice.title || "Official Announcement";
+    const url = typeof window !== "undefined" ? window.location.href : "";
+    const msg = encodeURIComponent(`*${title}*\nOfficial notice from ${workspaceName}:\n${url}`);
+    if (typeof window !== "undefined") {
+      window.open(`https://api.whatsapp.com/send?text=${msg}`, "_blank");
+    }
+  };
+
+  // Direct High-Resolution Official PDF Download
   const handleDownloadPdf = async (noticeToDownload?: any) => {
     const notice = noticeToDownload || activeNotice;
     if (!notice) return;
 
+    if (!activeNotice || activeNotice.id !== notice.id) {
+      setActiveNotice(notice);
+      await new Promise((r) => setTimeout(r, 200));
+    }
+
     setIsGeneratingPdf(true);
-    const toastId = toast.loading(`Generating official A4 PDF for "${notice.title.slice(0, 25)}..."`);
+    const toastId = toast.loading(`Generating official PDF for "${(notice.title || "Circular").slice(0, 25)}..."`);
 
     try {
-      // Find the element to capture
-      let element = document.getElementById(`a4-sheet-${notice.id}`);
-      if (!element) {
-        // If modal was open on 'overview', temporary switch to render A4 sheet
-        setActiveNotice(notice);
-        setModalTab("a4");
-        await new Promise((r) => setTimeout(r, 400));
-        element = document.getElementById(`a4-sheet-${notice.id}`);
+      if (docRendererRef.current) {
+        await docRendererRef.current.downloadPDF();
+        toast.success("Official PDF downloaded successfully!", { id: toastId });
+        return;
       }
-
-      if (!element) {
-        throw new Error("A4 Sheet element not ready");
-      }
-
-      const { jsPDF } = await import("jspdf");
-      const html2canvas = (await import("html2canvas")).default;
-
-      const canvas = await html2canvas(element, {
-        scale: 2,
-        useCORS: true,
-        backgroundColor: "#ffffff",
-        logging: false,
-        windowWidth: 794
-      });
-
-      const imgData = canvas.toDataURL("image/jpeg", 0.98);
-      const pdf = new jsPDF({
-        orientation: "portrait",
-        unit: "mm",
-        format: "a4"
-      });
-
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-
-      pdf.addImage(imgData, "JPEG", 0, 0, pdfWidth, Math.min(pdfHeight, pdf.internal.pageSize.getHeight()));
-
-      const cleanName = (notice.title || "Circular")
-        .replace(/[^a-zA-Z0-9]/g, "_")
-        .slice(0, 32);
-      pdf.save(`${cleanName}_Official_Circular.pdf`);
-
-      toast.success("A4 PDF downloaded successfully!", { id: toastId });
-    } catch (err) {
-      console.error("PDF generation failed:", err);
-      toast.error("Failed to generate PDF. You can also click 'Print A4' -> Save as PDF.", {
-        id: toastId
-      });
+      toast.error("Official document template renderer is preparing, please try again in a moment.", { id: toastId });
+    } catch (err: any) {
+      console.error("Template PDF download error:", err);
+      toast.error("Failed to generate PDF from template: " + (err?.message || "Unknown error"), { id: toastId });
     } finally {
       setIsGeneratingPdf(false);
     }
@@ -431,7 +559,7 @@ export default function StudentNoticesClient({
   const handlePrint = (noticeToPrint?: any) => {
     if (noticeToPrint) {
       setActiveNotice(noticeToPrint);
-      setModalTab("a4");
+      setModalTab("template");
     }
     setTimeout(() => {
       if (typeof window !== "undefined") {
@@ -496,6 +624,8 @@ export default function StudentNoticesClient({
           </Link>
         </div>
       </div>
+
+
 
       {/* Notice Source Status Banner */}
       {!hasCustomNotices && (
@@ -707,8 +837,14 @@ export default function StudentNoticesClient({
                           )}
                         >
                           <span className={cn("w-1.5 h-1.5 rounded-full mr-1", theme.dot)} />
-                          {notice.category || "General"}
+                          {normalizeNoticeCategory(notice.category)}
                         </Badge>
+
+                        {!readNoticeIds.has(notice.id) && (
+                          <Badge className="bg-amber-500 text-white border-none font-bold text-[9px] px-1.5 py-0.5 rounded uppercase tracking-wider animate-pulse">
+                            Unread
+                          </Badge>
+                        )}
 
                         {isToday && (
                           <Badge className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-none font-bold text-[9px] px-1.5 py-0.5 rounded uppercase tracking-wider">
@@ -733,10 +869,7 @@ export default function StudentNoticesClient({
 
                       {/* Notice Title */}
                       <h2
-                        onClick={() => {
-                          setActiveNotice(notice);
-                          setModalTab("overview");
-                        }}
+                        onClick={() => handleOpenNotice(notice)}
                         className="font-semibold text-xs sm:text-sm text-slate-900 dark:text-white group-hover:text-primary transition-colors cursor-pointer line-clamp-1"
                       >
                         {notice.title}
@@ -751,6 +884,18 @@ export default function StudentNoticesClient({
 
                   {/* Right Column: Actions (Rule 7.5 Action buttons) */}
                   <div className="flex items-center gap-2 self-end lg:self-center shrink-0 w-full sm:w-auto justify-end pt-1 lg:pt-0 border-t lg:border-t-0 border-slate-100 dark:border-slate-800/40">
+                    {/* Quick Share Button */}
+                    <Button
+                      onClick={() => handleShareNotice(notice)}
+                      variant="outline"
+                      size="sm"
+                      className="h-7 sm:h-8 px-2 sm:px-2.5 rounded-lg text-xs font-semibold border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 gap-1"
+                      title="Share notice"
+                    >
+                      <Share2 className="w-3 h-3 text-slate-500" />
+                      <span className="hidden sm:inline">Share</span>
+                    </Button>
+
                     {/* Direct PDF Download Button */}
                     <Button
                       onClick={() => handleDownloadPdf(notice)}
@@ -765,18 +910,15 @@ export default function StudentNoticesClient({
                       ) : (
                         <Download className="w-3 h-3 text-primary" />
                       )}
-                      <span>A4 PDF</span>
+                      <span>PDF</span>
                     </Button>
 
-                    {/* Direct A4 View / Read Circular Button */}
+                    {/* Direct View / Read Circular Button */}
                     <Button
-                      onClick={() => {
-                        setActiveNotice(notice);
-                        setModalTab("overview");
-                      }}
+                      onClick={() => handleOpenNotice(notice)}
                       variant="default"
                       size="sm"
-                      className="h-7 sm:h-8 px-3 rounded-lg text-xs font-semibold gap-1.5 shadow-sm"
+                      className="h-7 sm:h-8 px-3 rounded-lg text-xs font-semibold gap-1.5 shadow-sm text-white"
                       style={{ backgroundColor: primaryColor }}
                     >
                       <span>Read Circular</span>
@@ -893,18 +1035,30 @@ export default function StudentNoticesClient({
                     <h3 className="text-xs sm:text-sm font-bold text-white tracking-tight leading-none">
                       {workspaceName}
                     </h3>
-                    <p className="text-[10px] text-slate-400 mt-0.5">
-                      Circular Ref: {centerCode}/CIR/2026/{activeNotice.id.slice(-4).toUpperCase()}
+                    <p className="text-[10px] text-slate-400 mt-0.5 font-mono">
+                      Circular Ref: {activeNotice.refNo || `${centerCode}/CIR/2026/${(activeNotice.id || "0000").slice(-4).toUpperCase()}`}
                     </p>
                   </div>
                 </div>
 
-                {/* View Switcher Pills */}
-                <div className="flex items-center gap-1.5 bg-slate-800/80 p-1 rounded-lg border border-white/10">
+                {/* View Switcher Pills: Official PDF & Quick View */}
+                <div className="flex items-center gap-1.5 bg-slate-800/80 p-1 rounded-lg border border-white/10 overflow-x-auto no-scrollbar max-w-full">
+                  <button
+                    onClick={() => setModalTab("template")}
+                    className={cn(
+                      "px-2.5 py-1 text-xs font-semibold rounded-md transition-all flex items-center gap-1 shrink-0",
+                      modalTab === "template"
+                        ? "bg-white text-slate-900 shadow-sm"
+                        : "text-slate-400 hover:text-white"
+                    )}
+                  >
+                    <FileText className="w-3 h-3 text-amber-400" />
+                    <span>Official PDF</span>
+                  </button>
                   <button
                     onClick={() => setModalTab("overview")}
                     className={cn(
-                      "px-2.5 py-1 text-xs font-semibold rounded-md transition-all flex items-center gap-1",
+                      "px-2.5 py-1 text-xs font-semibold rounded-md transition-all flex items-center gap-1 shrink-0",
                       modalTab === "overview"
                         ? "bg-white text-slate-900 shadow-sm"
                         : "text-slate-400 hover:text-white"
@@ -913,18 +1067,31 @@ export default function StudentNoticesClient({
                     <Eye className="w-3 h-3" />
                     <span>Quick View</span>
                   </button>
-                  <button
-                    onClick={() => setModalTab("a4")}
-                    className={cn(
-                      "px-2.5 py-1 text-xs font-semibold rounded-md transition-all flex items-center gap-1",
-                      modalTab === "a4"
-                        ? "bg-white text-slate-900 shadow-sm"
-                        : "text-slate-400 hover:text-white"
-                    )}
-                  >
-                    <FileCheck2 className="w-3 h-3" />
-                    <span>A4 Official Sheet</span>
-                  </button>
+                </div>
+              </div>
+
+              {/* View 1: Official Noticepad Document Template (Always mounted for instant PDF export) */}
+              <div
+                className={cn(
+                  "p-3 sm:p-5 bg-slate-100 dark:bg-slate-950 overflow-y-auto max-h-[68vh] flex flex-col items-center",
+                  modalTab !== "template" && "hidden"
+                )}
+              >
+                <div className="text-center mb-2.5">
+                  <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
+                    Official Institutional Noticepad • Rendered via Super Admin Document Template
+                  </span>
+                </div>
+                <div className="border border-slate-300 dark:border-slate-700 rounded-lg shadow-xl overflow-auto bg-white p-2 max-w-full">
+                  {templateStudentData && (
+                    <DocumentRenderer
+                      ref={docRendererRef}
+                      type="NOTICE_PAD"
+                      template={noticepadTemplate}
+                      student={templateStudentData}
+                      inline={true}
+                    />
+                  )}
                 </div>
               </div>
 
@@ -938,7 +1105,7 @@ export default function StudentNoticesClient({
                         variant="outline"
                         className="bg-primary/10 text-primary border-primary/20 text-[9px] font-bold px-2 py-0.5 uppercase tracking-wider"
                       >
-                        {activeNotice.category || "General"}
+                        {normalizeNoticeCategory(activeNotice.category)}
                       </Badge>
 
                       <span className="text-[11px] font-medium text-slate-400 flex items-center gap-1">
@@ -1016,165 +1183,15 @@ export default function StudentNoticesClient({
                 </div>
               )}
 
-              {/* View 2: Official A4 Sheet (Standard 210mm x 297mm Layout) */}
-              <div
-                className={cn(
-                  "p-3 sm:p-5 bg-slate-100 dark:bg-slate-950 overflow-y-auto max-h-[68vh]",
-                  modalTab !== "a4" && "hidden"
-                )}
-              >
-                <div className="text-center mb-2">
-                  <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
-                    Standard A4 Official Institute Circular Sheet • Print or Export to PDF
-                  </span>
-                </div>
-
-                {/* THE A4 DOCUMENT CONTAINER */}
-                <div
-                  id={`a4-sheet-${activeNotice.id}`}
-                  className="bg-white text-slate-900 mx-auto rounded-md shadow-lg border-2 border-slate-900 p-6 sm:p-8 w-full max-w-[720px] font-serif relative"
-                  style={{ minHeight: "920px" }}
-                >
-                  {/* Subtle Background Watermark */}
-                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-[0.03] select-none">
-                    <div className="text-center transform -rotate-45">
-                      <GraduationCap className="w-80 h-80 mx-auto text-slate-900" />
-                      <p className="text-5xl font-black uppercase tracking-widest mt-4">
-                        {workspaceName}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Inner Thin Border for Formal Institutional Design */}
-                  <div className="border border-slate-400/80 p-5 sm:p-6 flex flex-col justify-between h-full space-y-6 relative z-10">
-                    {/* A4 Section 1: Institutional Letterhead */}
-                    <div className="text-center space-y-1 pb-4 border-b-2 border-slate-900">
-                      <div className="flex items-center justify-center gap-2 mb-1">
-                        <GraduationCap className="w-8 h-8 text-slate-900" />
-                      </div>
-                      <h1 className="text-xl sm:text-2xl font-black uppercase tracking-tight text-slate-900">
-                        {workspaceName}
-                      </h1>
-                      <p className="text-[11px] font-semibold tracking-wider text-slate-700 uppercase">
-                        Affiliated to Rashtriya Gramin Yuva Computer Saksharta Mission (RGYCSM)
-                      </p>
-                      <div className="flex flex-wrap items-center justify-center gap-3 text-[10px] text-slate-600 pt-0.5">
-                        <span>
-                          <strong>Center Code:</strong> {centerCode}
-                        </span>
-                        <span>•</span>
-                        <span>
-                          <strong>Accreditation:</strong> ISO 9001:2015 Certified
-                        </span>
-                        <span>•</span>
-                        <span>
-                          <strong>Reg No:</strong> RGYCSM/ATC/{workspace?.id?.slice(0, 6).toUpperCase() || "2026"}
-                        </span>
-                      </div>
-                      <p className="text-[10px] text-slate-500 pt-0.5">
-                        Campus: {centerAddress} | Phone: {centerPhone} | Email: {centerEmail}
-                      </p>
-                    </div>
-
-                    {/* A4 Section 2: Circular Ref No. and Date Bar */}
-                    <div className="flex items-center justify-between text-xs font-sans font-bold border-b border-slate-300 pb-2">
-                      <div className="text-slate-800">
-                        <span className="text-slate-500 font-normal">Ref No: </span>
-                        ABCD/{centerCode}/CIR/2026/{activeNotice.id.slice(-4).toUpperCase()}
-                      </div>
-                      <div className="text-slate-800">
-                        <span className="text-slate-500 font-normal">Date of Issue: </span>
-                        {formatDateFull(activeNotice.date)}
-                      </div>
-                    </div>
-
-                    {/* A4 Section 3: Official Notification Badge & Subject */}
-                    <div className="text-center space-y-3 pt-1">
-                      <div className="inline-block px-4 py-1 bg-slate-900 text-white text-xs font-sans font-bold uppercase tracking-widest rounded-sm">
-                        Official Notification & Circular
-                      </div>
-
-                      <div className="bg-slate-100 border-l-4 border-slate-900 p-3 text-left font-sans">
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block mb-0.5">
-                          Subject of Circular:
-                        </span>
-                        <h2 className="text-sm sm:text-base font-bold text-slate-900 leading-snug">
-                          {activeNotice.title}
-                        </h2>
-                        <div className="flex items-center gap-2 mt-1 text-[10px] text-slate-600 font-medium">
-                          <span>Classification: <strong>{activeNotice.category || "General"}</strong></span>
-                          <span>•</span>
-                          <span>Issuing Wing: <strong>{activeNotice.department || "Academic Council"}</strong></span>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* A4 Section 4: Circular Body Text */}
-                    <div className="space-y-3 text-xs sm:text-sm text-slate-800 leading-relaxed font-serif pt-1 flex-1">
-                      <p className="font-semibold font-sans text-xs text-slate-700">
-                        To All Concerned Students, Faculty Members & Academic Coordinators:
-                      </p>
-                      
-                      <div className="whitespace-pre-line text-justify pl-1">
-                        {activeNotice.description}
-                      </div>
-
-                      <div className="pt-2 text-[11px] font-sans text-slate-600 italic bg-slate-50 p-2.5 rounded border border-slate-200">
-                        <strong>Compliance Note:</strong> All students are hereby advised to strictly adhere to the timelines and instructions specified above. For any verification or support, please contact the center administration or raise a ticket via the student portal.
-                      </div>
-                    </div>
-
-                    {/* A4 Section 5: Signature Block & Official Seal */}
-                    <div className="pt-4 border-t border-slate-300 grid grid-cols-2 gap-4 items-end font-sans">
-                      {/* Left: Distribution */}
-                      <div className="text-[9px] text-slate-600 space-y-0.5">
-                        <p className="font-bold uppercase text-slate-800">Copy Forwarded For Information To:</p>
-                        <p>1. Institutional Notice Board (Physical & Digital Portal)</p>
-                        <p>2. Academic & Examination Department</p>
-                        <p>3. Faculty & Batch Coordinators</p>
-                        <p>4. Office Archive & Student Affairs</p>
-                      </div>
-
-                      {/* Right: Signature & Seal */}
-                      <div className="text-right space-y-1">
-                        <div className="inline-block text-center pr-2">
-                          <div className="w-24 h-12 border border-dashed border-slate-300 rounded flex items-center justify-center mx-auto mb-1 text-[9px] text-slate-400 select-none">
-                            [Digitally Sealed]
-                          </div>
-                          <div className="w-36 border-t-2 border-slate-900 pt-1">
-                            <p className="font-bold text-xs text-slate-900 uppercase">
-                              Authorized Signatory
-                            </p>
-                            <p className="text-[10px] text-slate-600 font-medium">
-                              Office of Academic Director
-                            </p>
-                            <p className="text-[9px] text-slate-500">
-                              {workspaceName}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* A4 Section 6: Official Verification Footer */}
-                    <div className="pt-2 border-t border-slate-200 text-center font-sans text-[9px] text-slate-400 flex items-center justify-between">
-                      <span>Official Circular Document • ABCD Edu Hub Platform</span>
-                      <span>Page 1 of 1</span>
-                      <span>Security Ref: {activeNotice.id.toUpperCase()}</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
               {/* Modal Footer Controls */}
               <div className="p-3.5 sm:p-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30 flex flex-wrap items-center justify-between gap-2">
                 <div className="flex items-center gap-2">
-                  {/* Share Link */}
+                  {/* Share Notice */}
                   <Button
                     type="button"
                     variant="outline"
                     size="sm"
-                    onClick={handleCopyLink}
+                    onClick={() => handleShareNotice(activeNotice)}
                     className="h-8 text-xs font-medium rounded-lg gap-1.5 border-slate-200 dark:border-slate-700"
                   >
                     {copiedLink ? (
@@ -1182,19 +1199,20 @@ export default function StudentNoticesClient({
                     ) : (
                       <Share2 className="w-3.5 h-3.5 text-slate-500" />
                     )}
-                    <span>{copiedLink ? "Copied" : "Share"}</span>
+                    <span>{copiedLink ? "Copied Link" : "Share"}</span>
                   </Button>
 
-                  {/* Print A4 */}
+                  {/* WhatsApp Share */}
                   <Button
                     type="button"
                     variant="outline"
                     size="sm"
-                    onClick={() => handlePrint(activeNotice)}
-                    className="h-8 text-xs font-medium rounded-lg gap-1.5 border-slate-200 dark:border-slate-700"
+                    onClick={() => handleWhatsAppShare(activeNotice)}
+                    className="h-8 text-xs font-medium rounded-lg gap-1.5 border-emerald-200 dark:border-emerald-800 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/20"
+                    title="Share via WhatsApp"
                   >
-                    <Printer className="w-3.5 h-3.5 text-slate-500" />
-                    <span>Print A4</span>
+                    <MessageSquare className="w-3.5 h-3.5 text-emerald-600" />
+                    <span>WhatsApp</span>
                   </Button>
                 </div>
 
@@ -1212,7 +1230,7 @@ export default function StudentNoticesClient({
                     ) : (
                       <Download className="w-3.5 h-3.5" />
                     )}
-                    <span>Download A4 PDF</span>
+                    <span>Download Official PDF</span>
                   </Button>
 
                   <Button

@@ -43,3 +43,21 @@ I have successfully implemented the complete, end-to-end student admission syste
 5. Go to `/admission/status`, log in, and click the Print button to see the A4 format.
 6. Go back to your admin dashboard -> **Students** -> **Admission Applications**, view the new application, and click **Approve & Enroll**.
 7. Check your main Students list to see the newly enrolled student!
+
+---
+
+## Troubleshooting Reference: Franchise Dashboard Sidebar 404 ("Lost in Space")
+
+### Why did this happen?
+When testing on `127.0.0.1:3000` or an IP host:
+1. `proxy.ts` and `routing.ts` had a logic flaw where IP address `127.0.0.1` was split by `.` into `['127', '0', '0', '1']`.
+2. This caused the system to mistakenly believe that `0.0.1` was the root domain and `"127"` was a tenant subdomain.
+3. Because Super Admin routes start with `/super-admin`, they were explicitly bypassed and worked perfectly.
+4. The Franchise Overview page loaded at `/app/chandpara/admin` because `/app/` was also bypassed on initial direct navigation.
+5. However, inside the sidebar, the client mistakenly generated links without the `/app/chandpara` prefix (rendering `/admin/wallet`, `/admin/analytics`, `/admin/enquiries` instead of `/app/chandpara/admin/wallet`).
+6. Clicking those links requested `/admin/wallet`, which hit the proxy, was rewritten to `/app/127/admin/wallet`, and threw 404 ("Lost in Space") because tenant `"127"` does not exist in the database.
+
+### What was fixed?
+- **[src/proxy.ts](file:///c:/Users/SUMAN/Desktop/programming/RGYCSP_PROJECT/rgycsp/src/proxy.ts)** & **[src/lib/routing.ts](file:///c:/Users/SUMAN/Desktop/programming/RGYCSP_PROJECT/rgycsp/src/lib/routing.ts)**: IP addresses (e.g. `127.0.0.1`, LAN IPs) are checked first and guaranteed to be treated as root domains, never split into fake subdomains.
+- **[src/components/layout/WorkspaceSidebar.tsx](file:///c:/Users/SUMAN/Desktop/programming/RGYCSP_PROJECT/rgycsp/src/components/layout/WorkspaceSidebar.tsx)**: Sidebar link generation now directly honors the server-provided `workspaceBase` prop (`/app/[tenant]`), eliminating any chance of client/server routing mismatch.
+

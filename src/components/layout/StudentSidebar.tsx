@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   LayoutDashboard,
@@ -22,6 +22,7 @@ import {
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { signOut } from "next-auth/react";
+import { getNotifications, NotificationItem } from "@/app/actions/notifications";
 
 import { detectTenant, getTenantLink, isActivePath, WORKSPACE_ROUTES } from "@/lib/routing";
 
@@ -36,25 +37,83 @@ export function StudentSidebar({
   const [isMoreOpen, setIsMoreOpen] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
   const pathname = usePathname();
+  const router = useRouter();
   
   const tenant = propTenant || detectTenant(pathname, typeof window !== 'undefined' ? window.location.host : undefined);
 
   const isSubdomainMode = workspaceBase !== undefined 
     ? workspaceBase === "" 
     : typeof window !== 'undefined' 
-      ? (window.location.host.includes('.') && !window.location.host.startsWith('192.') && !window.location.host.startsWith('127.'))
+      ? (!/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}(:\d+)?$/.test(window.location.host) && window.location.host.includes('.') && !window.location.host.endsWith('.localhost') && window.location.host !== 'localhost')
       : false;
 
   const TenantNavLink = ({ href, children, className, onClick }: any) => {
-    if (isSubdomainMode) {
-      return <a href={href} className={className} onClick={onClick}>{children}</a>;
-    }
-    return <Link href={href} className={className} onClick={onClick}>{children}</Link>;
+    return <a href={href} className={className} onClick={onClick}>{children}</a>;
   };
 
   const generateLink = (path: string) => {
+    if (workspaceBase !== undefined) {
+      const cleanPath = path.startsWith('/') ? path : `/${path}`;
+      if (workspaceBase && cleanPath.startsWith(workspaceBase)) return cleanPath;
+      return `${workspaceBase}${cleanPath}`.replace(/\/+/g, '/');
+    }
     return getTenantLink(path, tenant, pathname);
   };
+
+  const [unreadNoticeCount, setUnreadNoticeCount] = useState(0);
+
+  const getReadNoticeIds = (): Set<string> => {
+    if (typeof window === "undefined") return new Set();
+    try {
+      const stored = localStorage.getItem("student_read_notices");
+      return stored ? new Set(JSON.parse(stored)) : new Set();
+    } catch {
+      return new Set();
+    }
+  };
+
+  const loadSidebarNotices = async () => {
+    try {
+      const res = await getNotifications({
+        portal: "student",
+        tenant,
+      });
+      if (res.success && res.notifications) {
+        const readSet = getReadNoticeIds();
+        const unread = res.notifications.filter(
+          (n: NotificationItem) =>
+            (n.category === "notice" || n.type === "WARNING" || n.type === "INFO") &&
+            !n.isRead &&
+            !readSet.has(n.id)
+        );
+        setUnreadNoticeCount(unread.length);
+      }
+    } catch (e) {
+      console.error("Failed to load sidebar notifications:", e);
+    }
+  };
+
+  useEffect(() => {
+    loadSidebarNotices();
+    const pollInterval = setInterval(() => loadSidebarNotices(), 30000);
+    return () => clearInterval(pollInterval);
+  }, [tenant]);
+
+  // Real-time synchronization when a notice is marked read
+  useEffect(() => {
+    const handleNotificationRead = (event: Event) => {
+      const customEvent = event as CustomEvent<{ id?: string }>;
+      const readId = customEvent.detail?.id;
+      if (readId) {
+        setUnreadNoticeCount((prev) => Math.max(0, prev - 1));
+      } else {
+        loadSidebarNotices();
+      }
+    };
+
+    window.addEventListener("notification-read", handleNotificationRead);
+    return () => window.removeEventListener("notification-read", handleNotificationRead);
+  }, [tenant]);
 
   const navItems = [
     { name: "Overview", href: generateLink(WORKSPACE_ROUTES.STUDENT_DASHBOARD), icon: LayoutDashboard },
@@ -130,6 +189,9 @@ export function StudentSidebar({
         <nav className={cn("flex-1 py-4 space-y-1.5 overflow-y-auto overflow-x-hidden", isCollapsed ? "px-2 scrollbar-hide" : "px-4 custom-scrollbar")}>
           {navItems.map((item) => {
             const isActive = isActivePath(pathname, item.href);
+            const isNoticeItem = item.name === "Notices";
+            const hasUnread = isNoticeItem && unreadNoticeCount > 0;
+
             return (
               <TenantNavLink key={item.name} href={item.href} className="block w-full">
                 <div
@@ -141,21 +203,41 @@ export function StudentSidebar({
                     isCollapsed ? "justify-center h-10 w-10 mx-auto rounded-xl" : "px-3 py-2.5 rounded-xl"
                   )}
                 >
-                  <item.icon className={cn("h-5 w-5 flex-shrink-0", isActive ? "text-primary-foreground" : "group-hover:text-white")} />
+                  <div className="relative shrink-0 flex items-center justify-center">
+                    <item.icon className={cn("h-5 w-5 flex-shrink-0", isActive ? "text-primary-foreground" : "group-hover:text-white")} />
+                    {hasUnread && isCollapsed && (
+                      <span className="absolute -top-1.5 -right-1.5 flex items-center justify-center min-w-[16px] h-4 px-1 rounded-full bg-rose-500 text-white text-[9px] font-bold shadow-xs">
+                        {unreadNoticeCount > 9 ? "9+" : unreadNoticeCount}
+                      </span>
+                    )}
+                  </div>
                   
                   {!isCollapsed && (
-                    <motion.span
-                      initial={{ opacity: 0, x: -10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      className="font-medium whitespace-nowrap"
-                    >
-                      {item.name}
-                    </motion.span>
+                    <div className="flex items-center justify-between flex-1 min-w-0">
+                      <motion.span
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        className="font-medium whitespace-nowrap truncate"
+                      >
+                        {item.name}
+                      </motion.span>
+
+                      {hasUnread && (
+                        <span className="ml-auto flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full bg-rose-500 text-white text-[10px] font-bold shadow-xs">
+                          {unreadNoticeCount}
+                        </span>
+                      )}
+                    </div>
                   )}
 
                   {isCollapsed && (
-                    <div className="absolute left-full ml-4 px-2 py-1 bg-slate-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50 whitespace-nowrap border border-white/10">
-                      {item.name}
+                    <div className="absolute left-full ml-4 px-2 py-1 bg-slate-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50 whitespace-nowrap border border-white/10 flex items-center gap-1.5">
+                      <span>{item.name}</span>
+                      {hasUnread && (
+                        <span className="px-1.5 py-0.2 rounded-full bg-rose-500 text-white text-[9px] font-bold">
+                          {unreadNoticeCount}
+                        </span>
+                      )}
                     </div>
                   )}
                 </div>
@@ -213,10 +295,15 @@ export function StudentSidebar({
           
           <button onClick={toggleMore} className="flex flex-col items-center gap-1 w-16 relative">
             <div className={cn(
-              "p-2 rounded-2xl transition-all duration-300 flex items-center justify-center",
+              "p-2 rounded-2xl transition-all duration-300 flex items-center justify-center relative",
               isMoreOpen ? "bg-slate-100 dark:bg-white/10 text-slate-900 dark:text-white" : "text-slate-500 dark:text-slate-400"
             )}>
               <MoreHorizontal className="h-5 w-5" />
+              {unreadNoticeCount > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 flex items-center justify-center min-w-[15px] h-3.5 px-0.5 rounded-full bg-rose-500 text-white text-[8px] font-bold shadow-xs">
+                  {unreadNoticeCount > 9 ? "9+" : unreadNoticeCount}
+                </span>
+              )}
             </div>
             <span className={cn(
               "text-[10px] font-medium transition-colors text-center w-full truncate px-1",
@@ -250,6 +337,8 @@ export function StudentSidebar({
               <div className="flex-1 overflow-y-auto p-4 space-y-1.5 custom-scrollbar">
                 {moreNavItems.map((item) => {
                   const isActive = isActivePath(pathname, item.href);
+                  const isNoticeItem = item.name === "Notices";
+                  const hasUnread = isNoticeItem && unreadNoticeCount > 0;
                   
                   return (
                     <TenantNavLink key={item.name} href={item.href} className="block w-full">
@@ -260,7 +349,12 @@ export function StudentSidebar({
                           : "hover:bg-slate-100 dark:hover:bg-white/5 text-slate-700 dark:text-slate-300"
                       )}>
                         <item.icon className="h-5 w-5 shrink-0" />
-                        <span className="font-medium text-sm">{item.name}</span>
+                        <span className="font-medium text-sm flex-1">{item.name}</span>
+                        {hasUnread && (
+                          <span className="ml-auto px-2 py-0.5 rounded-full bg-rose-500 text-white text-xs font-bold shadow-xs">
+                            {unreadNoticeCount}
+                          </span>
+                        )}
                       </div>
                     </TenantNavLink>
                   );

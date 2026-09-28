@@ -177,10 +177,15 @@ export default async function InstituteLandingPage({
   }).slice(0, 3);
 
   const allEvents = await db.event.findMany({
-    where: { workspaceId: workspace.id },
+    where: {
+      OR: [
+        { workspaceId: workspace.id, isActive: true },
+        { workspaceId: null, isActive: true, showOnFranchises: true },
+      ],
+    },
     orderBy: { date: 'asc' }
   });
-  const top3Events = allEvents.filter(e => (e as any).isActive !== false).slice(0, 3);
+  const top3Events = allEvents.slice(0, 3);
 
   return (
     <div className="flex flex-col min-h-screen font-sans bg-background selection:bg-primary/30">

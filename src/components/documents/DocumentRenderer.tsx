@@ -8,6 +8,7 @@ import { Loader2 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { QRCodeSVG } from "qrcode.react";
+import { cn } from "@/lib/utils";
 
 export interface DocumentRendererRef {
   downloadPDF: () => Promise<void>;
@@ -18,12 +19,15 @@ export interface DocumentRendererRef {
 }
 
 interface DocumentRendererProps {
-  type: string;
+  type?: string;
   student: any;
   examData?: any;
   workspaceId?: string | null;
   semesterNumber?: number;
   templateId?: string | null;
+  template?: any;
+  inline?: boolean;
+  className?: string;
   onReady?: () => void;
 }
 
@@ -31,9 +35,9 @@ const DPI = 96;
 const MM_PER_INCH = 25.4;
 
 export const DocumentRenderer = forwardRef<DocumentRendererRef, DocumentRendererProps>(
-  ({ type, student, examData, workspaceId = null, semesterNumber, templateId = null, onReady }, ref) => {
-    const [template, setTemplate] = useState<any>(null);
-    const [isLoading, setIsLoading] = useState(true);
+  ({ type = "ID_CARD", student, examData, workspaceId = null, semesterNumber, templateId = null, template: initialTemplate = null, inline = false, className, onReady }, ref) => {
+    const [template, setTemplate] = useState<any>(initialTemplate);
+    const [isLoading, setIsLoading] = useState(!initialTemplate);
     const [previewOpen, setPreviewOpen] = useState(false);
     const [previewDataUrl, setPreviewDataUrl] = useState<string | null>(null);
     const canvasRef = useRef<HTMLDivElement>(null);
@@ -62,6 +66,11 @@ export const DocumentRenderer = forwardRef<DocumentRendererRef, DocumentRenderer
     }, [isLoading, template]);
 
     useEffect(() => {
+      if (initialTemplate) {
+        setTemplate(initialTemplate);
+        setIsLoading(false);
+        return;
+      }
       const fetchTemplate = async () => {
         setIsLoading(true);
         hasCalledOnReady.current = false;
@@ -74,7 +83,7 @@ export const DocumentRenderer = forwardRef<DocumentRendererRef, DocumentRenderer
         setIsLoading(false);
       };
       fetchTemplate();
-    }, [type, workspaceId, templateId]);
+    }, [type, workspaceId, templateId, initialTemplate]);
 
     // Data Mapping Logic
     const mapVariable = (varName: string) => {
@@ -207,11 +216,34 @@ export const DocumentRenderer = forwardRef<DocumentRendererRef, DocumentRenderer
           valid.setFullYear(valid.getFullYear() + 1);
           return `${valid.getDate().toString().padStart(2, '0')}/${(valid.getMonth() + 1).toString().padStart(2, '0')}/${valid.getFullYear()}`;
         case "noticeDate": {
+          if (student?.noticeDate) return student.noticeDate;
+          if (student?.date) return new Date(student.date).toLocaleDateString('en-GB');
+          if (student?.createdAt) return new Date(student.createdAt).toLocaleDateString('en-GB');
           const nDate = new Date();
           return `${nDate.getDate().toString().padStart(2, '0')}/${(nDate.getMonth() + 1).toString().padStart(2, '0')}/${nDate.getFullYear()}`;
         }
-        case "noticeTitle": return "";
-        case "noticeBody": return "";
+        case "noticeTitle": return student?.noticeTitle || student?.title || "";
+        case "noticeBody": return student?.noticeBody || student?.message || student?.description || "";
+        case "noticeRefNo": return student?.noticeRefNo || student?.refNo || (student?.id ? `CIR-${student.id.slice(-6).toUpperCase()}` : "RGYCSP/HO/DIR/2026/042");
+        case "noticeRecipient": return student?.noticeRecipient || student?.target || student?.audience || "All Concerned Persons";
+        case "issuerName": return student?.issuerName || (student?.workspace?.name ? student.workspace.name : "Central Head Office Administration");
+        case "issuerRole": return student?.issuerRole || (student?.workspace ? "Center Director / Head of Institute" : "Controller of Examinations & Central Secretary");
+        case "issuerSign": {
+          if (student?.isSuperAdmin) return "";
+          if (student?.franchiseAdminSign) return student.franchiseAdminSign;
+          if (student?.workspace && (student.workspace.signatureUrl || student.workspace.ownerSignatureUrl)) {
+            return student.workspace.signatureUrl || student.workspace.ownerSignatureUrl;
+          }
+          return "";
+        }
+        case "superAdminSign": return "";
+        case "franchiseAdminSign":
+        case "centerHeadSign":
+        case "franchiseOwnerSign": {
+          if (student?.isSuperAdmin) return "";
+          return student?.franchiseAdminSign || student?.workspace?.signatureUrl || student?.workspace?.ownerSignatureUrl || "";
+        }
+        case "officialSeal": return student?.officialSeal || student?.workspace?.logoUrl || "/logo.png";
         
         // Exam Fields
         case "examName": return activeExam?.title || "";
@@ -390,17 +422,33 @@ export const DocumentRenderer = forwardRef<DocumentRendererRef, DocumentRenderer
           await document.fonts.ready;
         }
 
-        const { toPng } = await import("html-to-image");
-        // 2.5 pixelRatio provides ultra-crisp 240+ DPI resolution for print while avoiding browser memory saturation
-        const imgData = await toPng(canvasRef.current, { 
-          pixelRatio: 2.5,
-          backgroundColor: '#ffffff',
-          quality: 0.98,
-          cacheBust: false,
-        });
+        let imgData: string | null = null;
+        try {
+          const { toPng } = await import("html-to-image");
+          // 2.5 pixelRatio provides ultra-crisp 240+ DPI resolution for print while avoiding browser memory saturation
+          // skipFonts: true prevents html-to-image from accessing cross-origin document.styleSheets cssRules (SecurityError)
+          imgData = await toPng(canvasRef.current, { 
+            pixelRatio: 2.5,
+            backgroundColor: '#ffffff',
+            quality: 0.98,
+            cacheBust: false,
+            skipFonts: true,
+          });
+        } catch (captureErr) {
+          console.warn("html-to-image capture failed, falling back to html2canvas:", captureErr);
+          const html2canvas = (await import("html2canvas")).default;
+          const canvas = await html2canvas(canvasRef.current, {
+            scale: 2.5,
+            useCORS: true,
+            allowTaint: true,
+            backgroundColor: '#ffffff',
+            logging: false,
+          });
+          imgData = canvas.toDataURL("image/png");
+        }
         return imgData;
       } catch (err) {
-        console.error(err);
+        console.error("Document generation error:", err);
         toast.error("Failed to render document image.");
         return null;
       }
@@ -429,7 +477,10 @@ export const DocumentRenderer = forwardRef<DocumentRendererRef, DocumentRenderer
           format: [template.width, template.height]
         });
         pdf.addImage(imgData, "PNG", 0, 0, template.width, template.height, undefined, "FAST");
-        pdf.save(`${student?.fullName || "Student"}_${type}.pdf`);
+        const docFileName = type === "NOTICE_PAD"
+          ? `${(student?.noticeTitle || student?.title || "Notice").slice(0, 35).replace(/[^a-zA-Z0-9_-]/g, "_")}_Noticepad.pdf`
+          : `${student?.fullName || "Student"}_${type}.pdf`;
+        pdf.save(docFileName);
         toast.success("PDF Downloaded successfully", { id: loadingToast });
       },
       preview: async () => {
@@ -476,118 +527,135 @@ export const DocumentRenderer = forwardRef<DocumentRendererRef, DocumentRenderer
 
     const config = (typeof template.config === "string" ? JSON.parse(template.config) : template.config) || [];
 
+    const renderCanvasInner = () => (
+      <div style={{ width: `${template.width}px`, height: `${template.height}px` }} className="shrink-0">
+        <div
+          ref={canvasRef}
+          className="relative bg-white overflow-hidden w-full h-full"
+        >
+          {cleanBackgroundUrl && (
+            <img src={cleanBackgroundUrl} crossOrigin="anonymous" alt="BG" className="absolute inset-0 w-full h-full object-fill pointer-events-none" />
+          )}
+          {config.map((item: any) => {
+            if (item.type === "qrcode") {
+              const parseQrContent = (template: string = "") => {
+                return template.replace(/\{(\w+)\}/g, (_: string, key: string) => {
+                  return mapVariable(key) || "";
+                });
+              };
+              
+              return (
+                <div
+                  key={item.id}
+                  style={{
+                    position: "absolute",
+                    left: `${item.x}px`,
+                    top: `${item.y}px`,
+                    width: `${item.width}px`,
+                    height: `${item.height}px`,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    overflow: "hidden"
+                  }}
+                >
+                  <QRCodeSVG
+                    value={parseQrContent(item.qrContentTemplate)}
+                    size={Math.min(item.width || 100, item.height || 100)}
+                    level="H"
+                    includeMargin={false}
+                  />
+                </div>
+              );
+            }
+
+            const mappedValue = mapVariable(item.name);
+            
+            if (item.type === "image" || item.type === "signature") {
+              if (!mappedValue) return null;
+              return (
+                <img
+                  key={item.id}
+                  src={mappedValue}
+                  alt={item.name}
+                  style={{
+                    position: "absolute",
+                    left: `${item.x}px`,
+                    top: `${item.y}px`,
+                    width: `${item.width}px`,
+                    height: `${item.height}px`,
+                    objectFit: item.objectFit || "fill",
+                    borderRadius: item.borderRadius !== undefined ? `${item.borderRadius}px` : "0",
+                  }}
+                  crossOrigin="anonymous"
+                />
+              );
+            }
+
+            let displayValue = mappedValue;
+            if (item.type === "text") {
+              const templateStr = item.textContent !== undefined ? item.textContent : `{${item.name}}`;
+              displayValue = templateStr.replace(/\{(\w+)\}/g, (_: string, key: string) => {
+                return mapVariable(key) || "";
+              });
+            }
+
+            return (
+              <div
+                key={item.id}
+                style={{
+                  position: "absolute",
+                  left: `${item.x}px`,
+                  top: `${item.y}px`,
+                  transform: (!item.width && item.type === "text") 
+                    ? (item.textAlign === "center" ? "translateX(-50%)" : item.textAlign === "right" ? "translateX(-100%)" : "none")
+                    : "none",
+                }}
+              >
+                <span 
+                  style={{
+                    fontSize: `${item.fontSize}px`,
+                    fontWeight: item.fontWeight,
+                    fontFamily: item.fontFamily || "Inter",
+                    color: item.color,
+                    whiteSpace: item.width ? "pre-wrap" : "pre",
+                    width: item.width ? `${item.width}px` : "auto",
+                    display: "block",
+                    textAlign: item.textAlign || "left",
+                    lineHeight: item.lineHeight || 1,
+                    margin: 0,
+                    padding: 0
+                  }}
+                  dangerouslySetInnerHTML={{ __html: displayValue || " " }}
+                />
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+
     return (
       <>
-        {/* Hidden Render Canvas Portaled to body to avoid affecting modal scroll */}
-        {typeof document !== 'undefined' && createPortal(
-          <div className="font-sans" style={{ position: 'absolute', top: 0, left: 0, pointerEvents: 'none', zIndex: -9999 }}>
+        {inline ? (
+          <div className={cn("font-sans flex justify-center w-full overflow-x-auto py-2", className)}>
             <style dangerouslySetInnerHTML={{ __html: `@import url('https://fonts.googleapis.com/css2?family=Charm:wght@400;700&family=Inter:wght@400;700;900&family=Montserrat:wght@400;700;900&family=Open+Sans:wght@400;700;800&family=Oswald:wght@400;700&family=Pacifico&family=Playfair+Display:wght@400;700;900&family=Roboto:wght@400;700;900&display=swap');` }} />
-            <div style={{ width: `${template.width}px`, height: `${template.height}px` }}>
-              <div
-                ref={canvasRef}
-                className="relative bg-white overflow-hidden w-full h-full"
-              >
-                {cleanBackgroundUrl && (
-                  <img src={cleanBackgroundUrl} crossOrigin="anonymous" alt="BG" className="absolute inset-0 w-full h-full object-fill pointer-events-none" />
-                )}
-                {config.map((item: any) => {
-                  if (item.type === "qrcode") {
-                    const parseQrContent = (template: string = "") => {
-                      return template.replace(/\{(\w+)\}/g, (_: string, key: string) => {
-                        return mapVariable(key) || "";
-                      });
-                    };
-                    
-                    return (
-                      <div
-                        key={item.id}
-                        style={{
-                          position: "absolute",
-                          left: `${item.x}px`,
-                          top: `${item.y}px`,
-                          width: `${item.width}px`,
-                          height: `${item.height}px`,
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          overflow: "hidden"
-                        }}
-                      >
-                        <QRCodeSVG
-                          value={parseQrContent(item.qrContentTemplate)}
-                          size={Math.min(item.width || 100, item.height || 100)}
-                          level="H"
-                          includeMargin={false}
-                        />
-                      </div>
-                    );
-                  }
-
-                  const mappedValue = mapVariable(item.name);
-                  
-                  if (item.type === "image" || item.type === "signature") {
-                    if (!mappedValue) return null;
-                    return (
-                      <img
-                        key={item.id}
-                        src={mappedValue}
-                        alt={item.name}
-                        style={{
-                          position: "absolute",
-                          left: `${item.x}px`,
-                          top: `${item.y}px`,
-                          width: `${item.width}px`,
-                          height: `${item.height}px`,
-                          objectFit: item.objectFit || "fill",
-                          borderRadius: item.borderRadius !== undefined ? `${item.borderRadius}px` : "0",
-                        }}
-                        crossOrigin="anonymous"
-                      />
-                    );
-                  }
-
-                  let displayValue = mappedValue;
-                  if (item.type === "text") {
-                    const templateStr = item.textContent !== undefined ? item.textContent : `{${item.name}}`;
-                    displayValue = templateStr.replace(/\{(\w+)\}/g, (_: string, key: string) => {
-                      return mapVariable(key) || "";
-                    });
-                  }
-
-                  return (
-                    <div
-                      key={item.id}
-                      style={{
-                        position: "absolute",
-                        left: `${item.x}px`,
-                        top: `${item.y}px`,
-                        transform: (!item.width && item.type === "text") 
-                          ? (item.textAlign === "center" ? "translateX(-50%)" : item.textAlign === "right" ? "translateX(-100%)" : "none")
-                          : "none",
-                      }}
-                    >
-                      <span 
-                        style={{
-                          fontSize: `${item.fontSize}px`,
-                          fontWeight: item.fontWeight,
-                          fontFamily: item.fontFamily || "Inter",
-                          color: item.color,
-                          whiteSpace: item.width ? "pre-wrap" : "pre",
-                          width: item.width ? `${item.width}px` : "auto",
-                          display: "block",
-                          textAlign: item.textAlign || "left",
-                          lineHeight: item.lineHeight || 1,
-                          margin: 0,
-                          padding: 0
-                        }}
-                        dangerouslySetInnerHTML={{ __html: displayValue || " " }}
-                      />
-                    </div>
-                  );
-                })}
+            <div 
+              className="relative shadow-2xl rounded-sm border border-slate-200 dark:border-slate-800 shrink-0 bg-white" 
+              style={{ width: `${template.width}px`, height: `${template.height}px` }}
+            >
+              {renderCanvasInner()}
+            </div>
           </div>
-        </div>
-      </div>, document.body)}
+        ) : (
+          typeof document !== 'undefined' && createPortal(
+            <div className="font-sans" style={{ position: 'absolute', top: 0, left: 0, pointerEvents: 'none', zIndex: -9999 }}>
+              <style dangerouslySetInnerHTML={{ __html: `@import url('https://fonts.googleapis.com/css2?family=Charm:wght@400;700&family=Inter:wght@400;700;900&family=Montserrat:wght@400;700;900&family=Open+Sans:wght@400;700;800&family=Oswald:wght@400;700&family=Pacifico&family=Playfair+Display:wght@400;700;900&family=Roboto:wght@400;700;900&display=swap');` }} />
+              {renderCanvasInner()}
+            </div>,
+            document.body
+          )
+        )}
 
       {/* Preview Modal */}
         <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>

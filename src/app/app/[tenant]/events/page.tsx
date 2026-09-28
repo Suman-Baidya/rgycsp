@@ -14,23 +14,21 @@ export default async function EventsPage({
 }) {
   const { tenant } = await params;
 
-  // Construct include object dynamically to avoid validation errors before restart
-  const workspaceInclude: any = {};
-  if ((db as any).event) {
-    workspaceInclude.events = {
-      where: { isActive: true },
-      orderBy: { date: 'asc' }
-    };
-  }
-
   const workspace = await db.workspace.findUnique({
     where: { subdomain: tenant?.toLowerCase() },
-    include: workspaceInclude
   });
 
   if (!workspace) notFound();
   
-  const events = (workspace as any).events || [];
+  const events = await db.event.findMany({
+    where: {
+      OR: [
+        { workspaceId: workspace.id, isActive: true },
+        { workspaceId: null, isActive: true, showOnFranchises: true },
+      ],
+    },
+    orderBy: { date: 'asc' }
+  });
 
   const workspaceSettings = await db.siteSettings.findFirst({
     where: { workspaceId: workspace.id },

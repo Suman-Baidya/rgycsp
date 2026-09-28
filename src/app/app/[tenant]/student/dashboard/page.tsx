@@ -6,6 +6,7 @@ import { getServerTenantLink } from "@/lib/routing-server";
 import { Button } from "@/components/ui/button";
 import { LogOut } from "lucide-react";
 import Link from "next/link";
+import { db } from "@/lib/prisma";
 
 export default async function StudentDashboardPage({
   params,
@@ -48,7 +49,69 @@ export default async function StudentDashboardPage({
 
   const workspaceSettings = workspace.siteSettings as any;
   const aboutSection = workspaceSettings?.sections?.find((s: any) => s.type === "about");
-  const notices = (aboutSection?.content as any)?.notices || [];
+  const centerRawNotices: any[] = (aboutSection?.content as any)?.notices || [];
+
+  const now = new Date();
+  // Filter workspace center notices: strictly exclude internal STAFF notices and future scheduled notices
+  const visibleCenterNotices = centerRawNotices.filter((n: any) => {
+    if (n.audience === "STAFF") return false;
+    if (n.status === "SCHEDULED" || (n.scheduledFor && new Date(n.scheduledFor) > now)) return false;
+    return true;
+  });
+
+  // Also include Super Admin student broadcast notices
+  const saBroadcastNotices = await db.notification.findMany({
+    where: {
+      type: { in: ["CIRCULAR", "NOTICE", "EVENT", "WARNING"] },
+      status: "PUBLISHED",
+      workspaceId: null,
+      userId: null,
+      targetAudience: { in: ["STUDENTS", "ALL", "PUBLIC"] },
+      OR: [
+        { scheduledFor: null },
+        { scheduledFor: { lte: now } },
+      ],
+      NOT: {
+        targetAudience: { in: ["ALL_FRANCHISES", "SPECIFIC_FRANCHISE", "STAFF"] },
+      },
+    },
+    orderBy: { createdAt: "desc" },
+    take: 10,
+  });
+
+  const saMapped = saBroadcastNotices.map((n) => ({
+    id: n.id,
+    title: n.title,
+    message: n.message,
+    description: n.message,
+    date: n.createdAt.toISOString().split("T")[0],
+    category: n.category || (n.type === "CIRCULAR" ? "Academic" : "General"),
+    priority: n.priority?.toLowerCase() || "normal",
+    publishedBy: "Head Office",
+    isHeadOffice: true,
+    refNo: n.refNo || null,
+    link: n.link || "",
+  }));
+
+  const seenDashboardKeys = new Set<string>();
+  const combinedDashboardNotices: any[] = [];
+  for (const n of visibleCenterNotices) {
+    const k = n.refNo ? `ref:${n.refNo.trim().toUpperCase()}` : (n.id || n.title);
+    if (!seenDashboardKeys.has(k)) {
+      seenDashboardKeys.add(k);
+      combinedDashboardNotices.push({
+        ...n,
+        description: n.message || n.description,
+      });
+    }
+  }
+  for (const n of saMapped) {
+    const k = n.refNo ? `ref:${n.refNo.trim().toUpperCase()}` : (n.id || n.title);
+    if (!seenDashboardKeys.has(k)) {
+      seenDashboardKeys.add(k);
+      combinedDashboardNotices.push(n);
+    }
+  }
 
   const studentProfileId = result.data?.studentProfile?.id;
   const courseId = result.data?.studentProfile?.courseId || result.data?.studentProfile?.batch?.courseId || result.data?.studentProfile?.batch?.course?.id;
@@ -65,7 +128,7 @@ export default async function StudentDashboardPage({
       student={result.data!} 
       tenant={tenant} 
       settings={workspaceSettings} 
-      notices={notices}
+      notices={combinedDashboardNotices}
       dashboardData={dashboardData}
       workspace={workspace}
     />

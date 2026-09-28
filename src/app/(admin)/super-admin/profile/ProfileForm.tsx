@@ -13,7 +13,8 @@ import {
   LogOut,
   Eye,
   EyeOff,
-  Edit2
+  Edit2,
+  FileSignature
 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -35,6 +36,7 @@ interface ProfileFormProps {
     email: string | null;
     username: string | null;
     image: string | null;
+    signatureUrl?: string | null;
   };
 }
 
@@ -48,6 +50,7 @@ export function ProfileForm({ user }: ProfileFormProps) {
   const [email, setEmail] = useState(user.email || "");
   const [username, setUsername] = useState(user.username || "");
   const [image, setImage] = useState(user.image || "");
+  const [signatureUrl, setSignatureUrl] = useState(user.signatureUrl || "");
 
   // Password State
   const [currentPassword, setCurrentPassword] = useState("");
@@ -63,10 +66,11 @@ export function ProfileForm({ user }: ProfileFormProps) {
     e.preventDefault();
     setIsUpdatingProfile(true);
     
-    const res = await updateProfile({ name, email, username, image });
+    const res = await updateProfile({ name, email, username, image, signatureUrl });
     
     if (res.success) {
-      toast.success("Profile updated successfully");
+      toast.success("Profile and signature updated successfully");
+      setIsEditingProfile(false);
     } else {
       toast.error(res.error || "Failed to update profile");
     }
@@ -267,6 +271,56 @@ export function ProfileForm({ user }: ProfileFormProps) {
                       </div>
                     </div>
                     
+                  </div>
+
+                  {/* Authorized Super Admin Signature */}
+                  <div className="pt-4 border-t border-slate-100 dark:border-slate-800">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 mb-3">
+                      <div>
+                        <Label className="text-xs font-bold text-slate-800 dark:text-white flex items-center gap-1.5">
+                          <FileSignature className="h-4 w-4 text-primary" />
+                          Official Super Admin Signature
+                        </Label>
+                        <p className="text-[11px] text-slate-500 mt-0.5">
+                          Automatically applied to Head Office Noticepad, Official Circulars, and Certificates.
+                        </p>
+                      </div>
+                      {signatureUrl && !isEditingProfile && (
+                        <Badge variant="outline" className="text-[10px] font-semibold text-emerald-600 border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/30">
+                          Signature Active
+                        </Badge>
+                      )}
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-center">
+                      <div className={cn("sm:col-span-1", !isEditingProfile && "opacity-80 pointer-events-none")}>
+                        <div className="p-2 border border-slate-200 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-800/50">
+                          <ImageUpload
+                            value={signatureUrl}
+                            onChange={setSignatureUrl}
+                            label="Signature"
+                            folder="RGYCSP/SuperAdmin/Signatures"
+                          />
+                        </div>
+                        <p className="text-[10px] text-muted-foreground text-center mt-1">PNG with transparent background recommended</p>
+                      </div>
+                      <div className="sm:col-span-2">
+                        <div className="p-3.5 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30 flex items-center justify-center min-h-[90px]">
+                          {signatureUrl ? (
+                            <div className="text-center space-y-1.5 py-1">
+                              <img src={signatureUrl} alt="Super Admin Signature" className="max-h-16 mx-auto object-contain bg-white dark:bg-slate-900/60 p-2 rounded-lg border border-slate-200 dark:border-slate-700 shadow-2xs" />
+                              <span className="text-[10px] text-slate-400 font-mono block">Official Digital Signature Active</span>
+                            </div>
+                          ) : (
+                            <div className="text-center text-slate-400 py-3">
+                              <FileSignature className="h-6 w-6 mx-auto mb-1 text-slate-300 dark:text-slate-600" />
+                              <p className="text-xs font-medium">No signature uploaded</p>
+                              <p className="text-[10px] text-slate-400">Click &quot;Edit Profile&quot; to upload your digital signature</p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </CardContent>
                 

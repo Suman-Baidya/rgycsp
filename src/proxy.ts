@@ -6,6 +6,7 @@ import { isDeveloperEmail } from './lib/developer';
 const { auth } = NextAuth(authConfig);
 
 export default auth((req) => {
+  console.log(">>> [PROXY.TS]", req.nextUrl.pathname, "Host:", req.headers.get("host"));
   const url = req.nextUrl;
   const isLoggedIn = !!req.auth;
   const userRole = req.auth?.user?.role;
@@ -53,16 +54,17 @@ export default auth((req) => {
   const rootDomainWithoutPort = cleanRootEnv.split(':')[0];
   let localDomain = "";
   
-  if (rootDomainWithoutPort && (cleanHost === rootDomainWithoutPort || cleanHost.endsWith(`.${rootDomainWithoutPort}`))) {
-    // Priority 1: Use explicit Root Domain ENV if current host matches it
-    localDomain = rootDomainWithoutPort;
-  } else if (cleanHost.includes('localhost') || cleanHost.includes('127.0.0.1')) {
-    // Priority 2: Localhost development
-    const parts = cleanHost.split('.');
-    localDomain = parts.length > 1 ? parts.slice(1).join('.') : cleanHost;
-  } else if (/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(cleanHost)) {
-    // Priority 3: IP Address (no subdomains possible)
+  const isIp = /^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(cleanHost) || cleanHost === '::1' || cleanHost === '[::1]';
+
+  if (isIp) {
+    // Priority 1: IP Address (no subdomains possible)
     localDomain = cleanHost;
+  } else if (cleanHost === 'localhost' || cleanHost.endsWith('.localhost')) {
+    // Priority 2: Localhost development (e.g. localhost or tenant.localhost)
+    localDomain = 'localhost';
+  } else if (rootDomainWithoutPort && (cleanHost === rootDomainWithoutPort || cleanHost.endsWith(`.${rootDomainWithoutPort}`))) {
+    // Priority 3: Use explicit Root Domain ENV if current host matches it
+    localDomain = rootDomainWithoutPort;
   } else {
     // Priority 4: Dynamic extraction from Vercel or Custom Domains
     const parts = cleanHost.split('.');
@@ -107,6 +109,7 @@ export default auth((req) => {
   if (url.pathname.startsWith('/app/') || url.pathname.startsWith('/super-admin')) {
     const requestHeaders = new Headers(req.headers);
     requestHeaders.set('x-pathname', url.pathname);
+    requestHeaders.set('x-routing-mode', 'subdirectory');
     return NextResponse.next({
       request: {
         headers: requestHeaders,
@@ -213,6 +216,7 @@ export default auth((req) => {
       const requestHeaders = new Headers(req.headers);
       requestHeaders.set('x-pathname', url.pathname);
       requestHeaders.set('x-is-subdomain', 'true');
+      requestHeaders.set('x-routing-mode', 'subdomain');
       
       return NextResponse.rewrite(rewriteUrl, {
         request: {

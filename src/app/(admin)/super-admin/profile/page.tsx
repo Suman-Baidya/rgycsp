@@ -24,6 +24,7 @@ export default async function ProfilePage() {
       email: true,
       username: true,
       image: true,
+      signatureUrl: true,
     }
   });
 

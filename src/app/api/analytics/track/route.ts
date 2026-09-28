@@ -32,8 +32,11 @@ export async function POST(req: NextRequest) {
   try {
     const userAgent = req.headers.get("user-agent") || "";
     
-    // 1. Production Defense: Ignore automated search engine crawlers & scraping bots
-    const isBot = /bot|crawler|spider|crawling|slurp|facebookexternalhit|bingbot|googlebot|semrush|ahrefs|yandex|baidu|bytespider/i.test(userAgent);
+    // 1. Production Defense: Ignore automated search engine crawlers, scraping bots, and headless runners
+    const isBot = 
+      !userAgent || 
+      userAgent.trim().length < 8 ||
+      /bot|crawler|spider|crawling|slurp|facebookexternalhit|bingbot|googlebot|semrush|ahrefs|yandex|baidu|bytespider|lighthouse|headlesschrome|phantomjs|selenium|puppeteer|playwright|python-requests|aiohttp|httpx|curl|wget|postman|node-fetch|axios|go-http-client|urllib|apachebench|wrk|loadtest/i.test(userAgent);
 
     const body = await req.json().catch(() => ({}));
     const { 
@@ -140,6 +143,19 @@ export async function POST(req: NextRequest) {
     }
 
     if (type === "LEAD_INTENT") {
+      // Deduplicate: Avoid duplicate intent leads within 10 minutes for the same session (e.g. repeated button clicks)
+      const recentIntent = await db.visitorLead.findFirst({
+        where: {
+          sessionId: session.id,
+          source: source.slice(0, 50),
+          createdAt: { gte: new Date(Date.now() - 10 * 60 * 1000) }
+        }
+      });
+
+      if (recentIntent) {
+        return NextResponse.json({ success: true, leadCaptured: true, deduplicated: true });
+      }
+
       // Record captured lead
       await db.visitorLead.create({
         data: {
@@ -182,16 +198,27 @@ export async function POST(req: NextRequest) {
     // Avoid duplicate logging of admin internal navigation
     const isAdminPath = path.startsWith("/admin") || path.startsWith("/super-admin") || path.includes("/admin/");
     if (!isAdminPath) {
-      await db.pageVisit.create({
-        data: {
+      // Deduplicate: Avoid duplicate page views for exact same path within 15 seconds (e.g. reload or StrictMode)
+      const recentVisit = await db.pageVisit.findFirst({
+        where: {
           sessionId: session.id,
-          workspaceId: workspaceId ?? null,
           path: path.slice(0, 255),
-          title: title?.slice(0, 255) || undefined,
-          courseId: courseId || undefined,
-          durationSeconds: Math.max(0, Math.min(Number(durationSeconds) || 0, 7200))
+          createdAt: { gte: new Date(Date.now() - 15 * 1000) }
         }
       });
+
+      if (!recentVisit) {
+        await db.pageVisit.create({
+          data: {
+            sessionId: session.id,
+            workspaceId: workspaceId ?? null,
+            path: path.slice(0, 255),
+            title: title?.slice(0, 255) || undefined,
+            courseId: courseId || undefined,
+            durationSeconds: Math.max(0, Math.min(Number(durationSeconds) || 0, 7200))
+          }
+        });
+      }
     }
 
     return NextResponse.json({ success: true, sessionId: session.id });

@@ -15,7 +15,8 @@ export async function getPostLoginRedirect(currentHost: string, currentPath: str
   const hostWithoutPort = cleanCurrentHost.split(':')[0];
   const rootWithoutPort = rootDomain.split(':')[0];
   
-  const isRoot = hostWithoutPort === rootWithoutPort || cleanCurrentHost === "localhost:3000" || hostWithoutPort === "www." + rootWithoutPort;
+  const isIp = /^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(hostWithoutPort) || hostWithoutPort === "::1" || hostWithoutPort === "localhost";
+  const isRoot = isIp || hostWithoutPort === rootWithoutPort || cleanCurrentHost === "localhost:3000" || hostWithoutPort === "www." + rootWithoutPort;
 
   // 1. Handle Super Admin
   if (user.role === "SUPER_ADMIN" || user.role === "SUPER_ADMIN_MANAGER") {

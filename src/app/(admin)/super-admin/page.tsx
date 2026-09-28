@@ -44,7 +44,17 @@ const getCachedOverviewMetrics = unstable_cache(
       db.workspace.count({ where: { isActive: true } }),
       db.studentProfile.count(),
       db.workspace.aggregate({ _sum: { tokensBalance: true } }),
-      db.notification.findMany({ take: 5, orderBy: { createdAt: "desc" } }),
+      db.notification.findMany({
+        where: {
+          NOT: [
+            { targetAudience: { in: ["ALL_FRANCHISES", "SPECIFIC_FRANCHISE"] } },
+            { type: { in: ["CIRCULAR", "NOTICE"] } },
+            { workspaceId: { not: null } }
+          ]
+        },
+        take: 5,
+        orderBy: { createdAt: "desc" }
+      }),
       db.workspace.findMany({ select: { createdAt: true, tokensBalance: true } }),
       db.studentProfile.count({ where: { admissionDate: { gte: thisMonthStart } } }),
       db.studentProfile.count({ where: { admissionDate: { gte: lastMonthStart, lt: thisMonthStart } } }),
