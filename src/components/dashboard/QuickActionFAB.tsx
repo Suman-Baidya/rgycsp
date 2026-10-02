@@ -12,7 +12,6 @@ import {
   GraduationCap, 
   FileText, 
   Building2, 
-  Terminal,
   QrCode
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -103,10 +102,10 @@ export function QuickActionFAB({ portal, tenant = "", workspaceBase = "" }: Quic
       color: "bg-blue-600 text-white",
     },
     {
-      label: "System Logs",
-      href: "/super-admin/logs",
-      icon: Terminal,
-      color: "bg-zinc-800 text-white",
+      label: "Wallet Economy",
+      href: "/super-admin/wallet",
+      icon: Wallet,
+      color: "bg-emerald-600 text-white",
     },
   ];
 

@@ -31,7 +31,8 @@ import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 import { getTenantLink } from "@/lib/routing";
 import { useTheme } from "next-themes";
-import { signOut } from "next-auth/react";
+import { signOut, useSession } from "next-auth/react";
+import { isDeveloperEmail } from "@/lib/developer";
 import { createPortal } from "react-dom";
 
 interface CommandItem {
@@ -60,6 +61,8 @@ export function CommandPalette({ portal, tenant = "" }: CommandPaletteProps) {
   const router = useRouter();
   const pathname = usePathname();
   const { setTheme, theme } = useTheme();
+  const { data: session } = useSession();
+  const isDev = Boolean(isDeveloperEmail(session?.user?.email) || (session?.user as any)?.isDeveloper);
 
   useEffect(() => {
     setMounted(true);
@@ -295,13 +298,13 @@ export function CommandPalette({ portal, tenant = "" }: CommandPaletteProps) {
         icon: Wallet,
         href: "/super-admin/wallet",
       },
-      {
+      ...(isDev ? [{
         id: "sa-logs",
         title: "System Audit Logs",
-        category: "Navigation",
+        category: "Navigation" as const,
         icon: Terminal,
         href: "/super-admin/logs",
-      },
+      }] : []),
       {
         id: "sa-settings",
         title: "Platform Settings",
@@ -311,7 +314,7 @@ export function CommandPalette({ portal, tenant = "" }: CommandPaletteProps) {
       },
       ...commonActions,
     ];
-  }, [portal, tenant, pathname, theme, setTheme]);
+  }, [portal, tenant, pathname, theme, setTheme, isDev]);
 
   // Filter items
   const filteredItems = useMemo(() => {

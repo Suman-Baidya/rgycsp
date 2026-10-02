@@ -40,6 +40,14 @@ export default auth((req) => {
       }
       return NextResponse.redirect(new URL('/', req.url));
     }
+
+    // Developer features: completely hidden and protected from non-developer super admins
+    if (url.pathname.startsWith('/super-admin/logs') && !isDev) {
+      if (isAction) {
+        return new NextResponse("Forbidden", { status: 403 });
+      }
+      return NextResponse.redirect(new URL('/super-admin', req.url));
+    }
   }
 
   // Get hostname of request (supports reverse proxies like Dokploy / Traefik via x-forwarded-host)

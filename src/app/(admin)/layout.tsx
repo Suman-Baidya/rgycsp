@@ -35,6 +35,11 @@ export default async function AdminLayout({
   const headersList = await headers();
   const currentPath = headersList.get("x-pathname") || "";
 
+  // Completely block non-developer Super Admins from accessing developer routes
+  if (!isDev && currentPath.includes("/super-admin/logs")) {
+    redirect("/super-admin");
+  }
+
   if (dbUser.role === "SUPER_ADMIN_MANAGER") {
     const parts = currentPath.split('/');
     const adminIndex = parts.indexOf("super-admin");
