@@ -1,12 +1,14 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import { useDebounce } from "@/hooks/useDebounce";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { Database, UserPlus, Save, CheckCircle2, Edit2, XCircle, Trash2, Search, ChevronLeft, ChevronRight, Filter } from "lucide-react";
-import { saveDraftApplication, finalEnrollApplication, updatePendingApplication, deleteDraftApplications } from "@/app/actions/admissions";
+import { Database, UserPlus, Save, CheckCircle2, Edit2, XCircle, Trash2, Search, ChevronLeft, ChevronRight, Filter, RefreshCw, GraduationCap, Clock, ArrowRight, UserCheck, Loader2, ChevronDown, X, AlertCircle, Sparkles, Check, BookOpen } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { saveDraftApplication, finalEnrollApplication, updatePendingApplication, deleteDraftApplications, searchExistingStudentsForReEnrollment, reEnrollExistingStudent } from "@/app/actions/admissions";
 import CsvBulkImport from "./CsvBulkImport";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ImageUpload } from "@/components/ui/ImageUpload";
@@ -14,6 +16,7 @@ import { getPincodeDetails } from "@/app/actions/pincode";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 export default function ManualEnrollmentTab({
   workspaceId,
   courses,
@@ -29,6 +32,7 @@ export default function ManualEnrollmentTab({
   editingOnlineApp?: any;
   onCancelEdit?: () => void;
 }) {
+  const router = useRouter();
   const isEditingOnline = !!editingOnlineApp;
   const [isBulkMode, setIsBulkMode] = useState(false);
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -40,6 +44,120 @@ export default function ManualEnrollmentTab({
   const debouncedSearchTerm = useDebounce(searchTerm, 250);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
+
+  // Re-Enrollment State
+  const [isReEnrollOpen, setIsReEnrollOpen] = useState(false);
+  const [reEnrollSearch, setReEnrollSearch] = useState("");
+  const debouncedReEnrollSearch = useDebounce(reEnrollSearch, 250);
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [selectedExistingStudent, setSelectedExistingStudent] = useState<any>(null);
+  const [reEnrollCourseId, setReEnrollCourseId] = useState("");
+  const [reEnrollCourseSearch, setReEnrollCourseSearch] = useState("");
+  const [isCourseDropdownOpen, setIsCourseDropdownOpen] = useState(false);
+  const [reEnrollBatchId, setReEnrollBatchId] = useState("");
+  const [reEnrollAdmissionDate, setReEnrollAdmissionDate] = useState(() => new Date().toISOString().split("T")[0]);
+  const [reEnrollFees, setReEnrollFees] = useState("");
+  const [reEnrollPaymentType, setReEnrollPaymentType] = useState("ONE_TIME");
+  const [isReEnrolling, setIsReEnrolling] = useState(false);
+
+  // Derived: All courses this student has previously or currently enrolled in
+  const selectedStudentCourses = useMemo(() => {
+    if (!selectedExistingStudent) return [];
+    return selectedExistingStudent.user?.studentProfiles || 
+      (selectedExistingStudent.course ? [{ course: selectedExistingStudent.course, courseId: selectedExistingStudent.courseId, status: selectedExistingStudent.status }] : []);
+  }, [selectedExistingStudent]);
+
+  // Selected course object
+  const selectedCourse = useMemo(() => {
+    return courses.find((c: any) => c.id === reEnrollCourseId) || null;
+  }, [courses, reEnrollCourseId]);
+
+  // Check if student is already actively enrolled in selected course
+  const isSelectedCourseAlreadyActive = useMemo(() => {
+    if (!selectedExistingStudent || !reEnrollCourseId) return false;
+    return selectedStudentCourses.some((sc: any) => sc.courseId === reEnrollCourseId && sc.status !== "PASS_OUT");
+  }, [selectedStudentCourses, reEnrollCourseId]);
+
+  // Smart filtered courses for search combobox
+  const filteredCourses = useMemo(() => {
+    const q = reEnrollCourseSearch.toLowerCase().trim();
+    if (!q) return courses;
+    return courses.filter((c: any) =>
+      c.title?.toLowerCase().includes(q) ||
+      c.code?.toLowerCase().includes(q) ||
+      c.category?.toLowerCase().includes(q) ||
+      c.duration?.toLowerCase().includes(q)
+    );
+  }, [courses, reEnrollCourseSearch]);
+
+  // Filtered batches for the selected course
+  const availableBatches = useMemo(() => {
+    if (!reEnrollCourseId) return batches;
+    return batches.filter((b: any) => !b.courseId || b.courseId === reEnrollCourseId);
+  }, [batches, reEnrollCourseId]);
+
+  useEffect(() => {
+    if (!debouncedReEnrollSearch.trim() || debouncedReEnrollSearch.trim().length < 2) {
+      setSearchResults([]);
+      return;
+    }
+    let isCancelled = false;
+    setIsSearching(true);
+    searchExistingStudentsForReEnrollment(workspaceId, debouncedReEnrollSearch)
+      .then(res => {
+        if (!isCancelled && res.success) {
+          setSearchResults(res.data || []);
+        }
+      })
+      .finally(() => {
+        if (!isCancelled) setIsSearching(false);
+      });
+    return () => { isCancelled = true; };
+  }, [debouncedReEnrollSearch, workspaceId]);
+
+  const handleConfirmReEnroll = async () => {
+    if (!selectedExistingStudent) {
+      toast.error("Please search and select an existing student first.");
+      return;
+    }
+    if (!reEnrollCourseId) {
+      toast.error("Please select a course to enroll.");
+      return;
+    }
+    if (isSelectedCourseAlreadyActive) {
+      toast.error("Student is already actively enrolled in this course.");
+      return;
+    }
+    setIsReEnrolling(true);
+    try {
+      const res = await reEnrollExistingStudent(workspaceId, {
+        existingProfileId: selectedExistingStudent.id,
+        courseId: reEnrollCourseId,
+        batchId: reEnrollBatchId || undefined,
+        admissionDate: reEnrollAdmissionDate,
+        admissionFees: reEnrollFees ? parseFloat(reEnrollFees) : undefined,
+        paymentType: reEnrollPaymentType
+      });
+      if (res.success) {
+        toast.success(`Student ${selectedExistingStudent.fullName} successfully re-enrolled with Enrollment No: ${res.enrollmentNo}!`);
+        setIsReEnrollOpen(false);
+        setSelectedExistingStudent(null);
+        setReEnrollSearch("");
+        setReEnrollCourseId("");
+        setReEnrollCourseSearch("");
+        setReEnrollBatchId("");
+        setReEnrollFees("");
+        router.refresh();
+      } else {
+        toast.error(res.error || "Failed to re-enroll student.");
+      }
+    } catch (e: any) {
+      toast.error(e?.message || "An unexpected error occurred.");
+    } finally {
+      setIsReEnrolling(false);
+    }
+  };
   
   const [confirmDialog, setConfirmDialog] = useState<{
     isOpen: boolean;
@@ -737,7 +855,21 @@ export default function ManualEnrollmentTab({
               Draft student applications awaiting complete information or batch assignment.
             </p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                setIsReEnrollOpen(true);
+                setSelectedExistingStudent(null);
+                setReEnrollSearch("");
+                setReEnrollCourseId("");
+                setReEnrollBatchId("");
+                setReEnrollFees("");
+              }} 
+              className="h-8 sm:h-9 px-3 rounded-lg text-xs font-semibold gap-1.5 border-indigo-200 text-indigo-700 hover:bg-indigo-50 dark:border-indigo-800 dark:text-indigo-400 dark:hover:bg-indigo-950/40"
+            >
+              <RefreshCw className="w-3.5 h-3.5" /> Re-Enroll Existing Student
+            </Button>
             <Button onClick={() => setIsFormOpen(true)} className="h-8 sm:h-9 px-3 rounded-lg text-xs font-semibold gap-1.5 shadow-xs">
               <UserPlus className="w-3.5 h-3.5" /> New Entry Student
             </Button>
@@ -960,6 +1092,451 @@ export default function ManualEnrollmentTab({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Re-Enrollment Modal (Rule 7.7) */}
+      <Dialog open={isReEnrollOpen} onOpenChange={setIsReEnrollOpen}>
+        <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl p-4 sm:p-6 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl">
+          <DialogHeader className="pb-3 border-b border-slate-100 dark:border-slate-800">
+            <div className="flex items-center gap-2">
+              <div className="p-2 rounded-lg bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400">
+                <RefreshCw className="w-4 h-4" />
+              </div>
+              <div>
+                <DialogTitle className="text-base font-bold text-slate-900 dark:text-white">
+                  Re-Enroll Existing Student
+                </DialogTitle>
+                <DialogDescription className="text-xs text-slate-500 mt-0.5">
+                  Select a verified student by Enrollment No or Name. All personal records & documents are reused automatically.
+                </DialogDescription>
+              </div>
+            </div>
+          </DialogHeader>
+
+          <div className="space-y-4 py-3">
+            {/* Step 1: Search Student */}
+            <div className="space-y-2">
+              <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                1. Search Verified Student
+              </label>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
+                <Input
+                  placeholder="Enter Student Name, Enrollment No (e.g. RGY000001), or Mobile..."
+                  value={reEnrollSearch}
+                  onChange={(e) => setReEnrollSearch(e.target.value)}
+                  className="pl-9 h-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700"
+                />
+                {isSearching && (
+                  <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 animate-spin" />
+                )}
+              </div>
+
+              {/* Search Results Dropdown/List */}
+              {searchResults.length > 0 && !selectedExistingStudent && (
+                <div className="border border-slate-200 dark:border-slate-800 rounded-xl divide-y divide-slate-100 dark:divide-slate-800 overflow-hidden shadow-sm max-h-48 overflow-y-auto bg-slate-50/50 dark:bg-slate-800/20">
+                  {searchResults.map((stu) => (
+                    <button
+                      key={stu.id}
+                      type="button"
+                      onClick={() => {
+                        setSelectedExistingStudent(stu);
+                        setSearchResults([]);
+                      }}
+                      className="w-full p-2.5 flex items-center justify-between text-left hover:bg-indigo-50/60 dark:hover:bg-indigo-950/30 transition-colors"
+                    >
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <Avatar className="h-8 w-8 rounded-lg shrink-0">
+                          <AvatarImage src={stu.photoUrl || ""} />
+                          <AvatarFallback className="text-[10px] font-bold">
+                            {stu.fullName?.substring(0, 2).toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="min-w-0">
+                          <p className="text-xs font-semibold text-slate-900 dark:text-white truncate">
+                            {stu.fullName}
+                          </p>
+                          <p className="text-[10px] text-slate-500 font-medium">
+                            Enrollment: <span className="font-bold text-slate-700 dark:text-slate-300">{stu.enrollmentNo}</span> | Mobile: {stu.phone}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="text-right shrink-0">
+                        <Badge variant="outline" className="text-[9px] font-bold uppercase border-indigo-200 text-indigo-700 dark:border-indigo-800 dark:text-indigo-400">
+                          {stu.course?.title || "Enrolled"}
+                        </Badge>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {/* No Student Results Empty State */}
+              {debouncedReEnrollSearch.trim().length >= 2 && !isSearching && searchResults.length === 0 && !selectedExistingStudent && (
+                <div className="p-3 text-center rounded-lg bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 text-xs text-slate-500 animate-in fade-in-0 duration-150">
+                  No verified student found matching &ldquo;{debouncedReEnrollSearch}&rdquo;.
+                </div>
+              )}
+
+              {/* Selected Student Confirmation Card with Existing Programs */}
+              {selectedExistingStudent && (
+                <div className="p-3.5 rounded-xl bg-emerald-50/70 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800/40 space-y-2.5 animate-in fade-in-0 duration-200">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <Avatar className="h-10 w-10 rounded-xl border border-emerald-300 dark:border-emerald-700 shrink-0">
+                        <AvatarImage src={selectedExistingStudent.photoUrl || ""} />
+                        <AvatarFallback className="text-xs font-bold text-emerald-700">
+                          {selectedExistingStudent.fullName?.substring(0, 2).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="font-bold text-xs sm:text-sm text-slate-900 dark:text-white truncate">
+                            {selectedExistingStudent.fullName}
+                          </span>
+                          <Badge className="bg-emerald-600 text-white text-[9px] font-bold px-1.5 py-0.2 border-none">
+                            Verified Student
+                          </Badge>
+                        </div>
+                        <p className="text-[11px] text-slate-600 dark:text-slate-400 mt-0.5">
+                          Permanent ID: <span className="font-mono font-bold text-emerald-700 dark:text-emerald-400">{selectedExistingStudent.enrollmentNo}</span> | Phone: {selectedExistingStudent.phone || "On File"}
+                        </p>
+                      </div>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setSelectedExistingStudent(null);
+                        setReEnrollCourseId("");
+                        setReEnrollCourseSearch("");
+                        setReEnrollFees("");
+                      }}
+                      className="h-7 px-2.5 text-xs font-semibold text-slate-500 hover:text-red-600 shrink-0"
+                    >
+                      Change
+                    </Button>
+                  </div>
+
+                  {/* List of Existing Enrolled Programs for this student */}
+                  {selectedStudentCourses.length > 0 && (
+                    <div className="pt-2 border-t border-emerald-200/60 dark:border-emerald-900/40 flex flex-wrap items-center gap-1.5">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-800 dark:text-emerald-300">
+                        Enrolled Records:
+                      </span>
+                      {selectedStudentCourses.map((sc: any, idx: number) => {
+                        const isPass = sc.status === "PASS_OUT";
+                        return (
+                          <span
+                            key={idx}
+                            className={cn(
+                              "text-[9px] font-bold px-1.5 py-0.5 rounded flex items-center gap-1",
+                              isPass
+                                ? "bg-purple-100 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800"
+                                : "bg-emerald-100 dark:bg-emerald-900/60 text-emerald-800 dark:text-emerald-200 border border-emerald-300 dark:border-emerald-700"
+                            )}
+                          >
+                            {sc.course?.title || sc.course?.code || "Course"}
+                            <span className="opacity-75">({isPass ? "Passed Out" : "Active"})</span>
+                          </span>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Step 2: Select New Course & Schedule */}
+            <div className="space-y-3 pt-3 border-t border-slate-100 dark:border-slate-800">
+              <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                2. New Course Enrollment Details
+              </label>
+
+              {/* Target Course Smart Searchable Combobox */}
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <label className="text-[11px] font-medium text-slate-500">
+                    Target Course * <span className="text-[10px] text-slate-400">({courses.length} Available Programs)</span>
+                  </label>
+                  {selectedCourse && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setReEnrollCourseId("");
+                        setReEnrollFees("");
+                        setIsCourseDropdownOpen(true);
+                      }}
+                      className="text-[11px] font-semibold text-primary hover:underline"
+                    >
+                      Change Course
+                    </button>
+                  )}
+                </div>
+
+                {!selectedCourse ? (
+                  /* Course Search Combobox Trigger */
+                  <div className="relative">
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none" />
+                      <Input
+                        placeholder="Search course by title, code (e.g. DCA, Tally), duration, or category..."
+                        value={reEnrollCourseSearch}
+                        onFocus={() => setIsCourseDropdownOpen(true)}
+                        onChange={(e) => {
+                          setReEnrollCourseSearch(e.target.value);
+                          setIsCourseDropdownOpen(true);
+                        }}
+                        className="pl-9 pr-8 h-9 text-xs rounded-xl bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700"
+                      />
+                      {reEnrollCourseSearch ? (
+                        <button
+                          type="button"
+                          onClick={() => setReEnrollCourseSearch("")}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => setIsCourseDropdownOpen(!isCourseDropdownOpen)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                        >
+                          <ChevronDown className={cn("w-3.5 h-3.5 transition-transform duration-200", isCourseDropdownOpen && "rotate-180")} />
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Backdrop to close dropdown on click outside */}
+                    {isCourseDropdownOpen && (
+                      <div
+                        className="fixed inset-0 z-40"
+                        onClick={() => setIsCourseDropdownOpen(false)}
+                      />
+                    )}
+
+                    {/* Course Search Results Dropdown */}
+                    {isCourseDropdownOpen && (
+                      <div className="absolute top-full left-0 right-0 mt-1 z-50 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xl max-h-60 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800/60 custom-scrollbar animate-in fade-in-0 zoom-in-95 duration-150">
+                        {filteredCourses.length > 0 ? (
+                          filteredCourses.map((c: any) => {
+                            const matchActive = selectedStudentCourses.some((sc: any) => sc.courseId === c.id && sc.status !== "PASS_OUT");
+                            const matchPassOut = selectedStudentCourses.some((sc: any) => sc.courseId === c.id && sc.status === "PASS_OUT");
+
+                            return (
+                              <button
+                                key={c.id}
+                                type="button"
+                                disabled={matchActive}
+                                onClick={() => {
+                                  if (matchActive) return;
+                                  setReEnrollCourseId(c.id);
+                                  if (c.feeAmount) {
+                                    setReEnrollFees(c.feeAmount.toString());
+                                  } else if (c.totalCourseFee) {
+                                    setReEnrollFees(c.totalCourseFee.toString());
+                                  }
+                                  setIsCourseDropdownOpen(false);
+                                  setReEnrollCourseSearch("");
+                                }}
+                                className={cn(
+                                  "w-full p-2.5 flex items-center justify-between text-left transition-colors",
+                                  matchActive
+                                    ? "opacity-50 cursor-not-allowed bg-slate-50/80 dark:bg-slate-800/40"
+                                    : "hover:bg-indigo-50/70 dark:hover:bg-indigo-950/30 cursor-pointer"
+                                )}
+                              >
+                                <div className="min-w-0 pr-2">
+                                  <div className="flex items-center gap-1.5 flex-wrap">
+                                    <span className="font-semibold text-xs text-slate-900 dark:text-white">
+                                      {c.title}
+                                    </span>
+                                    {c.code && (
+                                      <Badge variant="outline" className="text-[9px] font-bold px-1 py-0.1 rounded uppercase">
+                                        {c.code}
+                                      </Badge>
+                                    )}
+                                  </div>
+                                  <div className="flex items-center gap-2 mt-0.5 text-[10px] text-slate-500">
+                                    {c.duration && <span>Duration: <strong className="text-slate-700 dark:text-slate-300">{c.duration}</strong></span>}
+                                    {c.category && <span>• {c.category}</span>}
+                                  </div>
+                                </div>
+
+                                <div className="text-right shrink-0 flex flex-col items-end gap-1">
+                                  {c.feeAmount ? (
+                                    <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400">
+                                      ₹{c.feeAmount.toLocaleString()}
+                                    </span>
+                                  ) : null}
+                                  {matchActive ? (
+                                    <Badge className="bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 border-none text-[8px] font-bold px-1.5 py-0.2">
+                                      Already Active
+                                    </Badge>
+                                  ) : matchPassOut ? (
+                                    <Badge className="bg-purple-100 text-purple-800 dark:bg-purple-950/60 dark:text-purple-300 border-none text-[8px] font-bold px-1.5 py-0.2">
+                                      Completed (Refresher)
+                                    </Badge>
+                                  ) : null}
+                                </div>
+                              </button>
+                            );
+                          })
+                        ) : (
+                          <div className="p-4 text-center text-xs text-slate-500">
+                            No courses match "{reEnrollCourseSearch}".
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  /* Selected Course Display Card */
+                  <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-700/60 flex items-center justify-between gap-3 animate-in fade-in-0 duration-200">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div className="w-8 h-8 rounded-lg bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0">
+                        <GraduationCap className="w-4 h-4" />
+                      </div>
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-1.5">
+                          <h4 className="font-bold text-xs sm:text-sm text-slate-900 dark:text-white truncate">
+                            {selectedCourse.title}
+                          </h4>
+                          {selectedCourse.code && (
+                            <Badge variant="outline" className="text-[9px] font-bold px-1.5 py-0.2 rounded uppercase">
+                              {selectedCourse.code}
+                            </Badge>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2 mt-0.5 text-[10px] text-slate-500">
+                          {selectedCourse.duration && (
+                            <span>Duration: <strong className="text-slate-700 dark:text-slate-300">{selectedCourse.duration}</strong></span>
+                          )}
+                          {selectedCourse.category && <span>• {selectedCourse.category}</span>}
+                          {selectedCourse.feeAmount && (
+                            <span className="text-emerald-600 dark:text-emerald-400 font-bold">
+                              • Fee: ₹{selectedCourse.feeAmount.toLocaleString()}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setReEnrollCourseId("");
+                        setReEnrollFees("");
+                        setIsCourseDropdownOpen(true);
+                      }}
+                      className="h-7 px-2.5 text-xs font-semibold text-slate-500 hover:text-primary shrink-0"
+                    >
+                      Change
+                    </Button>
+                  </div>
+                )}
+
+                {/* Duplicate Active Warning */}
+                {isSelectedCourseAlreadyActive && (
+                  <div className="p-2.5 rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/50 flex items-start gap-2 text-amber-800 dark:text-amber-300 text-xs animate-in fade-in-0 duration-150">
+                    <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-amber-600" />
+                    <span>
+                      <strong>Warning:</strong> Student is already actively enrolled in this course. You cannot create a duplicate active enrollment for the same course until the current one is completed.
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              {/* Batch Assignment & Scheduling */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                <div className="space-y-1">
+                  <label className="text-[11px] font-medium text-slate-500">
+                    Batch Assignment {reEnrollCourseId ? "(Filtered for Course)" : ""}
+                  </label>
+                  <select
+                    value={reEnrollBatchId}
+                    onChange={(e) => setReEnrollBatchId(e.target.value)}
+                    className="w-full h-8 sm:h-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 px-2.5 font-medium text-slate-900 dark:text-white"
+                  >
+                    <option value="">Select Batch (Optional)...</option>
+                    {availableBatches.map((batch: any) => (
+                      <option key={batch.id} value={batch.id}>
+                        {batch.name} {batch.startTime && batch.endTime ? `(${batch.startTime} - ${batch.endTime})` : ""}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[11px] font-medium text-slate-500">Admission Date *</label>
+                  <Input
+                    type="date"
+                    value={reEnrollAdmissionDate}
+                    onChange={(e) => setReEnrollAdmissionDate(e.target.value)}
+                    className="h-8 sm:h-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700"
+                  />
+                </div>
+              </div>
+
+              {/* Fee & Payment Plan */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="text-[11px] font-medium text-slate-500">Course Admission Fee (₹)</label>
+                  <Input
+                    type="number"
+                    placeholder="Fee Amount"
+                    value={reEnrollFees}
+                    onChange={(e) => setReEnrollFees(e.target.value)}
+                    className="h-8 sm:h-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 font-semibold"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[11px] font-medium text-slate-500">Payment Plan</label>
+                  <select
+                    value={reEnrollPaymentType}
+                    onChange={(e) => setReEnrollPaymentType(e.target.value)}
+                    className="w-full h-8 sm:h-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 px-2.5 font-medium text-slate-900 dark:text-white"
+                  >
+                    <option value="ONE_TIME">One Time Full</option>
+                    <option value="EMI">Monthly Installment (EMI)</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter className="mt-2 pt-3 border-t border-slate-100 dark:border-slate-800 flex justify-end gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setIsReEnrollOpen(false)}
+              disabled={isReEnrolling}
+              className="h-8 sm:h-9 px-3 rounded-lg text-xs font-semibold"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleConfirmReEnroll}
+              disabled={!selectedExistingStudent || !reEnrollCourseId || isSelectedCourseAlreadyActive || isReEnrolling}
+              className="h-8 sm:h-9 px-4 rounded-lg text-xs font-semibold bg-indigo-600 hover:bg-indigo-700 text-white gap-1.5 shadow-xs"
+            >
+              {isReEnrolling ? (
+                <>
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" /> Enrolling...
+                </>
+              ) : (
+                <>
+                  <CheckCircle2 className="w-3.5 h-3.5" /> Confirm Re-Enrollment
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
+

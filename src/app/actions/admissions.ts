@@ -4,6 +4,7 @@ import { revalidateWorkspacePath } from "@/lib/revalidate";
 
 
 import { db } from "@/lib/prisma";
+import { auth } from "@/auth";
 import { revalidatePath } from "next/cache";
 
 /**
@@ -69,8 +70,14 @@ export async function saveDraftApplication(workspaceId: string, data: any, appli
       const randomDigits = Math.floor(10000 + Math.random() * 90000).toString();
       const applicationNo = `${namePart}${randomDigits}`;
       
-      const crypto = require('crypto');
-      const tempPassword = crypto.randomBytes(4).toString('hex'); // 8 char temp password
+      let birthYear = "2000";
+      if (data.dob) {
+        const d = new Date(data.dob);
+        if (!isNaN(d.getFullYear())) birthYear = d.getFullYear().toString();
+      }
+      let fname = (data.fullName || "Student").trim().split(/\s+/)[0];
+      fname = fname.charAt(0).toUpperCase() + fname.slice(1).toLowerCase();
+      const tempPassword = `${fname}${birthYear}`;
 
       appRecord = await db.admissionApplication.create({
         data: {
@@ -195,8 +202,14 @@ export async function finalEnrollApplication(workspaceId: string, applicationId:
 
     // Ensure application has a tempPassword (mostly for older drafts that missed it)
     if (!app.tempPassword) {
-      const crypto = require('crypto');
-      const tempPassword = crypto.randomBytes(4).toString('hex');
+      let birthYear = "2000";
+      if (app.dob) {
+        const d = new Date(app.dob);
+        if (!isNaN(d.getFullYear())) birthYear = d.getFullYear().toString();
+      }
+      let fname = (app.fullName || "Student").trim().split(/\s+/)[0];
+      fname = fname.charAt(0).toUpperCase() + fname.slice(1).toLowerCase();
+      const tempPassword = `${fname}${birthYear}`;
       await db.admissionApplication.update({
         where: { id: applicationId },
         data: { courseId: finalCourseId, tempPassword }
@@ -325,5 +338,280 @@ export async function bulkRegisterStudentsAction(workspaceId: string, studentsDa
   } catch (error: any) {
     console.error("Bulk registration error:", error);
     return { success: false, error: error.message };
+  }
+}
+
+/**
+ * Search existing students in a workspace to re-enroll them into a new course.
+ */
+export async function searchExistingStudentsForReEnrollment(workspaceId: string, query: string) {
+  try {
+    const q = query.trim();
+    if (!q || q.length < 2) return { success: true, data: [] };
+
+    const students = await db.studentProfile.findMany({
+      where: {
+        workspaceId,
+        OR: [
+          { enrollmentNo: { contains: q, mode: "insensitive" } },
+          { fullName: { contains: q, mode: "insensitive" } },
+          { phone: { contains: q } }
+        ]
+      },
+      include: {
+        course: { select: { id: true, title: true, code: true, duration: true } },
+        batch: { select: { id: true, name: true } },
+        user: {
+          select: {
+            studentProfiles: {
+              where: { workspaceId },
+              select: {
+                id: true,
+                courseId: true,
+                registrationNo: true,
+                status: true,
+                course: { select: { id: true, title: true, code: true } }
+              }
+            }
+          }
+        }
+      },
+      orderBy: { createdAt: "desc" },
+      take: 10
+    });
+
+    return { success: true, data: students };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+}
+
+/**
+ * Enroll an existing student into a new course (Re-Admission).
+ * Preserves the permanent enrollmentNo and verified biodata/documents while creating a new course record.
+ */
+export async function reEnrollExistingStudent(
+  workspaceId: string,
+  data: {
+    existingProfileId: string;
+    courseId: string;
+    batchId?: string;
+    admissionDate?: string;
+    admissionFees?: number;
+    paymentType?: string;
+  }
+) {
+  try {
+    const { existingProfileId, courseId, batchId, admissionDate, admissionFees, paymentType } = data;
+
+    const existing = await db.studentProfile.findUnique({
+      where: { id: existingProfileId, workspaceId },
+      include: { course: true }
+    });
+
+    if (!existing) {
+      return { success: false, error: "Existing student record not found." };
+    }
+
+    if (!courseId) {
+      return { success: false, error: "Please select a valid course for re-enrollment." };
+    }
+
+    // Check if the student is already actively enrolled in this exact course
+    const activeSameCourse = await db.studentProfile.findFirst({
+      where: {
+        workspaceId,
+        userId: existing.userId,
+        courseId,
+        status: { in: ["REGISTERED", "UNREGISTERED"] }
+      }
+    });
+
+    if (activeSameCourse) {
+      return { success: false, error: `Student is already actively enrolled in this course (${activeSameCourse.enrollmentNo}).` };
+    }
+
+    const course = await db.course.findUnique({ where: { id: courseId } });
+    if (!course) {
+      return { success: false, error: "Selected course does not exist." };
+    }
+
+    // Create a new StudentProfile row for this new course enrollment
+    const newProfile = await db.studentProfile.create({
+      data: {
+        workspaceId,
+        userId: existing.userId,
+        enrollmentNo: existing.enrollmentNo, // Permanent institutional ID maintained
+        fullName: existing.fullName,
+        dob: existing.dob,
+        gender: existing.gender,
+        bloodGroup: existing.bloodGroup,
+        religion: existing.religion,
+        caste: existing.caste,
+        phone: existing.phone,
+        email: existing.email,
+        whatsapp: existing.whatsapp,
+        parentName: existing.parentName,
+        parentPhone: existing.parentPhone,
+        fatherName: existing.fatherName,
+        motherName: existing.motherName,
+        guardianPhone: existing.guardianPhone,
+        address: existing.address,
+        qualification: existing.qualification ? (existing.qualification as any) : null,
+        photoUrl: existing.photoUrl,
+        signatureUrl: existing.signatureUrl,
+        idProofUrl: existing.idProofUrl,
+        loginPassword: existing.loginPassword,
+        paymentType: paymentType || existing.paymentType || "ONE_TIME",
+        courseId,
+        batchId: batchId || null,
+        admissionDate: admissionDate ? new Date(admissionDate) : new Date(),
+        status: "UNREGISTERED" // Ready for registration and wallet deduction
+      }
+    });
+
+    // Create fee invoice if fee > 0
+    if (admissionFees && admissionFees > 0) {
+      await db.invoice.create({
+        data: {
+          workspaceId,
+          studentProfileId: newProfile.id,
+          amount: admissionFees,
+          status: "PENDING",
+          dueDate: new Date(),
+          notes: `Course Admission Fee for ${course.title}`
+        }
+      });
+    }
+
+    // Create notification for admin
+    await db.notification.create({
+      data: {
+        workspaceId,
+        title: "Student Re-Enrolled",
+        message: `${existing.fullName} (${existing.enrollmentNo}) has been successfully enrolled into ${course.title}.`,
+        type: "APPLICATION",
+        link: "/admin/students"
+      }
+    });
+
+    await revalidateWorkspacePath(workspaceId, "/admin/students", "layout");
+    await revalidateWorkspacePath(workspaceId, "/admin/admissions", "layout");
+
+    return { success: true, studentId: newProfile.id, enrollmentNo: existing.enrollmentNo };
+  } catch (error: any) {
+    console.error("Re-enrollment error:", error);
+    return { success: false, error: error.message || "Failed to re-enroll student." };
+  }
+}
+
+/**
+ * Student self-initiated re-admission application from student dashboard.
+ * Retains permanent enrollmentNo, snaps current profile biodata, and alerts franchise admin.
+ */
+export async function applyForStudentReAdmission(workspaceId: string, courseId: string, remarks?: string) {
+  try {
+    const session = await auth();
+    if (!session?.user?.id) {
+      return { success: false, error: "Not authenticated." };
+    }
+
+    // Find the student's existing profile in this workspace
+    const existingProfile = await db.studentProfile.findFirst({
+      where: { userId: session.user.id, workspaceId },
+      orderBy: { createdAt: "desc" }
+    });
+
+    if (!existingProfile) {
+      return { success: false, error: "Existing student profile not found." };
+    }
+
+    const targetCourse = await db.course.findUnique({
+      where: { id: courseId }
+    });
+
+    if (!targetCourse) {
+      return { success: false, error: "Course not found." };
+    }
+
+    // Check if already actively enrolled in this course
+    const activeSameCourse = await db.studentProfile.findFirst({
+      where: {
+        userId: session.user.id,
+        courseId,
+        workspaceId,
+        status: { not: "PASS_OUT" }
+      }
+    });
+
+    if (activeSameCourse) {
+      return { success: false, error: "You are already actively enrolled in this course." };
+    }
+
+    // Generate Application Number
+    const appCount = await db.admissionApplication.count({ where: { workspaceId } });
+    const year = new Date().getFullYear();
+    const applicationNo = `APP${year}${String(appCount + 1).padStart(4, '0')}`;
+
+    // Create AdmissionApplication with status PENDING and customData marked as RE_ADMISSION
+    const app = await db.admissionApplication.create({
+      data: {
+        workspaceId,
+        applicationNo,
+        source: "ONLINE",
+        status: "PENDING",
+        fullName: existingProfile.fullName,
+        mobile: existingProfile.phone || "",
+        email: existingProfile.email || session.user.email || null,
+        whatsapp: existingProfile.whatsapp || null,
+        courseId,
+        fatherName: existingProfile.fatherName || null,
+        motherName: existingProfile.motherName || null,
+        guardianPhone: existingProfile.guardianPhone || null,
+        dob: existingProfile.dob || null,
+        gender: existingProfile.gender || null,
+        bloodGroup: existingProfile.bloodGroup || null,
+        religion: existingProfile.religion || null,
+        caste: existingProfile.caste || null,
+        address: (existingProfile.address ? (typeof existingProfile.address === "string" ? { full: existingProfile.address } : existingProfile.address) : undefined) as any,
+        qualification: (existingProfile.qualification || undefined) as any,
+        photoUrl: existingProfile.photoUrl || null,
+        signatureUrl: existingProfile.signatureUrl || null,
+        idProofUrl: existingProfile.idProofUrl || null,
+        paymentType: existingProfile.paymentType || "ONE_TIME",
+        customData: {
+          isReAdmission: true,
+          reEnrollmentNo: existingProfile.enrollmentNo,
+          existingStudentProfileId: existingProfile.id,
+          studentRemarks: remarks || null
+        }
+      }
+    });
+
+    // Notify Workspace Admin(s)
+    await db.notification.create({
+      data: {
+        workspaceId,
+        title: "New Re-Admission Application",
+        message: `Student ${existingProfile.fullName} (${existingProfile.enrollmentNo}) has submitted a re-admission application for "${targetCourse.title}".`,
+        type: "APPLICATION",
+        priority: "HIGH",
+        status: "PUBLISHED",
+        targetAudience: "STAFF",
+        link: `/admin/students/applications/${app.id}`
+      }
+    });
+
+    await revalidateWorkspacePath(workspaceId, "/admin/admissions", "layout");
+    await revalidateWorkspacePath(workspaceId, "/student/courses", "layout");
+
+    return { 
+      success: true, 
+      applicationNo, 
+      message: `Your re-admission application (${applicationNo}) has been submitted successfully.` 
+    };
+  } catch (error: any) {
+    console.error("Re-admission application error:", error);
+    return { success: false, error: error.message || "Failed to submit re-admission application." };
   }
 }

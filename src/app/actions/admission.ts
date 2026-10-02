@@ -79,11 +79,25 @@ export async function submitAdmissionApplication(workspaceId: string, data: any,
     const applicationNo = `${namePart}${randomDigits}`;
     
     // Parse DOB for database
-    const [d, m, y] = data.dob.split('/');
-    const dobDate = new Date(`${y}-${m}-${d}`);
+    let dobDate: Date | null = null;
+    let birthYear = "2000";
+    if (data.dob) {
+      if (typeof data.dob === 'string' && data.dob.includes('/')) {
+        const [d, m, y] = data.dob.split('/');
+        dobDate = new Date(`${y}-${m}-${d}`);
+        birthYear = y || "2000";
+      } else {
+        dobDate = new Date(data.dob);
+        if (!isNaN(dobDate.getFullYear())) {
+          birthYear = dobDate.getFullYear().toString();
+        }
+      }
+    }
     
-    // Generate secure unpredictable password
-    const tempPassword = generateSecurePassword();
+    // Automated generate password: First Name + Year of Birth (e.g. Rahul2004)
+    let fname = (data.fullName || "Student").trim().split(/\s+/)[0];
+    fname = fname.charAt(0).toUpperCase() + fname.slice(1).toLowerCase();
+    const tempPassword = `${fname}${birthYear}`;
     const passwordHash = await bcrypt.hash(tempPassword, 10);
 
     // Create new user for the applicant
@@ -216,17 +230,41 @@ export async function updateApplicationStatus(id: string, status: string, reject
 
     if (status === "APPROVED") {
       // Logic to create StudentProfile
-      const config = await db.registrationConfig.findFirst();
-      const prefix = config ? config.enrollmentPrefix : "RGY";
-      const digits = config?.enrollmentDigits || 6;
-      const globalCount = await db.studentProfile.count();
-      const enrollmentNo = `${prefix}${String(globalCount + 1).padStart(digits, '0')}`;
+      let enrollmentNo = (application.customData as any)?.existingEnrollmentNo || (application.customData as any)?.reEnrollmentNo;
+      if (!enrollmentNo && application.mobile) {
+        const existingStudent = await db.studentProfile.findFirst({
+          where: {
+            workspaceId: application.workspaceId,
+            phone: application.mobile
+          },
+          select: { enrollmentNo: true }
+        });
+        if (existingStudent?.enrollmentNo) {
+          enrollmentNo = existingStudent.enrollmentNo;
+        }
+      }
+
+      if (!enrollmentNo) {
+        const config = await db.registrationConfig.findFirst();
+        const prefix = config ? config.enrollmentPrefix : "RGY";
+        const digits = config?.enrollmentDigits || 6;
+        const globalCount = await db.studentProfile.count();
+        enrollmentNo = `${prefix}${String(globalCount + 1).padStart(digits, '0')}`;
+      }
 
       // Create or update User for login
-      if (!application.tempPassword) {
-        throw new Error("Temporary password not found for this application.");
+      let studentPassword = application.tempPassword;
+      if (!studentPassword) {
+        let birthYear = "2000";
+        if (application.dob) {
+          const yyyy = new Date(application.dob).getFullYear();
+          if (!isNaN(yyyy)) birthYear = yyyy.toString();
+        }
+        let fname = (application.fullName || "Student").trim().split(/\s+/)[0];
+        fname = fname.charAt(0).toUpperCase() + fname.slice(1).toLowerCase();
+        studentPassword = `${fname}${birthYear}`;
       }
-      const passwordHash = await bcrypt.hash(application.tempPassword, 10);
+      const passwordHash = await bcrypt.hash(studentPassword, 10);
       
       const user = await db.user.upsert({
         where: { username: enrollmentNo },
@@ -266,6 +304,7 @@ export async function updateApplicationStatus(id: string, status: string, reject
         update: {
           userId: user.id,
           enrollmentNo: enrollmentNo!,
+          loginPassword: studentPassword,
           batchId: batchId || null
         },
         create: {
@@ -273,6 +312,7 @@ export async function updateApplicationStatus(id: string, status: string, reject
           userId: user.id,
           fullName: application.fullName!,
           enrollmentNo: enrollmentNo!,
+          loginPassword: studentPassword,
           dob: application.dob,
           gender: application.gender,
           bloodGroup: application.bloodGroup,
@@ -304,9 +344,9 @@ export async function updateApplicationStatus(id: string, status: string, reject
         data: {
           workspaceId: application.workspaceId,
           title: "Admission Approved!",
-          message: `Congratulations ${application.fullName}, your admission for ${application.appliedCourse} has been approved. You can now login with your Application No.`,
+          message: `Congratulations ${application.fullName}! Your admission has been approved. Your Enrollment No is ${enrollmentNo}. You can login with your Enrollment No and password (${studentPassword}).`,
           type: "APPLICATION",
-          link: `/admission/status`
+          link: `/login`
         }
       });
     }

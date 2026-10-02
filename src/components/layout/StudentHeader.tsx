@@ -1,14 +1,33 @@
 "use client";
 
-import React from "react";
+import React, { useState, useTransition } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { ThemeToggle } from "./ThemeToggle";
 import { NotificationBell } from "./NotificationBell";
 import { CommandPalette, CommandSearchButton } from "./CommandPalette";
-import { BookOpen, ChevronRight } from "lucide-react";
+import { BookOpen, ChevronRight, ChevronDown, Check, Loader2, GraduationCap } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getTenantLink } from "@/lib/routing";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator
+} from "@/components/ui/dropdown-menu";
+import { setActiveStudentCourse } from "@/app/actions/student";
+import { toast } from "sonner";
+
+export interface ActiveCourseItem {
+  id: string;
+  courseTitle: string;
+  registrationNo: string | null;
+  enrollmentNo: string | null;
+  status: string;
+  batchName: string | null;
+}
 
 interface StudentHeaderProps {
   tenantName: string;
@@ -20,6 +39,8 @@ interface StudentHeaderProps {
   enrollmentNo?: string | null;
   registrationNo?: string | null;
   workspaceId?: string;
+  activeCourses?: ActiveCourseItem[];
+  currentProfileId?: string | null;
 }
 
 export function StudentHeader({
@@ -32,9 +53,14 @@ export function StudentHeader({
   enrollmentNo,
   registrationNo,
   workspaceId,
+  activeCourses = [],
+  currentProfileId,
 }: StudentHeaderProps) {
   const pathname = usePathname();
-  
+  const router = useRouter();
+  const [isPending, startTransition] = useTransition();
+  const [switchingId, setSwitchingId] = useState<string | null>(null);
+
   // Format Breadcrumbs:
   const segments = pathname.split('/').filter(Boolean);
   const lastSegment = segments[segments.length - 1];
@@ -47,6 +73,21 @@ export function StudentHeader({
   const dashboardHref = getTenantLink("/student/dashboard", tenant, pathname);
   const profileHref = getTenantLink("/student/profile", tenant, pathname);
   const coursesHref = getTenantLink("/student/courses", tenant, pathname);
+
+  const handleSwitchCourse = (profileId: string, courseTitle: string) => {
+    if (profileId === currentProfileId) return;
+    setSwitchingId(profileId);
+    startTransition(async () => {
+      const res = await setActiveStudentCourse(profileId);
+      if (res.success) {
+        toast.success(`Switched active course to ${courseTitle}`);
+        router.refresh();
+      } else {
+        toast.error(res.error || "Failed to switch course");
+      }
+      setSwitchingId(null);
+    });
+  };
 
   return (
     <header className="h-16 shrink-0 border-b border-border/40 bg-background/80 backdrop-blur-md sticky top-0 z-40 transition-all duration-300 px-4 sm:px-6 lg:px-6">
@@ -77,24 +118,111 @@ export function StudentHeader({
 
         {/* Right side: Course & Student Profile */}
         <div className="flex items-center gap-3 sm:gap-4 shrink-0">
-          {/* Current Enrolled Course Pill */}
-          <Link
-            href={coursesHref}
-            className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-100/80 dark:bg-slate-800/50 hover:bg-slate-200/70 dark:hover:bg-slate-800 border border-slate-200/60 dark:border-slate-700/50 transition-colors group cursor-pointer max-w-[240px]"
-            title={`Course: ${currentCourseName}`}
-          >
-            <div className="w-6 h-6 rounded-lg bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
-              <BookOpen className="h-3.5 w-3.5" />
-            </div>
-            <div className="flex flex-col text-left min-w-0">
-              <span className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground leading-none mb-0.5">
-                My Course
-              </span>
-              <span className="text-xs font-bold text-foreground leading-tight tracking-tight truncate">
-                {currentCourseName}
-              </span>
-            </div>
-          </Link>
+          {/* Active Course Dropdown Switcher (Rule: Only active courses, no pass out) */}
+          {activeCourses.length > 1 ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-100/90 dark:bg-slate-800/60 hover:bg-slate-200/80 dark:hover:bg-slate-800 border border-slate-200/70 dark:border-slate-700/60 transition-all cursor-pointer max-w-[260px] text-left outline-none group focus:ring-2 focus:ring-primary/20">
+                <div className="w-6 h-6 rounded-lg bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+                  {isPending ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <BookOpen className="h-3.5 w-3.5" />
+                  )}
+                </div>
+                <div className="flex flex-col text-left min-w-0 pr-1">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground leading-none">
+                      Active Course
+                    </span>
+                    <span className="text-[9px] font-semibold px-1 py-0.2 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded">
+                      {activeCourses.length}
+                    </span>
+                  </div>
+                  <span className="text-xs font-bold text-foreground leading-tight tracking-tight truncate max-w-[150px] sm:max-w-[180px]">
+                    {currentCourseName}
+                  </span>
+                </div>
+                <ChevronDown className="w-3.5 h-3.5 text-muted-foreground group-hover:text-foreground transition-transform shrink-0" />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-72 p-1.5 rounded-xl shadow-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
+                <DropdownMenuLabel className="px-2 py-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                  Switch Active Course
+                </DropdownMenuLabel>
+                <div className="space-y-1">
+                  {activeCourses.map((c) => {
+                    const isSelected = c.id === currentProfileId;
+                    const isSwitching = switchingId === c.id;
+                    return (
+                      <DropdownMenuItem
+                        key={c.id}
+                        onClick={() => handleSwitchCourse(c.id, c.courseTitle)}
+                        className={`flex items-start justify-between p-2 rounded-lg cursor-pointer transition-colors ${
+                          isSelected
+                            ? "bg-slate-100 dark:bg-slate-800 font-semibold"
+                            : "hover:bg-slate-50 dark:hover:bg-slate-800/50"
+                        }`}
+                      >
+                        <div className="flex items-start gap-2 min-w-0 pr-2">
+                          <div className={`w-5 h-5 rounded-md flex items-center justify-center shrink-0 mt-0.5 ${
+                            isSelected ? "bg-emerald-500 text-white" : "bg-slate-200 dark:bg-slate-800 text-slate-500"
+                          }`}>
+                            {isSwitching ? (
+                              <Loader2 className="w-3 h-3 animate-spin" />
+                            ) : (
+                              <GraduationCap className="w-3 h-3" />
+                            )}
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-xs font-bold text-slate-900 dark:text-white leading-tight truncate">
+                              {c.courseTitle}
+                            </p>
+                            <div className="flex items-center gap-1.5 mt-0.5 text-[10px] text-slate-400 font-mono">
+                              {c.registrationNo ? (
+                                <span className="text-emerald-600 dark:text-emerald-400 font-semibold">
+                                  {c.registrationNo}
+                                </span>
+                              ) : (
+                                <span>Pending Reg</span>
+                              )}
+                              {c.batchName && <span>• {c.batchName}</span>}
+                            </div>
+                          </div>
+                        </div>
+                        {isSelected && (
+                          <Check className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0 mt-1" />
+                        )}
+                      </DropdownMenuItem>
+                    );
+                  })}
+                </div>
+                <DropdownMenuSeparator className="my-1.5 border-slate-100 dark:border-slate-800" />
+                <Link href={coursesHref} className="block">
+                  <div className="p-2 text-center text-xs font-semibold text-primary hover:bg-primary/5 rounded-lg transition-colors cursor-pointer">
+                    View All & Completed Courses →
+                  </div>
+                </Link>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            /* Single Enrolled Course Pill */
+            <Link
+              href={coursesHref}
+              className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-100/80 dark:bg-slate-800/50 hover:bg-slate-200/70 dark:hover:bg-slate-800 border border-slate-200/60 dark:border-slate-700/50 transition-colors group cursor-pointer max-w-[240px]"
+              title={`Course: ${currentCourseName}`}
+            >
+              <div className="w-6 h-6 rounded-lg bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+                <BookOpen className="h-3.5 w-3.5" />
+              </div>
+              <div className="flex flex-col text-left min-w-0">
+                <span className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground leading-none mb-0.5">
+                  My Course
+                </span>
+                <span className="text-xs font-bold text-foreground leading-tight tracking-tight truncate">
+                  {currentCourseName}
+                </span>
+              </div>
+            </Link>
+          )}
 
           {/* Profile Section */}
           <Link 

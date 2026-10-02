@@ -5,13 +5,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
-import { Search, GraduationCap, Printer, CheckSquare, Building2, ChevronLeft, ChevronRight, Eye, Download } from "lucide-react";
+import { Search, GraduationCap, Printer, CheckSquare, Building2, ChevronLeft, ChevronRight, Eye, Download, AlertCircle, CheckCircle2, AlertTriangle } from "lucide-react";
 import { enrollStudentsToExam } from "@/app/actions/exam";
 import { toast } from "sonner";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { DocumentRenderer, DocumentRendererRef } from "@/components/documents/DocumentRenderer";
+import { calculateStudentExamFeeDues } from "@/lib/student-fee-utils";
 import type { jsPDF } from "jspdf";
 
 export default function AdmitCardTab({ students, courses, batches, exams }: { students: any[], courses: any[], batches: any[], exams: any[] }) {
@@ -22,6 +24,13 @@ export default function AdmitCardTab({ students, courses, batches, exams }: { st
   const [selectedStudents, setSelectedStudents] = useState<Set<string>>(new Set());
   const [isProcessing, setIsProcessing] = useState(false);
   const [selectedShiftId, setSelectedShiftId] = useState<string>("auto_sequential");
+  
+  // Pro-Rated Semester/Tenure Fee Dues Advisory Modal State
+  const [dueAdvisoryModal, setDueAdvisoryModal] = useState<{
+    isOpen: boolean;
+    studentsWithDues: { student: any; dues: ReturnType<typeof calculateStudentExamFeeDues> }[];
+    onProceed: () => void;
+  }>({ isOpen: false, studentsWithDues: [], onProceed: () => {} });
   
   const rendererRef = useRef<DocumentRendererRef>(null);
   const pdfRef = useRef<jsPDF | null>(null);
@@ -91,10 +100,7 @@ export default function AdmitCardTab({ students, courses, batches, exams }: { st
     }
   };
 
-  const handleGenerateAdmitCards = async () => {
-    if (!selectedExamId) return toast.error("Please select an exam first.");
-    if (selectedStudents.size === 0) return toast.error("Please select at least one student.");
-
+  const executeEnrollment = async (studentIds: string[]) => {
     let strategy: 'sequential' | 'equal' = 'sequential';
     let shiftId = undefined;
 
@@ -108,7 +114,6 @@ export default function AdmitCardTab({ students, courses, batches, exams }: { st
 
     setIsProcessing(true);
     try {
-      const studentIds = Array.from(selectedStudents);
       const res = await enrollStudentsToExam(selectedExamId, studentIds, {
         shiftId,
         strategy
@@ -126,9 +131,33 @@ export default function AdmitCardTab({ students, courses, batches, exams }: { st
     }
   };
 
-  const handleIssueSingle = async (studentId: string) => {
-    if (!selectedExamId) return toast.error("Please select a Target Exam first.");
+  const handleGenerateAdmitCards = async () => {
+    if (!selectedExamId) return toast.error("Please select an exam first.");
+    if (selectedStudents.size === 0) return toast.error("Please select at least one student.");
 
+    const studentIds = Array.from(selectedStudents);
+    const studentsWithDues = studentIds
+      .map(id => {
+        const student = students.find(s => s.id === id);
+        if (!student) return null;
+        const dues = calculateStudentExamFeeDues(student, selectedExam?.date);
+        return dues.isDue ? { student, dues } : null;
+      })
+      .filter(Boolean) as { student: any; dues: ReturnType<typeof calculateStudentExamFeeDues> }[];
+
+    if (studentsWithDues.length > 0) {
+      setDueAdvisoryModal({
+        isOpen: true,
+        studentsWithDues,
+        onProceed: () => executeEnrollment(studentIds)
+      });
+      return;
+    }
+
+    await executeEnrollment(studentIds);
+  };
+
+  const executeSingleIssue = async (studentId: string) => {
     let strategy: 'sequential' | 'equal' = 'sequential';
     let shiftId = undefined;
 
@@ -156,6 +185,25 @@ export default function AdmitCardTab({ students, courses, batches, exams }: { st
     } finally {
       setIsProcessing(false);
     }
+  };
+
+  const handleIssueSingle = async (studentId: string) => {
+    if (!selectedExamId) return toast.error("Please select a Target Exam first.");
+
+    const student = students.find(s => s.id === studentId);
+    if (student) {
+      const dues = calculateStudentExamFeeDues(student, selectedExam?.date);
+      if (dues.isDue) {
+        setDueAdvisoryModal({
+          isOpen: true,
+          studentsWithDues: [{ student, dues }],
+          onProceed: () => executeSingleIssue(studentId)
+        });
+        return;
+      }
+    }
+
+    await executeSingleIssue(studentId);
   };
 
   const handlePrintAdmitCards = () => {
@@ -477,6 +525,7 @@ export default function AdmitCardTab({ students, courses, batches, exams }: { st
             {paginatedStudents.map(student => {
               const isSelected = selectedStudents.has(student.id);
               const studentName = student.user?.name || student.fullName || "Student";
+              const dues = calculateStudentExamFeeDues(student, selectedExam?.date);
               return (
                 <div 
                   key={student.id} 
@@ -530,6 +579,31 @@ export default function AdmitCardTab({ students, courses, batches, exams }: { st
                           {student.course?.title || "No Course"}
                         </span>
                         <span className="text-[8px] font-bold text-slate-400 uppercase tracking-wider mt-0.5 block">Course</span>
+                      </div>
+
+                      {/* Pro-Rated Tenure/Semester Fee Status Column */}
+                      <div className="text-left shrink-0">
+                        {dues.isDue ? (
+                          <Badge 
+                            variant="outline" 
+                            title={dues.dueReason}
+                            className="bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800 text-[9px] font-bold px-1.5 py-0.5 rounded-md flex items-center gap-1 cursor-help"
+                          >
+                            <AlertCircle className="w-3 h-3 text-amber-600 shrink-0" />
+                            <span>₹{dues.semesterTenureDues.toLocaleString()} Due</span>
+                          </Badge>
+                        ) : (
+                          <Badge 
+                            variant="outline" 
+                            className="bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800 text-[9px] font-bold px-1.5 py-0.5 rounded-md flex items-center gap-1"
+                          >
+                            <CheckCircle2 className="w-3 h-3 text-emerald-600 shrink-0" />
+                            <span>Cleared</span>
+                          </Badge>
+                        )}
+                        <span className="text-[8px] font-bold text-slate-400 uppercase tracking-wider mt-0.5 block">
+                          {dues.paymentType === "EMI" ? `Month 1–${dues.elapsedMonths} EMI` : "Fee Status"}
+                        </span>
                       </div>
                     </div>
 
@@ -642,6 +716,83 @@ export default function AdmitCardTab({ students, courses, batches, exams }: { st
           />
         </div>
       )}
+
+      {/* Pro-Rated Semester/Tenure Fee Dues Advisory Dialog (Rule 7.7) */}
+      <Dialog open={dueAdvisoryModal.isOpen} onOpenChange={(open) => setDueAdvisoryModal(prev => ({ ...prev, isOpen: open }))}>
+        <DialogContent className="max-w-md p-4 sm:p-5 rounded-2xl">
+          <DialogHeader>
+            <div className="flex items-center gap-2.5 text-amber-600 dark:text-amber-400">
+              <div className="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center shrink-0">
+                <AlertTriangle className="w-4 h-4" />
+              </div>
+              <div>
+                <DialogTitle className="text-sm sm:text-base font-bold text-slate-900 dark:text-white">
+                  Semester Fee Dues Advisory
+                </DialogTitle>
+                <DialogDescription className="text-xs text-slate-500">
+                  Advisory notice for examination hall ticket issuance
+                </DialogDescription>
+              </div>
+            </div>
+          </DialogHeader>
+
+          <div className="space-y-3 py-2">
+            <div className="p-3 rounded-xl bg-amber-50/80 dark:bg-amber-950/30 border border-amber-200/80 dark:border-amber-800/50 text-xs text-amber-800 dark:text-amber-300 leading-relaxed space-y-1">
+              <p className="font-semibold flex items-center gap-1.5">
+                <AlertCircle className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                Pending Installments Identified
+              </p>
+              <p className="text-[11px] opacity-90">
+                The following student(s) have pending installments scheduled up to this examination date. 
+                As franchise administrator, you can either collect the dues first or proceed with issuing the admit card:
+              </p>
+            </div>
+
+            <div className="max-h-48 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800 border border-slate-200 dark:border-slate-800 rounded-xl">
+              {dueAdvisoryModal.studentsWithDues.map(({ student, dues }) => (
+                <div key={student.id} className="p-2.5 flex items-center justify-between text-xs">
+                  <div className="min-w-0 pr-2">
+                    <p className="font-semibold text-slate-900 dark:text-white truncate">
+                      {student.user?.name || student.fullName}
+                    </p>
+                    <p className="text-[10px] text-slate-500 font-mono">
+                      {student.enrollmentNo} • {student.course?.title || "Course"}
+                    </p>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <span className="font-bold text-amber-600 dark:text-amber-400 block">
+                      ₹{dues.semesterTenureDues.toLocaleString()}
+                    </span>
+                    <span className="text-[9px] text-slate-400 font-medium">
+                      {dues.paymentType === "EMI" ? `Month 1–${dues.elapsedMonths} EMI` : "Lump-Sum"}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <DialogFooter className="gap-2 sm:gap-0 mt-1 flex justify-end">
+            <Button
+              variant="outline"
+              onClick={() => setDueAdvisoryModal(prev => ({ ...prev, isOpen: false }))}
+              className="h-8 sm:h-9 text-xs font-semibold rounded-lg"
+            >
+              Review Dues
+            </Button>
+            <Button
+              onClick={() => {
+                const proceed = dueAdvisoryModal.onProceed;
+                setDueAdvisoryModal(prev => ({ ...prev, isOpen: false }));
+                proceed();
+              }}
+              className="h-8 sm:h-9 text-xs font-semibold rounded-lg bg-amber-600 hover:bg-amber-700 text-white gap-1.5"
+            >
+              <span>Proceed & Issue Anyway</span>
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

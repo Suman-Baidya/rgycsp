@@ -3,6 +3,8 @@ import { notFound } from "next/navigation";
 import { getStudents } from "@/app/actions/students";
 import { getBatches } from "@/app/actions/batches";
 import { getCourses } from "@/app/actions/courses";
+import { processPendingAutoCertificateIssues } from "@/app/actions/student-documents";
+import { findWorkspaceByTenant } from "@/lib/workspace";
 import StudentsManagementClient from "./StudentsManagementClient";
 
 export default async function StudentsPage({
@@ -11,17 +13,11 @@ export default async function StudentsPage({
   params: Promise<{ tenant: string }>;
 }) {
   const { tenant } = await params;
-  const normalizedTenant = tenant?.toLowerCase()?.trim();
 
-  const workspace = await db.workspace.findFirst({
-    where: {
-      OR: [
-        { subdomain: normalizedTenant },
-        { centerCode: { equals: normalizedTenant, mode: 'insensitive' } },
-        { id: tenant }
-      ]
-    }
-  });
+  // Process any auto-issuance timers that are due
+  await processPendingAutoCertificateIssues();
+
+  const workspace = await findWorkspaceByTenant(tenant);
 
   if (!workspace) {
     notFound();

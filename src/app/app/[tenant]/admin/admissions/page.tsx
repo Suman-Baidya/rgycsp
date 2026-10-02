@@ -25,7 +25,7 @@ export default async function AdmissionsPage({
       },
       courses: {
         where: { isActive: true },
-        select: { id: true, title: true, feeAmount: true }
+        select: { id: true, title: true, code: true, duration: true, feeAmount: true, category: true }
       },
       batches: {
         select: { 

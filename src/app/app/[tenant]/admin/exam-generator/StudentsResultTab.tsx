@@ -39,7 +39,14 @@ export default function StudentsResultTab({ students, courses, batches }: { stud
     return students.filter(s => {
       if (selectedBatch !== "all" && s.batchId !== selectedBatch) return false;
       if (selectedCourse !== "all" && s.courseId !== selectedCourse) return false;
-      if (q && !s.user?.name?.toLowerCase().includes(q) && !s.fullName?.toLowerCase().includes(q)) return false;
+      if (
+        q && 
+        !s.user?.name?.toLowerCase().includes(q) && 
+        !s.fullName?.toLowerCase().includes(q) &&
+        !s.enrollmentNo?.toLowerCase().includes(q) &&
+        !s.registrationNo?.toLowerCase().includes(q) &&
+        !s.phone?.includes(q)
+      ) return false;
       return true;
     });
   }, [students, selectedBatch, selectedCourse, debouncedSearch]);

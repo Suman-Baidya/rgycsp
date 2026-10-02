@@ -17,8 +17,13 @@ import {
   ChevronLeft,
   X,
   Search,
-  CheckCircle
+  CheckCircle,
+  Loader2,
+  Plus
 } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+import { requestExtraClass } from "@/app/actions/extra-classes";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -29,7 +34,8 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
-  DialogClose
+  DialogClose,
+  DialogFooter
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import {
@@ -55,6 +61,7 @@ interface StudentAttendanceProps {
   overallStats: any;
   theorySchedule: any;
   practicalSchedule: any[];
+  extraClasses?: any[];
   settings?: any;
   tenant: string;
   workspace?: any;
@@ -69,10 +76,12 @@ export default function StudentAttendanceClient({
   overallStats,
   theorySchedule,
   practicalSchedule = [],
+  extraClasses = [],
   settings,
   tenant,
   workspace
 }: StudentAttendanceProps) {
+  const router = useRouter();
   const primaryColor = settings?.primaryColor || "#0284c7";
   const [viewMode, setViewMode] = useState<"ALL" | "THEORY" | "PRACTICAL">("ALL");
   const [statusFilter, setStatusFilter] = useState<string>("ALL");
@@ -82,6 +91,50 @@ export default function StudentAttendanceClient({
   const [showSchedule, setShowSchedule] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 12;
+
+  // Extra Class Request State
+  const [isRequestModalOpen, setIsRequestModalOpen] = useState(false);
+  const [requestDate, setRequestDate] = useState(() => {
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    return tomorrow.toISOString().split("T")[0];
+  });
+  const [requestStartTime, setRequestStartTime] = useState("14:00");
+  const [requestEndTime, setRequestEndTime] = useState("15:30");
+  const [requestType, setRequestType] = useState<"PRACTICAL" | "THEORY">("PRACTICAL");
+  const [requestTopic, setRequestTopic] = useState("");
+  const [isSubmittingRequest, setIsSubmittingRequest] = useState(false);
+
+  const handleRequestSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!workspace?.id) return;
+    if (!requestDate) return toast.error("Please select a date.");
+    if (!requestStartTime || !requestEndTime) return toast.error("Please specify class timing.");
+
+    setIsSubmittingRequest(true);
+    try {
+      const res = await requestExtraClass({
+        workspaceId: workspace.id,
+        date: requestDate,
+        startTime: requestStartTime,
+        endTime: requestEndTime,
+        type: requestType,
+        topic: requestTopic.trim() || undefined
+      });
+      if (res.success) {
+        toast.success("Extra class request submitted! Your center administrator will review it.");
+        setIsRequestModalOpen(false);
+        setRequestTopic("");
+        router.refresh();
+      } else {
+        toast.error(res.error || "Failed to submit request.");
+      }
+    } catch (e: any) {
+      toast.error(e?.message || "An error occurred.");
+    } finally {
+      setIsSubmittingRequest(false);
+    }
+  };
 
   const daysOfWeek = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
@@ -171,6 +224,14 @@ export default function StudentAttendanceClient({
           >
             <CalendarIcon className="w-3.5 h-3.5 text-primary" />
             Class Schedule
+          </Button>
+
+          <Button
+            onClick={() => setIsRequestModalOpen(true)}
+            className="h-8 sm:h-9 px-3 sm:px-4 rounded-lg text-xs sm:text-sm font-semibold gap-1.5 bg-indigo-600 hover:bg-indigo-700 text-white shadow-xs"
+          >
+            <Clock className="w-3.5 h-3.5" />
+            Request Extra Class
           </Button>
 
           {/* Mode Switcher Tabs */}
@@ -292,6 +353,93 @@ export default function StudentAttendanceClient({
           </CardContent>
         </Card>
       </div>
+
+      {/* Extra Class Bookings Card */}
+      {extraClasses && extraClasses.length > 0 && (
+        <Card className="border border-indigo-200/80 dark:border-indigo-900/40 rounded-xl shadow-xs overflow-hidden bg-indigo-50/20 dark:bg-indigo-950/10">
+          <CardHeader className="p-3 sm:p-3.5 border-b border-indigo-100 dark:border-indigo-900/30 flex flex-row items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Clock className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+              <CardTitle className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
+                One-Time Extra Classes & Lab Bookings
+              </CardTitle>
+            </div>
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => setIsRequestModalOpen(true)}
+              className="h-7 text-xs font-semibold text-indigo-600 hover:text-indigo-700"
+            >
+              <Plus className="w-3 h-3 mr-1" /> Request Another
+            </Button>
+          </CardHeader>
+          <CardContent className="p-0">
+            <div className="divide-y divide-indigo-100/60 dark:divide-indigo-900/30">
+              {extraClasses.map((item: any) => {
+                const dateStr = new Date(item.date).toLocaleDateString("en-GB", {
+                  day: "numeric",
+                  month: "short",
+                  year: "numeric"
+                });
+
+                return (
+                  <div key={item.id} className="p-3 sm:p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 bg-white/60 dark:bg-slate-900/60">
+                    <div className="flex items-center gap-3">
+                      <div className={cn(
+                        "w-8 h-8 rounded-lg flex items-center justify-center shrink-0",
+                        item.type === "PRACTICAL" ? "bg-purple-100 dark:bg-purple-900/30 text-purple-600" : "bg-blue-100 dark:bg-blue-900/30 text-blue-600"
+                      )}>
+                        {item.type === "PRACTICAL" ? <Monitor className="w-4 h-4" /> : <BookOpen className="w-4 h-4" />}
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className="font-semibold text-xs text-slate-900 dark:text-white">
+                            {item.topic || (item.type === "PRACTICAL" ? "Practical Lab Practice" : "Theory Extra Class")}
+                          </span>
+                          <Badge variant="outline" className="text-[9px] font-bold px-1.5 py-0.2 rounded uppercase">
+                            {item.type}
+                          </Badge>
+                        </div>
+                        <p className="text-[10px] text-slate-500 mt-0.5">
+                          {dateStr} • {item.startTime} - {item.endTime}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 self-start sm:self-center">
+                      {item.status === "PENDING" && (
+                        <Badge className="bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 border-none text-[9px] font-bold px-2 py-0.5">
+                          ⏳ Pending Center Approval
+                        </Badge>
+                      )}
+                      {item.status === "APPROVED" && (
+                        <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-950/60 dark:text-blue-300 border-none text-[9px] font-bold px-2 py-0.5">
+                          ✓ Approved & Seat Reserved
+                        </Badge>
+                      )}
+                      {item.status === "COMPLETED" && (
+                        <Badge className={cn(
+                          "border-none text-[9px] font-bold px-2 py-0.5",
+                          item.attendanceStatus === "PRESENT"
+                            ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300"
+                            : "bg-rose-100 text-rose-800 dark:bg-rose-950/60 dark:text-rose-300"
+                        )}>
+                          {item.attendanceStatus === "PRESENT" ? "✓ Attended (Recorded)" : "✕ Absent"}
+                        </Badge>
+                      )}
+                      {item.status === "REJECTED" && (
+                        <Badge className="bg-rose-100 text-rose-800 dark:bg-rose-950/60 dark:text-rose-300 border-none text-[9px] font-bold px-2 py-0.5" title={item.rejectionReason}>
+                          ✕ Declined
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* 3. Analytics Section (Rule 7.4 Main Card) */}
       <Card className="border border-slate-200/80 dark:border-slate-800 rounded-xl shadow-xs overflow-hidden bg-white dark:bg-slate-900">
@@ -668,6 +816,98 @@ export default function StudentAttendanceClient({
               Close
             </Button>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Request Extra Class Dialog */}
+      <Dialog open={isRequestModalOpen} onOpenChange={setIsRequestModalOpen}>
+        <DialogContent className="max-w-md p-4 sm:p-5 rounded-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-sm sm:text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+              <Clock className="w-4 h-4 text-indigo-600" />
+              Request Extra Class / Makeup Lab
+            </DialogTitle>
+            <DialogDescription className="text-xs text-slate-500">
+              Submit a request for an extra hands-on practical lab or theory doubt session to your franchise admin.
+            </DialogDescription>
+          </DialogHeader>
+
+          <form onSubmit={handleRequestSubmit} className="space-y-3 pt-2">
+            <div className="grid grid-cols-2 gap-2">
+              <div className="space-y-1">
+                <label className="text-[11px] font-medium text-slate-500">Preferred Date *</label>
+                <Input
+                  type="date"
+                  value={requestDate}
+                  onChange={(e) => setRequestDate(e.target.value)}
+                  className="h-8 text-xs rounded-lg"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-[11px] font-medium text-slate-500">Session Type *</label>
+                <select
+                  value={requestType}
+                  onChange={(e) => setRequestType(e.target.value as any)}
+                  className="w-full h-8 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 px-2 font-medium"
+                >
+                  <option value="PRACTICAL">Practical Lab Practice</option>
+                  <option value="THEORY">Theory Revision Class</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2">
+              <div className="space-y-1">
+                <label className="text-[11px] font-medium text-slate-500">Preferred Start Time *</label>
+                <Input
+                  type="time"
+                  value={requestStartTime}
+                  onChange={(e) => setRequestStartTime(e.target.value)}
+                  className="h-8 text-xs rounded-lg"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-[11px] font-medium text-slate-500">Preferred End Time *</label>
+                <Input
+                  type="time"
+                  value={requestEndTime}
+                  onChange={(e) => setRequestEndTime(e.target.value)}
+                  className="h-8 text-xs rounded-lg"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-[11px] font-medium text-slate-500">Topic / Need (Optional)</label>
+              <Input
+                placeholder="e.g. Photoshop Layers makeup, Excel formulas doubt clearing..."
+                value={requestTopic}
+                onChange={(e) => setRequestTopic(e.target.value)}
+                className="h-8 text-xs rounded-lg"
+              />
+            </div>
+
+            <DialogFooter className="pt-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setIsRequestModalOpen(false)}
+                className="h-8 text-xs font-semibold rounded-lg"
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                disabled={isSubmittingRequest}
+                className="h-8 text-xs font-semibold rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white gap-1"
+              >
+                {isSubmittingRequest ? <Loader2 className="w-3 h-3 animate-spin" /> : <CheckCircle2 className="w-3 h-3" />}
+                Submit Request
+              </Button>
+            </DialogFooter>
+          </form>
         </DialogContent>
       </Dialog>
     </div>

@@ -30,6 +30,7 @@ import { getAttendanceList, saveAttendance } from "@/app/actions/attendance";
 import { toast } from "sonner";
 import AttendanceReports from "@/components/attendance/AttendanceReports";
 import PracticalClassesTab from "./PracticalClassesTab";
+import ExtraClassesTab from "./ExtraClassesTab";
 import QRScanner from "@/components/attendance/QRScanner";
 
 // Helper for formatting
@@ -44,11 +45,15 @@ const formatDay = (date: Date) => {
 export default function AttendanceClient({
   workspaceId,
   batches = [],
-  initialStudents = []
+  initialStudents = [],
+  allStudents = [],
+  initialExtraBookings = []
 }: {
   workspaceId: string;
   batches: any[];
   initialStudents?: any[];
+  allStudents?: any[];
+  initialExtraBookings?: any[];
 }) {
   const [activeTab, setActiveTab] = useState("take_attendance");
   const [selectedBatch, setSelectedBatch] = useState(batches[0]?.id || "");
@@ -156,9 +161,12 @@ export default function AttendanceClient({
   const displayDate = formatDate(new Date(selectedDate));
   const selectedBatchObj = batches.find(b => b.id === selectedBatch);
 
+  const pendingExtraCount = initialExtraBookings.filter((b: any) => b.status === "PENDING").length;
+
   const tabs = [
     { id: "take_attendance", label: "Theory Classes", icon: Edit3, count: stats.total },
     { id: "practical_classes", label: "Practical Classes", icon: CalendarDays },
+    { id: "extra_classes", label: "Extra Classes", icon: Clock, count: pendingExtraCount > 0 ? pendingExtraCount : undefined },
     { id: "qr_scanner", label: "QR Scanner", icon: Camera },
     { id: "reports", label: "Attendance Reports", icon: BarChart3 },
   ];
@@ -498,6 +506,14 @@ export default function AttendanceClient({
 
         {activeTab === "practical_classes" && (
           <PracticalClassesTab workspaceId={workspaceId} />
+        )}
+
+        {activeTab === "extra_classes" && (
+          <ExtraClassesTab 
+            workspaceId={workspaceId} 
+            initialBookings={initialExtraBookings} 
+            students={allStudents} 
+          />
         )}
 
         {activeTab === "qr_scanner" && (

@@ -70,7 +70,7 @@ import { Switch } from "@/components/ui/switch";
 import { DocumentRenderer, DocumentRendererRef } from "@/components/documents/DocumentRenderer";
 import { issueDocumentToStudent, requestDocumentIssue } from "@/app/actions/student-documents";
 import { getRegistrationConfig } from "@/app/actions/registration-config";
-import { getDocumentStatus } from "@/lib/document-utils";
+import { getDocumentStatus, getCertificateRequestInfo } from "@/lib/document-utils";
 import { ManageResultModal } from "@/components/students/ManageResultModal";
 
 export default function StudentList({ 
@@ -567,6 +567,7 @@ export default function StudentList({
       const matchesSearch = !term ||
                             s.fullName?.toLowerCase().includes(term) ||
                             s.enrollmentNo?.toLowerCase().includes(term) ||
+                            s.registrationNo?.toLowerCase().includes(term) ||
                             s.phone?.includes(term) ||
                             s.email?.toLowerCase().includes(term) ||
                             s.registrations?.some((r: any) => r.registrationNo?.toLowerCase().includes(term));
@@ -1620,11 +1621,17 @@ export default function StudentList({
                       
                       {!(certStatus.finalCertApproved || hasDocumentAuthority || certStatus.finalCertIssued || certStatus.isCertAuto) && (
                         <div className="flex items-center gap-2 ml-auto">
-                          {selectedStudent?.documentIssueRequestedAt ? (
-                            <Badge variant="outline" className="text-amber-500 border-amber-200 text-xs py-0.5">
-                              <Clock className="w-3 h-3 mr-1" /> Request Pending
-                            </Badge>
-                          ) : (
+                          {selectedStudent?.documentIssueRequestedAt ? (() => {
+                            const reqInfo = getCertificateRequestInfo(selectedStudent, globalConfig);
+                            return (
+                              <Badge variant="outline" className="text-indigo-600 dark:text-indigo-400 border-indigo-200 dark:border-indigo-800 bg-indigo-50/70 dark:bg-indigo-950/40 text-xs py-1 px-2.5 font-semibold gap-1.5">
+                                <Clock className="w-3.5 h-3.5 animate-spin text-indigo-500" />
+                                {reqInfo.isAutoEnabled 
+                                  ? `Request Pending • Auto-issue in ~${reqInfo.minutesRemaining}m (or upon Super Admin review)` 
+                                  : "Request Pending • Awaiting Super Admin manual verification"}
+                              </Badge>
+                            );
+                          })() : (
                             <Button 
                               onClick={() => handleRequestIssue(selectedStudent?.id)}
                               disabled={isRequestingIssue}

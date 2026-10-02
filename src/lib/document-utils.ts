@@ -115,3 +115,44 @@ export function getDocumentStatus(student: any, semester: any, config: Registrat
     finalCertApproved: student?.certificateApproved || isCertAuto,
   };
 }
+
+export interface CertificateRequestInfo {
+  hasPendingRequest: boolean;
+  requestedAt: Date | null;
+  isAutoEnabled: boolean;
+  delayMinutes: number;
+  autoIssueAt: Date | null;
+  isExpired: boolean;
+  minutesRemaining: number;
+}
+
+export function getCertificateRequestInfo(
+  student: any,
+  config: RegistrationConfig | null | undefined
+): CertificateRequestInfo {
+  const hasPendingRequest = !!student?.documentIssueRequestedAt && !student?.certificateApproved;
+  const requestedAt = student?.documentIssueRequestedAt ? new Date(student.documentIssueRequestedAt) : null;
+  const isAutoEnabled = !!config?.autoQuickIssueEnabled;
+  const delayMinutes = config?.autoIssueAfterRequestMinutes || 60;
+
+  let autoIssueAt: Date | null = null;
+  let isExpired = false;
+  let minutesRemaining = 0;
+
+  if (requestedAt && isAutoEnabled) {
+    autoIssueAt = new Date(requestedAt.getTime() + delayMinutes * 60 * 1000);
+    const now = Date.now();
+    isExpired = now >= autoIssueAt.getTime();
+    minutesRemaining = Math.max(0, Math.ceil((autoIssueAt.getTime() - now) / (60 * 1000)));
+  }
+
+  return {
+    hasPendingRequest,
+    requestedAt,
+    isAutoEnabled,
+    delayMinutes,
+    autoIssueAt,
+    isExpired,
+    minutesRemaining
+  };
+}

@@ -2,6 +2,7 @@ import { db } from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import AttendanceClient from "./AttendanceClient";
 import { getBatches, getAttendanceList } from "@/app/actions/attendance";
+import { getWorkspaceExtraClassBookings } from "@/app/actions/extra-classes";
 
 export default async function AttendancePage({
   params
@@ -24,7 +25,16 @@ export default async function AttendancePage({
 
   if (!workspace) notFound();
 
-  const batchesResult = await getBatches(workspace.id);
+  const [batchesResult, extraBookingsResult, allStudents] = await Promise.all([
+    getBatches(workspace.id),
+    getWorkspaceExtraClassBookings(workspace.id),
+    db.studentProfile.findMany({
+      where: { workspaceId: workspace.id, isActive: true },
+      select: { id: true, fullName: true, enrollmentNo: true, phone: true },
+      orderBy: { fullName: 'asc' }
+    })
+  ]);
+
   const batches = batchesResult.success ? (batchesResult.data ?? []) : [];
 
   let initialStudents: any[] = [];
@@ -40,6 +50,9 @@ export default async function AttendancePage({
       workspaceId={workspace.id}
       batches={batches} 
       initialStudents={initialStudents}
+      allStudents={allStudents}
+      initialExtraBookings={extraBookingsResult.bookings ?? []}
     />
   );
 }
+

@@ -9,7 +9,7 @@ export async function testLogin(username: string, password: string) {
         username: { equals: username, mode: 'insensitive' }
       },
       include: {
-        studentProfile: { include: { workspace: true } }
+        studentProfiles: { include: { workspace: true } }
       }
     });
 
@@ -18,13 +18,14 @@ export async function testLogin(username: string, password: string) {
     if (!user.passwordHash) return "User has no password";
 
     const isMatch = await bcrypt.compare(password, user.passwordHash);
+    const activeProfile = user.studentProfiles?.[0];
     
     return {
       userId: user.id,
       username: user.username,
-      hasProfile: !!user.studentProfile,
+      hasProfile: (user.studentProfiles?.length || 0) > 0,
       passwordMatch: isMatch,
-      tenant: user.studentProfile?.workspace?.subdomain
+      tenant: activeProfile?.workspace?.subdomain
     };
   } catch(e: any) {
     return e.message;

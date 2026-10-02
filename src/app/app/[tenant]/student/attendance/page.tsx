@@ -69,6 +69,14 @@ export default async function StudentAttendancePage({
 
   const practicalSchedule = student.studentProfile?.practicalSchedules || [];
 
+  const extraClasses = studentProfileId
+    ? await (db as any).extraClassBooking.findMany({
+        where: { studentProfileId, workspaceId: workspace.id },
+        orderBy: { date: 'desc' },
+        take: 50
+      })
+    : [];
+
   return (
     <StudentAttendanceClient 
       attendances={attendances}
@@ -79,9 +87,11 @@ export default async function StudentAttendancePage({
       overallStats={overallStats}
       theorySchedule={theorySchedule}
       practicalSchedule={practicalSchedule}
+      extraClasses={extraClasses}
       settings={settings}
       tenant={tenant}
       workspace={workspace}
     />
   );
 }
+

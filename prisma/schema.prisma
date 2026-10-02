@@ -30,7 +30,7 @@ model User {
   accounts            Account[]
   sessions            Session[]
   workspaceRoles      WorkspaceRole[]
-  studentProfile      StudentProfile?
+  studentProfiles     StudentProfile[]
   notifications       Notification[]
   pushSubscriptions   PushSubscription[]
   passkeyCredentials  PasskeyCredential[]
@@ -120,6 +120,7 @@ model Workspace {
   practicalConfig        PracticalConfig?
   practicalSlots         PracticalSlot[]
   practicalSchedules     StudentPracticalSchedule[]
+  extraClasses           ExtraClassBooking[]
 
   // Visitor Analytics & Leads
   visitorSessions        VisitorSession[]
@@ -344,12 +345,57 @@ model StudentPracticalSchedule {
 }
 
 // ============================================
+// One-Time Extra Classes System
+// ============================================
+
+model ExtraClassBooking {
+  id               String           @id @default(cuid())
+  workspaceId      String
+  studentProfileId String
+  courseId         String?
+  batchId          String?
+
+  date             DateTime         // Specific calendar date (e.g. 2026-10-15)
+  startTime        String           // HH:MM (e.g. "14:00")
+  endTime          String           // HH:MM (e.g. "15:30")
+  type             AttendanceType   @default(PRACTICAL) // THEORY or PRACTICAL
+  topic            String?          // e.g. "Photoshop Layer Masks / Makeup Lab"
+
+  status           ExtraClassStatus @default(PENDING) // PENDING, APPROVED, REJECTED, COMPLETED, CANCELLED
+  requestedBy      String           @default("STUDENT") // STUDENT or ADMIN
+  rejectionReason  String?
+  approvedAt       DateTime?
+
+  attendanceMarked Boolean          @default(false)
+  attendanceStatus AttendanceStatus? // PRESENT, ABSENT
+  remarks          String?
+
+  workspace        Workspace        @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  student          StudentProfile   @relation(fields: [studentProfileId], references: [id], onDelete: Cascade)
+
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+
+  @@index([workspaceId, date])
+  @@index([studentProfileId])
+  @@index([status])
+}
+
+enum ExtraClassStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  COMPLETED
+  CANCELLED
+}
+
+// ============================================
 // Student & Parent Profiles
 // ============================================
 
 model StudentProfile {
   id          String  @id @default(cuid())
-  userId      String? @unique // Optional if account isn't created yet
+  userId      String? // Links to User account (supports multiple course enrollments per student)
   workspaceId String
   batchId     String?
   courseId    String?
@@ -416,11 +462,12 @@ model StudentProfile {
   examEnrollments ExamEnrollment[]
   registrations   StudentRegistration[]
   practicalSchedules StudentPracticalSchedule[]
+  extraClasses    ExtraClassBooking[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@unique([workspaceId, enrollmentNo])
+  @@index([workspaceId, enrollmentNo])
   @@index([workspaceId])
   @@index([batchId])
   @@index([courseId])

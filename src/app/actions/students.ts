@@ -20,12 +20,12 @@ export async function getStudents(workspaceId: string) {
             select: { name: true }
           },
           course: {
-            select: { title: true, duration: true }
+            select: { id: true, title: true, duration: true, feeAmount: true, totalCourseFee: true, installmentAmount: true, totalInstallments: true }
           },
           admissionApp: {
             select: { appliedCourse: true, createdAt: true, email: true, photoUrl: true, signatureUrl: true, idProofUrl: true }
           },
-          invoices: { select: { amount: true, status: true } },
+          invoices: { select: { amount: true, status: true, dueDate: true, feeType: true, installmentNo: true, notes: true } },
           attendances: { select: { status: true } },
           registrations: true,
           semesters: { include: { marks: true } }

@@ -12,21 +12,116 @@ const getCachedRegistrationConfig = unstable_cache(
   { revalidate: 1800, tags: ["registration-config"] }
 );
 
+export async function processPendingAutoCertificateIssues() {
+  try {
+    const config = await db.registrationConfig.findFirst();
+    if (!config || !config.autoQuickIssueEnabled) {
+      // Auto-issue is disabled by Super Admin; all requests strictly require manual review
+      return { success: true, processedCount: 0, mode: "manual" };
+    }
+
+    const delayMinutes = config.autoIssueAfterRequestMinutes || 60;
+    if (delayMinutes <= 0) {
+      return { success: true, processedCount: 0, mode: "disabled" };
+    }
+
+    const cutoffDate = new Date(Date.now() - delayMinutes * 60 * 1000);
+
+    const pendingStudents = await db.studentProfile.findMany({
+      where: {
+        documentIssueRequestedAt: {
+          lte: cutoffDate,
+          not: null
+        },
+        certificateApproved: false
+      },
+      include: {
+        course: true,
+        semesters: { include: { marks: true } },
+        workspace: true
+      },
+      take: 50
+    });
+
+    if (pendingStudents.length === 0) {
+      return { success: true, processedCount: 0 };
+    }
+
+    let processedCount = 0;
+
+    for (const student of pendingStudents) {
+      // 1. Duration check
+      if (student.course?.duration) {
+        const gapCheck = isValidIssueGap(student.admissionDate, student.course.duration);
+        if (!gapCheck.valid) continue;
+
+        const requiredCount = getRequiredMarksheetCount(student.course.duration);
+        const issuedCount = student.semesters.filter((s: any) => s.marksheetApproved || s.marksheetIssuedToStudent).length;
+        if (issuedCount < requiredCount) continue;
+      }
+
+      await db.$transaction(async (tx) => {
+        let currentConfig = await tx.registrationConfig.findFirst();
+        if (!currentConfig) currentConfig = await tx.registrationConfig.create({ data: {} });
+
+        let certNo = student.certificateNo;
+        if (!certNo) {
+          const padding = currentConfig.certificateDigits || 4;
+          certNo = `${currentConfig.certificatePrefix}${String(currentConfig.certificateNextSeq).padStart(padding, '0')}`;
+          await tx.registrationConfig.update({
+            where: { id: currentConfig.id },
+            data: { certificateNextSeq: currentConfig.certificateNextSeq + 1 }
+          });
+        }
+
+        await tx.studentProfile.update({
+          where: { id: student.id },
+          data: {
+            certificateNo: certNo,
+            certificateApproved: true,
+            status: "PASS_OUT"
+          }
+        });
+
+        if (student.workspaceId) {
+          await tx.notification.create({
+            data: {
+              workspaceId: student.workspaceId,
+              title: "Certificate Auto-Issued",
+              message: `Certificate for ${student.fullName} (${student.enrollmentNo}) has been automatically approved following the ${delayMinutes}-minute timer.`,
+              type: "DOCUMENT",
+              link: "/admin/students"
+            }
+          });
+        }
+      });
+
+      processedCount++;
+    }
+
+    if (processedCount > 0) {
+      revalidatePath("/super-admin/students");
+      revalidatePath("/");
+    }
+
+    return { success: true, processedCount };
+  } catch (error: any) {
+    console.error("Error in processPendingAutoCertificateIssues:", error);
+    return { success: false, error: error.message };
+  }
+}
+
 export async function getPendingDocumentRequestsCount() {
   try {
-    const config = await getCachedRegistrationConfig();
-    const minutes = config?.autoIssueAfterRequestMinutes || 60;
-    const thresholdDate = new Date();
-    thresholdDate.setMinutes(thresholdDate.getMinutes() - minutes);
+    // Process any due auto-issues first
+    await processPendingAutoCertificateIssues();
 
     const count = await db.studentProfile.count({
       where: {
         documentIssueRequestedAt: {
-          not: null,
-          gte: thresholdDate
+          not: null
         },
-        certificateApproved: false,
-        certificateIssuedToStudent: false
+        certificateApproved: false
       }
     });
     return { success: true, count };
@@ -35,6 +130,7 @@ export async function getPendingDocumentRequestsCount() {
     return { success: false, count: 0 };
   }
 }
+
 
 export async function issueStudentDocument(studentId: string, documentType: "MARKSHEET" | "CERTIFICATE" | "STUDENT_ID" | "ADMIT_CARD", status: boolean, semesterNumber?: number) {
   try {
@@ -168,7 +264,20 @@ export async function issueStudentDocument(studentId: string, documentType: "MAR
       where: { id: studentId },
       data
     });
+
+    if (documentType === "CERTIFICATE" && status === true && student.workspaceId) {
+      await db.notification.create({
+        data: {
+          workspaceId: student.workspaceId,
+          title: "Certificate Approved",
+          message: `Super Admin has approved the completion certificate for ${student.fullName} (${student.enrollmentNo}).`,
+          type: "DOCUMENT",
+          link: "/admin/students"
+        }
+      });
+    }
     
+    revalidatePath("/super-admin/students");
     revalidatePath("/");
     return { success: true, certificateNo: data.certificateNo };
   } catch (error: any) {
@@ -176,16 +285,69 @@ export async function issueStudentDocument(studentId: string, documentType: "MAR
   }
 }
 
+/**
+ * Super Admin one-click action to immediately issue a certificate before or without timer trigger.
+ */
+export async function quickApproveCertificate(studentId: string) {
+  try {
+    const res = await issueStudentDocument(studentId, "CERTIFICATE", true);
+    return res;
+  } catch (error: any) {
+    return { success: false, error: error.message || "Failed to approve certificate." };
+  }
+}
+
 export async function issueDocumentToStudent(studentId: string, documentType: "MARKSHEET" | "CERTIFICATE" | "STUDENT_ID" | "ADMIT_CARD", status: boolean, semesterNumber?: number) {
   try {
+    const student = await db.studentProfile.findUnique({
+      where: { id: studentId },
+      include: { course: true, semesters: { include: { marks: true } } }
+    });
+
+    if (!student) return { success: false, error: "Student not found" };
+
+    if (documentType === "CERTIFICATE") {
+      if (status === false && student.status === "PASS_OUT") {
+        return { success: false, error: "Cannot un-issue a certificate once the student has passed out." };
+      }
+      if (status === true && student.course?.duration) {
+        const gapCheck = isValidIssueGap(student.admissionDate, student.course.duration);
+        if (!gapCheck.valid) {
+          return { success: false, error: `Minimum course duration not met. Certificate can be issued after ${gapCheck.requiredDate.toLocaleDateString('en-GB')}` };
+        }
+        const requiredCount = getRequiredMarksheetCount(student.course.duration);
+        const issuedCount = student.semesters.filter((s: any) => s.marksheetApproved || s.marksheetIssuedToStudent).length;
+        if (issuedCount < requiredCount) {
+          return { success: false, error: `Cannot issue certificate. This course requires ${requiredCount} marksheets, but only ${issuedCount} are issued/approved.` };
+        }
+      }
+    }
+
+    if (documentType === "MARKSHEET" && semesterNumber && status === true) {
+      if (student.course?.duration) {
+        const gapCheck = isValidMarksheetGap(student.admissionDate, semesterNumber, student.course.duration);
+        if (!gapCheck.valid) {
+          return { success: false, error: `Minimum duration for Semester ${semesterNumber} not met. Marksheet can be issued after ${gapCheck.requiredDate.toLocaleDateString('en-GB')}` };
+        }
+      }
+
+      if (semesterNumber > 1) {
+        const prevSem = student.semesters.find((s: any) => s.semesterNumber === semesterNumber - 1);
+        if (!prevSem || (!prevSem.marksheetApproved && !prevSem.marksheetIssuedToStudent)) {
+          return { success: false, error: `Cannot issue Semester ${semesterNumber} marksheet because Semester ${semesterNumber - 1} marksheet is not yet issued/approved.` };
+        }
+      }
+
+      const sem = student.semesters.find((s: any) => s.semesterNumber === semesterNumber);
+      const expectedUnits = getExpectedUnitsForSemester(student.course, semesterNumber);
+      if (!sem || !sem.marks || sem.marks.length < expectedUnits) {
+        return { success: false, error: `Cannot issue marksheet. All ${expectedUnits} unit marks have not been entered for Semester ${semesterNumber} on the Exam page.` };
+      }
+    }
+
     if (documentType === "MARKSHEET" && semesterNumber) {
       if (status === true) {
-        // Find existing to check if the student already has a marksheetNo
-        const student = await db.studentProfile.findUnique({
-          where: { id: studentId }
-        });
-        
-        let marksheetNoToUse = student?.marksheetNo;
+        let marksheetNoToUse = student.marksheetNo;
 
         if (!marksheetNoToUse) {
           // Generate number in a transaction

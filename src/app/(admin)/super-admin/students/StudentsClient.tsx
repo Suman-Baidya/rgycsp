@@ -5,7 +5,8 @@ import { getActiveDocumentTemplates } from "@/app/actions/document-templates";
 import Link from "next/link";
 import {
   Users, GraduationCap, Building2, Search,
-  Eye, Pencil, ChevronLeft, ChevronRight, CheckCircle, FileText, Calendar, Mail, Phone, MoreHorizontal, User, UserCheck, Trash2, ShieldCheck, Download, ExternalLink, Settings, Save, Printer
+  Eye, Pencil, ChevronLeft, ChevronRight, CheckCircle, FileText, Calendar, Mail, Phone, MoreHorizontal, User, UserCheck, Trash2, ShieldCheck, Download, ExternalLink, Settings, Save, Printer,
+  Clock, Rocket, ShieldAlert
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -18,9 +19,10 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { AdminPageHeader } from "@/components/layout/AdminPageHeader";
 import { ImageUpload } from "@/components/ui/ImageUpload";
 import { updateStudent, toggleStudentActiveStatus, deleteStudent, adminUpdateStudentPassword } from "@/app/actions/students";
-import { issueStudentDocument, markStudentsAsNotPrinted } from "@/app/actions/student-documents";
+import { issueStudentDocument, markStudentsAsNotPrinted, quickApproveCertificate } from "@/app/actions/student-documents";
 import { registerStudent } from "@/app/actions/student-registration";
 import { updateRegistrationConfig } from "@/app/actions/registration-config";
+import { getDocumentStatus, getCertificateRequestInfo } from "@/lib/document-utils";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
@@ -43,7 +45,6 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import dynamic from "next/dynamic";
 import { DocumentRenderer, DocumentRendererRef } from "@/components/documents/DocumentRenderer";
 const BulkDocumentGenerator = dynamic(() => import("@/components/documents/BulkDocumentGenerator").then(mod => mod.BulkDocumentGenerator), { ssr: false });
-import { getDocumentStatus } from "@/lib/document-utils";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { ManageResultModal } from "@/components/students/ManageResultModal";
 import { useDebounce } from "@/hooks/useDebounce";
@@ -397,6 +398,21 @@ export default function StudentsClient({ initialStudents, initialWorkspaces, ini
     });
   }, [initialStudents, configData]);
 
+  const handleQuickIssueCertificate = async (studentId: string, studentName: string) => {
+    const toastId = toast.loading(`Issuing certificate for ${studentName}...`);
+    try {
+      const res = await quickApproveCertificate(studentId);
+      if (res.success) {
+        toast.success(`Certificate issued successfully! (Cert No: ${res.certificateNo || 'Generated'})`, { id: toastId });
+        router.refresh();
+      } else {
+        toast.error(res.error || "Failed to issue certificate.", { id: toastId });
+      }
+    } catch (err: any) {
+      toast.error(err.message || "An error occurred.", { id: toastId });
+    }
+  };
+
   const filteredStudents = useMemo(() => {
     const searchLower = debouncedSearch.toLowerCase().trim();
 
@@ -426,6 +442,7 @@ export default function StudentsClient({ initialStudents, initialWorkspaces, ini
       return (
         s.fullName?.toLowerCase().includes(searchLower) ||
         s.enrollmentNo?.toLowerCase().includes(searchLower) ||
+        (s.registrationNo && s.registrationNo.toLowerCase().includes(searchLower)) ||
         regNos.some((r: string) => r.includes(searchLower)) ||
         (s.applicationId && s.applicationId.toLowerCase().includes(searchLower)) ||
         (s.phone && s.phone.includes(searchLower)) ||
@@ -879,12 +896,21 @@ export default function StudentsClient({ initialStudents, initialWorkspaces, ini
                         )}
                       </div>
 
-                      {/* Quick Issue Delay */}
+                      {/* Franchise Certificate Request Automation */}
                       <div className="p-3.5 bg-slate-50 dark:bg-slate-800/30 rounded-xl border border-slate-100 dark:border-slate-800 col-span-1 md:col-span-2">
                         <div className="flex items-center justify-between mb-3">
                           <div>
-                            <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-0.5">Auto Quick Issue</label>
-                            <p className="text-[11px] text-slate-500">Automatically issue documents when a franchise clicks "Request Quick Issue".</p>
+                            <div className="flex items-center gap-2">
+                              <label className="text-xs font-bold text-slate-800 dark:text-slate-200 block">Certificate Request Auto-Issuance</label>
+                              <Badge variant="outline" className={cn("text-[9px] font-bold border-none", configData.autoQuickIssueEnabled ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300" : "bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300")}>
+                                {configData.autoQuickIssueEnabled ? "Automatic Timer" : "Manual Review Only"}
+                              </Badge>
+                            </div>
+                            <p className="text-[11px] text-slate-500 mt-0.5">
+                              {configData.autoQuickIssueEnabled 
+                                ? "Franchise requests start a countdown timer. If you don't manually approve beforehand, the certificate automatically issues when the timer expires."
+                                : "Franchise requests require your manual sign-off and will NEVER be issued automatically without your explicit approval."}
+                            </p>
                           </div>
                           <Switch 
                             checked={configData.autoQuickIssueEnabled}
@@ -893,15 +919,20 @@ export default function StudentsClient({ initialStudents, initialWorkspaces, ini
                           />
                         </div>
                         {configData.autoQuickIssueEnabled && (
-                          <div className="mt-3 pt-3 border-t border-slate-200 dark:border-slate-700">
-                            <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-0.5">Quick Issue Delay (Minutes)</label>
-                            <p className="text-[11px] text-slate-500 mb-2">Minutes to wait after a franchise admin clicks "Request Quick Issue" before auto-approving the documents.</p>
-                            <Input 
-                              type="number"
-                              value={configData.autoIssueAfterRequestMinutes} 
-                              onChange={e => setConfigData(prev => ({ ...prev, autoIssueAfterRequestMinutes: parseInt(e.target.value) || 0 }))}
-                              className="h-8 sm:h-9 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-lg max-w-sm text-xs"
-                            />
+                          <div className="mt-3 pt-3 border-t border-slate-200 dark:border-slate-700/60">
+                            <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-0.5">Auto-Issue Delay Timer (Minutes)</label>
+                            <p className="text-[11px] text-slate-500 mb-2">Duration to wait after a franchise admin submits a certificate issue request before the system automatically generates the certificate number and approves it.</p>
+                            <div className="flex items-center gap-2 max-w-sm">
+                              <Input 
+                                type="number"
+                                min={1}
+                                max={10080}
+                                value={configData.autoIssueAfterRequestMinutes} 
+                                onChange={e => setConfigData(prev => ({ ...prev, autoIssueAfterRequestMinutes: parseInt(e.target.value) || 0 }))}
+                                className="h-8 sm:h-9 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-lg text-xs"
+                              />
+                              <span className="text-xs text-slate-400 font-medium">Minutes</span>
+                            </div>
                           </div>
                         )}
                       </div>
@@ -1144,6 +1175,53 @@ export default function StudentsClient({ initialStudents, initialWorkspaces, ini
 
                       {/* Static Style Actions */}
                       <div className="flex items-center gap-1 w-full lg:w-auto mt-1 lg:mt-0 justify-end">
+                        {/* Certificate Request Action Pill & Instant Issue */}
+                        {(() => {
+                          const reqInfo = getCertificateRequestInfo(student, configData as any);
+                          if (!reqInfo.hasPendingRequest) return null;
+
+                          return (
+                            <div className="flex items-center gap-1.5 mr-1.5">
+                              {reqInfo.isAutoEnabled ? (
+                                <Tooltip>
+                                  <TooltipTrigger className="cursor-help p-0 border-none bg-transparent">
+                                    <Badge className="bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 text-[10px] font-bold px-2 py-0.5 gap-1 shrink-0">
+                                      <Clock className="w-2.5 h-2.5 animate-spin text-indigo-500" />
+                                      {reqInfo.isExpired ? "Auto-issuing..." : `Auto in ${reqInfo.minutesRemaining}m`}
+                                    </Badge>
+                                  </TooltipTrigger>
+                                  <TooltipContent className="text-xs">
+                                    <p className="font-semibold">Auto-Issuance Timer Active</p>
+                                    <p className="text-[10px] text-slate-300">Requested by franchise. Auto-issues in {reqInfo.minutesRemaining}m or click "Issue Now" to release immediately.</p>
+                                  </TooltipContent>
+                                </Tooltip>
+                              ) : (
+                                <Tooltip>
+                                  <TooltipTrigger className="cursor-help p-0 border-none bg-transparent">
+                                    <Badge className="bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800 text-[10px] font-bold px-2 py-0.5 gap-1 shrink-0">
+                                      <ShieldAlert className="w-2.5 h-2.5 text-amber-500" />
+                                      Manual Review
+                                    </Badge>
+                                  </TooltipTrigger>
+                                  <TooltipContent className="text-xs">
+                                    <p className="font-semibold">Manual Review Required</p>
+                                    <p className="text-[10px] text-slate-300">Franchise requested certificate issue. Automatic timer is OFF.</p>
+                                  </TooltipContent>
+                                </Tooltip>
+                              )}
+
+                              <Button
+                                size="sm"
+                                onClick={() => handleQuickIssueCertificate(student.id, student.fullName)}
+                                className="h-7 text-xs font-semibold px-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs gap-1"
+                                title="Issue Certificate Immediately"
+                              >
+                                <Rocket className="w-3 h-3" /> Issue Now
+                              </Button>
+                            </div>
+                          );
+                        })()}
+
                         {student.status === "UNREGISTERED" && (
                           <Button
                             variant="ghost"
@@ -1865,6 +1943,43 @@ export default function StudentsClient({ initialStudents, initialWorkspaces, ini
                           <Badge className="bg-amber-50 text-amber-600 dark:bg-amber-500/10 border-0 rounded-lg px-2.5 py-1 text-xs font-bold">Pending</Badge>
                         )}
                       </div>
+
+                      {(() => {
+                        const reqInfo = getCertificateRequestInfo(selectedStudentForDocs, configData as any);
+                        if (!reqInfo.hasPendingRequest) return null;
+
+                        return (
+                          <div className="mt-3 p-3 rounded-xl border border-indigo-200 dark:border-indigo-800/60 bg-indigo-50/60 dark:bg-indigo-950/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5">
+                            <div className="flex items-start gap-2">
+                              {reqInfo.isAutoEnabled ? (
+                                <Clock className="w-4 h-4 text-indigo-600 dark:text-indigo-400 shrink-0 mt-0.5 animate-spin" />
+                              ) : (
+                                <ShieldAlert className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+                              )}
+                              <div className="text-xs">
+                                <p className="font-semibold text-slate-800 dark:text-slate-200">
+                                  {reqInfo.isAutoEnabled ? "Franchise Requested • Auto-Issue Timer Active" : "Franchise Requested • Manual Review Required"}
+                                </p>
+                                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                                  {reqInfo.isAutoEnabled
+                                    ? `Requested on ${reqInfo.requestedAt?.toLocaleDateString('en-GB')}. Will auto-approve in ${reqInfo.minutesRemaining} minutes unless issued beforehand.`
+                                    : `Requested on ${reqInfo.requestedAt?.toLocaleDateString('en-GB')}. Automatic timer is OFF. Requires your explicit review and sign-off.`}
+                                </p>
+                              </div>
+                            </div>
+                            <Button
+                              size="sm"
+                              onClick={() => {
+                                handleQuickIssueCertificate(selectedStudentForDocs.id, selectedStudentForDocs.fullName);
+                                setDocsModalOpen(false);
+                              }}
+                              className="h-8 text-xs font-semibold px-3 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm shrink-0 gap-1.5"
+                            >
+                              <Rocket className="w-3.5 h-3.5" /> Issue Certificate Now
+                            </Button>
+                          </div>
+                        );
+                      })()}
                       
                       <div className="flex items-center justify-between pt-3 mt-2.5 border-t border-slate-100 dark:border-slate-800">
                         <div className="flex items-center gap-2">

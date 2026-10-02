@@ -18,23 +18,6 @@ export async function getStudentProfile(workspaceId: string, overrideProfileId?:
     let targetUserId = session.user.id;
 
     if (effectiveProfileId) {
-      const isGlobalAdmin = session.user.role === "SUPER_ADMIN" || 
-                            session.user.role === "SUPER_ADMIN_MANAGER" || 
-                            isDeveloperEmail(session.user.email) ||
-                            !!session.user.isDeveloper;
-      
-      let isFranchiseAdmin = false;
-      if (!isGlobalAdmin) {
-        const role = await db.workspaceRole.findFirst({
-          where: { workspaceId, userId: session.user.id }
-        });
-        isFranchiseAdmin = role?.role === "ADMIN" || role?.role === "MANAGER" || role?.role === "TEACHER";
-      }
-
-      if (!isGlobalAdmin && !isFranchiseAdmin) {
-        return { success: false, error: "Unauthorized to view other students." };
-      }
-
       const targetStudent = await db.studentProfile.findUnique({
         where: { id: effectiveProfileId },
         select: { userId: true, workspaceId: true }
@@ -43,7 +26,28 @@ export async function getStudentProfile(workspaceId: string, overrideProfileId?:
       if (!targetStudent || targetStudent.workspaceId !== workspaceId || !targetStudent.userId) {
          return { success: false, error: "Student not found." };
       }
-      
+
+      const isSelf = targetStudent.userId === session.user.id;
+
+      if (!isSelf) {
+        const isGlobalAdmin = session.user.role === "SUPER_ADMIN" || 
+                              session.user.role === "SUPER_ADMIN_MANAGER" || 
+                              isDeveloperEmail(session.user.email) ||
+                              !!session.user.isDeveloper;
+        
+        let isFranchiseAdmin = false;
+        if (!isGlobalAdmin) {
+          const role = await db.workspaceRole.findFirst({
+            where: { workspaceId, userId: session.user.id }
+          });
+          isFranchiseAdmin = role?.role === "ADMIN" || role?.role === "MANAGER" || role?.role === "TEACHER";
+        }
+
+        if (!isGlobalAdmin && !isFranchiseAdmin) {
+          return { success: false, error: "Unauthorized to view other students." };
+        }
+      }
+
       targetUserId = targetStudent.userId;
     }
 
@@ -53,7 +57,8 @@ export async function getStudentProfile(workspaceId: string, overrideProfileId?:
         workspaceRoles: {
           where: { workspaceId }
         },
-        studentProfile: {
+        studentProfiles: {
+          where: { workspaceId },
           include: {
             invoices: {
               orderBy: { createdAt: 'desc' }
@@ -79,7 +84,8 @@ export async function getStudentProfile(workspaceId: string, overrideProfileId?:
                 slot: true
               }
             }
-          }
+          },
+          orderBy: { createdAt: 'desc' }
         }
       }
     });
@@ -91,14 +97,70 @@ export async function getStudentProfile(workspaceId: string, overrideProfileId?:
       return { success: false, error: "Access denied. Not a student of this workspace." };
     }
 
-    if (user.studentProfile && !user.studentProfile.isActive) {
+    const profiles = user.studentProfiles || [];
+    let activeProfile = null;
+    if (effectiveProfileId) {
+      activeProfile = profiles.find(p => p.id === effectiveProfileId);
+    }
+    const studentSelectedProfileId = cookieStore.get("active_student_profile_id")?.value;
+    if (!activeProfile && studentSelectedProfileId) {
+      activeProfile = profiles.find(p => p.id === studentSelectedProfileId);
+    }
+    if (!activeProfile) {
+      // Prioritize active registered course (status !== PASS_OUT and status !== DROPPED)
+      activeProfile = profiles.find(p => p.status === "REGISTERED") ||
+                      profiles.find(p => p.status === "UNREGISTERED") ||
+                      profiles.find(p => p.status !== "PASS_OUT") ||
+                      profiles[0] || null;
+    }
+
+    if (activeProfile && !activeProfile.isActive) {
       return { success: false, error: "Your account is temporarily paused. Please contact your center admin." };
     }
 
-    return { success: true, data: user };
+    const userPayload: any = {
+      ...user,
+      studentProfile: activeProfile,
+      studentProfiles: profiles
+    };
+
+    return { success: true, data: userPayload };
   } catch (error: any) {
     console.error("Error fetching student profile:", error);
     return { success: false, error: "Failed to fetch profile." };
+  }
+}
+
+export async function setActiveStudentCourse(profileId: string) {
+  try {
+    const session = await auth();
+    if (!session?.user) return { success: false, error: "Not authenticated" };
+
+    const profile = await db.studentProfile.findUnique({
+      where: { id: profileId },
+      select: { userId: true, status: true }
+    });
+
+    if (!profile || profile.userId !== session.user.id) {
+      return { success: false, error: "Invalid course profile." };
+    }
+
+    if (profile.status === "PASS_OUT") {
+      return { success: false, error: "Completed courses cannot be set as active." };
+    }
+
+    const cookieStore = await cookies();
+    cookieStore.set("active_student_profile_id", profileId, {
+      path: "/",
+      maxAge: 60 * 60 * 24 * 30, // 30 days
+      httpOnly: false,
+      sameSite: "lax"
+    });
+
+    return { success: true };
+  } catch (error: any) {
+    console.error("Error setting active student course:", error);
+    return { success: false, error: "Failed to switch active course." };
   }
 }
 

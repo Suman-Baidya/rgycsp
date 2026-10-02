@@ -1,4 +1,4 @@
-﻿import { findWorkspaceByTenant } from "@/lib/workspace";
+import { findWorkspaceByTenant } from "@/lib/workspace";
 import { auth } from "@/auth";
 import Link from "next/link";
 import { StudentSidebar } from "@/components/layout/StudentSidebar";
@@ -17,10 +17,8 @@ export default async function StudentLayout({
   children: React.ReactNode;
   params: Promise<{ tenant: string }>;
 }) {
-  console.log(">>> [DEBUG] REACHED StudentLayout");
   const session = await auth();
   const { tenant } = await params;
-  console.log(">>> [DEBUG] StudentLayout tenant:", tenant, "session user:", session?.user?.email || session?.user?.name || "NONE");
 
   if (!session) {
     const loginUrl = await getServerTenantLink("/login", tenant);
@@ -28,7 +26,8 @@ export default async function StudentLayout({
     redirect(`${loginUrl}?callbackUrl=${encodeURIComponent(callbackUrl)}`);
   }
 
-  const workspace = await findWorkspaceByTenant(tenant, { include: { siteSettings: true }
+  const workspace = await findWorkspaceByTenant(tenant, { 
+    include: { siteSettings: true }
   });
 
   if (!workspace) {
@@ -36,16 +35,44 @@ export default async function StudentLayout({
     redirect(target);
   }
 
-  const studentProfile = await db.studentProfile.findFirst({
-    where: { userId: session.user.id, workspaceId: workspace.id },
-    include: { course: true, batch: { include: { course: true } } }
-  });
-  
-  const currentCourseName = studentProfile?.course?.title || studentProfile?.batch?.course?.title || "Enrolled Learner";
+  const cookieStore = await cookies();
+  const selectedProfileId = cookieStore.get("active_student_profile_id")?.value;
+  const impersonatedProfileId = cookieStore.get("impersonated_profile_id")?.value;
+  const effectiveProfileId = impersonatedProfileId || selectedProfileId;
 
-  const homeHref = await getServerTenantLink("/", tenant);
+  const allProfiles = await db.studentProfile.findMany({
+    where: { userId: session.user.id, workspaceId: workspace.id },
+    include: { course: true, batch: { include: { course: true } } },
+    orderBy: { createdAt: "desc" }
+  });
+
+  // Filter ONLY active courses (Rule: no passed-out course in top dropdown)
+  const activeProfiles = allProfiles.filter(p => p.status !== "PASS_OUT" && p.status !== "SUSPENDED");
+
+  let currentProfile = null;
+  if (effectiveProfileId) {
+    currentProfile = allProfiles.find(p => p.id === effectiveProfileId) || null;
+  }
+  if (!currentProfile) {
+    currentProfile = activeProfiles.find(p => p.status === "REGISTERED") ||
+                     activeProfiles.find(p => p.status === "UNREGISTERED") ||
+                     activeProfiles[0] ||
+                     allProfiles[0] || null;
+  }
+
+  const currentCourseName = currentProfile?.course?.title || currentProfile?.batch?.course?.title || "Enrolled Learner";
+
+  const activeCoursesList = activeProfiles.map(p => ({
+    id: p.id,
+    courseTitle: p.course?.title || p.batch?.course?.title || "Course",
+    registrationNo: p.registrationNo,
+    enrollmentNo: p.enrollmentNo,
+    status: p.status,
+    batchName: p.batch?.name || null
+  }));
+
   const workspaceBase = await getServerWorkspaceBase(tenant);
-  const impersonatedUserName = (await cookies()).get("impersonated_user_name")?.value;
+  const impersonatedUserName = cookieStore.get("impersonated_user_name")?.value;
   const userName = impersonatedUserName || session.user.name || "Student";
 
   return (
@@ -67,9 +94,11 @@ export default async function StudentLayout({
           userName={userName}
           userImage={session.user.image}
           currentCourseName={currentCourseName}
-          enrollmentNo={studentProfile?.enrollmentNo}
-          registrationNo={studentProfile?.registrationNo}
+          enrollmentNo={currentProfile?.enrollmentNo}
+          registrationNo={currentProfile?.registrationNo}
           workspaceId={workspace.id}
+          activeCourses={activeCoursesList}
+          currentProfileId={currentProfile?.id}
         />
 
         <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-6 custom-scrollbar bg-slate-50/50 dark:bg-transparent">
