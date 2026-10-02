@@ -229,18 +229,18 @@ export const DocumentRenderer = forwardRef<DocumentRendererRef, DocumentRenderer
         case "issuerName": return student?.issuerName || (student?.workspace?.name ? student.workspace.name : "Central Head Office Administration");
         case "issuerRole": return student?.issuerRole || (student?.workspace ? "Center Director / Head of Institute" : "Controller of Examinations & Central Secretary");
         case "issuerSign": {
-          if (student?.isSuperAdmin) return "";
+          if (student?.issuerSign) return student.issuerSign;
+          if (student?.isSuperAdmin) return student?.superAdminSign || "";
           if (student?.franchiseAdminSign) return student.franchiseAdminSign;
           if (student?.workspace && (student.workspace.signatureUrl || student.workspace.ownerSignatureUrl)) {
             return student.workspace.signatureUrl || student.workspace.ownerSignatureUrl;
           }
           return "";
         }
-        case "superAdminSign": return "";
+        case "superAdminSign": return student?.superAdminSign || "";
         case "franchiseAdminSign":
         case "centerHeadSign":
         case "franchiseOwnerSign": {
-          if (student?.isSuperAdmin) return "";
           return student?.franchiseAdminSign || student?.workspace?.signatureUrl || student?.workspace?.ownerSignatureUrl || "";
         }
         case "officialSeal": return student?.officialSeal || student?.workspace?.logoUrl || "/logo.png";
@@ -594,7 +594,7 @@ export const DocumentRenderer = forwardRef<DocumentRendererRef, DocumentRenderer
 
             let displayValue = mappedValue;
             if (item.type === "text") {
-              const templateStr = item.textContent !== undefined ? item.textContent : `{${item.name}}`;
+              const templateStr = item.textContent !== undefined ? item.textContent : (item.customValue !== undefined ? item.customValue : `{${item.name}}`);
               displayValue = templateStr.replace(/\{(\w+)\}/g, (_: string, key: string) => {
                 return mapVariable(key) || "";
               });

@@ -128,6 +128,13 @@ export default async function StudentNoticesPage({
     });
   }
 
+  // Fetch active Super Admin signature for Head Office notice rendering
+  const saUser = await db.user.findFirst({
+    where: { role: "SUPER_ADMIN", signatureUrl: { not: null } },
+    select: { signatureUrl: true },
+  });
+  const superAdminSignature = saUser?.signatureUrl || null;
+
   return (
     <StudentNoticesClient 
       notices={combinedNotices}
@@ -135,7 +142,7 @@ export default async function StudentNoticesPage({
       tenant={tenant}
       workspace={workspace}
       noticepadTemplate={noticepadTemplate}
-      superAdminSignature={null}
+      superAdminSignature={superAdminSignature}
     />
   );
 }

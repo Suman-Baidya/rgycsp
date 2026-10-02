@@ -205,7 +205,7 @@ export async function saveExampleData(data: Record<string, string>, workspaceId:
 
 export async function getAllNoticepadTemplates(workspaceId: string | null = null) {
   try {
-    return await db.documentTemplate.findMany({
+    let templates = await db.documentTemplate.findMany({
       where: {
         type: "NOTICE_PAD",
         isActive: true,
@@ -216,8 +216,235 @@ export async function getAllNoticepadTemplates(workspaceId: string | null = null
       },
       orderBy: { updatedAt: "desc" },
     });
+
+    if (templates.length > 0) return templates;
+
+    // Check if any template exists anywhere in DB
+    const anyNoticepad = await db.documentTemplate.findFirst({
+      where: { type: "NOTICE_PAD" },
+      orderBy: { updatedAt: "desc" },
+    });
+    if (anyNoticepad) return [anyNoticepad];
+
+    // Seed default professional A4 Notice Pad template
+    const defaultTemplate = await createDefaultNoticepadTemplate();
+    return defaultTemplate ? [defaultTemplate] : [];
   } catch (error) {
     console.error("Failed to fetch noticepad templates:", error);
     return [];
+  }
+}
+
+export async function createDefaultNoticepadTemplate() {
+  try {
+    const config = [
+      {
+        id: "ntc-seal-logo",
+        name: "officialSeal",
+        type: "image",
+        x: 45,
+        y: 40,
+        width: 70,
+        height: 70,
+      },
+      {
+        id: "ntc-org-title",
+        name: "custom_header",
+        type: "text",
+        x: 130,
+        y: 40,
+        width: 615,
+        height: 28,
+        fontSize: 18,
+        fontWeight: "bold",
+        fontFamily: "Inter",
+        color: "#1e3a8a",
+        textContent: "RASHTRIYA GRAMIN YUVA COMPUTER SAKSHARTA PROGRAM",
+      },
+      {
+        id: "ntc-org-sub",
+        name: "custom_subtitle",
+        type: "text",
+        x: 130,
+        y: 70,
+        width: 615,
+        height: 18,
+        fontSize: 10,
+        fontWeight: "bold",
+        fontFamily: "Inter",
+        color: "#475569",
+        textContent: "CENTRAL HEAD OFFICE & EXAMINATION BOARD • GOVT. RECOGNIZED NATIONWIDE",
+      },
+      {
+        id: "ntc-org-affil",
+        name: "custom_affil",
+        type: "text",
+        x: 130,
+        y: 90,
+        width: 615,
+        height: 16,
+        fontSize: 9,
+        fontWeight: "normal",
+        fontFamily: "Inter",
+        color: "#64748b",
+        textContent: "Autonomous Institution Registered under NITI Aayog & MCA • ISO 9001:2015 Certified",
+      },
+      {
+        id: "ntc-ref-no",
+        name: "noticeRefNo",
+        type: "text",
+        x: 45,
+        y: 130,
+        width: 380,
+        height: 20,
+        fontSize: 11,
+        fontWeight: "bold",
+        fontFamily: "Inter",
+        color: "#0f172a",
+        textContent: "Ref: {noticeRefNo}",
+      },
+      {
+        id: "ntc-date",
+        name: "noticeDate",
+        type: "text",
+        x: 560,
+        y: 130,
+        width: 190,
+        height: 20,
+        fontSize: 11,
+        fontWeight: "bold",
+        fontFamily: "Inter",
+        color: "#0f172a",
+        textContent: "Date: {noticeDate}",
+      },
+      {
+        id: "ntc-recipient",
+        name: "noticeRecipient",
+        type: "text",
+        x: 45,
+        y: 165,
+        width: 705,
+        height: 22,
+        fontSize: 12,
+        fontWeight: "bold",
+        fontFamily: "Inter",
+        color: "#334155",
+        textContent: "To: {noticeRecipient}",
+      },
+      {
+        id: "ntc-title",
+        name: "noticeTitle",
+        type: "text",
+        x: 45,
+        y: 205,
+        width: 705,
+        height: 35,
+        fontSize: 16,
+        fontWeight: "bold",
+        fontFamily: "Inter",
+        color: "#0f172a",
+        textContent: "{noticeTitle}",
+      },
+      {
+        id: "ntc-body",
+        name: "noticeBody",
+        type: "text",
+        x: 45,
+        y: 255,
+        width: 705,
+        height: 480,
+        fontSize: 13,
+        fontWeight: "normal",
+        fontFamily: "Inter",
+        color: "#1e293b",
+        lineHeight: 1.6,
+        textContent: "{noticeBody}",
+      },
+      {
+        id: "ntc-official-seal",
+        name: "officialSeal",
+        type: "image",
+        x: 70,
+        y: 770,
+        width: 85,
+        height: 85,
+      },
+      {
+        id: "ntc-qr",
+        name: "qrCode",
+        type: "qrcode",
+        x: 350,
+        y: 770,
+        width: 85,
+        height: 85,
+        qrContentTemplate: "{noticeRefNo} - {noticeTitle}",
+      },
+      {
+        id: "ntc-sign",
+        name: "issuerSign",
+        type: "signature",
+        x: 560,
+        y: 755,
+        width: 140,
+        height: 50,
+      },
+      {
+        id: "ntc-sign-name",
+        name: "issuerName",
+        type: "text",
+        x: 520,
+        y: 815,
+        width: 230,
+        height: 20,
+        fontSize: 11,
+        fontWeight: "bold",
+        fontFamily: "Inter",
+        color: "#0f172a",
+        textContent: "{issuerName}",
+      },
+      {
+        id: "ntc-sign-role",
+        name: "issuerRole",
+        type: "text",
+        x: 520,
+        y: 835,
+        width: 230,
+        height: 18,
+        fontSize: 10,
+        fontWeight: "normal",
+        fontFamily: "Inter",
+        color: "#475569",
+        textContent: "{issuerRole}",
+      },
+      {
+        id: "ntc-footer-note",
+        name: "custom_footer",
+        type: "text",
+        x: 45,
+        y: 930,
+        width: 705,
+        height: 20,
+        fontSize: 9,
+        fontWeight: "normal",
+        fontFamily: "Inter",
+        color: "#94a3b8",
+        textContent: "Official Institutional Notification • Digitally verified and archived on central academic portal.",
+      },
+    ];
+
+    return await db.documentTemplate.create({
+      data: {
+        name: "Official A4 Institutional Noticepad",
+        type: "NOTICE_PAD",
+        width: 794,
+        height: 1123,
+        config,
+        isActive: true,
+        workspaceId: null,
+      },
+    });
+  } catch (err) {
+    console.error("Failed to create default noticepad template:", err);
+    return null;
   }
 }

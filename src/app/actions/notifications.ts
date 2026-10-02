@@ -207,6 +207,35 @@ export async function getNotifications(param?: string | NotificationQueryOptions
       } catch (err) {
         console.error("Error checking pending enquiries count:", err);
       }
+
+      // (f) Pending Franchise Center Requests & Inquiries
+      try {
+        const pendingFrRequests = await db.notification.count({
+          where: {
+            type: "REQUEST",
+            targetAudience: "SUPER_ADMIN",
+            isRead: false,
+          },
+        });
+        if (pendingFrRequests > 0) {
+          sidebarNotices.push({
+            id: "sidebar-requests-pending",
+            title: "Franchise Support Requests",
+            message: `${pendingFrRequests} franchise center request${pendingFrRequests > 1 ? "s" : ""} awaiting response.`,
+            type: "WARNING",
+            link: "/super-admin/events-notices?tab=franchise-requests",
+            isRead: false,
+            createdAt: new Date().toISOString(),
+            category: "sidebar",
+            badgeText: `${pendingFrRequests} New`,
+            badgeColor: "rose",
+            actionText: "Manage Requests",
+            count: pendingFrRequests,
+          });
+        }
+      } catch (err) {
+        console.error("Error checking pending franchise requests:", err);
+      }
     }
 
     // ==========================================================
@@ -403,6 +432,9 @@ export async function getNotifications(param?: string | NotificationQueryOptions
           where: {
             userId: userId,
             isRead: false,
+            NOT: {
+              type: "REQUEST",
+            },
           },
           orderBy: { createdAt: "desc" },
           take: 10,

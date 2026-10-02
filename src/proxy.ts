@@ -6,7 +6,6 @@ import { isDeveloperEmail } from './lib/developer';
 const { auth } = NextAuth(authConfig);
 
 export default auth((req) => {
-  console.log(">>> [PROXY.TS]", req.nextUrl.pathname, "Host:", req.headers.get("host"));
   const url = req.nextUrl;
   const isLoggedIn = !!req.auth;
   const userRole = req.auth?.user?.role;
@@ -152,16 +151,17 @@ export default auth((req) => {
     // If subdomains are disabled on the platform (e.g. Vercel free tier without wildcard DNS),
     // redirect incoming subdomain traffic to canonical root domain subdirectory URL
     if (isSubdirectoryOnly) {
+      const proto = req.nextUrl.protocol || (cleanHost === 'localhost' || isIp ? 'http:' : 'https:');
       if (tenant === 'super-admin') {
-        const redirectUrl = new URL(`/super-admin${path === "/" ? "" : path}`, `https://${localDomain}`);
+        const redirectUrl = new URL(`/super-admin${path === "/" ? "" : path}`, `${proto}//${localDomain}`);
         return NextResponse.redirect(redirectUrl, 307);
       }
       if (tenant === 'franchises' || tenant === 'franchise') {
-        const redirectUrl = new URL(`/franchises${path === "/" ? "" : path}`, `https://${localDomain}`);
+        const redirectUrl = new URL(`/franchises${path === "/" ? "" : path}`, `${proto}//${localDomain}`);
         return NextResponse.redirect(redirectUrl, 307);
       }
       if (tenant !== 'www' && tenant !== 'admin') {
-        const redirectUrl = new URL(`/app/${tenant}${path === "/" ? "" : path}`, `https://${localDomain}`);
+        const redirectUrl = new URL(`/app/${tenant}${path === "/" ? "" : path}`, `${proto}//${localDomain}`);
         return NextResponse.redirect(redirectUrl, 307);
       }
     }

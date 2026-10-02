@@ -38,6 +38,7 @@ import { getPendingWalletRequestsCount } from "@/app/actions/wallet";
 import { getDeveloperEmail } from "@/app/actions/logs";
 import { getPendingDocumentRequestsCount } from "@/app/actions/student-documents";
 import { getPendingEnquiriesCount } from "@/app/actions/enquiries";
+import { getPendingFranchiseRequestsCount } from "@/app/actions/events-notices";
 
 const navItems = [
   { name: "Overview", href: "/", icon: LayoutDashboard },
@@ -76,6 +77,7 @@ export function AdminSidebar({
   const [pendingWalletRequests, setPendingWalletRequests] = useState(0);
   const [pendingDocumentRequests, setPendingDocumentRequests] = useState(0);
   const [pendingEnquiries, setPendingEnquiries] = useState(0);
+  const [pendingRequests, setPendingRequests] = useState(0);
 
   // Session data passed from server layout
   const [developerEmail, setDeveloperEmail] = useState("");
@@ -98,16 +100,17 @@ export function AdminSidebar({
     fetchDevEmail();
   }, []);
 
-  // Fetch pending applications, orders, and enquiries count periodically
+  // Fetch pending applications, orders, requests, and enquiries count periodically
   useEffect(() => {
     const fetchPendingCount = async () => {
       try {
-        const [franchiseCount, ordersResult, walletResult, docRequestsResult, enquiriesCount] = await Promise.all([
+        const [franchiseCount, ordersResult, walletResult, docRequestsResult, enquiriesCount, requestsResult] = await Promise.all([
           getPendingFranchiseCount(),
           getPendingOrdersCount(),
           getPendingWalletRequestsCount(),
           getPendingDocumentRequestsCount(),
-          getPendingEnquiriesCount()
+          getPendingEnquiriesCount(),
+          getPendingFranchiseRequestsCount()
         ]);
         setPendingApplications(franchiseCount);
         if (ordersResult.success && ordersResult.count !== undefined) {
@@ -120,13 +123,27 @@ export function AdminSidebar({
           setPendingDocumentRequests(docRequestsResult.count);
         }
         setPendingEnquiries(enquiriesCount);
+        if (requestsResult?.success && requestsResult.count !== undefined) {
+          setPendingRequests(requestsResult.count);
+        }
       } catch (e) {
         console.error(e);
       }
     };
     fetchPendingCount();
     const intervalId = setInterval(fetchPendingCount, 30000); // refresh every 30s
-    return () => clearInterval(intervalId);
+
+    const handleRequestsUpdated = () => {
+      getPendingFranchiseRequestsCount().then((res) => {
+        if (res.success && res.count !== undefined) setPendingRequests(res.count);
+      });
+    };
+    window.addEventListener("franchise-requests-updated", handleRequestsUpdated);
+
+    return () => {
+      clearInterval(intervalId);
+      window.removeEventListener("franchise-requests-updated", handleRequestsUpdated);
+    };
   }, []);
 
   const toggleSidebar = () => setIsCollapsed(!isCollapsed);
@@ -237,6 +254,11 @@ export function AdminSidebar({
                       {item.href === "/enquiries" && pendingEnquiries > 0 && (
                         <span className="h-5 min-w-5 px-1.5 bg-red-500 text-white text-[10px] font-black rounded flex items-center justify-center animate-pulse shadow-[0_0_10px_rgba(239,68,68,0.5)]">
                           {pendingEnquiries}
+                        </span>
+                      )}
+                      {item.href === "/events-notices" && pendingRequests > 0 && (
+                        <span className="h-5 min-w-5 px-1.5 bg-rose-500 text-white text-[10px] font-black rounded flex items-center justify-center animate-pulse shadow-[0_0_10px_rgba(244,63,94,0.5)]">
+                          {pendingRequests}
                         </span>
                       )}
                       {item.href === "/franchises" && pendingApplications > 0 && (
@@ -375,6 +397,9 @@ export function AdminSidebar({
                     : "text-slate-500 hover:text-slate-900 dark:text-zinc-400 dark:hover:text-white"
                 )}>
                   <item.icon className={cn("h-5 w-5 transition-transform duration-200", isActive && "scale-110")} />
+                  {item.name === "Events & Notice" && pendingRequests > 0 && (
+                    <div className="absolute top-1 right-1 w-2.5 h-2.5 bg-rose-500 rounded-full animate-pulse shadow-[0_0_10px_rgba(244,63,94,0.5)]"></div>
+                  )}
                   {item.name === "Franchises" && pendingApplications > 0 && (
                     <div className="absolute top-1 right-1 w-2.5 h-2.5 bg-amber-500 rounded-full animate-pulse shadow-[0_0_10px_rgba(245,158,11,0.5)]"></div>
                   )}
@@ -448,6 +473,11 @@ export function AdminSidebar({
                         <item.icon className="h-5 w-5 shrink-0" />
                         <span className="font-medium text-sm flex-1 flex justify-between items-center">
                           {item.name}
+                          {item.name === "Events & Notice" && pendingRequests > 0 && (
+                            <span className="h-5 min-w-5 px-1.5 bg-rose-500 text-white text-[10px] font-black rounded-full flex items-center justify-center animate-pulse shadow-xs">
+                              {pendingRequests}
+                            </span>
+                          )}
                           {item.name === "Products" && pendingOrders > 0 && (
                             <span className="h-5 min-w-5 px-1.5 bg-red-500 text-white text-[10px] font-black rounded-full flex items-center justify-center animate-pulse shadow-xs">
                               {pendingOrders}

@@ -1,3 +1,4 @@
+﻿import { findWorkspaceByTenant } from "@/lib/workspace";
 import React from "react";
 import { notFound } from "next/navigation";
 import { db } from "@/lib/prisma";
@@ -21,9 +22,7 @@ export default async function FranchiseCampaignLeadPage({
   const resolvedSearchParams = await searchParams;
   const socialSource = resolvedSearchParams?.source || "social_campaign";
 
-  const workspace = await db.workspace.findUnique({
-    where: { subdomain: tenant?.toLowerCase() },
-    include: {
+  const workspace = await findWorkspaceByTenant(tenant, { include: {
       siteSettings: true
     }
   });

@@ -140,11 +140,21 @@ export async function getEventsAndNotices(workspaceId?: string | null) {
         take: 50,
       });
     } else if (isSuperAdmin) {
-      // Super Admin: Fetch all Broadcast Notices / Circulars
+      // Super Admin: Fetch ONLY notices sent BY Super Admin
+      // (workspaceId null = sent globally; OR sent to specific franchise by SA)
+      // We NEVER show franchise-internal notices (those have a workspaceId but
+      // targetAudience STUDENTS / STAFF / null — those are center-only).
       broadcastNotices = await db.notification.findMany({
         where: {
           type: { in: ["CIRCULAR", "NOTICE", "EVENT", "WARNING"] },
           userId: null,
+          // Only SA-originated: workspaceId null (global) OR targetAudience shows it was a SA broadcast to franchise(s)
+          OR: [
+            { workspaceId: null },
+            { targetAudience: { in: ["ALL_FRANCHISES", "SPECIFIC_FRANCHISE", "STUDENTS", "PUBLIC"] } },
+          ],
+          // Exclude franchise → super-admin requests (handled separately)
+          NOT: { targetAudience: "SUPER_ADMIN" },
         },
         include: {
           workspace: {
@@ -1227,3 +1237,227 @@ export async function cleanupExpiredNotices(options?: {
     return { success: false, error: error.message || "Failed to cleanup storage" };
   }
 }
+
+/**
+ * Franchise Admin submits a Request / Query to Super Admin
+ */
+export async function submitFranchiseRequest(data: {
+  workspaceId: string;
+  subject: string;
+  message: string;
+  priority?: "NORMAL" | "HIGH" | "URGENT";
+  category?: "General" | "Technical" | "Financial" | "Operational" | "Complaint";
+}) {
+  try {
+    const session = await auth();
+    if (!session?.user) return { success: false, error: "Unauthorized" };
+
+    // Verify user has access to this workspace
+    const hasAccess =
+      session.user.role === "SUPER_ADMIN" ||
+      session.user.role === "SUPER_ADMIN_MANAGER" ||
+      (await db.workspaceRole.findFirst({
+        where: { userId: session.user.id, workspaceId: data.workspaceId },
+      })) !== null;
+
+    if (!hasAccess) return { success: false, error: "Access denied" };
+
+    const workspace = await db.workspace.findUnique({
+      where: { id: data.workspaceId },
+      select: { name: true, centerCode: true, subdomain: true },
+    });
+
+    const request = await db.notification.create({
+      data: {
+        workspaceId: data.workspaceId,
+        userId: session.user.id,
+        title: data.subject.trim(),
+        message: data.message.trim(),
+        type: "REQUEST",
+        link: "/super-admin/events-notices?tab=requests",
+        isRead: false,
+        status: "PENDING",
+        priority: data.priority || "NORMAL",
+        targetAudience: "SUPER_ADMIN",
+        category: data.category || "General",
+        refNo: `REQ-${(workspace?.centerCode || data.workspaceId.slice(-4)).toUpperCase()}-${Date.now().toString(36).toUpperCase()}`,
+      },
+    });
+
+    revalidatePath("/super-admin/events-notices");
+    return { success: true, request, centerName: workspace?.name };
+  } catch (error: any) {
+    console.error("Failed to submit franchise request:", error);
+    return { success: false, error: error.message || "Failed to submit request" };
+  }
+}
+
+/**
+ * Get pending franchise requests count for Super Admin badges
+ */
+export async function getPendingFranchiseRequestsCount() {
+  try {
+    const count = await db.notification.count({
+      where: {
+        type: "REQUEST",
+        targetAudience: "SUPER_ADMIN",
+        isRead: false,
+      },
+    });
+    return { success: true, count };
+  } catch (error: any) {
+    console.error("Failed to get pending franchise requests count:", error);
+    return { success: false, count: 0 };
+  }
+}
+
+/**
+ * Get all franchise requests sent to Super Admin
+ */
+export async function getFranchiseRequests(workspaceId?: string | null) {
+  try {
+    const session = await auth();
+    if (!session?.user) return { success: false, error: "Unauthorized" };
+
+    const isSuperAdmin = session.user.role === "SUPER_ADMIN" || session.user.role === "SUPER_ADMIN_MANAGER";
+
+    let requests: any[] = [];
+
+    if (isSuperAdmin) {
+      // Super Admin sees ALL franchise requests
+      requests = await db.notification.findMany({
+        where: { type: "REQUEST", targetAudience: "SUPER_ADMIN" },
+        include: {
+          workspace: {
+            select: { id: true, name: true, subdomain: true, centerCode: true, district: true, state: true, logoUrl: true },
+          },
+          user: { select: { id: true, name: true, email: true, image: true } },
+        },
+        orderBy: { createdAt: "desc" },
+        take: 200,
+      });
+    } else if (workspaceId) {
+      // Franchise admin sees only their own requests
+      requests = await db.notification.findMany({
+        where: { type: "REQUEST", targetAudience: "SUPER_ADMIN", workspaceId },
+        include: {
+          user: { select: { id: true, name: true, email: true, image: true } },
+        },
+        orderBy: { createdAt: "desc" },
+        take: 100,
+      });
+    }
+
+    const pendingCount = requests.filter((r) => !r.isRead || r.status === "PENDING").length;
+    return { success: true, requests, pendingCount };
+  } catch (error: any) {
+    console.error("Failed to get franchise requests:", error);
+    return { success: false, error: error.message || "Failed to load requests", requests: [], pendingCount: 0 };
+  }
+}
+
+/**
+ * Super Admin updates request status and optionally sends resolution note back to Franchise Admin
+ */
+export async function updateFranchiseRequestStatus(data: {
+  requestId: string;
+  status: "PENDING" | "IN_PROGRESS" | "RESOLVED" | "REJECTED";
+  resolutionNote?: string;
+}) {
+  try {
+    const session = await auth();
+    if (!session?.user || (session.user.role !== "SUPER_ADMIN" && session.user.role !== "SUPER_ADMIN_MANAGER")) {
+      return { success: false, error: "Super Admin privileges required" };
+    }
+
+    const existing = await db.notification.findUnique({
+      where: { id: data.requestId },
+      include: { workspace: { select: { id: true, name: true, subdomain: true, centerCode: true } } },
+    });
+
+    if (!existing) {
+      return { success: false, error: "Request not found" };
+    }
+
+    const isResolvedOrClosed = data.status === "RESOLVED" || data.status === "REJECTED";
+    const noteText = data.resolutionNote?.trim();
+
+    // Append resolution note to message if provided
+    let updatedMessage = existing.message;
+    if (noteText) {
+      const stamp = new Date().toLocaleDateString("en-IN", {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+      const noteBlock = `\n\n--- [Head Office Response (${data.status}) - ${stamp}] ---\n${noteText}`;
+      if (!updatedMessage.includes(noteText)) {
+        updatedMessage = `${updatedMessage}${noteBlock}`;
+      }
+    }
+
+    await db.notification.update({
+      where: { id: data.requestId },
+      data: {
+        status: data.status,
+        isRead: isResolvedOrClosed,
+        message: updatedMessage,
+      },
+    });
+
+    // Notify Franchise Admin if resolution note was added or status updated
+    if (existing.workspaceId && noteText) {
+      try {
+        await db.notification.create({
+          data: {
+            workspaceId: existing.workspaceId,
+            userId: existing.userId || undefined,
+            title: `Update on Request ${existing.refNo || ""}: ${data.status}`,
+            message: noteText,
+            type: data.status === "RESOLVED" ? "SUCCESS" : data.status === "REJECTED" ? "WARNING" : "INFO",
+            link: `/admin/events-notices?tab=requests`,
+            isRead: false,
+            status: "PUBLISHED",
+            targetAudience: "STAFF",
+            category: "Support Update",
+            refNo: existing.refNo,
+          },
+        });
+      } catch (notifyErr) {
+        console.error("Failed to notify franchise of request resolution:", notifyErr);
+      }
+    }
+
+    revalidatePath("/super-admin/events-notices");
+    return { success: true };
+  } catch (error: any) {
+    console.error("Failed to update franchise request status:", error);
+    return { success: false, error: error.message || "Failed to update status" };
+  }
+}
+
+/**
+ * Super Admin marks a franchise request as read/resolved
+ */
+export async function markFranchiseRequestRead(requestId: string, isRead = true) {
+  try {
+    const session = await auth();
+    if (!session?.user || (session.user.role !== "SUPER_ADMIN" && session.user.role !== "SUPER_ADMIN_MANAGER")) {
+      return { success: false, error: "Super Admin privileges required" };
+    }
+    await db.notification.update({
+      where: { id: requestId },
+      data: {
+        isRead,
+        status: isRead ? "RESOLVED" : "PENDING",
+      },
+    });
+    revalidatePath("/super-admin/events-notices");
+    return { success: true };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+}
+

@@ -1,29 +1,76 @@
-import { db } from "@/lib/prisma";
-import { unstable_cache } from "next/cache";
+/**
+ * @file src/lib/workspace.ts
+ *
+ * SINGLE SOURCE OF TRUTH for looking up a workspace by tenant slug.
+ *
+ * WHY THIS EXISTS:
+ * The `[tenant]` URL segment can be any of three things:
+ *   1. The workspace `subdomain`  (e.g. "chandpara")
+ *   2. The workspace `centerCode` (e.g. "CHAN01" or "chandpara")
+ *   3. The workspace `id`         (UUID - used internally)
+ *
+ * Using findUnique({ where: { subdomain: slug } }) ONLY matches case 1.
+ * If the slug matches a centerCode but not a subdomain, the query returns
+ * null -> notFound() -> 404.  This was the root cause of the recurring
+ * "franchise sidebar links show 404" bug.
+ *
+ * ALWAYS use the helpers below instead of raw Prisma calls.
+ */
 
-export const getWorkspaceByTenant = (tenant: string) => {
-  if (!tenant) return Promise.resolve(null);
-  const normalized = tenant.toLowerCase().trim();
-  return unstable_cache(
-    async () => {
-      return await db.workspace.findFirst({
-        where: {
-          OR: [
-            { subdomain: normalized },
-            { centerCode: { equals: normalized, mode: 'insensitive' } },
-            { id: tenant }
-          ]
-        },
-        include: {
-          siteSettings: true,
-          admissionConfig: true,
-        },
-      });
-    },
-    [`workspace-tenant-${normalized}`],
-    {
-      tags: [`workspace-${normalized}`, "workspaces"],
-      revalidate: 1800, // Cache for 30 minutes in memory
-    }
-  )();
-};
+import { db } from "@/lib/prisma";
+
+/**
+ * Resolves the correct `where` clause for a workspace lookup
+ * from any tenant URL slug (subdomain / centerCode / id).
+ */
+export function tenantWhereClause(slug: string) {
+  const normalized = slug?.toLowerCase()?.trim();
+  return {
+    OR: [
+      { subdomain: normalized },
+      { centerCode: { equals: normalized, mode: "insensitive" as const } },
+      { id: slug },
+    ],
+  };
+}
+
+/**
+ * Finds a workspace by tenant slug (subdomain OR centerCode OR id).
+ *
+ * Use this in EVERY admin/student page instead of:
+ *   db.workspace.findUnique({ where: { subdomain: tenant } })
+ *
+ * @param slug    - The [tenant] URL param value
+ * @param options - Optional Prisma select or include object
+ *
+ * @example
+ * const workspace = await findWorkspaceByTenant(tenant, {
+ *   select: { id: true, name: true, subdomain: true }
+ * });
+ * if (!workspace) notFound();
+ */
+import { Prisma } from "@prisma/client";
+
+export async function findWorkspaceByTenant<T extends Prisma.WorkspaceFindFirstArgs = {}>(
+  slug: string,
+  options?: Prisma.SelectSubset<T, Prisma.WorkspaceFindFirstArgs>
+): Promise<Prisma.WorkspaceGetPayload<T> | null> {
+  return db.workspace.findFirst({
+    where: tenantWhereClause(slug),
+    ...(options as any),
+  }) as Promise<Prisma.WorkspaceGetPayload<T> | null>;
+}
+
+/**
+ * Alias for findWorkspaceByTenant that includes siteSettings by default.
+ * Used by [tenant]/layout.tsx and other places needing siteSettings.
+ *
+ * NEVER replace this with:
+ *   db.workspace.findUnique({ where: { subdomain: tenant } })
+ */
+export async function getWorkspaceByTenant(slug: string) {
+  return db.workspace.findFirst({
+    where: tenantWhereClause(slug),
+    include: { siteSettings: true },
+  });
+}

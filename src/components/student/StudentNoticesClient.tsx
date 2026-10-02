@@ -56,7 +56,9 @@ import { cn } from "@/lib/utils";
 import { useDebounce } from "@/hooks/useDebounce";
 import { DocumentRenderer, DocumentRendererRef } from "@/components/documents/DocumentRenderer";
 import { markNotificationAsRead } from "@/app/actions/notifications";
-import { normalizeNoticeCategory } from "@/components/documents/NoticepadDocumentViewer";
+import { normalizeCategory, NOTICE_CATEGORIES } from "@/lib/notice-categories";
+// Keep backward-compat alias used throughout this file
+const normalizeNoticeCategory = normalizeCategory;
 
 interface StudentNoticesClientProps {
   notices?: any[];
@@ -295,8 +297,8 @@ export default function StudentNoticesClient({
         : "All Enrolled Students & Concerned Candidates",
       issuerName: isHO ? "Central Head Office Directorate" : workspaceName,
       issuerRole: isHO ? "Central Secretary / Super Admin" : "Center Director / Authorized Head",
-      issuerSign: currentSign,
-      superAdminSign: "",
+      issuerSign: isHO ? (superAdminSignature || "") : currentSign,
+      superAdminSign: superAdminSignature || "",
       franchiseAdminSign: currentSign,
       centerHeadSign: currentSign,
       franchiseOwnerSign: currentSign,
@@ -304,10 +306,10 @@ export default function StudentNoticesClient({
       workspace: workspace || null,
       isSuperAdmin: isHO,
     };
-  }, [activeNotice, workspace, centerCode, workspaceName]);
+  }, [activeNotice, workspace, centerCode, workspaceName, superAdminSignature]);
 
-  // Available categories
-  const categories = ["all", "Academic", "Exams", "Holidays", "General"];
+  // Available categories (single source of truth from lib/notice-categories)
+  const categories = ["all", ...NOTICE_CATEGORIES];
 
   // Filtered and Sorted notices
   const filteredNotices = useMemo(() => {

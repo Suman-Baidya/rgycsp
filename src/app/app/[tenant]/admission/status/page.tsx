@@ -1,12 +1,11 @@
+﻿import { findWorkspaceByTenant } from "@/lib/workspace";
 import { db } from "@/lib/prisma";
 import { AdmissionStatusClient } from "./AdmissionStatusClient";
 
 export default async function AdmissionStatusPage({ params }: any) {
   const { tenant } = await params;
   
-  const workspace = await db.workspace.findUnique({
-    where: { subdomain: tenant?.toLowerCase() },
-    include: {
+  const workspace = await findWorkspaceByTenant(tenant, { include: {
        siteSettings: true
     }
   });

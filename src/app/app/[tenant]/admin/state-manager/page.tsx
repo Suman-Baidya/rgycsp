@@ -20,8 +20,15 @@ export default async function StateManagerPage({
   if (!session?.user) redirect(await getServerTenantLink("/login", tenant));
   
   // Find the workspace ID for this tenant
-  const workspace = await db.workspace.findUnique({
-    where: { subdomain: tenant.toLowerCase() },
+  const normalizedTenant = tenant?.toLowerCase()?.trim();
+  const workspace = await db.workspace.findFirst({
+    where: {
+      OR: [
+        { subdomain: normalizedTenant },
+        { centerCode: { equals: normalizedTenant, mode: 'insensitive' } },
+        { id: tenant }
+      ]
+    },
     select: { id: true, name: true, isStateManager: true }
   });
 

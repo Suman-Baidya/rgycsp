@@ -2,6 +2,38 @@
 
 This file defines the strict rules for developing within the multi-tenant ABCD Edu Hub platform. Follow these rules to avoid breaking navigation and context.
 
+## 0. CRITICAL: Tenant Workspace DB Lookup (GOLD RULE — prevents recurring 404 bug)
+
+> [!CAUTION]
+> **NEVER** write `db.workspace.findUnique({ where: { subdomain: tenant } })` directly in any page or server action.
+> The `[tenant]` URL param can be a `subdomain`, a `centerCode`, or an `id`. Querying by `subdomain` only will return `null` for any tenant whose URL slug is their `centerCode`, causing `notFound()` → 404 on every sub-page while the overview still works (because the layout uses a robust OR query).
+
+**ALWAYS use the shared helper from `@/lib/workspace`:**
+
+```ts
+import { findWorkspaceByTenant } from "@/lib/workspace";
+
+// With select:
+const workspace = await findWorkspaceByTenant(tenant, {
+  select: { id: true, name: true, subdomain: true }
+});
+if (!workspace) notFound();
+
+// With include:
+const workspace = await findWorkspaceByTenant(tenant, {
+  include: { siteSettings: true }
+});
+
+// No select/include (all fields):
+const workspace = await findWorkspaceByTenant(tenant);
+```
+
+The helper internally uses:
+```ts
+findFirst({ where: { OR: [{ subdomain }, { centerCode }, { id }] } })
+```
+
+
 ## 1. Multi-Tenant Routing Architecture
 The platform supports two concurrent routing modes. Your code MUST support both:
 - **Subdirectory Mode**: `domain.com/app/[tenant]/...`

@@ -1,3 +1,4 @@
+﻿import { findWorkspaceByTenant } from "@/lib/workspace";
 import { db } from "@/lib/prisma";
 import { notFound, redirect } from "next/navigation";
 import { WorkspaceNavbar } from "@/components/layout/WorkspaceNavbar";
@@ -30,9 +31,7 @@ export default async function AdmissionPage({
   // If student arrived from an inquiry/lead redirect, automatically open the application form directly
   const currentView = view || (courseId || name || phone ? "form" : "choice");
 
-  const workspace = await db.workspace.findUnique({
-    where: { subdomain: tenant?.toLowerCase() },
-    include: {
+  const workspace = await findWorkspaceByTenant(tenant, { include: {
       siteSettings: true,
       admissionConfig: true,
       courses: {

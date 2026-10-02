@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef, useMemo } from "react";
+import { normalizeCategory, NOTICE_CATEGORIES } from "@/lib/notice-categories";
 import {
   FileText,
   Plus,
@@ -102,14 +103,10 @@ export interface NoticeItem {
   } | null;
 }
 
-export function normalizeNoticeCategory(cat?: string | null): string {
-  if (!cat) return "General";
-  const c = cat.toLowerCase().trim();
-  if (/exam|test|admit/i.test(c)) return "Exams";
-  if (/holiday|vacation|closure/i.test(c)) return "Holidays";
-  if (/academic|course|batch|class/i.test(c)) return "Academic";
-  return "General";
-}
+
+/** @deprecated Use normalizeCategory from @/lib/notice-categories directly */
+export const normalizeNoticeCategory = normalizeCategory;
+export { NOTICE_CATEGORIES };
 
 interface NoticepadDocumentViewerProps {
   notices: NoticeItem[];
@@ -121,6 +118,7 @@ interface NoticepadDocumentViewerProps {
   workspacesList?: any[];
   onNoticeSelect?: (notice: NoticeItem) => void;
   onRefresh?: () => void;
+  showStatCards?: boolean;
   className?: string;
 }
 
@@ -135,6 +133,7 @@ export function NoticepadDocumentViewer({
   onNoticeSelect,
   onRefresh,
   className,
+  showStatCards = false,
 }: NoticepadDocumentViewerProps) {
   // Search & Filters State
   const [searchQuery, setSearchQuery] = useState("");
@@ -603,11 +602,14 @@ export function NoticepadDocumentViewer({
     return uniqueNotices.filter((n) => {
       // Search
       if (searchQuery.trim()) {
-        const q = searchQuery.toLowerCase();
+        const q = searchQuery.toLowerCase().trim();
         const matchesTitle = n.title?.toLowerCase().includes(q);
         const matchesMsg = n.message?.toLowerCase().includes(q);
         const matchesRef = n.refNo?.toLowerCase().includes(q);
-        const matchesWs = n.workspace?.name?.toLowerCase().includes(q);
+        const matchesWs =
+          n.workspace?.name?.toLowerCase().includes(q) ||
+          n.workspace?.centerCode?.toLowerCase().includes(q) ||
+          n.workspace?.subdomain?.toLowerCase().includes(q);
         if (!matchesTitle && !matchesMsg && !matchesRef && !matchesWs) return false;
       }
 
@@ -674,6 +676,7 @@ export function NoticepadDocumentViewer({
   return (
     <div className={cn("space-y-4 sm:space-y-5 pb-8 w-full mx-auto", className)}>
       {/* 1. TOP METRIC / STAT CARDS GRID */}
+      {showStatCards && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           <Card className="border border-slate-100 dark:border-white/5 shadow-sm rounded-xl overflow-hidden bg-white dark:bg-slate-900">
             <CardContent className="p-3.5 flex items-center justify-between">
@@ -739,6 +742,7 @@ export function NoticepadDocumentViewer({
             </CardContent>
           </Card>
         </div>
+      )}
 
         {/* 2. MAIN CONTENT CARD & TOOLBAR */}
         <Card className="border border-slate-200/80 dark:border-slate-800 rounded-xl shadow-sm overflow-hidden bg-white dark:bg-slate-900">

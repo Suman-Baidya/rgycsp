@@ -448,11 +448,13 @@ export async function getFranchiseAnalytics(tenantOrWorkspaceId: string, filters
   }
 
   // Find workspace
+  const normalized = tenantOrWorkspaceId?.toLowerCase()?.trim();
   const workspace = await db.workspace.findFirst({
     where: {
       OR: [
         { id: tenantOrWorkspaceId },
-        { subdomain: tenantOrWorkspaceId.toLowerCase() },
+        { subdomain: normalized },
+        { centerCode: { equals: normalized, mode: "insensitive" } },
       ],
     },
     select: { id: true, name: true, subdomain: true, centerCode: true },

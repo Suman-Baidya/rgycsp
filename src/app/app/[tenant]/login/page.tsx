@@ -1,3 +1,4 @@
+﻿import { findWorkspaceByTenant } from "@/lib/workspace";
 import { db } from "@/lib/prisma";
 import { LoginForm } from "@/components/auth/LoginForm";
 import { CustomThemeStyle } from "@/components/providers/CustomThemeStyle";
@@ -25,9 +26,7 @@ export default async function WorkspaceLoginPage({
     redirect(redirectUrl);
   }
 
-  const workspace = await db.workspace.findUnique({
-    where: { subdomain: tenant?.toLowerCase() },
-    include: { siteSettings: true }
+  const workspace = await findWorkspaceByTenant(tenant, { include: { siteSettings: true }
   });
 
   if (!workspace) redirect(await getServerTenantLink("/", tenant));

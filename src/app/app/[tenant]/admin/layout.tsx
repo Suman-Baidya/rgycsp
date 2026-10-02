@@ -11,6 +11,7 @@ import { db } from "@/lib/prisma";
 import { getPendingApplicationsCount } from "@/app/actions/admin-applications";
 import { getPendingFeePaymentsCount } from "@/app/actions/payments";
 import { getPendingEnquiriesCount } from "@/app/actions/enquiries";
+import { isDeveloperEmail } from "@/lib/developer";
 
 export default async function WorkspaceAdminLayout({
   children,
@@ -60,15 +61,21 @@ export default async function WorkspaceAdminLayout({
     }
     pendingEnquiriesCount = enquiriesCount;
 
-    if (session.user.role === "SUPER_ADMIN") {
-      userRole = "ADMIN"; // Super Admin gets full access in franchises
+    const isSuperOrDev = 
+      session.user.role === "SUPER_ADMIN" || 
+      session.user.role === "SUPER_ADMIN_MANAGER" ||
+      isDeveloperEmail(session.user.email) ||
+      Boolean((session.user as any)?.isDeveloper);
+
+    if (isSuperOrDev) {
+      userRole = "ADMIN"; // Super Admin and developers get full access in franchises
     }
 
     const roleRecord = await db.workspaceRole.findFirst({
       where: { userId: session.user.id, workspaceId: workspace.id }
     });
     
-    if (roleRecord && session.user.role !== "SUPER_ADMIN") {
+    if (roleRecord && !isSuperOrDev) {
       userRole = roleRecord.role;
       try {
         if (Array.isArray(roleRecord.permissions)) {

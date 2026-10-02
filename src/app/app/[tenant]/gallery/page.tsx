@@ -1,3 +1,4 @@
+﻿import { findWorkspaceByTenant } from "@/lib/workspace";
 import { db } from "@/lib/prisma";
 import { GalleryList } from "./GalleryList";
 import { WorkspacePageHeader } from "@/components/layout/WorkspacePageHeader";
@@ -12,9 +13,7 @@ export default async function GalleryPage({ params }: { params: Promise<{ tenant
   const { tenant } = await params;
   const session = await auth();
 
-  const workspace = await db.workspace.findUnique({
-    where: { subdomain: tenant?.toLowerCase() },
-    include: {
+  const workspace = await findWorkspaceByTenant(tenant, { include: {
       siteSettings: true,
       galleryItems: {
         where: { isActive: true },

@@ -346,8 +346,15 @@ export async function verifyPasskeyAuth(response: any, tenantSlug?: string) {
 
     // Strict tenant check
     if (tenantSlug && tenantSlug !== "super-admin" && tenantSlug !== "undefined") {
-      const workspace = await db.workspace.findUnique({
-        where: { subdomain: tenantSlug.toLowerCase() },
+      const normalized = tenantSlug.toLowerCase().trim();
+      const workspace = await db.workspace.findFirst({
+        where: {
+          OR: [
+            { subdomain: normalized },
+            { centerCode: { equals: normalized, mode: "insensitive" } },
+            { id: tenantSlug },
+          ],
+        },
       });
       if (!workspace) {
         return { success: false, error: "Invalid franchise workspace." };

@@ -1,3 +1,4 @@
+﻿import { findWorkspaceByTenant } from "@/lib/workspace";
 import { auth } from "@/auth";
 import Link from "next/link";
 import { StudentSidebar } from "@/components/layout/StudentSidebar";
@@ -27,9 +28,7 @@ export default async function StudentLayout({
     redirect(`${loginUrl}?callbackUrl=${encodeURIComponent(callbackUrl)}`);
   }
 
-  const workspace = await db.workspace.findUnique({
-    where: { subdomain: tenant?.toLowerCase() },
-    include: { siteSettings: true }
+  const workspace = await findWorkspaceByTenant(tenant, { include: { siteSettings: true }
   });
 
   if (!workspace) {

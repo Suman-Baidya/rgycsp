@@ -71,19 +71,19 @@ export function QuickActionFAB({ portal, tenant = "", workspaceBase = "" }: Quic
   const adminActions = [
     {
       label: "New Admission",
-      href: getTenantLink("/admin/students", tenant, pathname),
+      href: workspaceBase ? `${workspaceBase}/admin/students` : getTenantLink("/admin/students", tenant, pathname),
       icon: UserPlus,
       color: "bg-sky-600 text-white",
     },
     {
       label: "Daily Attendance",
-      href: getTenantLink("/admin/attendance", tenant, pathname),
+      href: workspaceBase ? `${workspaceBase}/admin/attendance` : getTenantLink("/admin/attendance", tenant, pathname),
       icon: CalendarCheck,
       color: "bg-emerald-600 text-white",
     },
     {
       label: "Fee Collection",
-      href: getTenantLink("/admin/fees", tenant, pathname),
+      href: workspaceBase ? `${workspaceBase}/admin/fees` : getTenantLink("/admin/fees", tenant, pathname),
       icon: Wallet,
       color: "bg-purple-600 text-white",
     },

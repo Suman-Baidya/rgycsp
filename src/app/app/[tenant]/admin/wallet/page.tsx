@@ -11,8 +11,15 @@ export default async function FranchiseWalletPage({
 }) {
   const { tenant } = await params;
   
-  const workspace = await prisma.workspace.findUnique({
-    where: { subdomain: tenant?.toLowerCase() }
+  const normalizedTenant = tenant?.toLowerCase()?.trim();
+  const workspace = await prisma.workspace.findFirst({
+    where: {
+      OR: [
+        { subdomain: normalizedTenant },
+        { centerCode: { equals: normalizedTenant, mode: 'insensitive' } },
+        { id: tenant }
+      ]
+    }
   });
 
   if (!workspace) {

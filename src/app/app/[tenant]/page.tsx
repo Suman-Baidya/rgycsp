@@ -1,3 +1,4 @@
+import { findWorkspaceByTenant } from "@/lib/workspace";
 import { db } from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import { WorkspaceNavbar } from "@/components/layout/WorkspaceNavbar";
@@ -24,9 +25,7 @@ export default async function InstituteLandingPage({
 }) {
   const { tenant } = await params;
 
-  const workspace = await db.workspace.findUnique({
-    where: { subdomain: tenant?.toLowerCase() }
-  });
+  const workspace = await findWorkspaceByTenant(tenant);
 
   if (!workspace) notFound();
 

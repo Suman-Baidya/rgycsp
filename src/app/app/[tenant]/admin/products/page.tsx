@@ -13,8 +13,15 @@ export default async function FranchiseProductsPage({
 }) {
   const { tenant } = await params;
   
-  const workspace = await db.workspace.findUnique({
-    where: { subdomain: tenant.toLowerCase() },
+  const normalizedTenant = tenant?.toLowerCase()?.trim();
+  const workspace = await db.workspace.findFirst({
+    where: {
+      OR: [
+        { subdomain: normalizedTenant },
+        { centerCode: { equals: normalizedTenant, mode: 'insensitive' } },
+        { id: tenant }
+      ]
+    },
     select: { id: true, name: true, shippingAddress: true }
   });
 

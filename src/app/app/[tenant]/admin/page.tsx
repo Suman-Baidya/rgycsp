@@ -46,9 +46,16 @@ function formatRelativeTime(date: Date | string): string {
 }
 
 const getCachedWorkspaceWithCounts = unstable_cache(
-  async (subdomain: string) => {
-    return db.workspace.findUnique({
-      where: { subdomain },
+  async (slug: string) => {
+    const normalized = slug?.toLowerCase()?.trim();
+    return db.workspace.findFirst({
+      where: {
+        OR: [
+          { subdomain: normalized },
+          { centerCode: { equals: normalized, mode: "insensitive" } },
+          { id: slug },
+        ],
+      },
       include: {
         _count: {
           select: {

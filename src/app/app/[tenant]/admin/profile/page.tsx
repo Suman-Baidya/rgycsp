@@ -19,8 +19,15 @@ export default async function ProfilePage(props: { params: Promise<{ tenant: str
     redirect(await getServerTenantLink("/login", tenant));
   }
 
-  const workspace = await db.workspace.findUnique({
-    where: { subdomain: tenant.toLowerCase() },
+  const normalizedTenant = tenant?.toLowerCase()?.trim();
+  const workspace = await db.workspace.findFirst({
+    where: {
+      OR: [
+        { subdomain: normalizedTenant },
+        { centerCode: { equals: normalizedTenant, mode: 'insensitive' } },
+        { id: tenant }
+      ]
+    },
     include: {
       siteSettings: true
     }

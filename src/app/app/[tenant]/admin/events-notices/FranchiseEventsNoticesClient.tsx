@@ -15,6 +15,7 @@ import {
   MapPin,
   ExternalLink,
   ShieldCheck,
+  ShieldAlert,
   CheckCircle2,
   AlertCircle,
   Megaphone,
@@ -29,7 +30,13 @@ import {
   ChevronLeft,
   ChevronRight,
   Printer,
-  FileText
+  FileText,
+  Inbox,
+  MessageSquare,
+  CheckCircle2 as CheckCircle2Icon,
+  Wrench,
+  Coins,
+  AlertTriangle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -48,6 +55,7 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { EventEditorDialog } from "@/components/events/EventEditorDialog";
 import { NoticepadDocumentViewer, normalizeNoticeCategory } from "@/components/documents/NoticepadDocumentViewer";
+import { NOTICE_CATEGORIES } from "@/lib/notice-categories";
 import {
   Table,
   TableHeader,
@@ -64,6 +72,8 @@ import {
   toggleEventStatus,
   saveCenterNotice,
   deleteCenterNotice,
+  submitFranchiseRequest,
+  getFranchiseRequests,
 } from "@/app/actions/events-notices";
 import type { NoticeItem } from "@/types/events-notices";
 
@@ -84,7 +94,7 @@ export default function FranchiseEventsNoticesClient({
   initialHost = "",
   isSubdomainMode = false,
 }: FranchiseEventsNoticesClientProps) {
-  const [activeTab, setActiveTab] = useState<"events" | "notices" | "circulars" | "noticepad">("events");
+  const [activeTab, setActiveTab] = useState<"events" | "notices" | "circulars" | "noticepad" | "requests">("events");
   const [selectedNoticeForPad, setSelectedNoticeForPad] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [events, setEvents] = useState<any[]>([]);
@@ -133,9 +143,85 @@ export default function FranchiseEventsNoticesClient({
   } | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
+  // Franchise → Super Admin Requests
+  const [myRequests, setMyRequests] = useState<any[]>([]);
+  const [isLoadingRequests, setIsLoadingRequests] = useState(false);
+  const [isSubmittingRequest, setIsSubmittingRequest] = useState(false);
+  const [requestSearchQuery, setRequestSearchQuery] = useState("");
+  const [requestStatusFilter, setRequestStatusFilter] = useState<"ALL" | "PENDING" | "IN_PROGRESS" | "RESOLVED" | "REJECTED">("ALL");
+  const [selectedRequestForView, setSelectedRequestForView] = useState<any | null>(null);
+  const [requestFormData, setRequestFormData] = useState({
+    subject: "",
+    message: "",
+    priority: "NORMAL" as "NORMAL" | "HIGH" | "URGENT",
+    category: "General" as "General" | "Technical" | "Financial" | "Operational" | "Complaint",
+  });
+
   useEffect(() => {
     loadData();
   }, [workspaceId]);
+
+  const loadRequests = async () => {
+    setIsLoadingRequests(true);
+    try {
+      const res = await getFranchiseRequests(workspaceId);
+      if (res.success) setMyRequests(res.requests || []);
+    } catch {}
+    finally { setIsLoadingRequests(false); }
+  };
+
+  const filteredMyRequests = useMemo(() => {
+    return myRequests.filter((req) => {
+      const status = (req.status || (req.isRead ? "RESOLVED" : "PENDING")).toUpperCase();
+      if (requestStatusFilter !== "ALL" && status !== requestStatusFilter) return false;
+      if (requestSearchQuery.trim()) {
+        const q = requestSearchQuery.toLowerCase();
+        const matchTitle = (req.title || "").toLowerCase().includes(q);
+        const matchMsg = (req.message || "").toLowerCase().includes(q);
+        const matchRef = (req.refNo || "").toLowerCase().includes(q);
+        const matchCat = (req.category || "").toLowerCase().includes(q);
+        if (!matchTitle && !matchMsg && !matchRef && !matchCat) return false;
+      }
+      return true;
+    });
+  }, [myRequests, requestStatusFilter, requestSearchQuery]);
+
+  const requestStats = useMemo(() => {
+    const total = myRequests.length;
+    const pending = myRequests.filter((r) => (r.status || (r.isRead ? "RESOLVED" : "PENDING")).toUpperCase() === "PENDING").length;
+    const inProgress = myRequests.filter((r) => (r.status || "").toUpperCase() === "IN_PROGRESS").length;
+    const resolved = myRequests.filter((r) => {
+      const s = (r.status || (r.isRead ? "RESOLVED" : "PENDING")).toUpperCase();
+      return s === "RESOLVED";
+    }).length;
+    return { total, pending, inProgress, resolved };
+  }, [myRequests]);
+
+  const handleSubmitRequest = async () => {
+    if (!requestFormData.subject.trim()) { toast.error("Please enter a subject"); return; }
+    if (!requestFormData.message.trim()) { toast.error("Please enter your message/request"); return; }
+    setIsSubmittingRequest(true);
+    try {
+      const res = await submitFranchiseRequest({
+        workspaceId,
+        subject: requestFormData.subject,
+        message: requestFormData.message,
+        priority: requestFormData.priority,
+        category: requestFormData.category,
+      });
+      if (res.success) {
+        toast.success("Your request has been sent to Head Office.");
+        setRequestFormData({ subject: "", message: "", priority: "NORMAL", category: "General" });
+        loadRequests();
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(new Event("franchise-requests-updated"));
+        }
+      } else {
+        toast.error(res.error || "Failed to send request");
+      }
+    } catch { toast.error("Failed to send request"); }
+    finally { setIsSubmittingRequest(false); }
+  };
 
   const loadData = async () => {
     setIsLoading(true);
@@ -415,36 +501,164 @@ export default function FranchiseEventsNoticesClient({
         </div>
       </AdminPageHeader>
 
-      {/* 2. Stat Cards Grid */}
+      {/* 2. Stat Cards Grid (Smart Dynamic Header) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        <StatCard
-          label="Total Events"
-          value={stats.totalEvents}
-          subtext={`${stats.centerEventsCount} Center + ${stats.headOfficeEventsCount} Head Office`}
-          icon={<CalendarDays className="h-5 w-5 text-blue-500" />}
-          color="blue"
-        />
-        <StatCard
-          label="Upcoming Programs"
-          value={stats.upcomingCount}
-          subtext="Active on center website"
-          icon={<Clock className="h-5 w-5 text-emerald-500" />}
-          color="emerald"
-        />
-        <StatCard
-          label="Center Notices"
-          value={stats.activeNoticesCount}
-          subtext="Live on ticker & student portal"
-          icon={<Megaphone className="h-5 w-5 text-indigo-500" />}
-          color="indigo"
-        />
-        <StatCard
-          label="Head Office Circulars"
-          value={stats.circularsCount}
-          subtext="Directives from Head Office"
-          icon={<ShieldCheck className="h-5 w-5 text-amber-500" />}
-          color="amber"
-        />
+        {activeTab === "requests" ? (
+          <>
+            <StatCard
+              label="Total Sent"
+              value={requestStats.total}
+              subtext="Support requests to Head Office"
+              icon={<MessageSquare className="h-5 w-5 text-indigo-500" />}
+              color="indigo"
+            />
+            <StatCard
+              label="Pending Review"
+              value={requestStats.pending}
+              subtext="Awaiting Head Office response"
+              icon={<Clock className="h-5 w-5 text-amber-500" />}
+              color="amber"
+            />
+            <StatCard
+              label="In Progress"
+              value={requestStats.inProgress}
+              subtext="Under active investigation"
+              icon={<RefreshCw className="h-5 w-5 text-sky-500" />}
+              color="sky"
+            />
+            <StatCard
+              label="Resolved"
+              value={requestStats.resolved}
+              subtext="Completed with resolution note"
+              icon={<CheckCircle2 className="h-5 w-5 text-emerald-500" />}
+              color="emerald"
+            />
+          </>
+        ) : activeTab === "noticepad" ? (
+          <>
+            <StatCard
+              label="Total Circulars"
+              value={centerNotices.length + headOfficeNotices.length}
+              subtext="Center notices & directives"
+              icon={<FileText className="h-5 w-5 text-indigo-500" />}
+              color="indigo"
+            />
+            <StatCard
+              label="Published & Live"
+              value={[...centerNotices, ...headOfficeNotices].filter((n: any) => n.status === "PUBLISHED" || (!n.status && (!n.scheduledFor || new Date(n.scheduledFor) <= new Date()))).length}
+              subtext="Active on A4 noticepad"
+              icon={<CheckCircle2 className="h-5 w-5 text-emerald-500" />}
+              color="emerald"
+            />
+            <StatCard
+              label="Scheduled Circulars"
+              value={[...centerNotices, ...headOfficeNotices].filter((n: any) => n.status === "SCHEDULED" || (n.scheduledFor && new Date(n.scheduledFor) > new Date())).length}
+              subtext="Scheduled for release"
+              icon={<Clock className="h-5 w-5 text-amber-500" />}
+              color="amber"
+            />
+            <StatCard
+              label="Urgent Directives"
+              value={[...centerNotices, ...headOfficeNotices].filter((n: any) => n.priority === "URGENT" || n.type === "WARNING").length}
+              subtext="High-priority compliance alerts"
+              icon={<ShieldAlert className="h-5 w-5 text-rose-500" />}
+              color="rose"
+            />
+          </>
+        ) : activeTab === "circulars" ? (
+          <>
+            <StatCard
+              label="Head Office Circulars"
+              value={stats.circularsCount}
+              subtext="Directives from Head Office"
+              icon={<ShieldCheck className="h-5 w-5 text-amber-500" />}
+              color="amber"
+            />
+            <StatCard
+              label="Urgent Directives"
+              value={headOfficeNotices.filter((n: any) => n.type === "WARNING").length}
+              subtext="High-priority compliance notices"
+              icon={<ShieldAlert className="h-5 w-5 text-rose-500" />}
+              color="rose"
+            />
+            <StatCard
+              label="General Directives"
+              value={headOfficeNotices.filter((n: any) => n.type !== "WARNING").length}
+              subtext="Standard institutional directives"
+              icon={<Megaphone className="h-5 w-5 text-indigo-500" />}
+              color="indigo"
+            />
+            <StatCard
+              label="Center Events"
+              value={stats.centerEventsCount}
+              subtext="Active center programs"
+              icon={<CalendarDays className="h-5 w-5 text-blue-500" />}
+              color="blue"
+            />
+          </>
+        ) : activeTab === "notices" ? (
+          <>
+            <StatCard
+              label="Center Notices"
+              value={stats.activeNoticesCount}
+              subtext="Live on ticker & student portal"
+              icon={<Megaphone className="h-5 w-5 text-indigo-500" />}
+              color="indigo"
+            />
+            <StatCard
+              label="Head Office Circulars"
+              value={stats.circularsCount}
+              subtext="Directives from Head Office"
+              icon={<ShieldCheck className="h-5 w-5 text-amber-500" />}
+              color="amber"
+            />
+            <StatCard
+              label="Center Events"
+              value={stats.centerEventsCount}
+              subtext="Organized by center"
+              icon={<CalendarDays className="h-5 w-5 text-blue-500" />}
+              color="blue"
+            />
+            <StatCard
+              label="Upcoming Programs"
+              value={stats.upcomingCount}
+              subtext="Active on center website"
+              icon={<Clock className="h-5 w-5 text-emerald-500" />}
+              color="emerald"
+            />
+          </>
+        ) : (
+          <>
+            <StatCard
+              label="Total Events"
+              value={stats.totalEvents}
+              subtext={`${stats.centerEventsCount} Center + ${stats.headOfficeEventsCount} Head Office`}
+              icon={<CalendarDays className="h-5 w-5 text-blue-500" />}
+              color="blue"
+            />
+            <StatCard
+              label="Upcoming Programs"
+              value={stats.upcomingCount}
+              subtext="Active on center website"
+              icon={<Clock className="h-5 w-5 text-emerald-500" />}
+              color="emerald"
+            />
+            <StatCard
+              label="Center Notices"
+              value={stats.activeNoticesCount}
+              subtext="Live on ticker & student portal"
+              icon={<Megaphone className="h-5 w-5 text-indigo-500" />}
+              color="indigo"
+            />
+            <StatCard
+              label="Head Office Circulars"
+              value={stats.circularsCount}
+              subtext="Directives from Head Office"
+              icon={<ShieldCheck className="h-5 w-5 text-amber-500" />}
+              color="amber"
+            />
+          </>
+        )}
       </div>
 
       {/* 3. Horizontal Navigation Tabs */}
@@ -500,10 +714,273 @@ export default function FranchiseEventsNoticesClient({
           <FileText className="w-3.5 h-3.5 text-amber-500" />
           Official Noticepad (A4)
         </button>
+
+        <button
+          onClick={() => { setActiveTab("requests"); loadRequests(); }}
+          className={cn(
+            "flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-medium shrink-0 whitespace-nowrap transition-all",
+            activeTab === "requests"
+              ? "bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 font-semibold shadow-inner"
+              : "text-slate-500 hover:text-slate-900 hover:bg-slate-50 dark:hover:text-white dark:hover:bg-slate-800/50"
+          )}
+        >
+          <Inbox className="w-3.5 h-3.5 text-indigo-500" />
+          Send Request to HO
+          {myRequests.filter(r => !r.isRead).length > 0 && (
+            <span className="ml-0.5 text-[9px] font-bold px-1 py-0.5 rounded bg-indigo-500 text-white">
+              {myRequests.filter(r => !r.isRead).length}
+            </span>
+          )}
+        </button>
       </div>
 
-      {/* 4. Main Content: Noticepad Document Viewer OR Tables */}
-      {activeTab === "noticepad" ? (
+      {/* 4. Main Content */}
+      {activeTab === "requests" ? (
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
+          {/* Send Request Form */}
+          <Card className="lg:col-span-2 border border-slate-200/80 dark:border-slate-800 rounded-xl shadow-sm bg-white dark:bg-slate-900">
+            <CardHeader className="p-4 border-b border-slate-100 dark:border-slate-800">
+              <CardTitle className="text-sm font-bold flex items-center gap-2">
+                <Inbox className="h-4 w-4 text-indigo-500" />
+                Send Request to Head Office
+              </CardTitle>
+              <CardDescription className="text-[11px]">Send queries, complaints, or requests directly to the Super Admin team.</CardDescription>
+            </CardHeader>
+            <CardContent className="p-4 space-y-3">
+              <div>
+                <Label className="text-xs font-semibold text-slate-600 dark:text-slate-400">Category</Label>
+                <Select
+                  value={requestFormData.category}
+                  onValueChange={(val: any) => setRequestFormData(p => ({ ...p, category: val }))}
+                >
+                  <SelectTrigger className="h-8 sm:h-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 mt-1">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="General" className="text-xs">General Inquiry</SelectItem>
+                    <SelectItem value="Technical" className="text-xs">Technical Support</SelectItem>
+                    <SelectItem value="Financial" className="text-xs">Financial & Wallet</SelectItem>
+                    <SelectItem value="Operational" className="text-xs">Center Operations</SelectItem>
+                    <SelectItem value="Complaint" className="text-xs">Grievance & Complaint</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label className="text-xs font-semibold text-slate-600 dark:text-slate-400">Priority</Label>
+                <Select
+                  value={requestFormData.priority}
+                  onValueChange={(val: any) => setRequestFormData(p => ({ ...p, priority: val }))}
+                >
+                  <SelectTrigger className="h-8 sm:h-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 mt-1">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="NORMAL" className="text-xs">Normal Priority</SelectItem>
+                    <SelectItem value="HIGH" className="text-xs">High Priority</SelectItem>
+                    <SelectItem value="URGENT" className="text-xs">Urgent Escalation</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label className="text-xs font-semibold text-slate-600 dark:text-slate-400">Subject</Label>
+                <Input
+                  placeholder="Brief summary of your request or issue..."
+                  value={requestFormData.subject}
+                  onChange={e => setRequestFormData(p => ({ ...p, subject: e.target.value }))}
+                  className="h-8 sm:h-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 mt-1"
+                />
+              </div>
+              <div>
+                <Label className="text-xs font-semibold text-slate-600 dark:text-slate-400">Message / Details</Label>
+                <Textarea
+                  placeholder="Provide complete details, references, or instructions for Head Office..."
+                  value={requestFormData.message}
+                  onChange={e => setRequestFormData(p => ({ ...p, message: e.target.value }))}
+                  rows={5}
+                  className="text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 resize-none mt-1"
+                />
+              </div>
+              <Button
+                onClick={handleSubmitRequest}
+                disabled={isSubmittingRequest}
+                className="w-full h-8 sm:h-9 text-xs font-semibold rounded-lg gap-2"
+              >
+                {isSubmittingRequest ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" />}
+                {isSubmittingRequest ? "Sending..." : "Submit to Head Office"}
+              </Button>
+            </CardContent>
+          </Card>
+
+          {/* Request History */}
+          <div className="lg:col-span-3 space-y-3">
+            {/* List & Toolbar Card */}
+            <Card className="border border-slate-200/80 dark:border-slate-800 rounded-xl shadow-sm bg-white dark:bg-slate-900 overflow-hidden">
+              <CardHeader className="p-3 sm:p-3.5 border-b border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+                <div className="relative w-full sm:max-w-[240px]">
+                  <Search className="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none h-3.5 w-3.5 text-slate-400" />
+                  <Input
+                    placeholder="Search my requests..."
+                    value={requestSearchQuery}
+                    onChange={e => setRequestSearchQuery(e.target.value)}
+                    className="h-8 pl-8 pr-2.5 bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700/60 rounded-lg text-xs"
+                  />
+                </div>
+                <div className="flex items-center gap-2">
+                  <Select
+                    value={requestStatusFilter}
+                    onValueChange={(val: any) => setRequestStatusFilter(val)}
+                  >
+                    <SelectTrigger className="h-8 text-xs font-medium rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700/60 w-[130px]">
+                      <SelectValue placeholder="All Status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="ALL" className="text-xs">All Status</SelectItem>
+                      <SelectItem value="PENDING" className="text-xs">Pending</SelectItem>
+                      <SelectItem value="IN_PROGRESS" className="text-xs">In Progress</SelectItem>
+                      <SelectItem value="RESOLVED" className="text-xs">Resolved</SelectItem>
+                      <SelectItem value="REJECTED" className="text-xs">Rejected</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={loadRequests}
+                    disabled={isLoadingRequests}
+                    className="h-8 w-8 rounded-lg p-0 text-slate-500 hover:text-slate-900 dark:hover:text-white"
+                    title="Refresh requests"
+                  >
+                    <RefreshCw className={cn("h-3.5 w-3.5", isLoadingRequests && "animate-spin")} />
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent className="p-0">
+                {isLoadingRequests ? (
+                  <div className="flex items-center justify-center h-44 text-xs text-slate-400 gap-2">
+                    <RefreshCw className="h-3.5 w-3.5 animate-spin" /> Loading requests...
+                  </div>
+                ) : filteredMyRequests.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center h-48 gap-2 text-slate-400">
+                    <Inbox className="h-8 w-8 opacity-30" />
+                    <p className="text-xs font-medium">No requests found</p>
+                    <p className="text-[10px]">
+                      {requestSearchQuery || requestStatusFilter !== "ALL"
+                        ? "Try clearing filters to view all requests."
+                        : "Use the form on the left to submit an inquiry to Head Office."}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="divide-y divide-slate-100 dark:divide-slate-800/60">
+                    {filteredMyRequests.map((req) => {
+                      const reqStatus = (req.status || (req.isRead ? "RESOLVED" : "PENDING")).toUpperCase();
+                      const statusColor =
+                        reqStatus === "PENDING"
+                          ? "border-l-amber-500"
+                          : reqStatus === "IN_PROGRESS"
+                          ? "border-l-sky-500"
+                          : reqStatus === "RESOLVED"
+                          ? "border-l-emerald-500"
+                          : "border-l-slate-400";
+
+                      return (
+                        <div
+                          key={req.id}
+                          className={cn(
+                            "p-3 sm:p-3.5 bg-white dark:bg-slate-900 hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-all border-l-[3px]",
+                            statusColor
+                          )}
+                        >
+                          <div className="flex items-start justify-between gap-2.5">
+                            <div className="min-w-0 flex-1">
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                <span className="font-semibold text-xs sm:text-sm text-slate-900 dark:text-white truncate">
+                                  {req.title}
+                                </span>
+                                {req.refNo && (
+                                  <span className="font-mono text-[9px] text-slate-400 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">
+                                    {req.refNo}
+                                  </span>
+                                )}
+                              </div>
+                              <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 line-clamp-2 leading-relaxed">
+                                {req.message}
+                              </p>
+                            </div>
+
+                            <div className="flex flex-col items-end gap-1 shrink-0">
+                              <Badge
+                                className={cn(
+                                  "text-[9px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider border-none",
+                                  reqStatus === "PENDING"
+                                    ? "bg-amber-100 text-amber-800 dark:bg-amber-950/50 dark:text-amber-300"
+                                    : reqStatus === "IN_PROGRESS"
+                                    ? "bg-sky-100 text-sky-800 dark:bg-sky-950/50 dark:text-sky-300"
+                                    : reqStatus === "RESOLVED"
+                                    ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300"
+                                    : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400"
+                                )}
+                              >
+                                {reqStatus}
+                              </Badge>
+                              <Badge
+                                variant="outline"
+                                className={cn(
+                                  "text-[9px] font-semibold px-1 py-0.2 rounded border",
+                                  req.priority === "URGENT"
+                                    ? "text-red-600 border-red-200 dark:border-red-900/50 bg-red-50/50 dark:bg-red-950/30"
+                                    : req.priority === "HIGH"
+                                    ? "text-amber-600 border-amber-200 dark:border-amber-900/50 bg-amber-50/50 dark:bg-amber-950/30"
+                                    : "text-slate-500 border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40"
+                                )}
+                              >
+                                {req.priority || "NORMAL"}
+                              </Badge>
+                            </div>
+                          </div>
+
+                          {/* Response highlight note if resolved or answered */}
+                          {req.resolutionNotes && (
+                            <div className="mt-2.5 p-2 rounded-lg bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-100 dark:border-emerald-900/40 text-[11px] text-emerald-800 dark:text-emerald-300 flex items-start gap-1.5">
+                              <CheckCircle2Icon className="h-3.5 w-3.5 text-emerald-600 shrink-0 mt-0.5" />
+                              <div className="min-w-0 flex-1">
+                                <span className="font-semibold">Head Office Response:</span>{" "}
+                                <span className="line-clamp-2">{req.resolutionNotes}</span>
+                              </div>
+                            </div>
+                          )}
+
+                          <div className="flex items-center justify-between gap-2 mt-2 pt-2 border-t border-slate-50 dark:border-slate-800/50">
+                            <div className="flex items-center gap-2 text-[10px] text-slate-400">
+                              <span className="font-medium text-slate-500 dark:text-slate-400">
+                                {req.category || "General"}
+                              </span>
+                              <span>•</span>
+                              <span>
+                                {new Date(req.createdAt).toLocaleDateString("en-GB", {
+                                  day: "numeric",
+                                  month: "short",
+                                  year: "numeric",
+                                })}
+                              </span>
+                            </div>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setSelectedRequestForView(req)}
+                              className="h-6 px-2 text-[10px] font-semibold text-primary hover:bg-primary/5 rounded"
+                            >
+                              <Eye className="h-3 w-3 mr-1" /> View Ticket
+                            </Button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      ) : activeTab === "noticepad" ? (
         <NoticepadDocumentViewer
           notices={[...centerNotices, ...headOfficeNotices]}
           selectedNoticeId={selectedNoticeForPad?.id || null}
@@ -1316,6 +1793,116 @@ export default function FranchiseEventsNoticesClient({
                 className="h-8 px-4 text-xs font-semibold rounded-lg"
               >
                 Close Directive
+              </Button>
+            </div>
+          </DialogContent>
+        )}
+      </Dialog>
+
+      {/* 8. Franchise Request Details Modal */}
+      <Dialog open={!!selectedRequestForView} onOpenChange={(open) => !open && setSelectedRequestForView(null)}>
+        {selectedRequestForView && (
+          <DialogContent className="max-w-xl p-0 overflow-hidden rounded-2xl border-slate-200 dark:border-slate-800">
+            <DialogHeader className="p-4 sm:p-5 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2">
+                  <div className="p-2 rounded-lg bg-primary/10 text-primary">
+                    <MessageSquare className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <DialogTitle className="text-sm sm:text-base font-bold text-slate-900 dark:text-white">
+                      {selectedRequestForView.title}
+                    </DialogTitle>
+                    {selectedRequestForView.refNo && (
+                      <p className="text-[10px] font-mono text-slate-400 mt-0.5">
+                        Ref: {selectedRequestForView.refNo}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                <Badge
+                  className={cn(
+                    "text-[9px] font-bold px-2 py-0.5 rounded uppercase tracking-wider border-none shrink-0",
+                    (selectedRequestForView.status || (selectedRequestForView.isRead ? "RESOLVED" : "PENDING")).toUpperCase() === "PENDING"
+                      ? "bg-amber-100 text-amber-800 dark:bg-amber-950/50 dark:text-amber-300"
+                      : (selectedRequestForView.status || "").toUpperCase() === "IN_PROGRESS"
+                      ? "bg-sky-100 text-sky-800 dark:bg-sky-950/50 dark:text-sky-300"
+                      : (selectedRequestForView.status || (selectedRequestForView.isRead ? "RESOLVED" : "PENDING")).toUpperCase() === "RESOLVED"
+                      ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300"
+                      : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400"
+                  )}
+                >
+                  {(selectedRequestForView.status || (selectedRequestForView.isRead ? "RESOLVED" : "PENDING")).toUpperCase()}
+                </Badge>
+              </div>
+            </DialogHeader>
+
+            <div className="p-4 sm:p-5 space-y-4 max-h-[70vh] overflow-y-auto">
+              {/* Meta row */}
+              <div className="grid grid-cols-3 gap-2 p-2.5 rounded-lg bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800 text-xs">
+                <div>
+                  <span className="text-[9px] font-bold uppercase tracking-wider text-slate-400 block">Category</span>
+                  <span className="font-semibold text-slate-700 dark:text-slate-300">{selectedRequestForView.category || "General"}</span>
+                </div>
+                <div>
+                  <span className="text-[9px] font-bold uppercase tracking-wider text-slate-400 block">Priority</span>
+                  <span className="font-semibold text-slate-700 dark:text-slate-300">{selectedRequestForView.priority || "NORMAL"}</span>
+                </div>
+                <div>
+                  <span className="text-[9px] font-bold uppercase tracking-wider text-slate-400 block">Submitted On</span>
+                  <span className="font-semibold text-slate-700 dark:text-slate-300">
+                    {new Date(selectedRequestForView.createdAt).toLocaleDateString("en-GB", {
+                      day: "numeric",
+                      month: "short",
+                      year: "numeric",
+                    })}
+                  </span>
+                </div>
+              </div>
+
+              {/* Message Details */}
+              <div>
+                <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5 block">
+                  Submitted Request Details
+                </Label>
+                <div className="p-3 rounded-lg bg-slate-50 dark:bg-slate-800/30 border border-slate-200/60 dark:border-slate-700/60 text-xs text-slate-800 dark:text-slate-200 whitespace-pre-wrap leading-relaxed">
+                  {selectedRequestForView.message}
+                </div>
+              </div>
+
+              {/* Head Office Response Section */}
+              <div>
+                <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5 block">
+                  Head Office Action & Remarks
+                </Label>
+                {selectedRequestForView.resolutionNotes ? (
+                  <div className="p-3 rounded-lg bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/50 text-xs text-emerald-900 dark:text-emerald-200 space-y-1.5">
+                    <div className="flex items-center gap-1.5 font-semibold text-emerald-800 dark:text-emerald-300">
+                      <CheckCircle2Icon className="h-4 w-4" />
+                      Official Response from Central Directorate:
+                    </div>
+                    <p className="whitespace-pre-wrap leading-relaxed">
+                      {selectedRequestForView.resolutionNotes}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="p-3 rounded-lg bg-amber-50/60 dark:bg-amber-950/20 border border-amber-200/60 dark:border-amber-900/30 text-xs text-amber-800 dark:text-amber-300 flex items-center gap-2">
+                    <Clock className="h-4 w-4 shrink-0" />
+                    <span>This ticket is currently queued for review with the Super Admin operations desk.</span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="p-3 sm:p-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 flex justify-end">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setSelectedRequestForView(null)}
+                className="h-8 px-4 text-xs font-semibold rounded-lg"
+              >
+                Close Ticket View
               </Button>
             </div>
           </DialogContent>

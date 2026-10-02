@@ -17,10 +17,16 @@ export default async function ExamDetailsPage({
 }) {
   const { tenant, examId } = await params;
   
-  const normalizedTenant = tenant?.toLowerCase();
+  const normalizedTenant = tenant?.toLowerCase()?.trim();
 
-  const workspace = await db.workspace.findUnique({
-    where: { subdomain: normalizedTenant }
+  const workspace = await db.workspace.findFirst({
+    where: {
+      OR: [
+        { subdomain: normalizedTenant },
+        { centerCode: { equals: normalizedTenant, mode: 'insensitive' } },
+        { id: tenant }
+      ]
+    }
   });
 
   if (!workspace) notFound();

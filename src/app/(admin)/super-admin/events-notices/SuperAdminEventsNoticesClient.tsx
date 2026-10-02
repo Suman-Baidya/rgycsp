@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useMemo } from "react";
+import { useSearchParams } from "next/navigation";
 import {
   CalendarDays,
   Bell,
@@ -37,7 +38,11 @@ import {
   ShieldAlert,
   FileText,
   RotateCcw,
-  Printer
+  Printer,
+  Inbox,
+  MessageSquare,
+  Wrench,
+  Coins,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -47,7 +52,7 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { AdminPageHeader } from "@/components/layout/AdminPageHeader";
 import { StatCard } from "@/components/dashboard/StatCard";
@@ -77,11 +82,15 @@ import {
   getNoticeConfig,
   saveNoticeConfig,
   cleanupExpiredNotices,
+  getFranchiseRequests,
+  markFranchiseRequestRead,
+  updateFranchiseRequestStatus,
 } from "@/app/actions/events-notices";
+import { NOTICE_CATEGORIES, REQUEST_CATEGORIES } from "@/lib/notice-categories";
 import type { NoticeRetentionConfig } from "@/types/events-notices";
 
 export function SuperAdminEventsNoticesClient() {
-  const [activeTab, setActiveTab] = useState<"events" | "notices" | "global-ticker" | "config" | "noticepad">("events");
+  const [activeTab, setActiveTab] = useState<"events" | "notices" | "global-ticker" | "config" | "noticepad" | "franchise-requests">("events");
   const [selectedNoticeForPad, setSelectedNoticeForPad] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [events, setEvents] = useState<any[]>([]);
@@ -112,7 +121,7 @@ export function SuperAdminEventsNoticesClient() {
   const [noticeFormData, setNoticeFormData] = useState({
     title: "",
     message: "",
-    target: "ALL_FRANCHISES" as "ALL_FRANCHISES" | "SPECIFIC_FRANCHISE" | "PUBLIC",
+    target: "ALL_FRANCHISES" as "ALL_FRANCHISES" | "SPECIFIC_FRANCHISE" | "ALL_STUDENTS" | "PUBLIC",
     workspaceIds: [] as string[],
     priority: "NORMAL" as "NORMAL" | "HIGH" | "URGENT",
     category: "General",
@@ -150,10 +159,36 @@ export function SuperAdminEventsNoticesClient() {
   } | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
+  // Franchise Requests
+  const searchParams = useSearchParams();
+  const tabParam = searchParams.get("tab");
+  const [franchiseRequests, setFfranchiseRequests] = useState<any[]>([]);
+  const [isLoadingFrRequests, setIsLoadingFrRequests] = useState(false);
+  const [frRequestFilter, setFrRequestFilter] = useState<"ALL" | "PENDING" | "IN_PROGRESS" | "RESOLVED" | "REJECTED">("ALL");
+  const [frCategoryFilter, setFrCategoryFilter] = useState<string>("ALL");
+  const [frWorkspaceFilter, setFrWorkspaceFilter] = useState("ALL");
+  const [frSearchQuery, setFrSearchQuery] = useState("");
+
+  // Manage Request Modal State
+  const [selectedRequestForManage, setSelectedRequestForManage] = useState<any | null>(null);
+  const [manageStatus, setManageStatus] = useState<"PENDING" | "IN_PROGRESS" | "RESOLVED" | "REJECTED">("PENDING");
+  const [resolutionNote, setResolutionNote] = useState("");
+  const [isSavingStatus, setIsSavingStatus] = useState(false);
+  const [isManageModalOpen, setIsManageModalOpen] = useState(false);
+
+  const pendingFrRequestsCount = franchiseRequests.filter(r => r.status === "PENDING" || (!r.status && !r.isRead)).length;
+
   useEffect(() => {
     loadData();
     loadNoticeConfig();
   }, []);
+
+  useEffect(() => {
+    if (tabParam === "franchise-requests" || tabParam === "requests") {
+      setActiveTab("franchise-requests");
+      loadFranchiseRequests();
+    }
+  }, [tabParam]);
 
   const loadData = async () => {
     setIsLoading(true);
@@ -190,6 +225,78 @@ export function SuperAdminEventsNoticesClient() {
     } finally {
       setIsLoadingConfig(false);
     }
+  };
+
+  const loadFranchiseRequests = async () => {
+    setIsLoadingFrRequests(true);
+    try {
+      const res = await getFranchiseRequests(null);
+      if (res.success) {
+        setFfranchiseRequests(res.requests || []);
+      }
+    } catch {}
+    finally { setIsLoadingFrRequests(false); }
+  };
+
+  const handleOpenManageModal = (req: any) => {
+    setSelectedRequestForManage(req);
+    setManageStatus((req.status as any) || (req.isRead ? "RESOLVED" : "PENDING"));
+    setResolutionNote("");
+    setIsManageModalOpen(true);
+  };
+
+  const handleSaveRequestStatus = async () => {
+    if (!selectedRequestForManage) return;
+    setIsSavingStatus(true);
+    try {
+      const res = await updateFranchiseRequestStatus({
+        requestId: selectedRequestForManage.id,
+        status: manageStatus,
+        resolutionNote: resolutionNote.trim() || undefined,
+      });
+      if (res.success) {
+        toast.success(`Request status updated to ${manageStatus}`);
+        setIsManageModalOpen(false);
+        setSelectedRequestForManage(null);
+        setResolutionNote("");
+        await loadFranchiseRequests();
+        window.dispatchEvent(new Event("franchise-requests-updated"));
+      } else {
+        toast.error(res.error || "Failed to update request");
+      }
+    } catch {
+      toast.error("Network error while updating request status");
+    } finally {
+      setIsSavingStatus(false);
+    }
+  };
+
+  const handleQuickToggleStatus = async (req: any) => {
+    const isCurrentlyResolved = req.status === "RESOLVED" || req.isRead;
+    const nextStatus = isCurrentlyResolved ? "PENDING" : "RESOLVED";
+    try {
+      const res = await updateFranchiseRequestStatus({
+        requestId: req.id,
+        status: nextStatus,
+      });
+      if (res.success) {
+        toast.success(nextStatus === "RESOLVED" ? "Request marked as Resolved" : "Request marked as Pending");
+        await loadFranchiseRequests();
+        window.dispatchEvent(new Event("franchise-requests-updated"));
+      } else {
+        toast.error(res.error || "Failed to update status");
+      }
+    } catch {
+      toast.error("Failed to update status");
+    }
+  };
+
+  const handleMarkRequestRead = async (requestId: string, isRead: boolean) => {
+    await markFranchiseRequestRead(requestId, isRead);
+    setFfranchiseRequests(prev =>
+      prev.map(r => r.id === requestId ? { ...r, isRead, status: isRead ? "RESOLVED" : "PENDING" } : r)
+    );
+    window.dispatchEvent(new Event("franchise-requests-updated"));
   };
 
   const handleSaveConfig = async () => {
@@ -378,6 +485,8 @@ export function SuperAdminEventsNoticesClient() {
 
         const targetSummary = noticeFormData.target === "ALL_FRANCHISES"
           ? "All Franchise Centers"
+          : noticeFormData.target === "ALL_STUDENTS"
+          ? "All Enrolled Students (Nationwide)"
           : noticeFormData.target === "PUBLIC"
           ? "Public Website Notice Ticker"
           : `${res.count || noticeFormData.workspaceIds.length} Franchise Centers`;
@@ -517,36 +626,164 @@ export function SuperAdminEventsNoticesClient() {
         </div>
       </AdminPageHeader>
 
-      {/* 2. Stat Cards Grid */}
+      {/* 2. Stat Cards Grid (Smart Dynamic Header) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        <StatCard
-          label="Total Events"
-          value={stats.totalEvents}
-          subtext={`${stats.globalEventsCount} Organized for All Franchises`}
-          icon={<CalendarDays className="h-5 w-5 text-blue-500" />}
-          color="blue"
-        />
-        <StatCard
-          label="Upcoming Events"
-          value={stats.upcomingCount}
-          subtext="Scheduled across all centers"
-          icon={<Clock className="h-5 w-5 text-emerald-500" />}
-          color="emerald"
-        />
-        <StatCard
-          label="Head Office Circulars"
-          value={stats.broadcastNoticesCount}
-          subtext="Active admin notices & directives"
-          icon={<Megaphone className="h-5 w-5 text-amber-500" />}
-          color="amber"
-        />
-        <StatCard
-          label="Storage Retention"
-          value={`${retentionConfig.retentionDays} Days`}
-          subtext={retentionConfig.autoCleanEnabled ? "Auto-Cleaning Active" : "Manual Cleanup Only"}
-          icon={<HardDrive className="h-5 w-5 text-indigo-500" />}
-          color="indigo"
-        />
+        {activeTab === "franchise-requests" ? (
+          <>
+            <StatCard
+              label="Total Inquiries"
+              value={franchiseRequests.length}
+              subtext="All franchise queries & support"
+              icon={<Inbox className="h-5 w-5 text-indigo-500" />}
+              color="indigo"
+            />
+            <StatCard
+              label="Pending Action"
+              value={franchiseRequests.filter(r => (r.status === "PENDING" || (!r.status && !r.isRead))).length}
+              subtext="Awaiting Head Office review"
+              icon={<Clock className="h-5 w-5 text-amber-500" />}
+              color="amber"
+            />
+            <StatCard
+              label="In Progress"
+              value={franchiseRequests.filter(r => r.status === "IN_PROGRESS").length}
+              subtext="Under investigation / processing"
+              icon={<RefreshCw className="h-5 w-5 text-sky-500" />}
+              color="sky"
+            />
+            <StatCard
+              label="Resolved / Closed"
+              value={franchiseRequests.filter(r => r.status === "RESOLVED" || r.status === "REJECTED" || (r.isRead && !r.status)).length}
+              subtext="Successfully answered / closed"
+              icon={<CheckCircle2 className="h-5 w-5 text-emerald-500" />}
+              color="emerald"
+            />
+          </>
+        ) : activeTab === "noticepad" ? (
+          <>
+            <StatCard
+              label="Total Circulars"
+              value={broadcastNotices.length}
+              subtext="A4 printable circulars"
+              icon={<FileText className="h-5 w-5 text-indigo-500" />}
+              color="indigo"
+            />
+            <StatCard
+              label="Published & Live"
+              value={broadcastNotices.filter((n) => n.status === "PUBLISHED" || (!n.status && (!n.scheduledFor || new Date(n.scheduledFor) <= new Date()))).length}
+              subtext="Active on franchise dashboards"
+              icon={<CheckCircle2 className="h-5 w-5 text-emerald-500" />}
+              color="emerald"
+            />
+            <StatCard
+              label="Scheduled Circulars"
+              value={broadcastNotices.filter((n) => n.status === "SCHEDULED" || (n.scheduledFor && new Date(n.scheduledFor) > new Date())).length}
+              subtext="Scheduled for release"
+              icon={<Clock className="h-5 w-5 text-amber-500" />}
+              color="amber"
+            />
+            <StatCard
+              label="Urgent Directives"
+              value={broadcastNotices.filter((n) => n.type === "WARNING" || n.priority === "URGENT").length}
+              subtext="High-priority compliance notices"
+              icon={<ShieldAlert className="h-5 w-5 text-rose-500" />}
+              color="rose"
+            />
+          </>
+        ) : activeTab === "config" ? (
+          <>
+            <StatCard
+              label="Total DB Records"
+              value={storageStats.totalNotifications}
+              subtext="Notifications in database"
+              icon={<Database className="h-5 w-5 text-indigo-500" />}
+              color="indigo"
+            />
+            <StatCard
+              label="Broadcast Circulars"
+              value={storageStats.broadcastCircularsCount}
+              subtext="Active system circulars"
+              icon={<Megaphone className="h-5 w-5 text-amber-500" />}
+              color="amber"
+            />
+            <StatCard
+              label="Eligible for Cleanup"
+              value={storageStats.eligibleForCleanupCount}
+              subtext={`Stale records > ${retentionConfig.retentionDays} days`}
+              icon={<Trash2 className="h-5 w-5 text-rose-500" />}
+              color="rose"
+            />
+            <StatCard
+              label="Storage Retention"
+              value={`${retentionConfig.retentionDays} Days`}
+              subtext={retentionConfig.autoCleanEnabled ? "Auto-Cleaning Active" : "Manual Cleanup Only"}
+              icon={<HardDrive className="h-5 w-5 text-blue-500" />}
+              color="blue"
+            />
+          </>
+        ) : activeTab === "notices" || activeTab === "global-ticker" ? (
+          <>
+            <StatCard
+              label="Head Office Circulars"
+              value={stats.broadcastNoticesCount}
+              subtext="Active admin notices & directives"
+              icon={<Megaphone className="h-5 w-5 text-amber-500" />}
+              color="amber"
+            />
+            <StatCard
+              label="Urgent Alerts"
+              value={stats.urgentNoticesCount}
+              subtext="Priority directives dispatched"
+              icon={<ShieldAlert className="h-5 w-5 text-rose-500" />}
+              color="rose"
+            />
+            <StatCard
+              label="Center Specific"
+              value={broadcastNotices.filter((n) => !!n.workspaceId).length}
+              subtext="Directives to individual centers"
+              icon={<Building2 className="h-5 w-5 text-indigo-500" />}
+              color="indigo"
+            />
+            <StatCard
+              label="Landing Ticker"
+              value={publicNotices.length}
+              subtext="Public announcements on website"
+              icon={<Globe className="h-5 w-5 text-emerald-500" />}
+              color="emerald"
+            />
+          </>
+        ) : (
+          <>
+            <StatCard
+              label="Total Events"
+              value={stats.totalEvents}
+              subtext={`${stats.globalEventsCount} Organized for All Franchises`}
+              icon={<CalendarDays className="h-5 w-5 text-blue-500" />}
+              color="blue"
+            />
+            <StatCard
+              label="Upcoming Events"
+              value={stats.upcomingCount}
+              subtext="Scheduled across all centers"
+              icon={<Clock className="h-5 w-5 text-emerald-500" />}
+              color="emerald"
+            />
+            <StatCard
+              label="Head Office Circulars"
+              value={stats.broadcastNoticesCount}
+              subtext="Active admin notices & directives"
+              icon={<Megaphone className="h-5 w-5 text-amber-500" />}
+              color="amber"
+            />
+            <StatCard
+              label="Storage Retention"
+              value={`${retentionConfig.retentionDays} Days`}
+              subtext={retentionConfig.autoCleanEnabled ? "Auto-Cleaning Active" : "Manual Cleanup Only"}
+              icon={<HardDrive className="h-5 w-5 text-indigo-500" />}
+              color="indigo"
+            />
+          </>
+        )}
       </div>
 
       {/* 3. Horizontal Navigation Tabs */}
@@ -618,10 +855,385 @@ export function SuperAdminEventsNoticesClient() {
           <FileText className="w-3.5 h-3.5 text-amber-500" />
           Official Noticepad (A4)
         </button>
+
+        <button
+          onClick={() => { setActiveTab("franchise-requests"); loadFranchiseRequests(); }}
+          className={cn(
+            "flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-medium shrink-0 whitespace-nowrap transition-all",
+            activeTab === "franchise-requests"
+              ? "bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 font-semibold shadow-inner"
+              : "text-slate-500 hover:text-slate-900 hover:bg-slate-50 dark:hover:text-white dark:hover:bg-slate-800/50"
+          )}
+        >
+          <Inbox className="w-3.5 h-3.5 text-indigo-500" />
+          Franchise Requests
+          {pendingFrRequestsCount > 0 && (
+            <span className="ml-0.5 text-[9px] font-bold px-1.5 py-0.5 rounded bg-red-500 text-white">
+              {pendingFrRequestsCount}
+            </span>
+          )}
+        </button>
       </div>
 
-      {/* 4. Main Content: Noticepad Document Viewer OR Tables/Config */}
-      {activeTab === "noticepad" ? (
+      {/* 4. Main Content */}
+      {activeTab === "franchise-requests" ? (
+        <div className="space-y-4">
+          <Card className="border border-slate-200/80 dark:border-slate-800 rounded-xl shadow-sm overflow-hidden bg-white dark:bg-slate-900">
+            {/* Filter Toolbar with Smart Search */}
+            <CardHeader className="p-3.5 sm:p-4 border-b border-slate-100 dark:border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-3">
+              <div className="relative w-full md:max-w-[380px] group">
+                <Search className="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none h-3.5 w-3.5 text-slate-400 group-focus-within:text-primary transition-colors" />
+                <Input
+                  placeholder="Search center name, code (e.g. WB-124), subject, or ref no..."
+                  value={frSearchQuery}
+                  onChange={(e) => setFrSearchQuery(e.target.value)}
+                  className="h-8 sm:h-9 pl-8 pr-3 bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700/60 rounded-lg font-normal text-[11px] sm:text-xs placeholder:text-slate-400"
+                />
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2">
+                <Select value={frRequestFilter} onValueChange={(v: any) => setFrRequestFilter(v)}>
+                  <SelectTrigger className="h-8 sm:h-9 text-xs font-medium rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700/60 w-[130px]">
+                    <SelectValue placeholder="Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="ALL">All Status</SelectItem>
+                    <SelectItem value="PENDING">Pending</SelectItem>
+                    <SelectItem value="IN_PROGRESS">In Progress</SelectItem>
+                    <SelectItem value="RESOLVED">Resolved</SelectItem>
+                    <SelectItem value="REJECTED">Closed / Rejected</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                <Select value={frCategoryFilter} onValueChange={(val: any) => setFrCategoryFilter(val)}>
+                  <SelectTrigger className="h-8 sm:h-9 text-xs font-medium rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700/60 w-[140px]">
+                    <SelectValue placeholder="Category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="ALL">All Categories</SelectItem>
+                    {REQUEST_CATEGORIES.map(c => (
+                      <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={loadFranchiseRequests}
+                  disabled={isLoadingFrRequests}
+                  className="h-8 sm:h-9 px-2.5 rounded-lg text-xs font-semibold gap-1.5"
+                  title="Reload Requests"
+                >
+                  <RefreshCw className={cn("h-3.5 w-3.5", isLoadingFrRequests && "animate-spin")} />
+                  <span className="hidden sm:inline">Refresh</span>
+                </Button>
+              </div>
+            </CardHeader>
+
+            <CardContent className="p-0">
+              {isLoadingFrRequests ? (
+                <div className="flex items-center justify-center h-44 text-xs text-slate-400 gap-2">
+                  <RefreshCw className="h-4 w-4 animate-spin text-indigo-500" />
+                  <span>Loading franchise requests...</span>
+                </div>
+              ) : franchiseRequests.filter(r => {
+                  const reqStatus = r.status || (r.isRead ? "RESOLVED" : "PENDING");
+                  if (frRequestFilter !== "ALL" && reqStatus !== frRequestFilter) return false;
+                  if (frCategoryFilter !== "ALL" && (r.category || "General") !== frCategoryFilter) return false;
+                  if (frSearchQuery.trim()) {
+                    const q = frSearchQuery.toLowerCase().trim();
+                    const titleMatch = (r.title || "").toLowerCase().includes(q);
+                    const msgMatch = (r.message || "").toLowerCase().includes(q);
+                    const refMatch = (r.refNo || "").toLowerCase().includes(q);
+                    const centerNameMatch = (r.workspace?.name || "").toLowerCase().includes(q);
+                    const centerCodeMatch = (r.workspace?.centerCode || "").toLowerCase().includes(q);
+                    const subdomainMatch = (r.workspace?.subdomain || "").toLowerCase().includes(q);
+                    const districtMatch = (r.workspace?.district || "").toLowerCase().includes(q);
+                    const submitterMatch = (r.user?.name || "").toLowerCase().includes(q) || (r.user?.email || "").toLowerCase().includes(q);
+                    if (!titleMatch && !msgMatch && !refMatch && !centerNameMatch && !centerCodeMatch && !subdomainMatch && !districtMatch && !submitterMatch) return false;
+                  }
+                  return true;
+                }).length === 0 ? (
+                <div className="flex flex-col items-center justify-center h-44 gap-2.5 text-slate-400 p-6 text-center">
+                  <Inbox className="h-9 w-9 opacity-25" />
+                  <p className="text-xs font-semibold text-slate-600 dark:text-slate-300">No requests found</p>
+                  <p className="text-[11px] text-slate-400 max-w-sm">No franchise center inquiries match your current search and filter selections.</p>
+                </div>
+              ) : (
+                <div className="divide-y divide-slate-100 dark:divide-slate-800/60">
+                  {franchiseRequests
+                    .filter(r => {
+                      const reqStatus = r.status || (r.isRead ? "RESOLVED" : "PENDING");
+                      if (frRequestFilter !== "ALL" && reqStatus !== frRequestFilter) return false;
+                      if (frCategoryFilter !== "ALL" && (r.category || "General") !== frCategoryFilter) return false;
+                      if (frSearchQuery.trim()) {
+                        const q = frSearchQuery.toLowerCase().trim();
+                        const titleMatch = (r.title || "").toLowerCase().includes(q);
+                        const msgMatch = (r.message || "").toLowerCase().includes(q);
+                        const refMatch = (r.refNo || "").toLowerCase().includes(q);
+                        const centerNameMatch = (r.workspace?.name || "").toLowerCase().includes(q);
+                        const centerCodeMatch = (r.workspace?.centerCode || "").toLowerCase().includes(q);
+                        const subdomainMatch = (r.workspace?.subdomain || "").toLowerCase().includes(q);
+                        const districtMatch = (r.workspace?.district || "").toLowerCase().includes(q);
+                        const submitterMatch = (r.user?.name || "").toLowerCase().includes(q) || (r.user?.email || "").toLowerCase().includes(q);
+                        if (!titleMatch && !msgMatch && !refMatch && !centerNameMatch && !centerCodeMatch && !subdomainMatch && !districtMatch && !submitterMatch) return false;
+                      }
+                      return true;
+                    })
+                    .map((req) => {
+                      const status = req.status || (req.isRead ? "RESOLVED" : "PENDING");
+                      const category = req.category || "General";
+
+                      // Clean Category Icon Component
+                      const CategoryIcon =
+                        category === "Technical" ? Wrench :
+                        category === "Financial" ? Coins :
+                        category === "Operational" ? Building2 :
+                        category === "Complaint" ? AlertTriangle :
+                        FileText;
+
+                      const categoryColor =
+                        category === "Technical" ? "text-sky-600 bg-sky-50 dark:bg-sky-950/40 border-sky-200 dark:border-sky-800/50" :
+                        category === "Financial" ? "text-emerald-600 bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800/50" :
+                        category === "Operational" ? "text-indigo-600 bg-indigo-50 dark:bg-indigo-950/40 border-indigo-200 dark:border-indigo-800/50" :
+                        category === "Complaint" ? "text-rose-600 bg-rose-50 dark:bg-rose-950/40 border-rose-200 dark:border-rose-800/50" :
+                        "text-slate-600 bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700";
+
+                      return (
+                        <div
+                          key={req.id}
+                          className={cn(
+                            "flex flex-col lg:flex-row items-start lg:items-center justify-between p-3.5 sm:p-4 hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-all gap-3.5 group border-l-[3px]",
+                            status === "RESOLVED" ? "border-emerald-500" :
+                            status === "IN_PROGRESS" ? "border-sky-500" :
+                            status === "REJECTED" ? "border-slate-400 dark:border-slate-600" :
+                            "border-amber-500"
+                          )}
+                        >
+                          <div className="flex items-start gap-3 min-w-0 flex-1">
+                            <div className={cn("w-9 h-9 rounded-lg border flex items-center justify-center shrink-0 shadow-xs", categoryColor)}>
+                              <CategoryIcon className="h-4 w-4" />
+                            </div>
+
+                            <div className="min-w-0 flex-1 space-y-1">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <p className="font-bold text-xs sm:text-sm text-slate-900 dark:text-white leading-tight">
+                                  {req.title}
+                                </p>
+                                {req.refNo && (
+                                  <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+                                    {req.refNo}
+                                  </span>
+                                )}
+                              </div>
+
+                              <p className="text-[11px] text-slate-600 dark:text-slate-400 line-clamp-2 leading-relaxed">
+                                {req.message}
+                              </p>
+
+                              <div className="flex items-center gap-2.5 pt-0.5 flex-wrap text-[10px]">
+                                {req.workspace && (
+                                  <span className="font-semibold text-indigo-600 dark:text-indigo-400 flex items-center gap-1 bg-indigo-50 dark:bg-indigo-950/40 px-2 py-0.5 rounded-md border border-indigo-100 dark:border-indigo-900/40">
+                                    <Building2 className="h-3 w-3" />
+                                    {req.workspace.name} {req.workspace.centerCode ? `[${req.workspace.centerCode}]` : ""}
+                                  </span>
+                                )}
+
+                                <Badge
+                                  variant="outline"
+                                  className={cn(
+                                    "text-[9px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider",
+                                    status === "RESOLVED" ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300" :
+                                    status === "IN_PROGRESS" ? "bg-sky-50 text-sky-700 border-sky-200 dark:bg-sky-950/40 dark:text-sky-300" :
+                                    status === "REJECTED" ? "bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800 dark:text-slate-300" :
+                                    "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-300"
+                                  )}
+                                >
+                                  {status === "IN_PROGRESS" ? "In Progress" : status}
+                                </Badge>
+
+                                <Badge
+                                  className={cn(
+                                    "text-[9px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider border-none",
+                                    req.priority === "URGENT" ? "bg-rose-100 text-rose-700 dark:bg-rose-950/50 dark:text-rose-300 font-extrabold" :
+                                    req.priority === "HIGH" ? "bg-amber-100 text-amber-700 dark:bg-amber-950/50 dark:text-amber-300" :
+                                    "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400"
+                                  )}
+                                >
+                                  {req.priority}
+                                </Badge>
+
+                                <span className="text-slate-400 font-medium">
+                                  {new Date(req.createdAt).toLocaleDateString("en-IN", {
+                                    day: "numeric",
+                                    month: "short",
+                                    year: "numeric",
+                                    hour: "2-digit",
+                                    minute: "2-digit"
+                                  })}
+                                </span>
+
+                                {req.user && (
+                                  <span className="text-slate-500 font-medium hidden sm:inline">
+                                    Submitted by: <strong className="text-slate-700 dark:text-slate-300">{req.user.name}</strong>
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-2 self-end lg:self-center shrink-0">
+                            <Button
+                              variant="default"
+                              size="sm"
+                              onClick={() => handleOpenManageModal(req)}
+                              className="h-8 px-3 rounded-lg text-xs font-semibold bg-indigo-600 hover:bg-indigo-700 text-white gap-1.5 shadow-xs"
+                            >
+                              <Edit2 className="h-3 w-3" />
+                              Manage & Respond
+                            </Button>
+
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleQuickToggleStatus(req)}
+                              title={status === "RESOLVED" ? "Mark Pending" : "Mark Resolved"}
+                              className={cn(
+                                "h-8 px-2.5 rounded-lg text-xs font-semibold",
+                                status === "RESOLVED" ? "text-slate-600 hover:text-slate-900" : "text-emerald-600 hover:text-emerald-700 bg-emerald-50/50 dark:bg-emerald-950/30"
+                              )}
+                            >
+                              {status === "RESOLVED" ? (
+                                <RotateCcw className="h-3.5 w-3.5" />
+                              ) : (
+                                <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
+                              )}
+                            </Button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Manage Request Modal */}
+          <Dialog open={isManageModalOpen} onOpenChange={setIsManageModalOpen}>
+            <DialogContent className="max-w-xl rounded-2xl p-4 sm:p-5">
+              <DialogHeader>
+                <div className="flex items-center gap-2">
+                  <Badge variant="outline" className="font-mono text-[10px] uppercase">
+                    {selectedRequestForManage?.refNo || "SUPPORT-REQ"}
+                  </Badge>
+                  <Badge
+                    className={cn(
+                      "text-[9px] font-bold px-1.5 py-0.5 rounded uppercase border-none",
+                      selectedRequestForManage?.priority === "URGENT" ? "bg-rose-100 text-rose-700" :
+                      selectedRequestForManage?.priority === "HIGH" ? "bg-amber-100 text-amber-700" :
+                      "bg-slate-100 text-slate-600"
+                    )}
+                  >
+                    {selectedRequestForManage?.priority}
+                  </Badge>
+                </div>
+                <DialogTitle className="text-base sm:text-lg font-bold text-slate-900 dark:text-white mt-1">
+                  {selectedRequestForManage?.title}
+                </DialogTitle>
+                <DialogDescription className="text-xs text-slate-500">
+                  Update status, review center query, and send official Head Office response.
+                </DialogDescription>
+              </DialogHeader>
+
+              {selectedRequestForManage && (
+                <div className="space-y-4 py-2">
+                  {/* Franchise Context Card */}
+                  <div className="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200/80 dark:border-slate-700 flex items-center justify-between text-xs">
+                    <div>
+                      <p className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                        <Building2 className="h-3.5 w-3.5 text-indigo-500" />
+                        {selectedRequestForManage.workspace?.name}
+                      </p>
+                      <p className="text-[11px] text-slate-500 mt-0.5 font-medium">
+                        Center Code: <span className="font-mono font-bold text-indigo-600">{selectedRequestForManage.workspace?.centerCode || "N/A"}</span>
+                        {selectedRequestForManage.workspace?.district && ` • ${selectedRequestForManage.workspace.district}, ${selectedRequestForManage.workspace.state || ""}`}
+                      </p>
+                    </div>
+                    <div className="text-right text-[11px] text-slate-500">
+                      <p className="font-medium text-slate-700 dark:text-slate-300">By {selectedRequestForManage.user?.name || "Center Admin"}</p>
+                      <p className="text-[10px] text-slate-400">{selectedRequestForManage.user?.email || ""}</p>
+                    </div>
+                  </div>
+
+                  {/* Query Body Card */}
+                  <div>
+                    <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">Franchise Message / Query</Label>
+                    <div className="mt-1 p-3 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 text-xs text-slate-800 dark:text-slate-200 leading-relaxed whitespace-pre-wrap max-h-48 overflow-y-auto custom-scrollbar">
+                      {selectedRequestForManage.message}
+                    </div>
+                  </div>
+
+                  {/* Status Selection */}
+                  <div>
+                    <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">Resolution Status</Label>
+                    <Select
+                      value={manageStatus}
+                      onValueChange={(val: any) => setManageStatus(val)}
+                    >
+                      <SelectTrigger className="h-9 text-xs font-semibold rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 mt-1">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="PENDING">Pending (Awaiting Action)</SelectItem>
+                        <SelectItem value="IN_PROGRESS">In Progress (Under Review / Assigned)</SelectItem>
+                        <SelectItem value="RESOLVED">Resolved (Action Completed)</SelectItem>
+                        <SelectItem value="REJECTED">Closed / Rejected</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Head Office Response Note */}
+                  <div>
+                    <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                      Head Office Response / Guidance <span className="text-[10px] text-slate-400 font-normal">(Optional — will notify Franchise Admin)</span>
+                    </Label>
+                    <Textarea
+                      placeholder="Type response remarks or action taken for the franchise..."
+                      value={resolutionNote}
+                      onChange={(e) => setResolutionNote(e.target.value)}
+                      rows={4}
+                      className="mt-1 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 resize-none"
+                    />
+                  </div>
+                </div>
+              )}
+
+              <DialogFooter className="gap-2 sm:gap-0 pt-2 border-t border-slate-100 dark:border-slate-800">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsManageModalOpen(false)}
+                  disabled={isSavingStatus}
+                  className="h-9 px-3 rounded-lg text-xs font-semibold"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="default"
+                  size="sm"
+                  onClick={handleSaveRequestStatus}
+                  disabled={isSavingStatus}
+                  className="h-9 px-4 rounded-lg text-xs font-semibold bg-indigo-600 hover:bg-indigo-700 text-white gap-1.5"
+                >
+                  {isSavingStatus ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />}
+                  {isSavingStatus ? "Saving..." : "Save & Notify Center"}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </div>
+      ) : activeTab === "noticepad" ? (
         <NoticepadDocumentViewer
           notices={broadcastNotices}
           selectedNoticeId={selectedNoticeForPad?.id || null}
@@ -1210,33 +1822,6 @@ export function SuperAdminEventsNoticesClient() {
           {/* TAB 4: NOTICE CONFIG & STORAGE CLEANING */}
           {activeTab === "config" && (
             <div className="p-4 sm:p-6 space-y-6">
-              {/* Storage Stats Row */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
-                <div className="p-3.5 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30 space-y-1">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Total System Notifications</span>
-                  <div className="text-xl font-bold text-slate-900 dark:text-white">
-                    {storageStats.totalNotifications} Records
-                  </div>
-                  <span className="text-[10px] text-slate-400 block">Across Super Admin & all study centers</span>
-                </div>
-
-                <div className="p-3.5 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30 space-y-1">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Broadcast Directives Stored</span>
-                  <div className="text-xl font-bold text-amber-600 dark:text-amber-400">
-                    {storageStats.broadcastCircularsCount} Circulars
-                  </div>
-                  <span className="text-[10px] text-slate-400 block">Official notices issued to franchises</span>
-                </div>
-
-                <div className="p-3.5 rounded-xl border border-amber-200/80 dark:border-amber-900/40 bg-amber-50/30 dark:bg-amber-950/20 space-y-1">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">Eligible for Storage Cleanup</span>
-                  <div className="text-xl font-bold text-amber-700 dark:text-amber-300">
-                    {storageStats.eligibleForCleanupCount} Stale Records
-                  </div>
-                  <span className="text-[10px] text-slate-500 block">Older than current retention policy</span>
-                </div>
-              </div>
-
               {/* Policy Configuration Card */}
               <div className="border border-slate-200 dark:border-slate-800 rounded-2xl p-4 sm:p-5 bg-white dark:bg-slate-900 space-y-4">
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-800 pb-3">
@@ -1451,6 +2036,7 @@ export function SuperAdminEventsNoticesClient() {
                   <SelectContent>
                     <SelectItem value="ALL_FRANCHISES">All Franchise Admins (Broadcast)</SelectItem>
                     <SelectItem value="SPECIFIC_FRANCHISE">Specific Franchise Center(s)</SelectItem>
+                    <SelectItem value="ALL_STUDENTS">All Students Nationwide (Student Portal)</SelectItem>
                     <SelectItem value="PUBLIC">Public Website Notice Ticker</SelectItem>
                   </SelectContent>
                 </Select>
