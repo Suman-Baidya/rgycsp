@@ -12,7 +12,6 @@ const Testimonials = dynamic(() => import("@/components/landing/Testimonials").t
 const FaqSection = dynamic(() => import("@/components/landing/FaqSection").then(mod => mod.FaqSection));
 const ContactSection = dynamic(() => import("@/components/landing/ContactSection").then(mod => mod.ContactSection));
 const CoursesSection = dynamic(() => import("@/components/landing/CoursesSection").then(mod => mod.CoursesSection));
-const FloatingWhatsApp = dynamic(() => import("@/components/landing/FloatingWhatsApp").then(mod => mod.FloatingWhatsApp));
 
 import { db } from "@/lib/prisma";
 import { CustomThemeStyle } from "@/components/providers/CustomThemeStyle";
@@ -67,7 +66,6 @@ export default async function RootLandingPage() {
         {isSectionActive("contact") && <ContactSection data={getSectionData("contact")} settings={settings} />}
       </main>
 
-      <FloatingWhatsApp phoneNumber={settings.whatsapp} />
       <MainFooter settings={settings} />
     </div>
   );

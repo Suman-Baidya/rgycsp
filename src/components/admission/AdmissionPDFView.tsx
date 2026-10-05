@@ -55,7 +55,7 @@ export function AdmissionPDFView({ application, workspace, settings, config }: A
               )}
               <div className="flex-1">
                 <h1 className="text-2xl font-bold tracking-tight uppercase leading-snug mb-1">{settings?.siteName || workspace.name}</h1>
-                <h2 className="text-[13px] font-bold tracking-wider text-white/90 mb-3">Rajeev Gandhi Youth Computer Shiksha Parishad</h2>
+                <h2 className="text-[13px] font-bold tracking-wider text-white/90 mb-3">{settings?.navbarConfig?.secondarySiteName || settings?.brandDescription || "Central Board of Education"}</h2>
                 <div className="flex flex-col gap-2 opacity-90">
                   <span className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest"><MapPin className="w-3.5 h-3.5 opacity-60" /> {settings?.address || "Institute Campus Address"}</span>
                   <div className="flex gap-6 mt-1">

@@ -1,4 +1,4 @@
-﻿import { findWorkspaceByTenant } from "@/lib/workspace";
+import { findWorkspaceByTenant } from "@/lib/workspace";
 import { db } from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import { WorkspaceNavbar } from "@/components/layout/WorkspaceNavbar";
@@ -71,7 +71,7 @@ export default async function WorkspaceEnquiryPage({
                   <Phone className="w-5 h-5" />
                 </div>
                 <h4 className="font-bold text-xs uppercase tracking-wider text-slate-400">Direct Helpline</h4>
-                <p className="text-base font-bold text-slate-900 dark:text-white">{workspace.siteSettings.contactPhone || "89448 97472"}</p>
+                <p className="text-base font-bold text-slate-900 dark:text-white">{workspace.siteSettings.contactPhone || "8944899747"}</p>
               </div>
 
               <div className="p-6 rounded-2xl bg-slate-50 dark:bg-zinc-900 border border-slate-200/60 dark:border-zinc-800 space-y-2">
@@ -79,7 +79,7 @@ export default async function WorkspaceEnquiryPage({
                   <Mail className="w-5 h-5" />
                 </div>
                 <h4 className="font-bold text-xs uppercase tracking-wider text-slate-400">Email Desk</h4>
-                <p className="text-base font-bold text-slate-900 dark:text-white break-words">{workspace.siteSettings.contactEmail || "info@rgycsp.com"}</p>
+                <p className="text-base font-bold text-slate-900 dark:text-white break-words">{workspace.siteSettings.contactEmail || "sb.abcd321@gmail.com"}</p>
               </div>
 
               <div className="p-6 rounded-2xl bg-slate-50 dark:bg-zinc-900 border border-slate-200/60 dark:border-zinc-800 space-y-2">

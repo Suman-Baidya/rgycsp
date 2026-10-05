@@ -9,6 +9,7 @@ import { Wallet, ChevronRight, ShieldCheck, UserCheck, MapPinned, Building2 } fr
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { detectTenant } from "@/lib/routing";
+import { ContextualGuideHeaderButton } from "@/components/guides/ContextualGuideHeaderButton";
 
 interface WorkspaceAdminHeaderProps {
   tenantName: string;
@@ -144,6 +145,7 @@ export function WorkspaceAdminHeader({
 
           {/* Notification Center & Theme Toggle */}
           <div className="flex items-center gap-1 sm:gap-2 border-l border-border/50 pl-2.5 sm:pl-3">
+            <ContextualGuideHeaderButton portal="admin" workspaceId={workspaceId} />
             <NotificationBell workspaceId={workspaceId} tenant={tenant} portal="admin" />
             <ThemeToggle />
           </div>

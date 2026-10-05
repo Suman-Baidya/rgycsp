@@ -26,8 +26,11 @@ export function getRootDomain() {
 export function extractRootDomain(host: string) {
   if (!host) return "localhost:3000";
   
-  // Handle localhost
-  if (host.startsWith('localhost') || host.includes('127.0.0.1')) {
+  const cleanHost = host.split(':')[0];
+  const isIp = /^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(cleanHost) || cleanHost === '::1' || cleanHost === '[::1]';
+
+  // Handle IP addresses and localhost (no subdomains possible)
+  if (isIp || cleanHost === 'localhost' || host.includes('127.0.0.1')) {
     return host;
   }
 

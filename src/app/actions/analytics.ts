@@ -778,7 +778,7 @@ export async function exportAnalyticsToExcel(filters: { workspaceId?: string; da
 
   // Sheet 1: Summary
   const summaryData = [
-    ["RGYCSP / ABCD Edu Hub - Analytics Report"],
+    ["ABCD Edu Hub - Analytics Report"],
     ["Generated On", new Date().toLocaleString("en-IN")],
     ["Time Window", filters.dateRange?.toUpperCase() || "PAST YEAR"],
     [],

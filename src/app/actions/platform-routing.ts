@@ -36,6 +36,14 @@ export async function getPlatformRoutingConfig(): Promise<PlatformRoutingConfig>
         maintenanceMode: parsed.maintenanceMode ?? false,
         maintenanceMessage: parsed.maintenanceMessage || DEFAULT_ROUTING_CONFIG.maintenanceMessage,
         enableVerboseLogging: parsed.enableVerboseLogging ?? false,
+        enableUserGuides: parsed.enableUserGuides ?? false,
+        enableSuperAdminGuides: parsed.enableSuperAdminGuides ?? false,
+        enableFranchiseGuides: parsed.enableFranchiseGuides ?? false,
+        franchiseGuidesEnabled: parsed.franchiseGuidesEnabled ?? false,
+        enableGuideVideos: parsed.enableGuideVideos ?? false,
+        enableGuidePdfs: parsed.enableGuidePdfs ?? false,
+        enableGuideArticles: parsed.enableGuideArticles ?? false,
+        enableGuideExternalLinks: parsed.enableGuideExternalLinks ?? false,
         updatedAt: parsed.updatedAt,
         updatedBy: parsed.updatedBy,
       };
@@ -121,12 +129,27 @@ export async function updatePlatformRoutingConfig(config: PlatformRoutingConfig)
       maxAge: 60 * 60 * 24 * 365,
       sameSite: "lax",
     });
+    cookieStore.set("platform_maintenance_mode", config.maintenanceMode ? "1" : "0", {
+      path: "/",
+      maxAge: 60 * 60 * 24 * 365,
+      sameSite: "lax",
+    });
+    cookieStore.set("platform_pwa_enabled", config.enablePwa ? "1" : "0", {
+      path: "/",
+      maxAge: 60 * 60 * 24 * 365,
+      sameSite: "lax",
+    });
+    cookieStore.set("platform_pwa_prompt", config.enablePwaInstallPrompt ? "1" : "0", {
+      path: "/",
+      maxAge: 60 * 60 * 24 * 365,
+      sameSite: "lax",
+    });
 
     // Write audit log
     await createLog(
       "INFO",
       "ROUTING_ENGINE",
-      `Platform routing configuration updated: Mode=${config.routingMode}, Subdomains=${config.enableSubdomains ? 'Enabled' : 'Disabled'}, Subdirectories=${config.enableSubdirectories ? 'Enabled' : 'Disabled'}`,
+      `Platform routing configuration updated: Mode=${config.routingMode}, Subdomains=${config.enableSubdomains ? 'Enabled' : 'Disabled'}, PWA=${config.enablePwa ? 'Enabled' : 'Disabled'}, Maintenance=${config.maintenanceMode ? 'Active' : 'Inactive'}`,
       "SYSTEM_CORE"
     );
 
@@ -134,11 +157,54 @@ export async function updatePlatformRoutingConfig(config: PlatformRoutingConfig)
     (revalidateTag as any)("site-settings");
     revalidatePath("/super-admin/logs");
     revalidatePath("/super-admin/franchises");
+    revalidatePath("/super-admin/guides");
+    revalidatePath("/admin/guides");
     revalidatePath("/workspaces");
+    revalidatePath("/", "layout");
 
     return { success: true, config: payload };
   } catch (error: any) {
     console.error("Failed to update platform routing config:", error);
     return { success: false, error: error.message || "Failed to update configuration" };
+  }
+}
+
+/**
+ * Purge all system cache tags (SiteSettings, Workspaces, Courses, Fee Configs)
+ * Strictly restricted to verified Developer admin only.
+ */
+export async function purgeSystemCache() {
+  try {
+    const session = await auth();
+    if (!session?.user) {
+      return { success: false, error: "Unauthorized" };
+    }
+
+    const isDev = Boolean(
+      isDeveloperEmail(session.user.email) ||
+      (session.user as any)?.isDeveloper
+    );
+
+    if (!isDev) {
+      return { success: false, error: "Access Denied: Only verified Developers can purge system cache." };
+    }
+
+    (revalidateTag as any)("site-settings");
+    (revalidateTag as any)("workspaces");
+    (revalidateTag as any)("courses");
+    (revalidateTag as any)("fee-config");
+    revalidatePath("/", "layout");
+
+    await createLog(
+      "INFO",
+      "SYSTEM_MAINTENANCE",
+      "Global edge, layout, and database cache tags successfully purged & revalidated",
+      "SYSTEM_CORE"
+    );
+
+    return { success: true };
+  } catch (error: any) {
+    console.error("Failed to purge system cache:", error);
+    return { success: false, error: error.message || "Failed to purge system cache" };
   }
 }

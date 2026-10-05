@@ -11,7 +11,7 @@ export function CustomSolution({ data }: { data?: any }) {
     contact: {
       phone: "+91 89448 99747",
       email: "sb.abcd321@gmail.com",
-      whatsapp: "+91 89448 99747"
+      whatsapp: "+91 81676 85731"
     },
     primaryBtn: { label: "Talk to Our Experts", link: "/contact" },
     secondaryBtn: { label: "View All Features", link: "/services" }

@@ -224,7 +224,7 @@ export const DocumentRenderer = forwardRef<DocumentRendererRef, DocumentRenderer
         }
         case "noticeTitle": return student?.noticeTitle || student?.title || "";
         case "noticeBody": return student?.noticeBody || student?.message || student?.description || "";
-        case "noticeRefNo": return student?.noticeRefNo || student?.refNo || (student?.id ? `CIR-${student.id.slice(-6).toUpperCase()}` : "RGYCSP/HO/DIR/2026/042");
+        case "noticeRefNo": return student?.noticeRefNo || student?.refNo || (student?.id ? `CIR-${student.id.slice(-6).toUpperCase()}` : "ABCD/HO/DIR/2026/042");
         case "noticeRecipient": return student?.noticeRecipient || student?.target || student?.audience || "All Concerned Persons";
         case "issuerName": return student?.issuerName || (student?.workspace?.name ? student.workspace.name : "Central Head Office Administration");
         case "issuerRole": return student?.issuerRole || (student?.workspace ? "Center Director / Head of Institute" : "Controller of Examinations & Central Secretary");

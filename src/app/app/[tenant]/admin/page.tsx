@@ -301,7 +301,7 @@ export default async function WorkspaceAdminDashboard({
         description="Real-time students, admissions, programs, and branch operations."
       >
         <div className="flex items-center gap-2">
-          <Link href={analyticsLink}>
+          <a href={analyticsLink}>
             <Button 
               variant="outline" 
               className="h-8 sm:h-9 px-3 rounded-lg text-xs font-semibold gap-1.5 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800"
@@ -309,10 +309,10 @@ export default async function WorkspaceAdminDashboard({
               <BarChart3 className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
               <span className="hidden xs:inline">Visitor</span> Analytics
             </Button>
-          </Link>
+          </a>
 
           {(hasAccess("admissions") || hasAccess("students")) && (
-            <Link href={admissionsLink}>
+            <a href={admissionsLink}>
               <Button 
                 variant="outline" 
                 className="h-8 sm:h-9 px-3 rounded-lg text-xs font-semibold gap-1.5 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 relative"
@@ -325,16 +325,16 @@ export default async function WorkspaceAdminDashboard({
                   </span>
                 )}
               </Button>
-            </Link>
+            </a>
           )}
 
           {hasAccess("students") && (
-            <Link href={studentLink}>
+            <a href={studentLink}>
               <Button className="h-8 sm:h-9 px-3.5 rounded-lg text-xs font-semibold gap-1.5 shadow-xs bg-primary text-primary-foreground">
                 <Plus className="w-3.5 h-3.5" />
                 <span>New Student</span>
               </Button>
-            </Link>
+            </a>
           )}
         </div>
       </AdminPageHeader>
@@ -545,11 +545,11 @@ export default async function WorkspaceAdminDashboard({
                   </span>
                 </div>
                 {hasAccess("wallet") && (
-                  <Link href={walletLink}>
+                  <a href={walletLink}>
                     <Button variant="outline" className="h-7 px-2.5 rounded-md text-[11px] font-semibold gap-1">
                       <Wallet className="w-3 h-3" /> Top-Up
                     </Button>
-                  </Link>
+                  </a>
                 )}
               </div>
             </CardContent>
@@ -564,7 +564,7 @@ export default async function WorkspaceAdminDashboard({
             </CardHeader>
             <CardContent className="p-3.5 sm:p-4">
               <div className="grid grid-cols-2 gap-2">
-                <Link href={attendanceLink}>
+                <a href={attendanceLink}>
                   <div className="p-2.5 rounded-lg border border-slate-100 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-800/30 hover:bg-slate-100 dark:hover:bg-slate-800/70 transition-colors group cursor-pointer">
                     <div className="flex items-center gap-2 mb-1">
                       <QrCode className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400 group-hover:scale-110 transition-transform" />
@@ -574,9 +574,9 @@ export default async function WorkspaceAdminDashboard({
                     </div>
                     <p className="text-[9px] text-slate-400 font-medium">Smart QR Scanner</p>
                   </div>
-                </Link>
+                </a>
 
-                <Link href={feesLink}>
+                <a href={feesLink}>
                   <div className="p-2.5 rounded-lg border border-slate-100 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-800/30 hover:bg-slate-100 dark:hover:bg-slate-800/70 transition-colors group cursor-pointer">
                     <div className="flex items-center gap-2 mb-1">
                       <Receipt className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 group-hover:scale-110 transition-transform" />
@@ -586,9 +586,9 @@ export default async function WorkspaceAdminDashboard({
                     </div>
                     <p className="text-[9px] text-slate-400 font-medium">Collections & Dues</p>
                   </div>
-                </Link>
+                </a>
 
-                <Link href={examsLink}>
+                <a href={examsLink}>
                   <div className="p-2.5 rounded-lg border border-slate-100 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-800/30 hover:bg-slate-100 dark:hover:bg-slate-800/70 transition-colors group cursor-pointer">
                     <div className="flex items-center gap-2 mb-1">
                       <FileQuestion className="w-3.5 h-3.5 text-violet-600 dark:text-violet-400 group-hover:scale-110 transition-transform" />
@@ -598,9 +598,9 @@ export default async function WorkspaceAdminDashboard({
                     </div>
                     <p className="text-[9px] text-slate-400 font-medium">Paper Generator</p>
                   </div>
-                </Link>
+                </a>
 
-                <Link href={settingsLink}>
+                <a href={settingsLink}>
                   <div className="p-2.5 rounded-lg border border-slate-100 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-800/30 hover:bg-slate-100 dark:hover:bg-slate-800/70 transition-colors group cursor-pointer">
                     <div className="flex items-center gap-2 mb-1">
                       <Palette className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 group-hover:scale-110 transition-transform" />
@@ -610,7 +610,7 @@ export default async function WorkspaceAdminDashboard({
                     </div>
                     <p className="text-[9px] text-slate-400 font-medium">Public Website</p>
                   </div>
-                </Link>
+                </a>
               </div>
             </CardContent>
           </Card>

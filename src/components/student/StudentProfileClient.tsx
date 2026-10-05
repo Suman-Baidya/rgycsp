@@ -93,7 +93,7 @@ export default function StudentProfileClient({
   const centerCode = workspace?.centerCode || tenant.toUpperCase();
   const centerAddress = workspace?.address || settings?.address || "Institutional Campus";
   const centerPhone = workspace?.phone || settings?.phone || "Contact Institute Office";
-  const centerEmail = workspace?.email || settings?.email || "support@rgycsp.org.in";
+  const centerEmail = workspace?.email || settings?.email || settings?.contactEmail || "sb.abcd321@gmail.com";
   const rollNumber = profile?.rollNo || profile?.registrationNo || profile?.enrollmentNo || "Pending";
 
   // Active navigation tab
@@ -1155,7 +1155,7 @@ export default function StudentProfileClient({
                     {/* QR Code */}
                     <div className="p-1 rounded-md bg-white border border-slate-200 shrink-0 shadow-xs flex flex-col items-center">
                       <QRCodeSVG
-                        value={typeof window !== "undefined" ? `${window.location.origin}/verify/student/${profile?.enrollmentNo || rollNumber}` : `https://${tenant}.rgycsp.org.in/verify/student/${profile?.enrollmentNo || rollNumber}`}
+                        value={typeof window !== "undefined" ? `${window.location.origin}/verify/student/${profile?.enrollmentNo || rollNumber}` : `https://${tenant}.abcd.com/verify/student/${profile?.enrollmentNo || rollNumber}`}
                         size={48}
                         level="M"
                       />
@@ -1188,7 +1188,7 @@ export default function StudentProfileClient({
                   <div className="border-t border-slate-300 pt-1 text-center space-y-0.5 text-[7px] text-slate-500">
                     <p className="font-bold text-slate-800 uppercase">{workspaceName}</p>
                     <p>{centerAddress} • Phone: {centerPhone}</p>
-                    <p>Web: {typeof window !== "undefined" ? window.location.host : `${tenant}.rgycsp.org.in`} • Email: {centerEmail}</p>
+                    <p>Web: {typeof window !== "undefined" ? window.location.host : `${tenant}.abcd.com`} • Email: {centerEmail}</p>
                   </div>
                 </div>
               )}

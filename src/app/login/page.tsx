@@ -1,10 +1,12 @@
 import { db } from "@/lib/prisma";
+import { findWorkspaceByTenant } from "@/lib/workspace";
 import { headers } from "next/headers";
 import { LoginForm } from "@/components/auth/LoginForm";
 import { CustomThemeStyle } from "@/components/providers/CustomThemeStyle";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { getPostLoginRedirect } from "@/app/actions/auth";
+import { isDemoTargetAccount, isDemoRestrictionsEnabled } from "@/lib/demo";
 
 export default async function LoginPage() {
   const session = await auth();
@@ -25,8 +27,9 @@ export default async function LoginPage() {
     if (tenant === "www") tenant = "";
   }
 
-  // If already logged in, redirect to the appropriate dashboard
-  if (session) {
+  // If already logged in, redirect to the appropriate dashboard (unless demo is disabled)
+  const isDemoBlocked = isDemoTargetAccount(session?.user?.email) && !isDemoRestrictionsEnabled();
+  if (session?.user && !isDemoBlocked) {
     const redirectUrl = await getPostLoginRedirect(host, pathname);
     redirect(redirectUrl);
   }
@@ -43,8 +46,7 @@ export default async function LoginPage() {
   };
 
   if (tenant && tenant !== "super-admin") {
-    const workspace = await db.workspace.findUnique({
-      where: { subdomain: tenant },
+    const workspace = await findWorkspaceByTenant(tenant, {
       include: { siteSettings: true }
     });
     if (workspace) {
@@ -63,6 +65,14 @@ export default async function LoginPage() {
       branding.settings = globalSettings;
     }
   }
+
+  // Check if showcase demo credentials exist in environment
+  const demoEmail = (process.env.DEMO_ADMIN_EMAIL || process.env.NEXT_PUBLIC_DEMO_EMAIL || "").trim();
+  const demoPassword = (process.env.DEMO_ADMIN_PASSWORD || process.env.NEXT_PUBLIC_DEMO_PASSWORD || "").trim();
+  const isDemoEnabled = process.env.ENABLE_DEMO_RESTRICTIONS !== "false";
+  const demoCredentials = (demoEmail && demoPassword && isDemoEnabled && (!tenant || tenant === "super-admin"))
+    ? { email: demoEmail, password: demoPassword }
+    : null;
 
   return (
     <div className="min-h-[100dvh] w-full flex flex-col items-center justify-center bg-slate-50/70 dark:bg-[#06080e] p-4 sm:p-6 relative overflow-y-auto font-sans transition-colors duration-300">
@@ -86,6 +96,7 @@ export default async function LoginPage() {
           isGlobal={!tenant || tenant === "super-admin"}
           variant={!tenant || tenant === "super-admin" ? "super-admin" : "franchise"}
           primaryColor={branding.settings?.primaryColor || undefined}
+          demoCredentials={demoCredentials}
         />
       </div>
     </div>

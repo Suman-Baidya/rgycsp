@@ -22,6 +22,7 @@ import {
   MoreHorizontal,
   Building2,
   BookOpen,
+  BookOpenText,
   MapPinned,
   ShoppingCart,
   BarChart2,
@@ -53,6 +54,7 @@ const navItems = [
   { name: "Courses", href: "/courses", icon: BookOpen },
   { name: "Products", href: "/products", icon: ShoppingCart },
   { name: "Documents", href: "/documents", icon: FileText },
+  { name: "User Guide", href: "/guides", icon: BookOpenText },
   { name: "System Logs", href: "/logs", icon: Activity },
   { name: "Settings", href: "/settings", icon: Settings },
   { name: "Profile", href: "/profile", icon: ShieldCheck },
@@ -62,12 +64,14 @@ export function AdminSidebar({
   serverRole,
   serverPermissions,
   serverEmail,
-  serverIsDeveloper
+  serverIsDeveloper,
+  isUserGuideEnabled = true
 }: {
   serverRole?: string;
   serverPermissions?: string[];
   serverEmail?: string;
   serverIsDeveloper?: boolean;
+  isUserGuideEnabled?: boolean;
 } = {}) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMoreOpen, setIsMoreOpen] = useState(false);
@@ -156,6 +160,9 @@ export function AdminSidebar({
   const filteredNavItems = navItems.filter(item => {
     // Hide System Logs unless developer
     if (item.name === "System Logs" && !isDeveloper) return false;
+
+    // Hide User Guide if disabled by developer and current user is not developer
+    if (item.name === "User Guide" && !isDeveloper && !isUserGuideEnabled) return false;
     
     // For SUPER_ADMIN_MANAGER, hide if not in permissions array
     if (isManager) {

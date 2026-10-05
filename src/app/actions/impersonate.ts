@@ -3,11 +3,16 @@
 import { db } from "@/lib/prisma";
 import { auth } from "@/auth";
 import { cookies } from "next/headers";
+import { isDemoEmail } from "@/lib/demo";
 
 export async function setImpersonation(studentProfileId: string) {
   try {
     const session = await auth();
     if (!session?.user) return { success: false, error: "Not authenticated" };
+
+    if (session.user.isDemo || isDemoEmail(session.user.email)) {
+      return { success: false, error: "You Can't Edit as Demo Preview" };
+    }
 
     const callerRole = session.user.role;
     const isGlobalAdmin = callerRole === "SUPER_ADMIN" || 

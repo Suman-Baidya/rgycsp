@@ -18,7 +18,7 @@ export function MainFooter({ settings }: { settings?: any }) {
   const footerTagline = settings?.navbarConfig?.footerTagline || "Global Education Platform";
   const contactEmail = settings?.contactEmail || "sb.abcd321@gmail.com";
   const contactPhone = settings?.contactPhone || "8944899747";
-  const whatsappNumber = settings?.whatsapp || contactPhone;
+  const whatsappNumber = settings?.whatsapp || "8167685731";
   const address = settings?.address || "Kolkata, West Bengal, India - 700001";
   const brandDescription = settings?.brandDescription || "The ultimate platform for modern educational management. Empowering institutes worldwide with cutting-edge technology and seamless digital transformation.";
   const socialLinks = settings?.socialLinks || {};

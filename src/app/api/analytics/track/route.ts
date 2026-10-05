@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/prisma";
 import crypto from "crypto";
+import { findWorkspaceByTenant } from "@/lib/workspace";
 
 function parseUserAgent(ua: string) {
   let device = "Desktop";
@@ -89,8 +90,7 @@ export async function POST(req: NextRequest) {
     // Resolve workspace ID if tenant is passed
     let workspaceId = providedWorkspaceId || null;
     if (!workspaceId && tenant && tenant !== "super-admin" && tenant !== "root") {
-      const ws = await db.workspace.findUnique({
-        where: { subdomain: tenant.toLowerCase() },
+      const ws = await findWorkspaceByTenant(tenant, {
         select: { id: true }
       });
       if (ws) {

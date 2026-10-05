@@ -5,6 +5,7 @@ import { revalidateWorkspacePath } from "@/lib/revalidate";
 
 import { db } from "@/lib/prisma";
 import { revalidatePath, revalidateTag } from "next/cache";
+import { getBrandShortName } from "@/lib/branding";
 
 export async function updateSiteSettings(data: any) {
   try {
@@ -234,17 +235,19 @@ export async function getHeadOfficeBadgeConfig() {
     if (!globalSettings) return null;
     const navConfig = (globalSettings.navbarConfig as any) || {};
     const badge = navConfig.headOfficeBadge || {};
+    const shortName = badge.shortName || getBrandShortName(globalSettings.siteName, null);
     return {
       enabled: badge.enabled !== false,
       label: badge.label || "Head Office",
-      title: badge.title || globalSettings.siteName || "RGYCSP Head Office",
+      shortName: shortName,
+      title: badge.title || globalSettings.siteName || "ABCD Head Office",
       logoUrl: badge.logoUrl || globalSettings.logoUrl || "/logo.png",
       showButton: !!badge.showButton,
       buttonText: badge.buttonText || "Visit Portal",
       linkUrl: badge.linkUrl || "/",
       openInNewTab: badge.openInNewTab !== false,
       globalLogoUrl: globalSettings.logoUrl || "/logo.png",
-      globalSiteName: globalSettings.siteName || "RGYCSP",
+      globalSiteName: globalSettings.siteName || "ABCD",
     };
   } catch (error) {
     console.error("Failed to get head office badge config:", error);

@@ -1740,7 +1740,7 @@ export default function FranchiseApplicationsClient({
                         <Input 
                           required
                           className="h-8 sm:h-9 pl-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 font-medium focus-visible:ring-1 focus-visible:ring-blue-500 transition-all"
-                          placeholder="e.g. RGYCSP Chandpara"
+                          placeholder="e.g. ABCD Chandpara"
                           value={editConfigData.name}
                           onChange={(e) => setEditConfigData({ ...editConfigData, name: e.target.value })}
                         />

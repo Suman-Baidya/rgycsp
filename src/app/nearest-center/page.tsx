@@ -7,8 +7,8 @@ import { auth } from "@/auth";
 import { CustomThemeStyle } from "@/components/providers/CustomThemeStyle";
 
 export const metadata = {
-  title: "Find Nearest Center | RGYCSP",
-  description: "Find an authorized RGYCSP study center near you to begin your enrollment process.",
+  title: "Find Nearest Center | ABCD",
+  description: "Find an authorized study center near you to begin your enrollment process.",
 };
 
 export default async function NearestCenterPage() {

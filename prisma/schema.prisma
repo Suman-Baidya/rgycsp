@@ -1387,3 +1387,43 @@ model VisitorLead {
   @@index([phone])
 }
 
+// ============================================
+// Interactive User Guides & Documentation
+// ============================================
+
+model UserGuide {
+  id            String   @id @default(cuid())
+  title         String
+  description   String?  @db.Text
+  category      String   @default("General") // e.g. "Platform Overview", "Student Admissions", "Financial & Wallet", "Examinations"
+  targetRole    String   @default("SUPER_ADMIN") // "SUPER_ADMIN" | "FRANCHISE_ADMIN"
+  contentType   String   @default("YOUTUBE") // "YOUTUBE" | "PDF" | "ARTICLE" | "LINK"
+  
+  youtubeUrl    String?
+  pdfUrl        String?
+  externalUrl   String?
+  content       String?  @db.Text // Rich text instructions & step-by-step guides
+  
+  order         Int      @default(0)
+  isPublished   Boolean  @default(true)
+  createdByRole String   @default("DEVELOPER") // "DEVELOPER" | "SUPER_ADMIN"
+  createdById   String?
+
+  // Franchise Targeting & Custom SOPs
+  isAllFranchises    Boolean  @default(true) // Visible to all centers or specific centers
+  assignedWorkspaces Json?    // Array of workspace IDs or metadata
+  guideType          String   @default("OFFICIAL") // "OFFICIAL" | "SOP" | "DIRECTIVE"
+
+  // Developer Protection & Versioning
+  isLocked           Boolean  @default(false)
+  version            String   @default("1.0.0")
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([targetRole, isPublished])
+  @@index([category])
+  @@index([isAllFranchises])
+  @@index([isLocked])
+}
+

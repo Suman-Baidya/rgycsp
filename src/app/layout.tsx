@@ -21,8 +21,9 @@ export async function generateMetadata(): Promise<Metadata> {
     console.error("Error fetching global site settings for metadata:", error);
   }
 
-  const siteName = globalSettings?.siteName || "RGYCSP";
-  const desc = globalSettings?.brandDescription || "RGYCSP (ABCD Edu Hub) provides top-tier educational management and skill development centers across the globe.";
+  const routingConfig = (globalSettings?.routingConfig as any) || DEFAULT_ROUTING_CONFIG;
+  const siteName = globalSettings?.siteName || "ABCD";
+  const desc = globalSettings?.brandDescription || `${siteName} provides top-tier educational management and skill development centers across the globe.`;
 
   return {
     title: {
@@ -30,7 +31,7 @@ export async function generateMetadata(): Promise<Metadata> {
       default: `${siteName} - Empowering Education and Technology`,
     },
     description: desc,
-    keywords: ["education", "management", "RGYCSP", "learning", "dashboard", "hub"],
+    keywords: ["education", "management", "ABCD", "learning", "dashboard", "hub"],
     openGraph: {
       title: `${siteName} - Education Hub`,
       description: desc,
@@ -42,9 +43,9 @@ export async function generateMetadata(): Promise<Metadata> {
       icon: globalSettings?.faviconUrl || globalSettings?.logoUrl || "https://res.cloudinary.com/dmhipemqk/image/upload/v1780409947/RGYCSP/SuperAdmin/branding/mjwcqjcyprkxpyleggms.webp",
       apple: globalSettings?.faviconUrl || globalSettings?.logoUrl || "https://res.cloudinary.com/dmhipemqk/image/upload/v1780409947/RGYCSP/SuperAdmin/branding/mjwcqjcyprkxpyleggms.webp",
     },
-    manifest: "/manifest.webmanifest",
+    manifest: routingConfig.enablePwa ? "/manifest.webmanifest" : undefined,
     appleWebApp: {
-      capable: true,
+      capable: Boolean(routingConfig.enablePwa),
       statusBarStyle: "default",
       title: siteName,
     },
@@ -62,13 +63,22 @@ import { auth } from "@/auth";
 import { OfflineIndicator } from "@/components/OfflineIndicator";
 import { TopProgressBar } from "@/components/layout/TopProgressBar";
 import { Toaster } from "sonner";
+import { PwaManager } from "@/components/pwa/PwaManager";
+import { DEFAULT_ROUTING_CONFIG } from "@/lib/routing-config";
 
 export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const session = await auth();
+  const [session, globalSettings] = await Promise.all([
+    auth(),
+    getCachedGlobalSettings().catch(() => null)
+  ]);
+
+  const routingConfig = (globalSettings?.routingConfig as any) || DEFAULT_ROUTING_CONFIG;
+  const siteName = globalSettings?.siteName || "ABCD Edu Hub";
+
   return (
     <html
       lang="en"
@@ -78,6 +88,12 @@ export default async function RootLayout({
       <body className="min-h-full flex flex-col font-sans" suppressHydrationWarning>
         <TopProgressBar />
         <VisitorTracker />
+        <PwaManager
+          enablePwa={Boolean(routingConfig.enablePwa)}
+          enableInstallPrompt={Boolean(routingConfig.enablePwaInstallPrompt)}
+          appName={siteName}
+          logoUrl={globalSettings?.logoUrl || undefined}
+        />
         <SessionProvider session={session}>
           <UserHeartbeat />
           <OfflineIndicator />

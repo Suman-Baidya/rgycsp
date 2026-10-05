@@ -58,7 +58,7 @@ export default async function AIExamGeneratorPage({
     })
   ]);
 
-  const superAdminName = superAdminSettings?.siteName || "RGYCSP";
+  const superAdminName = superAdminSettings?.siteName || "ABCD";
   const courses = (coursesResult.data ?? [])
     .filter((c: any) => c.isActive)
     .map((c: any) => ({ id: c.id, title: c.title, topics: c.topics }));

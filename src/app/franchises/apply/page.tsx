@@ -1,7 +1,7 @@
 import { FranchiseApplyClient } from "./FranchiseApplyClient";
 
 export const metadata = {
-  title: "Apply for Franchise | RGYCSP",
+  title: "Apply for Franchise | ABCD",
   description: "Submit your franchise application to join our network.",
 };
 

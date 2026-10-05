@@ -1,4 +1,4 @@
-﻿import { findWorkspaceByTenant } from "@/lib/workspace";
+import { findWorkspaceByTenant } from "@/lib/workspace";
 import { db } from "@/lib/prisma";
 import { LoginForm } from "@/components/auth/LoginForm";
 import { CustomThemeStyle } from "@/components/providers/CustomThemeStyle";
@@ -7,6 +7,7 @@ import { getServerTenantLink } from "@/lib/routing-server";
 import { auth } from "@/auth";
 import { headers } from "next/headers";
 import { getPostLoginRedirect } from "@/app/actions/auth";
+import { isDemoTargetAccount, isDemoRestrictionsEnabled } from "@/lib/demo";
 
 export default async function WorkspaceLoginPage({
   params
@@ -16,8 +17,9 @@ export default async function WorkspaceLoginPage({
   const session = await auth();
   const { tenant } = await params;
 
-  // If already logged in, intelligently redirect based on role
-  if (session) {
+  // If already logged in, intelligently redirect based on role (unless demo is disabled)
+  const isDemoBlocked = isDemoTargetAccount(session?.user?.email) && !isDemoRestrictionsEnabled();
+  if (session?.user && !isDemoBlocked) {
     const headersList = await headers();
     const rawHost = headersList.get("x-forwarded-host") || headersList.get("host") || "";
     const host = rawHost.split(',')[0].trim();

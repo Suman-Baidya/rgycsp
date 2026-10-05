@@ -1,12 +1,51 @@
-import { notFound } from "next/navigation";
+import { auth } from "@/auth";
+import { db } from "@/lib/prisma";
+import { redirect } from "next/navigation";
+import { getServerTenantLink } from "@/lib/routing-server";
 
-// This file exists purely to trick the Next.js client-side router into treating
-// /admin/... as a valid route during client-side navigations (e.g. using <Link>).
-// When running in Subdomain mode, clicking a link to /admin/wallet will match this
-// route on the client, preventing an immediate 404. Then, Next.js fetches the server,
-// which triggers proxy.ts middleware to rewrite the request to /app/[tenant]/admin/wallet,
-// effectively bypassing this dummy page and loading the actual content.
+export const dynamic = "force-dynamic";
 
-export default function AdminSubdomainFallback() {
-  return <div>Dummy Fallback Hit. Proxy rewrite failed.</div>;
+export default async function AdminSubdomainSlugFallback({
+  params,
+}: {
+  params: Promise<{ slug?: string[] }>;
+}) {
+  const { slug } = await params;
+  const subpath = slug && slug.length > 0 ? `/${slug.join("/")}` : "";
+  const session = await auth();
+
+  if (!session?.user) {
+    redirect("/login");
+  }
+
+  const user = session.user;
+
+  // 1. Super Admin
+  if (user.role === "SUPER_ADMIN" || user.role === "SUPER_ADMIN_MANAGER") {
+    redirect(`/super-admin${subpath}`);
+  }
+
+  // 2. Franchise Admin or Staff
+  const workspaceRole = await db.workspaceRole.findFirst({
+    where: { userId: user.id },
+    include: { workspace: true },
+  });
+
+  if (workspaceRole?.workspace?.subdomain) {
+    const target = await getServerTenantLink(`/admin${subpath}`, workspaceRole.workspace.subdomain);
+    redirect(target);
+  }
+
+  // 3. Student
+  const studentProfile = await db.studentProfile.findFirst({
+    where: { userId: user.id },
+    include: { workspace: true },
+  });
+
+  if (studentProfile?.workspace?.subdomain) {
+    const target = await getServerTenantLink("/student/dashboard", studentProfile.workspace.subdomain);
+    redirect(target);
+  }
+
+  redirect("/login");
 }

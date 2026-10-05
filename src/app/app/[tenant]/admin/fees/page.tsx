@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { getStudents } from "@/app/actions/students";
 import { getPendingFeePayments } from "@/app/actions/payments";
 import { getCachedGlobalSettings } from "@/lib/settings";
+import { getBrandShortName } from "@/lib/branding";
 import FeesManagementClient from "./FeesManagementClient";
 
 export default async function FeesPage({
@@ -53,7 +54,9 @@ export default async function FeesPage({
     address: siteSettings?.address || workspace.ownerAddress || "",
     logoUrl: siteSettings?.logoUrl || workspace.logoUrl || "",
     globalLogoUrl: globalSiteSettings?.logoUrl || "",
-    globalSiteName: globalSiteSettings?.siteName || "RGYCSP",
+    globalSiteName: globalSiteSettings?.siteName || "ABCD",
+    globalBrandShortName: getBrandShortName(globalSiteSettings?.siteName, null),
+    shortName: (siteSettings?.navbarConfig as any)?.shortName || getBrandShortName(siteSettings?.siteName || workspace.name, null),
     centerCode: workspace.centerCode || "",
     primaryColor: siteSettings?.primaryColor || "#0f766e" // fallback to a teal-like theme
   };

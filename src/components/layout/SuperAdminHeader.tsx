@@ -7,6 +7,7 @@ import { NotificationBell } from "./NotificationBell";
 import { CommandPalette, CommandSearchButton } from "./CommandPalette";
 import { ShieldCheck, ChevronRight } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { ContextualGuideHeaderButton } from "@/components/guides/ContextualGuideHeaderButton";
 
 interface SuperAdminHeaderProps {
   user?: {
@@ -88,6 +89,7 @@ export function SuperAdminHeader({ user, role = "SUPER_ADMIN" }: SuperAdminHeade
 
           {/* Notification Center & Theme Toggle */}
           <div className="flex items-center gap-1 sm:gap-2 border-l border-border/50 pl-2.5 sm:pl-3">
+            <ContextualGuideHeaderButton portal="super-admin" />
             <NotificationBell portal="super-admin" />
             <ThemeToggle />
           </div>

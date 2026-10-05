@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { auth } from "@/auth";
 import bcrypt from "bcryptjs";
 import { getDeveloperEmails, isDeveloperEmail } from "@/lib/developer";
+import { assertNotDemo } from "@/lib/demo";
 
 export async function getUsers() {
   try {
@@ -75,6 +76,9 @@ export async function toggleUserStatus(userId: string, currentStatus: string) {
 
 export async function createGlobalUser(data: { name: string; email: string; password?: string; role: "SUPER_ADMIN" | "SUPER_ADMIN_MANAGER", systemPermissions?: string[] }) {
   try {
+    const { isDemo, error: demoError } = await assertNotDemo();
+    if (isDemo) return { success: false, error: demoError };
+
     const session = await auth();
     const isDev = isDeveloperEmail(session?.user?.email) || !!session?.user?.isDeveloper;
     
@@ -112,6 +116,9 @@ export async function createGlobalUser(data: { name: string; email: string; pass
 
 export async function updateGlobalUserPermissions(userId: string, permissions: string[]) {
   try {
+    const { isDemo, error: demoError } = await assertNotDemo();
+    if (isDemo) return { success: false, error: demoError };
+
     const session = await auth();
     const isDev = isDeveloperEmail(session?.user?.email) || !!session?.user?.isDeveloper;
     

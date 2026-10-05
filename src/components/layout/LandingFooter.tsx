@@ -17,7 +17,7 @@ export function LandingFooter({ settings }: { settings?: any }) {
   const contactPhone = settings?.contactPhone || "8944899747";
   const address = settings?.address || "Kolkata, West Bengal, India - 700001";
   const socialLinks = settings?.socialLinks || {};
-  const whatsapp = settings?.whatsapp;
+  const whatsapp = settings?.whatsapp || "8167685731";
   
   const brandDescription = settings?.brandDescription || "Empowering the next generation of learners through innovative technology and expert-led educational programs. Your success is our ultimate mission.";
   const footerTagline = settings?.navbarConfig?.footerTagline || settings?.navbarConfig?.secondarySiteName || "Empowering Education Worldwide";

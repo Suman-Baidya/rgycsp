@@ -777,11 +777,11 @@ export default function WalletDashboardClient({
                       </div>
                     )}
                     <h1 className="text-xl md:text-2xl font-black tracking-tight mb-2 whitespace-normal break-words" style={{ color: '#0f2940', maxWidth: '100%' }}>
-                      {globalSettings?.siteName || "RGYCSP Hub"}
+                      {globalSettings?.siteName || "ABCD Hub"}
                     </h1>
                     <div className="text-sm font-medium" style={{ color: '#475569' }}>
                       <p>Registered Franchise Office</p>
-                      <p>{globalSettings?.contactPhone || "+91 00000 00000"} | {globalSettings?.contactEmail || "info@example.com"}</p>
+                      <p>{globalSettings?.contactPhone || "+91 89448 99747"} | {globalSettings?.contactEmail || "sb.abcd321@gmail.com"}</p>
                     </div>
                   </div>
 

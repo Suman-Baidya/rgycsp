@@ -142,7 +142,7 @@ export function QuickActionFAB({ portal, tenant = "", workspaceBase = "" }: Quic
                 exit={{ opacity: 0, y: 15, scale: 0.9 }}
                 transition={{ duration: 0.18, delay: (actions.length - 1 - idx) * 0.04 }}
               >
-                <Link
+                <a
                   href={action.href}
                   onClick={() => setIsOpen(false)}
                   className="flex items-center gap-2.5 group cursor-pointer"
@@ -153,7 +153,7 @@ export function QuickActionFAB({ portal, tenant = "", workspaceBase = "" }: Quic
                   <div className={cn("w-10 h-10 rounded-full flex items-center justify-center shadow-lg transition-transform group-hover:scale-105 group-active:scale-95", action.color)}>
                     <action.icon className="w-5 h-5" />
                   </div>
-                </Link>
+                </a>
               </motion.div>
             ))}
           </div>

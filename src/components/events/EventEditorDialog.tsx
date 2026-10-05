@@ -149,7 +149,7 @@ export function EventEditorDialog({
         time: event.time || "",
         location: event.location || "",
         category: event.category || "Annual & Award Meet",
-        hostName: event.hostName || (isSuperAdmin ? "RGYCSP Institute" : "Center Administration"),
+        hostName: event.hostName || (isSuperAdmin ? "ABCD Institute" : "Center Administration"),
         image: event.image || "",
         videoUrl: event.videoUrl || "",
         isActive: event.isActive !== false,
@@ -169,7 +169,7 @@ export function EventEditorDialog({
         time: "11:00 AM",
         location: "",
         category: "Annual & Award Meet",
-        hostName: isSuperAdmin ? "RGYCSP Institute" : "Center Administration",
+        hostName: isSuperAdmin ? "ABCD Institute" : "Center Administration",
         image: "",
         videoUrl: "",
         isActive: true,
@@ -369,7 +369,7 @@ export function EventEditorDialog({
                             value={formData.title}
                             onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                             className="h-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 font-medium"
-                            placeholder="e.g. RGYCSP Annual Excellence Awards & Grand Meet 2027"
+                            placeholder="e.g. Annual Excellence Awards & Grand Meet 2027"
                           />
                         </div>
 
@@ -493,7 +493,7 @@ export function EventEditorDialog({
                               value={formData.hostName}
                               onChange={(e) => setFormData({ ...formData, hostName: e.target.value })}
                               className="h-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 px-3 font-medium"
-                              placeholder="e.g. RGYCSP Institute"
+                              placeholder="e.g. ABCD Institute"
                             />
                           </div>
 

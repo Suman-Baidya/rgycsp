@@ -4,6 +4,7 @@ import { db } from "@/lib/prisma";
 import { auth } from "@/auth";
 import { compare, hash } from "bcryptjs";
 import { revalidatePath } from "next/cache";
+import { isDemoEmail } from "@/lib/demo";
 
 export async function updateProfile(data: {
   name?: string;
@@ -16,6 +17,10 @@ export async function updateProfile(data: {
   const session = await auth();
   if (!session?.user?.id) {
     return { success: false, error: "Unauthorized" };
+  }
+
+  if (session.user.isDemo || isDemoEmail(session.user.email)) {
+    return { success: false, error: "You Can't Edit as Demo Preview" };
   }
 
   // Determine which user to update
@@ -77,6 +82,10 @@ export async function updatePassword(data: {
   const session = await auth();
   if (!session?.user?.id) {
     return { success: false, error: "Unauthorized" };
+  }
+
+  if (session.user.isDemo || isDemoEmail(session.user.email)) {
+    return { success: false, error: "You Can't Edit as Demo Preview" };
   }
 
   const userIdToUpdate = (session.user.role === "SUPER_ADMIN" && data.targetUserId) 

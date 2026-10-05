@@ -1,4 +1,5 @@
 import { jsPDF } from "jspdf";
+import { getBrandShortName } from "@/lib/branding";
 
 const getBase64ImageFromUrl = async (imageUrl: string) => {
   try {
@@ -38,7 +39,7 @@ export const generateInvoicePDF = async (data: {
   const rightValX = 190;
 
   // 1. Watermark (Background)
-  const shortName = "RGYCSP";
+  const shortName = getBrandShortName(workspaceInfo?.name, workspaceInfo?.shortName);
   doc.setTextColor(245, 245, 245); // Very light gray so it stays a watermark
   doc.setFontSize(120); // Huge font for the middle of the page
   doc.setFont("helvetica", "bold");

@@ -36,21 +36,25 @@ function SelectContent({
   children,
   side = "bottom",
   sideOffset = 4,
+  align = "start",
+  alignItemWithTrigger = false,
   ...props
 }: React.ComponentProps<typeof SelectPrimitive.Popup> & 
-  Pick<React.ComponentProps<typeof SelectPrimitive.Positioner>, "side" | "sideOffset">) {
+  Pick<React.ComponentProps<typeof SelectPrimitive.Positioner>, "side" | "sideOffset" | "align" | "alignItemWithTrigger">) {
   return (
     <SelectPrimitive.Portal>
       <SelectPrimitive.Positioner
         side={side}
         sideOffset={sideOffset}
+        align={align}
+        alignItemWithTrigger={alignItemWithTrigger}
         className="z-[105]"
         style={{ zIndex: 105 }}
       >
         <SelectPrimitive.Popup
           data-slot="select-content"
           className={cn(
-            "relative max-h-96 min-w-[8rem] overflow-hidden rounded-xl border bg-popover text-popover-foreground shadow-md data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
+            "relative max-h-96 min-w-[var(--anchor-width)] overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800 bg-popover text-popover-foreground shadow-lg data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
             className
           )}
           style={{ zIndex: 105 }}

@@ -1,4 +1,4 @@
-﻿import { findWorkspaceByTenant } from "@/lib/workspace";
+import { findWorkspaceByTenant } from "@/lib/workspace";
 import { db } from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import Link from "next/link";
@@ -46,7 +46,7 @@ export default async function HelpCenterPage({
     ticketText: "Open a Ticket",
     ticketLink: "#",
     emailText: "Email Support",
-    emailLink: `mailto:${workspace.siteSettings.contactEmail || 'support@abcd.com'}`
+    emailLink: `mailto:${workspace.siteSettings.contactEmail || 'sb.abcd321@gmail.com'}`
   };
 
   const iconMap: any = { HelpCircle, Search, Mail, MessageSquare, BookOpen, FileText, MapPin, PhoneCall };
@@ -117,9 +117,9 @@ export default async function HelpCenterPage({
             <div className="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-6">
               {[
                 { icon: MapPin, title: "Our Office", value: workspace.siteSettings.address || "Kolkata, India", sub: "Visit us for in-person support" },
-                { icon: PhoneCall, title: "Call Us", value: workspace.siteSettings.contactPhone || "8944899747", sub: "Available Mon-Sat, 10am-6pm", href: `tel:${workspace.siteSettings.contactPhone}` },
-                { icon: Mail, title: "Email Support", value: workspace.siteSettings.contactEmail || "support@abcd.com", sub: "We'll respond within 24 hours", href: `mailto:${workspace.siteSettings.contactEmail}` },
-                { icon: MessageSquare, title: "WhatsApp Support", value: workspace.siteSettings.whatsapp || "Connect Now", sub: "Quickest way to get help", href: workspace.siteSettings.whatsapp ? `https://wa.me/${workspace.siteSettings.whatsapp.replace(/\D/g, '')}` : undefined }
+                { icon: PhoneCall, title: "Call Us", value: workspace.siteSettings.contactPhone || "+91 89448 99747", sub: "Available Mon-Sat, 10am-6pm", href: `tel:${workspace.siteSettings.contactPhone || "8944899747"}` },
+                { icon: Mail, title: "Email Support", value: workspace.siteSettings.contactEmail || "sb.abcd321@gmail.com", sub: "We'll respond within 24 hours", href: `mailto:${workspace.siteSettings.contactEmail || "sb.abcd321@gmail.com"}` },
+                { icon: MessageSquare, title: "WhatsApp Support", value: workspace.siteSettings.whatsapp || "+91 81676 85731", sub: "Quickest way to get help", href: workspace.siteSettings.whatsapp ? `https://wa.me/${workspace.siteSettings.whatsapp.replace(/\D/g, '')}` : 'https://wa.me/918167685731' }
               ].map((contact, i) => (
                 <div key={i} className="p-8 bg-white dark:bg-zinc-900 rounded-[2.5rem] border border-border/50 shadow-sm flex items-start gap-5">
                   <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center text-primary shrink-0">

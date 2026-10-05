@@ -13,7 +13,15 @@ import {
   Info,
   Zap,
   Sliders,
-  Server
+  Server,
+  BookOpenText,
+  Lock,
+  ArrowRight,
+  Video,
+  FileText,
+  BookOpen,
+  Link as LinkIcon,
+  Eye
 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -26,8 +34,10 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { 
   getPlatformRoutingConfig, 
-  updatePlatformRoutingConfig 
+  updatePlatformRoutingConfig,
+  purgeSystemCache
 } from "@/app/actions/platform-routing";
+import { bulkLockOfficialGuides } from "@/app/actions/user-guides";
 import { 
   type PlatformRoutingConfig, 
   type PlatformRoutingMode, 
@@ -47,10 +57,11 @@ export function DeveloperSiteConfigModal({
   developerEmail,
   isDeveloper
 }: DeveloperSiteConfigModalProps) {
-  const [activeTab, setActiveTab] = useState<"routing" | "pwa" | "maintenance">("routing");
+  const [activeTab, setActiveTab] = useState<"routing" | "pwa" | "maintenance" | "guides">("routing");
   const [config, setConfig] = useState<PlatformRoutingConfig>(DEFAULT_ROUTING_CONFIG);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [isBulkLocking, setIsBulkLocking] = useState(false);
   const [copiedLink, setCopiedLink] = useState<string | null>(null);
   const [previewTenant, setPreviewTenant] = useState("wb-101");
   const [hostDomain, setHostDomain] = useState("");
@@ -263,6 +274,19 @@ export function DeveloperSiteConfigModal({
             >
               <Server className="h-3.5 w-3.5" />
               <span>Health & Maintenance</span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab("guides")}
+              className={cn(
+                "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all",
+                activeTab === "guides"
+                  ? "bg-white dark:bg-slate-900 text-primary dark:text-white font-semibold shadow-xs"
+                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+              )}
+            >
+              <BookOpenText className="h-3.5 w-3.5" />
+              <span>User Guides</span>
             </button>
           </div>
         </div>
@@ -690,15 +714,268 @@ export function DeveloperSiteConfigModal({
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => {
-                    fetchConfig();
-                    toast.success("Cache purged & revalidated!");
+                  onClick={async () => {
+                    if (!isDeveloper) {
+                      toast.error("Permission Denied: Developer clearance required.");
+                      return;
+                    }
+                    toast.loading("Purging system cache tags...", { id: "purge-cache" });
+                    const res = await purgeSystemCache();
+                    if (res.success) {
+                      toast.success("Cache tags purged & platform revalidated!", { id: "purge-cache" });
+                      fetchConfig();
+                    } else {
+                      toast.error(res.error || "Failed to purge cache", { id: "purge-cache" });
+                    }
                   }}
                   className="h-7 px-2.5 rounded-lg text-xs font-semibold gap-1.5 border-slate-200 dark:border-slate-700 shrink-0"
                 >
                   <RefreshCw className="h-3 w-3" />
                   <span>Purge</span>
                 </Button>
+              </div>
+            </div>
+          )}
+
+          {/* TAB 4: USER GUIDES & KNOWLEDGE BASE */}
+          {activeTab === "guides" && (
+            <div className="space-y-3">
+              <div className="flex items-center justify-between p-3 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30">
+                <div className="space-y-0.5 pr-3">
+                  <div className="flex items-center gap-2">
+                    <Label className="text-xs font-bold text-slate-900 dark:text-white">
+                      Global User Guide System
+                    </Label>
+                    <Badge variant="outline" className={cn(
+                      "text-[8px] font-bold px-1.5 py-0 border-none",
+                      config.enableUserGuides ? "bg-emerald-500/15 text-emerald-600" : "bg-slate-200 dark:bg-slate-700 text-slate-500"
+                    )}>
+                      {config.enableUserGuides ? "ENABLED" : "DISABLED"}
+                    </Badge>
+                  </div>
+                  <p className="text-[11px] text-slate-500">
+                    Master developer switch. Enables the interactive user guide system across authorized admin portals.
+                  </p>
+                </div>
+                <Switch
+                  checked={config.enableUserGuides}
+                  onCheckedChange={(checked) => setConfig(prev => ({ ...prev, enableUserGuides: checked }))}
+                />
+              </div>
+
+              <div className="flex items-center justify-between p-3 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30">
+                <div className="space-y-0.5 pr-3">
+                  <div className="flex items-center gap-2">
+                    <Label className="text-xs font-semibold text-slate-800 dark:text-slate-200">
+                      Super Admin Portal Guides
+                    </Label>
+                    <Badge variant="outline" className="text-[8px] font-semibold px-1.5 py-0 border-none bg-blue-500/10 text-blue-600">
+                      /super-admin/guides
+                    </Badge>
+                  </div>
+                  <p className="text-[11px] text-slate-500">
+                    Allows Super Admins to view operational guides and manage Franchise Admin documentation.
+                  </p>
+                </div>
+                <Switch
+                  checked={config.enableSuperAdminGuides}
+                  disabled={!config.enableUserGuides}
+                  onCheckedChange={(checked) => setConfig(prev => ({ ...prev, enableSuperAdminGuides: checked }))}
+                />
+              </div>
+
+              <div className="flex items-center justify-between p-3 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30">
+                <div className="space-y-0.5 pr-3">
+                  <div className="flex items-center gap-2">
+                    <Label className="text-xs font-semibold text-slate-800 dark:text-slate-200">
+                      Franchise Admin Guides Master Permission
+                    </Label>
+                    <Badge variant="outline" className="text-[8px] font-semibold px-1.5 py-0 border-none bg-purple-500/10 text-purple-600">
+                      /admin/guides
+                    </Badge>
+                  </div>
+                  <p className="text-[11px] text-slate-500">
+                    Master developer permission allowing Franchise Admin dashboards to display the User Guide menu. (Super Admin also controls individual rollout).
+                  </p>
+                </div>
+                <Switch
+                  checked={config.enableFranchiseGuides}
+                  disabled={!config.enableUserGuides}
+                  onCheckedChange={(checked) => setConfig(prev => ({ ...prev, enableFranchiseGuides: checked }))}
+                />
+              </div>
+
+              {/* GRANULAR CONTENT & MEDIA CONTROLS */}
+              <div className="pt-2 border-t border-slate-200/60 dark:border-slate-700/60 space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider">
+                    Content Formats & Media Permissions
+                  </h4>
+                  <Badge variant="outline" className="text-[9px] font-semibold text-slate-500 border-none">
+                    Granular Developer Control
+                  </Badge>
+                </div>
+
+                {/* YouTube Video Tutorials */}
+                <div className="flex items-center justify-between p-3 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30">
+                  <div className="space-y-0.5 pr-3">
+                    <div className="flex items-center gap-2">
+                      <Video className="w-3.5 h-3.5 text-red-500" />
+                      <Label className="text-xs font-semibold text-slate-800 dark:text-slate-200">
+                        YouTube Video Tutorials
+                      </Label>
+                      <Badge variant="outline" className={cn(
+                        "text-[8px] font-bold px-1.5 py-0 border-none",
+                        config.enableGuideVideos ? "bg-red-500/15 text-red-600" : "bg-slate-200 dark:bg-slate-700 text-slate-500"
+                      )}>
+                        {config.enableGuideVideos ? "ENABLED" : "DISABLED"}
+                      </Badge>
+                    </div>
+                    <p className="text-[11px] text-slate-500">
+                      Allow YouTube walkthrough videos for users.
+                    </p>
+                  </div>
+                  <Switch
+                    checked={config.enableGuideVideos}
+                    disabled={!config.enableUserGuides}
+                    onCheckedChange={(checked) => setConfig(prev => ({ ...prev, enableGuideVideos: checked }))}
+                  />
+                </div>
+
+                {/* PDF Documentation & Operating Manuals */}
+                <div className="flex items-center justify-between p-3 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30">
+                  <div className="space-y-0.5 pr-3">
+                    <div className="flex items-center gap-2">
+                      <FileText className="w-3.5 h-3.5 text-amber-500" />
+                      <Label className="text-xs font-semibold text-slate-800 dark:text-slate-200">
+                        PDF Manuals & SOP Downloads
+                      </Label>
+                      <Badge variant="outline" className={cn(
+                        "text-[8px] font-bold px-1.5 py-0 border-none",
+                        config.enableGuidePdfs ? "bg-amber-500/15 text-amber-600" : "bg-slate-200 dark:bg-slate-700 text-slate-500"
+                      )}>
+                        {config.enableGuidePdfs ? "ENABLED" : "DISABLED"}
+                      </Badge>
+                    </div>
+                    <p className="text-[11px] text-slate-500">
+                      Allow downloadable PDF guides and manuals.
+                    </p>
+                  </div>
+                  <Switch
+                    checked={config.enableGuidePdfs}
+                    disabled={!config.enableUserGuides}
+                    onCheckedChange={(checked) => setConfig(prev => ({ ...prev, enableGuidePdfs: checked }))}
+                  />
+                </div>
+
+                {/* Interactive Step-by-Step Articles */}
+                <div className="flex items-center justify-between p-3 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30">
+                  <div className="space-y-0.5 pr-3">
+                    <div className="flex items-center gap-2">
+                      <BookOpen className="w-3.5 h-3.5 text-emerald-500" />
+                      <Label className="text-xs font-semibold text-slate-800 dark:text-slate-200">
+                        Step-by-Step Written Articles
+                      </Label>
+                      <Badge variant="outline" className={cn(
+                        "text-[8px] font-bold px-1.5 py-0 border-none",
+                        config.enableGuideArticles ? "bg-emerald-500/15 text-emerald-600" : "bg-slate-200 dark:bg-slate-700 text-slate-500"
+                      )}>
+                        {config.enableGuideArticles ? "ENABLED" : "DISABLED"}
+                      </Badge>
+                    </div>
+                    <p className="text-[11px] text-slate-500">
+                      Allow written articles and operating instructions.
+                    </p>
+                  </div>
+                  <Switch
+                    checked={config.enableGuideArticles}
+                    disabled={!config.enableUserGuides}
+                    onCheckedChange={(checked) => setConfig(prev => ({ ...prev, enableGuideArticles: checked }))}
+                  />
+                </div>
+
+                {/* External Resource Links */}
+                <div className="flex items-center justify-between p-3 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30">
+                  <div className="space-y-0.5 pr-3">
+                    <div className="flex items-center gap-2">
+                      <LinkIcon className="w-3.5 h-3.5 text-indigo-500" />
+                      <Label className="text-xs font-semibold text-slate-800 dark:text-slate-200">
+                        External Resource Links
+                      </Label>
+                      <Badge variant="outline" className={cn(
+                        "text-[8px] font-bold px-1.5 py-0 border-none",
+                        config.enableGuideExternalLinks ? "bg-indigo-500/15 text-indigo-600" : "bg-slate-200 dark:bg-slate-700 text-slate-500"
+                      )}>
+                        {config.enableGuideExternalLinks ? "ENABLED" : "DISABLED"}
+                      </Badge>
+                    </div>
+                    <p className="text-[11px] text-slate-500">
+                      Allow outbound reference and documentation links.
+                    </p>
+                  </div>
+                  <Switch
+                    checked={config.enableGuideExternalLinks}
+                    disabled={!config.enableUserGuides}
+                    onCheckedChange={(checked) => setConfig(prev => ({ ...prev, enableGuideExternalLinks: checked }))}
+                  />
+                </div>
+              </div>
+
+              <div className="p-3 rounded-xl border border-amber-500/20 bg-amber-500/5 space-y-2">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+                  <div className="space-y-0.5">
+                    <h4 className="text-xs font-bold text-amber-900 dark:text-amber-300 flex items-center gap-1.5">
+                      <Lock className="w-3.5 h-3.5 text-amber-600" />
+                      <span>Developer Guide Protection & Immutability</span>
+                    </h4>
+                    <p className="text-[11px] text-amber-800/80 dark:text-amber-400/80">
+                      Protects official core system manuals from being modified or deleted by Super Admins.
+                    </p>
+                  </div>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={async () => {
+                      setIsBulkLocking(true);
+                      try {
+                        const res = await bulkLockOfficialGuides();
+                        if (res.success) {
+                          toast.success(`Locked ${res.count} official system guides.`);
+                        } else {
+                          toast.error(res.error || "Failed to lock guides");
+                        }
+                      } catch (err: any) {
+                        toast.error(err.message || "An error occurred");
+                      } finally {
+                        setIsBulkLocking(false);
+                      }
+                    }}
+                    disabled={isBulkLocking}
+                    className="h-8 px-3 rounded-lg text-xs font-bold border-amber-500/30 text-amber-800 dark:text-amber-200 hover:bg-amber-500/10 shrink-0 gap-1.5"
+                  >
+                    <Lock className="w-3.5 h-3.5" />
+                    <span>{isBulkLocking ? "Locking..." : "Lock All Official Guides"}</span>
+                  </Button>
+                </div>
+              </div>
+
+              <div className="p-3 rounded-xl border border-blue-500/20 bg-blue-500/5 flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <h4 className="text-xs font-bold text-blue-900 dark:text-blue-300">
+                    Knowledge Base Management Console
+                  </h4>
+                  <p className="text-[11px] text-blue-700/80 dark:text-blue-400/80">
+                    Upload and manage YouTube videos, PDF documentation, and step-by-step guides.
+                  </p>
+                </div>
+                <a 
+                  href="/super-admin/guides"
+                  className="inline-flex items-center justify-center h-8 px-3 rounded-lg text-xs font-bold gap-1.5 bg-blue-600 hover:bg-blue-700 text-white shadow-sm shrink-0 transition-all"
+                >
+                  <span>Manage Guides</span>
+                  <ArrowRight className="h-3.5 w-3.5" />
+                </a>
               </div>
             </div>
           )}

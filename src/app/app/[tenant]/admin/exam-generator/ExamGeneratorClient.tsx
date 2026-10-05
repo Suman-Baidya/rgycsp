@@ -152,7 +152,7 @@ export default function ExamGeneratorClient({
 
       <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
         {activeTab === "question" && <QuestionPapersTab workspaceId={workspaceId} workspaceTokens={workspaceTokens} courses={courses} chapters={chapters} />}
-        {activeTab === "online" && <OnlineExamTab workspaceId={workspaceId} exams={exams.filter(e => e.type === "ONLINE")} />}
+        {activeTab === "online" && <OnlineExamTab workspaceId={workspaceId} workspace={workspace} superAdminName={superAdminName} exams={exams.filter(e => e.type === "ONLINE")} />}
         {activeTab === "offline" && <OfflineExamTab workspaceId={workspaceId} workspace={workspace} superAdminName={superAdminName} courses={courses} exams={exams} students={students} />}
         {activeTab === "result" && <StudentsResultTab students={students} courses={courses} batches={batches} />}
         {activeTab === "admit" && <AdmitCardTab students={students} courses={courses} batches={batches} exams={exams} />}

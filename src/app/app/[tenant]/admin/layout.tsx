@@ -5,6 +5,7 @@ import { headers } from "next/headers";
 import { WorkspaceSidebar } from "@/components/layout/WorkspaceSidebar";
 import { WorkspaceAdminHeader } from "@/components/layout/WorkspaceAdminHeader";
 import { QuickActionFAB } from "@/components/dashboard/QuickActionFAB";
+import { ContextualGuideWidget } from "@/components/guides/ContextualGuideWidget";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { getServerTenantLink, getServerWorkspaceBase } from "@/lib/routing-server";
 import { db } from "@/lib/prisma";
@@ -12,6 +13,7 @@ import { getPendingApplicationsCount } from "@/app/actions/admin-applications";
 import { getPendingFeePaymentsCount } from "@/app/actions/payments";
 import { getPendingEnquiriesCount } from "@/app/actions/enquiries";
 import { isDeveloperEmail } from "@/lib/developer";
+import { getPlatformRoutingConfig } from "@/app/actions/platform-routing";
 
 export default async function WorkspaceAdminLayout({
   children,
@@ -24,20 +26,29 @@ export default async function WorkspaceAdminLayout({
   const { tenant } = await params;
   
   const normalizedTenant = tenant?.toLowerCase()?.trim();
-  const workspace = await db.workspace.findFirst({
-    where: {
-      OR: [
-        { subdomain: normalizedTenant },
-        { centerCode: { equals: normalizedTenant, mode: 'insensitive' } },
-        { id: tenant }
-      ]
-    },
-    select: { id: true, isStateManager: true, walletBalance: true, name: true, centerCode: true, isSubdomainEnabled: true, subdomain: true }
-  });
+  const [workspace, routingConfig] = await Promise.all([
+    db.workspace.findFirst({
+      where: {
+        OR: [
+          { subdomain: normalizedTenant },
+          { centerCode: { equals: normalizedTenant, mode: 'insensitive' } },
+          { id: tenant }
+        ]
+      },
+      select: { id: true, isStateManager: true, walletBalance: true, name: true, centerCode: true, isSubdomainEnabled: true, subdomain: true }
+    }),
+    getPlatformRoutingConfig().catch(() => null)
+  ]);
 
   if (!workspace) {
     notFound();
   }
+
+  const isUserGuideEnabled = Boolean(
+    routingConfig?.enableUserGuides &&
+    routingConfig?.enableFranchiseGuides &&
+    routingConfig?.franchiseGuidesEnabled
+  );
 
   const canonicalTenant = workspace.subdomain;
 
@@ -140,6 +151,7 @@ export default async function WorkspaceAdminLayout({
         pendingEnquiriesCount={pendingEnquiriesCount}
         isStateManager={workspace?.isStateManager || false}
         isSubdomainEnabled={workspace?.isSubdomainEnabled ?? true}
+        isUserGuideEnabled={isUserGuideEnabled}
         userRole={userRole}
         userPermissions={userPermissions}
       />
@@ -163,6 +175,7 @@ export default async function WorkspaceAdminLayout({
         </main>
       </div>
       <QuickActionFAB portal="admin" tenant={canonicalTenant} workspaceBase={workspaceBase} />
+      <ContextualGuideWidget portal="admin" tenant={canonicalTenant} workspaceBase={workspaceBase} workspaceId={workspace.id} />
     </div>
   );
 }

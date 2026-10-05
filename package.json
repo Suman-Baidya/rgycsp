@@ -11,7 +11,8 @@
     "docs:franchise": "python scripts/build-franchise-guide.py",
     "docs:superadmin": "python scripts/build-super-admin-guide.py",
     "docs:features": "python scripts/build-features-catalog.py",
-    "docs:all": "python scripts/build-franchise-guide.py && python scripts/build-super-admin-guide.py && python scripts/build-features-catalog.py"
+    "docs:all": "python scripts/build-franchise-guide.py && python scripts/build-super-admin-guide.py && python scripts/build-features-catalog.py",
+    "demo:seed": "tsx scripts/seed-demo-superadmin.ts"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.2",

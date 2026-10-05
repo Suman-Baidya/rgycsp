@@ -43,21 +43,87 @@ function createPrismaClient(): PrismaClient {
   });
 }
 
-// In development, attempt to refresh cached client if new models are added
-if (process.env.NODE_ENV !== "production" && globalThis.prisma && !(globalThis.prisma as any).userAccessLog) {
+async function checkDemoWritePermission(model?: string, action?: string, args?: any) {
+  if (process.env.ENABLE_DEMO_RESTRICTIONS !== "true") return;
+  // Always permit login tracking and NextAuth sessions
+  if (model === "UserAccessLog" || model === "Session" || model === "Account") return;
+
+  // Fast check via proxy request header (no recursive database or auth calls)
   try {
-    const updatedClient = createPrismaClient();
-    if ((updatedClient as any).userAccessLog) {
-      globalThis.prisma = updatedClient;
+    const { headers } = await import("next/headers");
+    const headerList = await headers();
+    if (headerList.get("x-is-demo-user") === "true") {
+      if (model === "User") {
+        // Block all User deletions and creations by demo user
+        if (action === "delete" || action === "deleteMany" || action === "create" || action === "createMany") {
+          throw new Error("You Can't Edit as Demo Preview");
+        }
+        // If updating a user, only allow non-destructive telemetry (lastSeen, lastLoginAt, lastActive)
+        if (action === "update" || action === "updateMany" || action === "upsert") {
+          const dataKeys = Object.keys(args?.data || {});
+          const allowedTelemetryKeys = ["lastSeen", "lastLoginAt", "lastActive", "presence"];
+          const isOnlyTelemetry = dataKeys.length > 0 && dataKeys.every((k) => allowedTelemetryKeys.includes(k));
+          if (!isOnlyTelemetry) {
+            throw new Error("You Can't Edit as Demo Preview");
+          }
+        }
+      } else {
+        // Any write to any other model is strictly prohibited for demo user
+        throw new Error("You Can't Edit as Demo Preview");
+      }
     }
-  } catch (err) {
-    console.warn("PRISMA: Retaining existing client instance:", err);
+  } catch (err: any) {
+    if (err?.message?.includes("You Can't Edit as Demo Preview")) {
+      throw err;
+    }
   }
 }
 
-export const db = globalThis.prisma || createPrismaClient();
+function applyDemoProtection(client: PrismaClient): PrismaClient {
+  if (process.env.ENABLE_DEMO_RESTRICTIONS !== "true") {
+    return client;
+  }
+  return (client as any).$extends({
+    query: {
+      $allModels: {
+        async create({ model, args, query }: any) {
+          await checkDemoWritePermission(model, "create", args);
+          return query(args);
+        },
+        async update({ model, args, query }: any) {
+          await checkDemoWritePermission(model, "update", args);
+          return query(args);
+        },
+        async delete({ model, args, query }: any) {
+          await checkDemoWritePermission(model, "delete", args);
+          return query(args);
+        },
+        async upsert({ model, args, query }: any) {
+          await checkDemoWritePermission(model, "upsert", args);
+          return query(args);
+        },
+        async createMany({ model, args, query }: any) {
+          await checkDemoWritePermission(model, "createMany", args);
+          return query(args);
+        },
+        async updateMany({ model, args, query }: any) {
+          await checkDemoWritePermission(model, "updateMany", args);
+          return query(args);
+        },
+        async deleteMany({ model, args, query }: any) {
+          await checkDemoWritePermission(model, "deleteMany", args);
+          return query(args);
+        },
+      }
+    }
+  }) as PrismaClient;
+}
 
-if (process.env.NODE_ENV !== "production") globalThis.prisma = db;
+const basePrisma = globalThis.prisma || createPrismaClient();
+
+export const db = applyDemoProtection(basePrisma);
+
+if (process.env.NODE_ENV !== "production") globalThis.prisma = basePrisma;
 
 // Trigger Next.js recompile to load the updated Prisma Client (Product and ProductOrder added)
 // Last Updated: 2026-06-26T14:05:00Z

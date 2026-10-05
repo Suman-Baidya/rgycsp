@@ -17,6 +17,7 @@ import { WorkspaceContact } from "@/components/landing/WorkspaceContact";
 import { WorkspaceEvents } from "@/components/landing/WorkspaceEvents";
 import { CustomThemeStyle } from "@/components/providers/CustomThemeStyle";
 import { auth } from "@/auth";
+import { getBrandShortName } from "@/lib/branding";
 
 export default async function InstituteLandingPage({
   params
@@ -114,7 +115,7 @@ export default async function InstituteLandingPage({
     enabled: globalBadge.enabled !== false,
     label: globalBadge.label || "Head Office",
     title: globalBadge.title || globalSettings?.siteName || "Head Office",
-    shortName: globalBadge.shortName || "RGYCSP",
+    shortName: getBrandShortName(globalSettings?.siteName, globalBadge.shortName),
     logoUrl: globalBadge.logoUrl || globalSettings?.logoUrl || "/logo.png",
     showButton: !!globalBadge.showButton,
     buttonText: globalBadge.buttonText || "Visit Portal",

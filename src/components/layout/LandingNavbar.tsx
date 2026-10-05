@@ -23,6 +23,7 @@ import { useTheme } from "next-themes";
 import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import Image from "next/image";
+import { getBrandShortName } from "@/lib/branding";
 import { CustomThemeStyle } from "@/components/providers/CustomThemeStyle";
 import { cn } from "@/lib/utils";
 
@@ -122,7 +123,19 @@ export function LandingNavbar({ settings, user, isHome }: { settings?: any, user
   };
 
   const siteName = settings?.siteName || "ABCD Edu Hub";
+  const brandShortName = getBrandShortName(siteName, settings?.navbarConfig?.shortName);
+  const isNameTooLongForMobile = siteName.length > 14;
+  const isNameTooLongForDesktop = siteName.length > 20;
+
+  const mobileDisplayTitle = isNameTooLongForMobile ? brandShortName : siteName;
+  const desktopDisplayTitle = isNameTooLongForDesktop ? brandShortName : siteName;
+  const secondarySiteName = settings?.navbarConfig?.secondarySiteName;
+  const desktopSubtitle = isNameTooLongForDesktop 
+    ? (secondarySiteName || siteName)
+    : secondarySiteName;
+
   const contactPhone = settings?.contactPhone || "8944899747";
+  const whatsappNumber = settings?.whatsapp || "8167685731";
   const logoUrl = settings?.logoUrl || "/logo.png";
 
   const dashboardHref = (user?.role === "SUPER_ADMIN" || user?.role === "SUPER_ADMIN_MANAGER" || user?.isDeveloper) ? "/super-admin" : "/workspaces";
@@ -182,23 +195,23 @@ export function LandingNavbar({ settings, user, isHome }: { settings?: any, user
           {/* Mobile Text (Hidden on Desktop) */}
           <div className="flex lg:hidden flex-col border-l-2 border-foreground/20 dark:border-foreground/30 pl-2 overflow-hidden min-w-0 max-w-[160px] sm:max-w-[200px]">
             <span className="text-lg sm:text-xl font-bold tracking-tight whitespace-nowrap font-heading text-foreground group-hover:text-primary transition-colors leading-tight">
-              R.G.Y.C.S.P
+              {mobileDisplayTitle}
             </span>
             <div className="overflow-hidden w-full relative h-[14px] mt-0.5">
               <div className="absolute whitespace-nowrap flex animate-marquee text-[10px] sm:text-xs text-foreground/70 font-bold tracking-widest uppercase leading-none group-hover:text-foreground/90 transition-colors">
-                <span className="mr-8">Rajeev Gandhi Youth Computer Shiksha Parishad</span>
-                <span className="mr-8">Rajeev Gandhi Youth Computer Shiksha Parishad</span>
+                <span className="mr-8">{config?.secondarySiteName || siteName}</span>
+                <span className="mr-8">{config?.secondarySiteName || siteName}</span>
               </div>
             </div>
           </div>
           {/* Desktop Text (Hidden on Mobile) */}
-          <div className="hidden lg:flex flex-col border-l-2 border-foreground/20 dark:border-foreground/30 pl-2">
-            <span className="text-lg sm:text-2xl font-bold tracking-tight whitespace-nowrap font-heading text-foreground group-hover:text-primary transition-colors leading-tight">
-              {siteName}
+          <div className="hidden lg:flex flex-col border-l-2 border-foreground/20 dark:border-foreground/30 pl-2 max-w-[320px] xl:max-w-[420px]">
+            <span className="text-lg sm:text-2xl font-bold tracking-tight whitespace-nowrap font-heading text-foreground group-hover:text-primary transition-colors leading-tight truncate">
+              {desktopDisplayTitle}
             </span>
-            {config?.secondarySiteName && (
-              <span className="text-[10px] sm:text-xs text-foreground/70 font-bold tracking-widest uppercase whitespace-nowrap leading-none mt-1 group-hover:text-foreground/90 transition-colors">
-                {config.secondarySiteName}
+            {desktopSubtitle && (
+              <span className="text-[10px] sm:text-xs text-foreground/70 font-bold tracking-widest uppercase whitespace-nowrap leading-none mt-1 group-hover:text-foreground/90 transition-colors truncate">
+                {desktopSubtitle}
               </span>
             )}
           </div>
@@ -225,7 +238,7 @@ export function LandingNavbar({ settings, user, isHome }: { settings?: any, user
             {settings?.socialLinks?.instagram && <Link href={settings.socialLinks.instagram} target="_blank" aria-label="Instagram" className="hover:text-muted transition-colors"><Instagram className="w-4 h-4" /></Link>}
             {settings?.socialLinks?.twitter && <Link href={settings.socialLinks.twitter} target="_blank" aria-label="X (Twitter)" className="hover:text-muted transition-colors"><Twitter className="w-4 h-4" /></Link>}
             {settings?.socialLinks?.linkedin && <Link href={settings.socialLinks.linkedin} target="_blank" aria-label="LinkedIn" className="hover:text-muted transition-colors"><Linkedin className="w-4 h-4" /></Link>}
-            {settings?.whatsapp && <Link href={`https://wa.me/${settings.whatsapp.replace(/\D/g, '')}`} target="_blank" aria-label="WhatsApp" className="hover:text-muted transition-colors"><Phone className="w-4 h-4" /></Link>}
+            {whatsappNumber && <Link href={`https://wa.me/${whatsappNumber.replace(/\D/g, '')}`} target="_blank" aria-label="WhatsApp" className="hover:text-muted transition-colors"><Phone className="w-4 h-4" /></Link>}
           </div>
 
           {/* Top Right: Catalog, Theme */}

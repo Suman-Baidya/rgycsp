@@ -56,6 +56,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { DocumentRenderer, DocumentRendererRef } from "@/components/documents/DocumentRenderer";
+import { getBrandShortName } from "@/lib/branding";
 import { getAllNoticepadTemplates } from "@/app/actions/document-templates";
 import {
   broadcastSuperAdminNotice,
@@ -218,7 +219,8 @@ export function NoticepadDocumentViewer({
     const year = new Date().getFullYear();
     const code = workspace?.centerCode || (isSuperAdmin ? "HO" : "CTR");
     const rand = Math.floor(100 + Math.random() * 900);
-    return `RGYCSP/${code}/CIR/${year}/${rand}`;
+    const brand = isSuperAdmin ? getBrandShortName(workspace?.name, null) : (workspace?.centerCode || "CTR");
+    return `${brand}/${code}/CIR/${year}/${rand}`;
   };
 
   // Open Create Modal
@@ -467,7 +469,8 @@ export function NoticepadDocumentViewer({
     });
 
     const isUrgent = notice.priority === "URGENT";
-    const refNo = notice.refNo || `RGYCSP/${workspace?.centerCode || (isSuperAdmin ? "HO" : "CTR")}/CIR/${new Date().getFullYear()}/${notice.id ? notice.id.slice(-4).toUpperCase() : "042"}`;
+    const brand = isSuperAdmin ? getBrandShortName(workspace?.name, null) : (workspace?.centerCode || "CTR");
+    const refNo = notice.refNo || `${brand}/${workspace?.centerCode || (isSuperAdmin ? "HO" : "CTR")}/CIR/${new Date().getFullYear()}/${notice.id ? notice.id.slice(-4).toUpperCase() : "042"}`;
 
     const isNoticeFromSuperAdmin = isSuperAdmin || !notice.workspace || notice.publishedBy === "Head Office" || notice.isHeadOffice;
 
@@ -1264,7 +1267,7 @@ export function NoticepadDocumentViewer({
                   <Input
                     value={formRefNo}
                     onChange={(e) => setFormRefNo(e.target.value)}
-                    placeholder="RGYCSP/HO/CIR/2026/042"
+                    placeholder="ABCD/HO/CIR/2026/042"
                     className="h-8 sm:h-9 text-xs rounded-lg font-mono bg-slate-50 dark:bg-slate-800/50"
                   />
                 </div>

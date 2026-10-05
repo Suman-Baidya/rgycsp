@@ -5,6 +5,7 @@ import authConfig from '@/auth.config';
 import Credentials from 'next-auth/providers/credentials';
 import bcrypt from 'bcryptjs';
 import { isDeveloperEmail } from '@/lib/developer';
+import { isDemoEmail, isDemoRestrictionsEnabled } from '@/lib/demo';
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(db),
@@ -29,6 +30,32 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           const cleanUsername = username.trim();
           const upperUsername = cleanUsername.toUpperCase();
           const lowerEmail = cleanUsername.toLowerCase();
+
+          // Anti-bot & IP Rate Limiting
+          try {
+            const { headers } = await import("next/headers");
+            const headerList = await headers();
+            const rawIp = headerList.get("x-forwarded-for")?.split(",")[0]?.trim() || headerList.get("x-real-ip") || "127.0.0.1";
+            const { checkAuthRateLimit, checkDemoAccountRateLimit } = await import("@/lib/security");
+            
+            const rateCheck = checkAuthRateLimit(rawIp);
+            if (!rateCheck.allowed) {
+              console.warn(`AUTH: IP ${rawIp} exceeded login rate limit.`);
+              throw new Error(`Too many login attempts. Please wait ${rateCheck.retryAfterSeconds} seconds.`);
+            }
+
+            if (isDemoEmail(cleanUsername) || isDemoEmail(lowerEmail)) {
+              const demoCheck = checkDemoAccountRateLimit(rawIp);
+              if (!demoCheck.allowed) {
+                console.warn(`AUTH: IP ${rawIp} exceeded demo login rate limit.`);
+                throw new Error(`Demo preview is busy. Please wait ${demoCheck.retryAfterSeconds} seconds.`);
+              }
+            }
+          } catch (rateErr: any) {
+            if (rateErr?.message?.includes("login attempts") || rateErr?.message?.includes("Demo preview")) {
+              throw rateErr;
+            }
+          }
 
           // Try username first (Student/Applicant)
           let user = await db.user.findFirst({
@@ -75,6 +102,13 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
           if (!user || !user.passwordHash) {
             console.log("AUTH: User not found or no password hash");
+            return null;
+          }
+
+          // If this account is a demo account, ensure demo mode is explicitly enabled in environment
+          const isDemoTarget = isDemoEmail(user.email) || user.email?.toLowerCase().trim() === "demoadmin@abcd.com";
+          if (isDemoTarget && !isDemoRestrictionsEnabled()) {
+            console.log("AUTH: Demo login rejected because ENABLE_DEMO_RESTRICTIONS is not true.");
             return null;
           }
 
@@ -188,6 +222,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           }
 
           console.log("AUTH: Successfully authorized user:", user.email || user.username);
+          const isDemo = isDemoEmail(user.email) && isDemoRestrictionsEnabled();
           return {
             id: user.id,
             name: user.name,
@@ -196,6 +231,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             role: effectiveRole,
             isActive: user.isActive !== false,
             isDeveloper: isDev,
+            isDemo: isDemo,
             systemPermissions: (user as any).systemPermissions,
           };
         } catch (error) {

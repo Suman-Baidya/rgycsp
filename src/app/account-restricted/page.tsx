@@ -18,8 +18,8 @@ export default async function AccountRestrictedPage() {
     select: { contactEmail: true, contactPhone: true, siteName: true }
   });
 
-  const supportEmail = settings?.contactEmail || "support@rgycsp.tech";
-  const supportPhone = settings?.contactPhone || "+91 8944899747";
+  const supportEmail = settings?.contactEmail || "sb.abcd321@gmail.com";
+  const supportPhone = settings?.contactPhone || "+91 89448 99747";
   const siteName = settings?.siteName || "ABCD Edu Hub";
 
   return (

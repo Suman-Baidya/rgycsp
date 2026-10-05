@@ -8,6 +8,7 @@ declare module "next-auth" {
       isActive?: boolean;
       systemPermissions?: any;
       isDeveloper?: boolean;
+      isDemo?: boolean;
       originalUserId?: string;
     } & DefaultSession["user"];
   }
@@ -16,6 +17,7 @@ declare module "next-auth" {
     role: string;
     isActive?: boolean;
     isDeveloper?: boolean;
+    isDemo?: boolean;
     systemPermissions?: any;
   }
 }
@@ -27,6 +29,7 @@ declare module "next-auth/jwt" {
     isActive?: boolean;
     systemPermissions?: any;
     isDeveloper?: boolean;
+    isDemo?: boolean;
     impersonatedUserId?: string;
     impersonatedRole?: string;
     impersonatedName?: string;

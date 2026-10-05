@@ -321,7 +321,7 @@ export function WorkspaceSettingsForm({ settings }: { settings: any }) {
                           id="siteName"
                           value={siteName || ""}
                           onChange={(e) => setSiteName(e.target.value)}
-                          placeholder="e.g. RGYCSP Chandpara"
+                          placeholder="e.g. ABCD Chandpara"
                           className="h-8 sm:h-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 font-semibold"
                         />
                         <p className="text-[9px] text-slate-400 font-medium">Main title displayed in the franchise navbar and official records.</p>
@@ -384,7 +384,7 @@ export function WorkspaceSettingsForm({ settings }: { settings: any }) {
                           id="footerBrandName"
                           value={navbarConfig?.footerBrandName || ""}
                           onChange={(e) => setNavbarConfig({ ...navbarConfig, footerBrandName: e.target.value })}
-                          placeholder={siteName || "e.g. RGYCSP Chandpara"}
+                          placeholder={siteName || "e.g. ABCD Chandpara"}
                           className="h-8 sm:h-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 font-medium"
                         />
                         <p className="text-[9px] text-slate-400 font-medium">Defaults to Institute Name if left empty.</p>

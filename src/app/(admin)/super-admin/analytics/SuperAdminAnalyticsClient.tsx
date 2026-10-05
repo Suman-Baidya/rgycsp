@@ -889,7 +889,7 @@ export function SuperAdminAnalyticsClient({ initialData }: SuperAdminAnalyticsPr
                       {/* WhatsApp Button */}
                       {cleanPhone && (
                         <a
-                          href={`https://wa.me/91${cleanPhone}?text=Hello!%20Thank%20you%20for%20contacting%20RGYCSP%20Edu%20Hub.%20How%20can%20we%20assist%20you%20with%20your%20course%20enrollment?`}
+                          href={`https://wa.me/91${cleanPhone}?text=Hello!%20Thank%20you%20for%20contacting%20ABCD%20Edu%20Hub.%20How%20can%20we%20assist%20you%20with%20your%20course%20enrollment?`}
                           target="_blank"
                           rel="noreferrer"
                         >

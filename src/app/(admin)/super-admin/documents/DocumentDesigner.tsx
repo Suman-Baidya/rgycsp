@@ -122,7 +122,7 @@ const DEFAULT_DEMO_DATA: Record<string, string> = {
   noticeTitle: "Annual Verification & Examination Schedule Directive",
   noticeBody: "All registered candidates, center directors, and faculty members are hereby informed that the upcoming examinations and annual center verification audit will be conducted strictly as per the central board norms.\n\nAll candidate records, admit cards, and internal attendance logs must be submitted before the cutoff deadline.",
   noticeDate: "27/09/2026",
-  noticeRefNo: "RGYCSP/HO/DIR/2026/088",
+  noticeRefNo: "ABCD/HO/DIR/2026/088",
   noticeRecipient: "All Franchise Center Directors & Affiliated Candidates",
   issuerName: "Central Head Office Board of Examinations",
   issuerRole: "Controller of Examinations & Central Secretary",

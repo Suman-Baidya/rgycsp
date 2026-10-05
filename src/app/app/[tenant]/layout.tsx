@@ -3,6 +3,7 @@ import { headers } from "next/headers";
 import { auth } from "@/auth";
 import type { Metadata } from "next";
 import { getWorkspaceByTenant } from "@/lib/workspace";
+import { isDeveloperEmail } from "@/lib/developer";
 
 export async function generateMetadata({ params }: { params: Promise<{ tenant: string }> }): Promise<Metadata> {
   const { tenant } = await params;
@@ -56,9 +57,21 @@ export default async function TenantLayout({
   const reqHeaders = await headers();
   const isSubdomain = reqHeaders.get("x-is-subdomain") === "true";
   const session = await auth();
-  const isSuperAdmin = session?.user?.role === "SUPER_ADMIN";
+  const isSuperOrDev = 
+    session?.user?.role === "SUPER_ADMIN" || 
+    session?.user?.role === "SUPER_ADMIN_MANAGER" ||
+    isDeveloperEmail(session?.user?.email) ||
+    Boolean((session?.user as any)?.isDeveloper);
 
-  if (isSubdomain && !workspace.isSubdomainEnabled && !isSuperAdmin) {
+  const currentPath = reqHeaders.get("x-pathname") || "";
+  const isPortalRoute = 
+    currentPath.includes("/admin") || 
+    currentPath.includes("/student") || 
+    currentPath.includes("/login") || 
+    currentPath.includes("/account-restricted");
+
+  // Only public landing pages can be disabled by isSubdomainEnabled; portal routes are always accessible
+  if (isSubdomain && !workspace.isSubdomainEnabled && !isSuperOrDev && !isPortalRoute) {
     notFound();
   }
 

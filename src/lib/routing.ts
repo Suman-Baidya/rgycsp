@@ -183,6 +183,7 @@ export const WORKSPACE_ROUTES = {
   ADMIN_STATE_MANAGER: "/admin/state-manager",
   ADMIN_PRODUCTS: "/admin/products",
   ADMIN_WALLET: "/admin/wallet",
+  ADMIN_GUIDES: "/admin/guides",
   STUDENT_DASHBOARD: "/student/dashboard",
   STUDENT_PROFILE: "/student/profile",
   STUDENT_COURSES: "/student/courses",

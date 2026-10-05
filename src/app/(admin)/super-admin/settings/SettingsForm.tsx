@@ -17,6 +17,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { SuperAdminEventsTab } from "./SuperAdminEventsTab";
 import { cn } from "@/lib/utils";
 import { ThemeContrastIndicator } from "@/components/theme/ThemeContrastIndicator";
+import { getBrandShortName } from "@/lib/branding";
 
 const THEME_PRESETS = [
   { name: "Sunset Glow", primary: "#f97316", accent: "#ea580c", description: "Vibrant and energetic orange tones." },
@@ -568,10 +569,10 @@ export function SettingsForm({ settings, isSuperAdmin = true }: { settings: any,
                             id="headOfficeShortName"
                             value={headOfficeBadge.shortName || ""}
                             onChange={(e) => setHeadOfficeBadge({ ...headOfficeBadge, shortName: e.target.value })}
-                            placeholder="e.g. RGYCSP"
+                            placeholder="e.g. ABCD"
                             className="h-8 sm:h-9 bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700/60 rounded-lg text-xs"
                           />
-                          <p className="text-[9px] text-slate-400 font-medium">Acronym shown in navbar (e.g. RGYCSP).</p>
+                          <p className="text-[9px] text-slate-400 font-medium">Acronym shown in navbar (e.g. ABCD).</p>
                         </div>
                         <div className="space-y-1.5">
                           <Label htmlFor="headOfficeTitle" className="text-xs font-semibold text-slate-700 dark:text-slate-300">Full Organization Name</Label>
@@ -579,7 +580,7 @@ export function SettingsForm({ settings, isSuperAdmin = true }: { settings: any,
                             id="headOfficeTitle"
                             value={headOfficeBadge.title || ""}
                             onChange={(e) => setHeadOfficeBadge({ ...headOfficeBadge, title: e.target.value })}
-                            placeholder={siteName || "e.g. Rajeev Gandhi Youth Computer Shiksha Parishad"}
+                            placeholder={siteName || "e.g. ABCD Educational Hub"}
                             className="h-8 sm:h-9 bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700/60 rounded-lg text-xs"
                           />
                           <p className="text-[9px] text-slate-400 font-medium">Full name shown in tooltip & link details.</p>
@@ -593,7 +594,7 @@ export function SettingsForm({ settings, isSuperAdmin = true }: { settings: any,
                             id="headOfficeLink"
                             value={headOfficeBadge.linkUrl || ""}
                             onChange={(e) => setHeadOfficeBadge({ ...headOfficeBadge, linkUrl: e.target.value })}
-                            placeholder="e.g. / or https://rgycsp.in"
+                            placeholder="e.g. / or https://abcd.com"
                             className="h-8 sm:h-9 bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700/60 rounded-lg text-xs"
                           />
                           <p className="text-[9px] text-slate-400 font-medium">Clicking opens this link. Defaults to main site landing page.</p>
@@ -654,7 +655,7 @@ export function SettingsForm({ settings, isSuperAdmin = true }: { settings: any,
                             <ExternalLink className="w-2.5 h-2.5 opacity-60" />
                           </span>
                           <span className="text-base sm:text-xl lg:text-2xl font-black text-white tracking-wide leading-tight mt-0.5">
-                            {headOfficeBadge.shortName || (headOfficeBadge.title?.toLowerCase().includes("rajeev gandhi") ? "RGYCSP" : (headOfficeBadge.title || "RGYCSP"))}
+                            {getBrandShortName(headOfficeBadge.title || siteName, headOfficeBadge.shortName)}
                           </span>
                         </div>
                         {headOfficeBadge.showButton && (

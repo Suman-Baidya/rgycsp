@@ -407,12 +407,17 @@ export default function FranchiseEnquiriesClient({
         >
           <div className="flex items-center gap-2">
             <Button
+              type="button"
               onClick={() => setActiveTab(prev => prev === "CAMPAIGNS" ? "ALL" : "CAMPAIGNS")}
-              variant={activeTab === "CAMPAIGNS" ? "default" : "outline"}
-              className="h-8 sm:h-9 px-3 sm:px-4 rounded-lg text-xs sm:text-sm font-semibold gap-1.5 shadow-sm border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900"
+              className={cn(
+                "h-8 sm:h-9 px-3 sm:px-4 rounded-lg text-xs sm:text-sm font-semibold gap-1.5 shadow-sm transition-all border",
+                activeTab === "CAMPAIGNS"
+                  ? "bg-blue-600 hover:bg-blue-700 text-white border-blue-600 shadow-sm"
+                  : "bg-white text-slate-700 hover:bg-slate-50 hover:text-slate-900 border-slate-200 dark:bg-slate-900 dark:text-slate-200 dark:border-slate-700 dark:hover:bg-slate-800 dark:hover:text-white"
+              )}
             >
-              <Megaphone className="h-3.5 w-3.5 text-primary" />
-              <span>Campaigns & Marketing Funnel</span>
+              <Megaphone className={cn("h-3.5 w-3.5", activeTab === "CAMPAIGNS" ? "text-white" : "text-blue-600 dark:text-blue-400")} />
+              <span>Campaign Builder</span>
             </Button>
 
             <Button
@@ -463,7 +468,7 @@ export default function FranchiseEnquiriesClient({
             { id: "STUDENTS", label: "Student Marketing Leads", icon: GraduationCap, count: stats.studentLeads },
             { id: "CONTACTS", label: "Contact Form Queries", icon: MessageSquareQuote, count: stats.generalContacts },
             { id: "NEWSLETTER", label: "Newsletter Subscribers", icon: Mail, count: stats.newsletterSubscribers },
-            { id: "CAMPAIGNS", label: "Campaigns & Marketing Funnel", icon: Share2 },
+            { id: "CAMPAIGNS", label: "Campaign Builder", icon: Share2 },
           ].map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;

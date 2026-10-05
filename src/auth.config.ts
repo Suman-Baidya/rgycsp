@@ -1,6 +1,7 @@
 import type { NextAuthConfig } from 'next-auth';
 import Google from 'next-auth/providers/google';
 import { isDeveloperEmail } from './lib/developer';
+import { isDemoEmail, isDemoRestrictionsEnabled, isDemoTargetAccount } from './lib/demo';
 
 const useSecureCookies = process.env.NODE_ENV === "production";
 const cookiePrefix = useSecureCookies ? "__Secure-" : "";
@@ -24,6 +25,7 @@ export default {
   basePath: '/api/auth',
   pages: {
     signIn: '/login',
+    error: '/login',
   },
   ...(sharedCookieDomain ? {
     cookies: {
@@ -41,6 +43,10 @@ export default {
   } : {}),
   callbacks: {
     async session({ session, token }) {
+      const email = session.user?.email || (token?.email as string);
+      if (isDemoTargetAccount(email) && !isDemoRestrictionsEnabled()) {
+        return { ...session, user: null as any };
+      }
       if (token?.sub && session.user) {
         session.user.id = token.sub;
       }
@@ -53,25 +59,40 @@ export default {
       if (token?.systemPermissions && session.user) {
         session.user.systemPermissions = token.systemPermissions;
       }
-      const email = session.user?.email || (token?.email as string);
       if (token?.isDeveloper || isDeveloperEmail(email)) {
         session.user.isDeveloper = true;
         session.user.role = "SUPER_ADMIN";
         session.user.isActive = true;
       }
+      if (token?.isDemo || (isDemoEmail(email) && isDemoRestrictionsEnabled())) {
+        session.user.isDemo = true;
+        session.user.role = "SUPER_ADMIN";
+      }
       return session;
     },
     async jwt({ token, user }) {
+      const email = user?.email || (token?.email as string);
+      if (isDemoTargetAccount(email) && !isDemoRestrictionsEnabled()) {
+        token.isActive = false;
+        token.role = "USER";
+        token.isDemo = false;
+      }
       if (user) {
         token.role = user.role as string;
         token.isActive = (user as any).isActive !== false;
         token.systemPermissions = (user as any).systemPermissions;
+        if ((user as any).isDemo) {
+          token.isDemo = true;
+        }
       }
-      const email = user?.email || (token?.email as string);
       if (isDeveloperEmail(email)) {
         token.role = "SUPER_ADMIN";
         token.isDeveloper = true;
         token.isActive = true;
+      }
+      if (isDemoEmail(email) && isDemoRestrictionsEnabled()) {
+        token.isDemo = true;
+        token.role = "SUPER_ADMIN";
       }
       return token;
     },

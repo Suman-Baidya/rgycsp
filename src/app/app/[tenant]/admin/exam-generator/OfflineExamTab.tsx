@@ -474,7 +474,7 @@ export default function OfflineExamTab({ workspaceId, workspace, superAdminName,
                 <div className="flex-1 text-center px-4">
                   <h1 className="text-3xl font-black uppercase tracking-wider" style={{ color: '#1e3a8a' }}>{workspace?.name || "Exam Center"}</h1>
                   <h2 className="text-lg font-bold mt-1 tracking-wider capitalize" style={{ color: '#4338ca', textDecoration: 'underline' }}>
-                    An authorised study centre of {superAdminName?.toLowerCase() || "rajeev gandhi youth computer shiksha parishad"}
+                    An authorised study centre of {superAdminName || "ABCD"}
                   </h2>
                   <h3 className="text-xl font-bold mt-3" style={{ color: '#0f172a' }}>Attendance & Signature Sheet</h3>
                 </div>

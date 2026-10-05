@@ -2,6 +2,7 @@ import NextAuth from 'next-auth';
 import authConfig from './auth.config';
 import { NextResponse } from 'next/server';
 import { isDeveloperEmail } from './lib/developer';
+import { isDemoEmail, isDemoRestrictionsEnabled, isDemoTargetAccount } from './lib/demo';
 
 const { auth } = NextAuth(authConfig);
 
@@ -11,9 +12,31 @@ export default auth((req) => {
   const userRole = req.auth?.user?.role;
   const userEmail = req.auth?.user?.email;
   const isDev = Boolean(req.auth?.user?.isDeveloper || isDeveloperEmail(userEmail));
+  const isDemo = Boolean(req.auth?.user?.isDemo || (isDemoEmail(userEmail) && isDemoRestrictionsEnabled()));
   const isRestricted = isLoggedIn && req.auth?.user?.isActive === false && !isDev;
   const isSuperAdminRoute = url.pathname.startsWith('/super-admin');
   const isAction = req.headers.has('next-action') || req.headers.get('accept')?.includes('text/x-component');
+
+  // Intercept Platform Maintenance Mode (Bypassed for verified Developers, Auth, and Static assets)
+  const isMaintenance = req.cookies.get("platform_maintenance_mode")?.value === "1";
+  if (isMaintenance && !isDev) {
+    const isExempt = 
+      url.pathname.startsWith('/maintenance') ||
+      url.pathname.startsWith('/api/auth') ||
+      url.pathname.startsWith('/login') ||
+      url.pathname.startsWith('/_next') ||
+      url.pathname === '/favicon.ico' ||
+      url.pathname === '/manifest.webmanifest' ||
+      url.pathname === '/sw.js' ||
+      url.pathname.includes('.');
+
+    if (!isExempt) {
+      if (isAction) {
+        return new NextResponse("Platform Under Maintenance", { status: 503 });
+      }
+      return NextResponse.redirect(new URL('/maintenance', req.url));
+    }
+  }
 
   // Intercept Restricted Users
   if (isRestricted) {
@@ -25,6 +48,20 @@ export default auth((req) => {
     }
   }
 
+  // Intercept Direct Mutating API Calls for Showcase Demo User (Read-Only Mode)
+  if (isDemo && url.pathname.startsWith('/api/') && !url.pathname.startsWith('/api/auth') && req.method !== 'GET' && req.method !== 'HEAD') {
+    return new NextResponse(
+      JSON.stringify({
+        success: false,
+        error: "You Can't Edit as Demo Preview"
+      }),
+      {
+        status: 403,
+        headers: { 'content-type': 'application/json' }
+      }
+    );
+  }
+
   // Handle Protected Routes
   if (isSuperAdminRoute) {
     if (!isLoggedIn) {
@@ -33,6 +70,15 @@ export default auth((req) => {
       }
       return NextResponse.redirect(new URL('/login', req.url));
     }
+
+    // If this is a demo account but demo mode is disabled in environment, block completely
+    if (isDemoTargetAccount(userEmail) && !isDemoRestrictionsEnabled()) {
+      if (isAction) {
+        return new NextResponse("Forbidden", { status: 403 });
+      }
+      return NextResponse.redirect(new URL('/login', req.url));
+    }
+
     if (userRole !== 'SUPER_ADMIN' && userRole !== 'SUPER_ADMIN_MANAGER' && !isDev) {
       // If logged in but not a super admin, manager, or developer, redirect to root or error
       if (isAction) {
@@ -101,25 +147,32 @@ export default auth((req) => {
   const searchParams = req.nextUrl.searchParams.toString();
   const path = `${url.pathname}${searchParams.length > 0 ? `?${searchParams}` : ""}`;
 
+  function getForwardedHeaders(extra?: Record<string, string>) {
+    const headers = new Headers(req.headers);
+    headers.set('x-pathname', url.pathname);
+    if (isDemo) {
+      headers.set('x-is-demo-user', 'true');
+    }
+    if (extra) {
+      Object.entries(extra).forEach(([k, v]) => headers.set(k, v));
+    }
+    return headers;
+  }
+
   // 0. Bypass API and Static routes (Ensure they are not rewritten)
   if (url.pathname.startsWith('/api') || url.pathname.startsWith('/_next') || url.pathname.includes('.')) {
-    const requestHeaders = new Headers(req.headers);
-    requestHeaders.set('x-pathname', url.pathname);
     return NextResponse.next({
       request: {
-        headers: requestHeaders,
+        headers: getForwardedHeaders(),
       }
     });
   }
 
   // 0.5 Bypass explicit subdirectory or super-admin routes to prevent double-rewriting on IP addresses
   if (url.pathname.startsWith('/app/') || url.pathname.startsWith('/super-admin')) {
-    const requestHeaders = new Headers(req.headers);
-    requestHeaders.set('x-pathname', url.pathname);
-    requestHeaders.set('x-routing-mode', 'subdirectory');
     return NextResponse.next({
       request: {
-        headers: requestHeaders,
+        headers: getForwardedHeaders({ 'x-routing-mode': 'subdirectory' }),
       }
     });
   }
@@ -141,13 +194,9 @@ export default auth((req) => {
     // Skip subdomains for initial Vercel branch previews (except if it matches our localDomain pattern)
     (cleanHost.includes("vercel.app") && !cleanHost.endsWith(`.${localDomain}`) && !cleanHost.startsWith('super-admin.'))
   ) {
-    const requestHeaders = new Headers(req.headers);
-    requestHeaders.set('x-pathname', url.pathname);
-    requestHeaders.set('x-routing-mode', isSubdirectoryOnly ? 'SUBDIRECTORY' : (routingCookie || 'BOTH'));
-    
     return NextResponse.next({
       request: {
-        headers: requestHeaders,
+        headers: getForwardedHeaders({ 'x-routing-mode': isSubdirectoryOnly ? 'SUBDIRECTORY' : (routingCookie || 'BOTH') }),
       }
     });
   }
@@ -177,13 +226,9 @@ export default auth((req) => {
     // Special case: Super Admin Subdomain
     if (tenant === 'super-admin') {
       const rewriteUrl = new URL(`/super-admin${path === "/" ? "" : path}`, req.url);
-      const requestHeaders = new Headers(req.headers);
-      requestHeaders.set('x-pathname', url.pathname);
-      requestHeaders.set('x-routing-mode', routingCookie || 'BOTH');
-      
       return NextResponse.rewrite(rewriteUrl, {
         request: {
-          headers: requestHeaders,
+          headers: getForwardedHeaders({ 'x-routing-mode': routingCookie || 'BOTH' }),
         }
       });
     }
@@ -192,12 +237,9 @@ export default auth((req) => {
     if (tenant === 'franchises' || tenant === 'franchise') {
       const targetPath = path.startsWith('/franchises') ? path : `/franchises${path === "/" ? "" : path}`;
       const rewriteUrl = new URL(targetPath, req.url);
-      const requestHeaders = new Headers(req.headers);
-      requestHeaders.set('x-pathname', url.pathname);
-      
       return NextResponse.rewrite(rewriteUrl, {
         request: {
-          headers: requestHeaders,
+          headers: getForwardedHeaders(),
         }
       });
     }
@@ -208,12 +250,9 @@ export default auth((req) => {
         ? path 
         : path.replace(/^\/franchise/, '/franchises');
       const rewriteUrl = new URL(normalizedPath, req.url);
-      const requestHeaders = new Headers(req.headers);
-      requestHeaders.set('x-pathname', url.pathname);
-      
       return NextResponse.rewrite(rewriteUrl, {
         request: {
-          headers: requestHeaders,
+          headers: getForwardedHeaders(),
         }
       });
     }
@@ -221,24 +260,17 @@ export default auth((req) => {
     // Generic Tenant Subdomain
     if (tenant !== 'www' && tenant !== 'admin') {
       const rewriteUrl = new URL(`/app/${tenant}${path === "/" ? "" : path}`, req.url);
-      const requestHeaders = new Headers(req.headers);
-      requestHeaders.set('x-pathname', url.pathname);
-      requestHeaders.set('x-is-subdomain', 'true');
-      requestHeaders.set('x-routing-mode', 'subdomain');
-      
       return NextResponse.rewrite(rewriteUrl, {
         request: {
-          headers: requestHeaders,
+          headers: getForwardedHeaders({ 'x-is-subdomain': 'true', 'x-routing-mode': 'subdomain' }),
         }
       });
     }
   }
 
-  const requestHeaders = new Headers(req.headers);
-  requestHeaders.set('x-pathname', url.pathname);
   return NextResponse.next({
     request: {
-      headers: requestHeaders,
+      headers: getForwardedHeaders(),
     }
   });
 });

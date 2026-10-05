@@ -27,6 +27,7 @@ import {
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { loginWithPasskey } from "@/lib/webauthn-client";
+import { getBrandShortName } from "@/lib/branding";
 
 export function LoginForm({
   tenantName,
@@ -37,6 +38,7 @@ export function LoginForm({
   tenantSlug,
   variant,
   centerCode,
+  demoCredentials,
 }: {
   tenantName?: string;
   tenantLogo?: string | null;
@@ -46,9 +48,11 @@ export function LoginForm({
   tenantSlug?: string;
   variant?: "super-admin" | "franchise" | "global";
   centerCode?: string | null;
+  demoCredentials?: { email: string; password: string } | null;
 }) {
   const [isLoading, setIsLoading] = useState(false);
   const [isBiometricLoading, setIsBiometricLoading] = useState(false);
+  const [isFillingDemo, setIsFillingDemo] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const searchParams = useSearchParams();
@@ -56,6 +60,19 @@ export function LoginForm({
   const isSuperAdmin = variant === "super-admin" || (isGlobal && !tenantSlug);
   const isFranchise = variant === "franchise" || (!!tenantSlug && tenantSlug !== "super-admin");
   const effectiveBrandColor = primaryColor || (isSuperAdmin ? "#4f46e5" : "#0284c7");
+  React.useEffect(() => {
+    const errorParam = searchParams.get("error");
+    const codeParam = searchParams.get("code");
+    if (errorParam) {
+      if (codeParam === "AccessDenied" || errorParam === "AccessDenied") {
+        setError("Access denied. You do not have permission to access this portal.");
+      } else if (codeParam === "AccountPaused") {
+        setError("Your account has been temporarily paused. Please contact your center administrator.");
+      } else {
+        setError("Invalid username or password. Please check your credentials and try again.");
+      }
+    }
+  }, [searchParams]);
 
   const handleBiometricLogin = async () => {
     setIsBiometricLoading(true);
@@ -86,11 +103,18 @@ export function LoginForm({
     setError(null);
 
     const formData = new FormData(e.currentTarget);
-    const username = formData.get("username") as string;
+    const honeypot = (formData.get("_security_honeypot_trap") as string)?.trim();
+    if (honeypot) {
+      // Bot honeypot triggered: silently drop
+      setIsLoading(false);
+      return;
+    }
+
+    const username = (formData.get("username") as string)?.trim();
     const password = formData.get("password") as string;
 
     if (!username || !password) {
-      setError("Please fill in all fields.");
+      setError("Please fill in both your username and password.");
       setIsLoading(false);
       return;
     }
@@ -103,17 +127,25 @@ export function LoginForm({
         redirect: false,
       });
 
-      if (result?.error) {
-        setError("Invalid credentials. Please check your username and password.");
-        toast.error("Authentication failed");
+      if (!result || result.error || (result as any).ok === false) {
+        if ((result as any)?.code === "AccessDenied") {
+          setError("Access denied. You do not have permission to access this portal.");
+          toast.error("Access denied for this portal");
+        } else if ((result as any)?.code === "AccountPaused") {
+          setError("Your account has been temporarily paused. Please contact your center administrator.");
+          toast.error("Account temporarily paused");
+        } else {
+          setError("Invalid username or password. Please check your credentials and try again.");
+          toast.error("Invalid username or password");
+        }
       } else {
         toast.success("Welcome back!");
         const redirectUrl = await getPostLoginRedirect(window.location.host, window.location.pathname);
         window.location.href = redirectUrl;
       }
     } catch (err) {
-      setError("An unexpected error occurred during login.");
-      toast.error("Connection error");
+      setError("Invalid username or password. Please check your credentials and try again.");
+      toast.error("Invalid username or password");
     } finally {
       setIsLoading(false);
     }
@@ -183,7 +215,9 @@ export function LoginForm({
             {/* Dynamic Brand Name (Balanced 2 lines) */}
             <div className="space-y-0.5 sm:space-y-1">
               <h1 className="text-[15px] sm:text-lg font-bold tracking-tight text-slate-900 dark:text-zinc-50 capitalize leading-snug [text-wrap:balance] max-w-[250px] sm:max-w-[310px] mx-auto">
-                {tenantName || (isSuperAdmin ? "Rajeev Gandhi Youth Computer Shiksha Parishad" : "Institute Portal")}
+                {tenantName 
+                  ? (tenantName.length > 28 ? getBrandShortName(tenantName) : tenantName)
+                  : (isSuperAdmin ? "ABCD Educational Hub" : "Institute Portal")}
               </h1>
               <div className="flex items-center justify-center gap-2 pt-0.5">
                 <div className="h-px w-7 sm:w-10 bg-gradient-to-r from-transparent via-slate-300 dark:via-zinc-700 to-slate-300 dark:to-zinc-700" />
@@ -213,6 +247,16 @@ export function LoginForm({
           )}
 
           <form onSubmit={handleSubmit} className="space-y-2.5 sm:space-y-3">
+            {/* Anti-Bot Honeypot Trap - Invisible to humans */}
+            <input
+              type="text"
+              name="_security_honeypot_trap"
+              style={{ display: "none", position: "absolute", left: "-9999px" }}
+              tabIndex={-1}
+              autoComplete="off"
+              aria-hidden="true"
+            />
+
             {/* Identification Input */}
             <div className="space-y-1">
               <div className="flex justify-between items-center px-1">
@@ -242,12 +286,13 @@ export function LoginForm({
                   name="username"
                   placeholder={
                     isSuperAdmin 
-                      ? "admin@rgycsp.com or Master ID" 
+                      ? "admin@abcd.com or Master ID" 
                       : isFranchise 
                       ? "Enrollment No., Username or Email" 
                       : "Email, Username, or Center Code"
                   }
                   autoComplete="username"
+                  onChange={() => { if (error) setError(null); }}
                   className="h-9 sm:h-10.5 pl-9 sm:pl-10 rounded-xl border-slate-200 dark:border-zinc-800 bg-slate-50/70 dark:bg-zinc-900/80 text-slate-900 dark:text-zinc-100 placeholder:text-slate-400 dark:placeholder:text-zinc-500 focus:bg-white dark:focus:bg-zinc-900 focus:ring-2 font-semibold text-xs sm:text-sm transition-all outline-none"
                   style={{ outlineColor: effectiveBrandColor }}
                   required
@@ -269,6 +314,7 @@ export function LoginForm({
                   type={showPassword ? "text" : "password"}
                   placeholder="••••••••"
                   autoComplete="current-password"
+                  onChange={() => { if (error) setError(null); }}
                   className="h-9 sm:h-10.5 pl-9 sm:pl-10 pr-9 sm:pr-10 rounded-xl border-slate-200 dark:border-zinc-800 bg-slate-50/70 dark:bg-zinc-900/80 text-slate-900 dark:text-zinc-100 placeholder:text-slate-400 dark:placeholder:text-zinc-500 focus:bg-white dark:focus:bg-zinc-900 focus:ring-2 font-semibold text-xs sm:text-sm transition-all outline-none"
                   required
                 />
@@ -281,6 +327,32 @@ export function LoginForm({
                 </button>
               </div>
             </div>
+
+            {/* Quick Demo Credentials Fill (Only if configured in environment) */}
+            {demoCredentials?.email && demoCredentials?.password && (
+              <button
+                type="button"
+                disabled={isFillingDemo || isLoading}
+                onClick={() => {
+                  if (isFillingDemo || !demoCredentials?.email || !demoCredentials?.password) return;
+                  setIsFillingDemo(true);
+                  const usernameInput = document.querySelector('input[name="username"]') as HTMLInputElement;
+                  const passwordInput = document.querySelector('input[name="password"]') as HTMLInputElement;
+                  if (usernameInput && passwordInput) {
+                    usernameInput.value = demoCredentials.email;
+                    passwordInput.value = demoCredentials.password;
+                    usernameInput.dispatchEvent(new Event('input', { bubbles: true }));
+                    passwordInput.dispatchEvent(new Event('input', { bubbles: true }));
+                    if (error) setError(null);
+                    toast.info("Showcase demo credentials filled!");
+                  }
+                  setTimeout(() => setIsFillingDemo(false), 1000);
+                }}
+                className="w-full py-1.5 px-3 rounded-xl border border-dashed border-amber-500/50 bg-amber-500/5 hover:bg-amber-500/10 text-amber-600 dark:text-amber-400 text-[10.5px] font-semibold flex items-center justify-center gap-1.5 transition-colors cursor-pointer disabled:opacity-50"
+              >
+                <span>⚡ Fill Showcase Demo Credentials</span>
+              </button>
+            )}
 
             {/* Authorize Button */}
             <Button
@@ -388,7 +460,7 @@ export function LoginForm({
 
       <div className="mt-2.5 text-center">
         <p className="text-[10px] font-semibold text-slate-400 dark:text-zinc-400 tracking-tight">
-          POWERED BY <span className="font-bold" style={{ color: effectiveBrandColor }}>RGYCSP PLATFORM</span> &copy; 2026
+          POWERED BY <span className="font-bold" style={{ color: effectiveBrandColor }}>{getBrandShortName(tenantName, null, 12)} PLATFORM</span> &copy; {new Date().getFullYear()}
         </p>
       </div>
     </div>

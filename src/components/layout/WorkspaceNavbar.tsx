@@ -24,6 +24,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useTheme } from "next-themes";
+import { getBrandShortName } from "@/lib/branding";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -256,7 +257,7 @@ export function WorkspaceNavbar({ settings, user, tenant: propTenant }: { settin
                 </Link>
                 <div className="flex items-center gap-2 border-l border-white/10 pl-8">
                   <Phone className="h-3 w-3 text-primary" />
-                  <span className="font-black text-white/90">{settings.contactPhone || "89448 97472"}</span>
+                  <span className="font-black text-white/90">{settings.contactPhone || "8944899747"}</span>
                 </div>
                 <button onClick={() => setTheme(theme === "dark" ? "light" : "dark")} className="hover:text-white transition-colors pl-8 border-l border-white/10 flex items-center gap-2 group">
                   {theme === "dark" ? <Sun className="h-3.5 w-3.5 text-yellow-500" /> : <Moon className="h-3.5 w-3.5 text-blue-400" />}
@@ -286,12 +287,10 @@ export function WorkspaceNavbar({ settings, user, tenant: propTenant }: { settin
                 .map((w: string) => w.charAt(0).toUpperCase() + w.slice(1))
                 .join(" ");
               
-              const brandShortName = headOfficeBadge.shortName || 
-                (headOfficeBadge.title?.toLowerCase().includes("rajeev gandhi") 
-                  ? "RGYCSP" 
-                  : (headOfficeBadge.title && headOfficeBadge.title.length <= 10 
-                      ? headOfficeBadge.title 
-                      : (headOfficeBadge.globalSiteName || "RGYCSP")));
+              const brandShortName = getBrandShortName(
+                headOfficeBadge.title || headOfficeBadge.globalSiteName,
+                headOfficeBadge.shortName
+              );
 
               return (
                 <a
@@ -489,12 +488,10 @@ export function WorkspaceNavbar({ settings, user, tenant: propTenant }: { settin
                   .split(" ")
                   .map((w: string) => w.charAt(0).toUpperCase() + w.slice(1))
                   .join(" ");
-                const brandShortName = headOfficeBadge.shortName || 
-                  (headOfficeBadge.title?.toLowerCase().includes("rajeev gandhi") 
-                    ? "RGYCSP" 
-                    : (headOfficeBadge.title && headOfficeBadge.title.length <= 10 
-                        ? headOfficeBadge.title 
-                        : (headOfficeBadge.globalSiteName || "RGYCSP")));
+                const brandShortName = getBrandShortName(
+                  headOfficeBadge.title || headOfficeBadge.globalSiteName,
+                  headOfficeBadge.shortName
+                );
 
                 return (
                   <a

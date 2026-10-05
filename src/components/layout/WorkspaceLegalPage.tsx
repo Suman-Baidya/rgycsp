@@ -7,6 +7,7 @@ import { CustomThemeStyle } from "@/components/providers/CustomThemeStyle";
 import { auth } from "@/auth";
 import { ShieldCheck, Scale, FileText, Clock, AlertCircle } from "lucide-react";
 import ReactMarkdown from 'react-markdown';
+import { findWorkspaceByTenant } from "@/lib/workspace";
 
 interface LegalPageProps {
   tenant: string;
@@ -16,8 +17,7 @@ interface LegalPageProps {
 }
 
 export async function WorkspaceLegalPage({ tenant, type, title, defaultContent }: LegalPageProps) {
-  const workspace = await db.workspace.findUnique({
-    where: { subdomain: tenant },
+  const workspace = await findWorkspaceByTenant(tenant, {
     include: {
       siteSettings: {
         include: {

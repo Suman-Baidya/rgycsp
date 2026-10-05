@@ -1,6 +1,8 @@
 "use server";
 
 import { v2 as cloudinary } from "cloudinary";
+import { auth } from "@/auth";
+import { isDemoEmail } from "@/lib/demo";
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -13,6 +15,11 @@ export async function uploadImage(
   folder: string = "RGYCSP/Uncategorized",
   options?: { preserveQuality?: boolean }
 ) {
+  const session = await auth();
+  if (session?.user?.isDemo || isDemoEmail(session?.user?.email)) {
+    return { success: false, error: "You Can't Edit as Demo Preview" };
+  }
+
   // Ensure the folder starts with RGYCSP for root organization
   const finalFolder = folder.startsWith("RGYCSP") ? folder : `RGYCSP/${folder}`;
 

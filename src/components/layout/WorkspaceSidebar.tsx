@@ -28,7 +28,8 @@ import {
   GraduationCap,
   BarChart2,
   MessageSquareQuote,
-  CalendarDays
+  CalendarDays,
+  BookOpenText
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -43,6 +44,7 @@ export function WorkspaceSidebar({
   pendingEnquiriesCount = 0,
   isStateManager = false,
   isSubdomainEnabled = true,
+  isUserGuideEnabled = true,
   userRole = "ADMIN",
   userPermissions = []
 }: { 
@@ -53,6 +55,7 @@ export function WorkspaceSidebar({
   pendingEnquiriesCount?: number;
   isStateManager?: boolean;
   isSubdomainEnabled?: boolean;
+  isUserGuideEnabled?: boolean;
   userRole?: string;
   userPermissions?: string[];
 }) {
@@ -101,14 +104,15 @@ export function WorkspaceSidebar({
     { id: "products", name: "Products & Store", href: generateLink(WORKSPACE_ROUTES.ADMIN_PRODUCTS), icon: ShoppingCart },
     { id: "exam-gen", name: "Exam Zone", href: generateLink(WORKSPACE_ROUTES.ADMIN_EXAM_GENERATOR), icon: GraduationCap },
     { id: "settings", name: "Landing Page", href: generateLink(WORKSPACE_ROUTES.ADMIN_SETTINGS), icon: Building2 },
+    ...(isUserGuideEnabled ? [{ id: "guides", name: "User Guide", href: generateLink(WORKSPACE_ROUTES.ADMIN_GUIDES), icon: BookOpenText }] : []),
     { id: "profile", name: "Profile", href: generateLink(WORKSPACE_ROUTES.ADMIN_PROFILE), icon: UserCog },
   ];
 
   const navItems = userRole === "ADMIN" 
     ? allNavItems 
     : allNavItems.filter(item => 
-        // Staff page is typically admin only unless specifically allowed (which we didn't add to checkbox array, but let's say it's admin only)
-        item.id === "staff" ? userRole === "ADMIN" : userPermissions.includes(item.id) || item.id === "dashboard" || item.id === "profile"
+        // Staff page is typically admin only unless specifically allowed
+        item.id === "staff" ? userRole === "ADMIN" : userPermissions.includes(item.id) || item.id === "dashboard" || item.id === "profile" || item.id === "guides"
       );
 
   if (isStateManager) {
