@@ -54,6 +54,7 @@ export default async function WorkspaceLoginPage({
         <LoginForm 
           tenantName={workspace.name}
           tenantLogo={workspace.logoUrl || workspace.siteSettings?.logoUrl}
+          shortName={(workspace.siteSettings?.navbarConfig as any)?.shortName || undefined}
           primaryColor={workspace.siteSettings?.primaryColor}
           tenantSlug={tenant}
           variant="franchise"

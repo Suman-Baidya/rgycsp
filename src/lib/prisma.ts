@@ -13,7 +13,13 @@ declare global {
   var prisma: PrismaClient | undefined;
 }
 
-const connectionString = process.env.DATABASE_URL;
+const rawConnectionString = process.env.DATABASE_URL;
+// Upgrade sslmode=require to sslmode=verify-full if needed to prevent node-postgres / pg-connection-string security warning
+const connectionString = rawConnectionString
+  ? (rawConnectionString.includes('sslmode=require') && !rawConnectionString.includes('uselibpqcompat')
+      ? rawConnectionString.replace('sslmode=require', 'sslmode=verify-full')
+      : rawConnectionString)
+  : undefined;
 
 if (process.env.NODE_ENV === "development") {
   const maskedUrl = connectionString ? connectionString.split('@')[1]?.substring(0, 30) : "MISSING";
@@ -23,13 +29,21 @@ if (process.env.NODE_ENV === "development") {
 function createPrismaClient(): PrismaClient {
   let prismaArgs: { adapter?: any } = {};
   if (connectionString) {
-    const isNeon = connectionString.includes('neon.tech');
-    if (isNeon) {
+    const useNeonWebSocket = process.env.PRISMA_USE_NEON_WEBSOCKET === "true";
+    if (useNeonWebSocket && connectionString.includes('neon.tech')) {
       const adapter = new PrismaNeon({ connectionString });
       prismaArgs = { adapter };
     } else {
-      // Standard PostgreSQL (Local Docker / Dokploy on VPS)
-      const pool = new pg.Pool({ connectionString });
+      // Standard PostgreSQL connection pool (Robust TCP connection handling with automatic retry & reconnect)
+      const pool = new pg.Pool({
+        connectionString,
+        max: 10,
+        idleTimeoutMillis: 30000,
+        connectionTimeoutMillis: 10000,
+      });
+      pool.on('error', (err) => {
+        console.warn('PRISMA: PG Pool idle client disconnected (auto-reconnecting):', err.message);
+      });
       const adapter = new PrismaPg(pool);
       prismaArgs = { adapter };
     }

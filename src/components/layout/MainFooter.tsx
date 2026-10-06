@@ -10,9 +10,11 @@ import { Button } from "@/components/ui/button";
 
 import { FloatingWhatsApp } from "@/components/landing/FloatingWhatsApp";
 import { FloatingChatbot } from "@/components/landing/FloatingChatbot";
+import { getBrandShortName } from "@/lib/branding";
 
 export function MainFooter({ settings }: { settings?: any }) {
   const siteName = settings?.siteName || "ABCD Edu Hub";
+  const brandShortName = (settings?.navbarConfig as any)?.shortName || getBrandShortName(siteName);
   const footerBrandName = settings?.navbarConfig?.footerBrandName || siteName;
   const logoUrl = settings?.logoUrl || "/logo.png";
   const footerTagline = settings?.navbarConfig?.footerTagline || "Global Education Platform";
@@ -222,11 +224,11 @@ export function MainFooter({ settings }: { settings?: any }) {
           <div className="flex items-center gap-8">
             <div className="flex items-center gap-3 text-[11px] font-bold text-white uppercase opacity-40">
               <Globe className="w-4 h-4" />
-              <span>Global Presence</span>
+              <span>Powered by {brandShortName}</span>
             </div>
             <div className="flex items-center gap-3 text-[11px] font-bold text-white uppercase opacity-40">
               <ShieldCheck className="w-4 h-4" />
-              <span>A Secure Platform</span>
+              <span>Secured by {brandShortName}</span>
             </div>
           </div>
         </div>

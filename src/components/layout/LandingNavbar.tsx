@@ -123,16 +123,18 @@ export function LandingNavbar({ settings, user, isHome }: { settings?: any, user
   };
 
   const siteName = settings?.siteName || "ABCD Edu Hub";
-  const brandShortName = getBrandShortName(siteName, settings?.navbarConfig?.shortName);
-  const isNameTooLongForMobile = siteName.length > 14;
-  const isNameTooLongForDesktop = siteName.length > 20;
-
-  const mobileDisplayTitle = isNameTooLongForMobile ? brandShortName : siteName;
-  const desktopDisplayTitle = isNameTooLongForDesktop ? brandShortName : siteName;
+  const brandShortName = (settings?.navbarConfig as any)?.shortName || getBrandShortName(siteName);
   const secondarySiteName = settings?.navbarConfig?.secondarySiteName;
-  const desktopSubtitle = isNameTooLongForDesktop 
-    ? (secondarySiteName || siteName)
-    : secondarySiteName;
+  const secondaryShortName = (settings?.navbarConfig as any)?.secondaryShortName;
+
+  // Desktop display: Main title is ALWAYS kept as siteName as it is (no shortening)
+  const desktopDisplayTitle = siteName;
+  // Desktop subtitle: Secondary name as configured without dot-dot truncation
+  const desktopSubtitle = secondarySiteName;
+
+  // Mobile display: Uses explicit brand short name for compact screen naming
+  const mobileDisplayTitle = brandShortName;
+  const mobileSecondaryTitle = secondaryShortName || secondarySiteName || siteName;
 
   const contactPhone = settings?.contactPhone || "8944899747";
   const whatsappNumber = settings?.whatsapp || "8167685731";
@@ -193,24 +195,24 @@ export function LandingNavbar({ settings, user, isHome }: { settings?: any, user
       {showName && (
         <>
           {/* Mobile Text (Hidden on Desktop) */}
-          <div className="flex lg:hidden flex-col border-l-2 border-foreground/20 dark:border-foreground/30 pl-2 overflow-hidden min-w-0 max-w-[160px] sm:max-w-[200px]">
-            <span className="text-lg sm:text-xl font-bold tracking-tight whitespace-nowrap font-heading text-foreground group-hover:text-primary transition-colors leading-tight">
+          <div className="flex lg:hidden flex-col border-l-2 border-foreground/20 dark:border-foreground/30 pl-2 overflow-hidden min-w-0 max-w-[170px] sm:max-w-[220px]">
+            <span className="text-base sm:text-lg font-bold tracking-tight whitespace-nowrap font-heading text-foreground group-hover:text-primary transition-colors leading-tight truncate">
               {mobileDisplayTitle}
             </span>
             <div className="overflow-hidden w-full relative h-[14px] mt-0.5">
               <div className="absolute whitespace-nowrap flex animate-marquee text-[10px] sm:text-xs text-foreground/70 font-bold tracking-widest uppercase leading-none group-hover:text-foreground/90 transition-colors">
-                <span className="mr-8">{config?.secondarySiteName || siteName}</span>
-                <span className="mr-8">{config?.secondarySiteName || siteName}</span>
+                <span className="mr-8">{mobileSecondaryTitle}</span>
+                <span className="mr-8">{mobileSecondaryTitle}</span>
               </div>
             </div>
           </div>
           {/* Desktop Text (Hidden on Mobile) */}
-          <div className="hidden lg:flex flex-col border-l-2 border-foreground/20 dark:border-foreground/30 pl-2 max-w-[320px] xl:max-w-[420px]">
-            <span className="text-lg sm:text-2xl font-bold tracking-tight whitespace-nowrap font-heading text-foreground group-hover:text-primary transition-colors leading-tight truncate">
+          <div className="hidden lg:flex flex-col border-l-2 border-foreground/20 dark:border-foreground/30 pl-2.5 min-w-0">
+            <span className="text-base sm:text-lg lg:text-xl font-bold tracking-tight whitespace-nowrap font-heading text-foreground group-hover:text-primary transition-colors leading-tight">
               {desktopDisplayTitle}
             </span>
             {desktopSubtitle && (
-              <span className="text-[10px] sm:text-xs text-foreground/70 font-bold tracking-widest uppercase whitespace-nowrap leading-none mt-1 group-hover:text-foreground/90 transition-colors truncate">
+              <span className="text-[10px] sm:text-[11.5px] text-foreground/75 font-semibold tracking-normal whitespace-nowrap leading-tight mt-0.5 group-hover:text-foreground/95 transition-colors">
                 {desktopSubtitle}
               </span>
             )}

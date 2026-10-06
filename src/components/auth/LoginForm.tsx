@@ -39,6 +39,7 @@ export function LoginForm({
   variant,
   centerCode,
   demoCredentials,
+  shortName,
 }: {
   tenantName?: string;
   tenantLogo?: string | null;
@@ -49,6 +50,7 @@ export function LoginForm({
   variant?: "super-admin" | "franchise" | "global";
   centerCode?: string | null;
   demoCredentials?: { email: string; password: string } | null;
+  shortName?: string | null;
 }) {
   const [isLoading, setIsLoading] = useState(false);
   const [isBiometricLoading, setIsBiometricLoading] = useState(false);
@@ -229,10 +231,10 @@ export function LoginForm({
                   style={{ color: isSuperAdmin ? undefined : effectiveBrandColor }}
                 >
                   {isSuperAdmin 
-                    ? "Global Executive Command" 
+                    ? `Global Executive Command${shortName ? ` • ${shortName}` : ""}` 
                     : isFranchise 
-                    ? "Academy Portal • Faculty & Students" 
-                    : "Secured Member Login"}
+                    ? `Academy Portal • ${shortName || "Faculty & Students"}` 
+                    : `Secured Member Login • ${shortName || "Platform"}`}
                 </p>
                 <div className="h-px w-7 sm:w-10 bg-gradient-to-l from-transparent via-slate-300 dark:via-zinc-700 to-slate-300 dark:to-zinc-700" />
               </div>
@@ -458,10 +460,14 @@ export function LoginForm({
         </CardContent>
       </Card>
 
-      <div className="mt-2.5 text-center">
+      <div className="mt-2.5 text-center flex flex-col items-center justify-center gap-1">
         <p className="text-[10px] font-semibold text-slate-400 dark:text-zinc-400 tracking-tight">
-          POWERED BY <span className="font-bold" style={{ color: effectiveBrandColor }}>{getBrandShortName(tenantName, null, 12)} PLATFORM</span> &copy; {new Date().getFullYear()}
+          POWERED BY <span className="font-bold" style={{ color: effectiveBrandColor }}>{shortName || getBrandShortName(tenantName, null, 12)} PLATFORM</span> &copy; {new Date().getFullYear()}
         </p>
+        <div className="inline-flex items-center gap-1.5 text-[9.5px] font-semibold text-slate-400/80 dark:text-zinc-500">
+          <ShieldCheck className="w-3 h-3 text-emerald-500" />
+          <span>Secured by {shortName || getBrandShortName(tenantName, null, 10)} Guard</span>
+        </div>
       </div>
     </div>
   );

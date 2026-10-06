@@ -15,6 +15,7 @@ import { cn } from "@/lib/utils";
 import { useState, useEffect } from "react";
 import { getWorkspaceRole } from "@/app/actions/student";
 import { submitNewsletterSubscription } from "@/app/actions/enquiries";
+import { getBrandShortName } from "@/lib/branding";
 
 export function WorkspaceFooter({ settings, tenant: propTenant, user }: { settings?: any; tenant?: string; user?: any }) {
   const pathname = usePathname();
@@ -42,6 +43,7 @@ export function WorkspaceFooter({ settings, tenant: propTenant, user }: { settin
   const rootHref = getTenantLink("/", tenant, pathname);
 
   const siteName = settings?.siteName || "Institute Portal";
+  const brandShortName = (settings?.navbarConfig as any)?.shortName || getBrandShortName(siteName);
   const footerBrandName = settings?.navbarConfig?.footerBrandName || siteName;
   const logoUrl = settings?.logoUrl || "/logo.png";
   const footerTagline = settings?.navbarConfig?.footerTagline || settings?.navbarConfig?.subtitle?.trim() || "An Authorized Study & Training Center";
@@ -329,14 +331,14 @@ export function WorkspaceFooter({ settings, tenant: propTenant, user }: { settin
             <p>© {new Date().getFullYear()} {siteName}. All Rights Reserved.</p>
             <div className="hidden md:flex items-center gap-2 text-primary">
                <ShieldCheck className="w-4 h-4" />
-               <span>Official Institute Portal</span>
+               <span>Secured by {brandShortName}</span>
             </div>
           </div>
           
           <div className="flex items-center gap-6">
              <div className="flex items-center gap-2 text-[11px] font-bold tracking-widest text-zinc-500">
                 <Globe className="w-4 h-4 text-primary" />
-                <span>Authorized Center</span>
+                <span>Powered by {brandShortName}</span>
              </div>
              {whatsapp && (
                 <Link 

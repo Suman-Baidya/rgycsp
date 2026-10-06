@@ -366,10 +366,25 @@ export function SettingsForm({ settings, isSuperAdmin = true }: { settings: any,
                     <div className="space-y-1.5">
                       <Label htmlFor="siteName" className="text-xs font-semibold text-slate-700 dark:text-slate-300">Primary Site Name</Label>
                       <Input id="siteName" value={siteName || ""} onChange={(e) => setSiteName(e.target.value)} placeholder="Enter primary site name" className="h-8 sm:h-9 bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700/60 rounded-lg text-xs" />
+                      <p className="text-[10px] text-slate-400">Full brand title displayed on landing page desktop header (kept as entered, no shortening).</p>
                     </div>
                     <div className="space-y-1.5">
-                      <Label htmlFor="secondarySiteName" className="text-xs font-semibold text-slate-700 dark:text-slate-300">Secondary Name</Label>
-                      <Input id="secondarySiteName" value={navbarConfig.secondarySiteName || ""} onChange={(e) => setNavbarConfig({...navbarConfig, secondarySiteName: e.target.value})} placeholder="e.g. Regional / Short Name" className="h-8 sm:h-9 bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700/60 rounded-lg text-xs" />
+                      <Label htmlFor="brandShortName" className="text-xs font-semibold text-slate-700 dark:text-slate-300">Brand Short Name (Mobile &amp; Badges)</Label>
+                      <Input id="brandShortName" value={navbarConfig.shortName || ""} onChange={(e) => setNavbarConfig({...navbarConfig, shortName: e.target.value})} placeholder="e.g. RGYCSP" className="h-8 sm:h-9 bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700/60 rounded-lg text-xs font-bold" />
+                      <p className="text-[10px] text-slate-400">Used for mobile screen navbar, &quot;Powered by&quot;, &quot;Secured by&quot;, and login page.</p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 pt-1">
+                    <div className="space-y-1.5">
+                      <Label htmlFor="secondarySiteName" className="text-xs font-semibold text-slate-700 dark:text-slate-300">Secondary Name (Regional / Tagline)</Label>
+                      <Input id="secondarySiteName" value={navbarConfig.secondarySiteName || ""} onChange={(e) => setNavbarConfig({...navbarConfig, secondarySiteName: e.target.value})} placeholder="e.g. রাজীব গান্ধী যুব কম্পিউটার শিক্ষা পরিষদ | राजीव गांधी युवा कंप्यूटर..." className="h-8 sm:h-9 bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700/60 rounded-lg text-xs" />
+                      <p className="text-[10px] text-slate-400">Full secondary name displayed on desktop landing page (no dot-dot truncation).</p>
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="secondaryShortName" className="text-xs font-semibold text-slate-700 dark:text-slate-300">Secondary Short Name</Label>
+                      <Input id="secondaryShortName" value={navbarConfig.secondaryShortName || ""} onChange={(e) => setNavbarConfig({...navbarConfig, secondaryShortName: e.target.value})} placeholder="e.g. Regional Acronym / Short Name" className="h-8 sm:h-9 bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700/60 rounded-lg text-xs" />
+                      <p className="text-[10px] text-slate-400">Optional compact secondary name for mobile ticker &amp; small tags.</p>
                     </div>
                   </div>
                   

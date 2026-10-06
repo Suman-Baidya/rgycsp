@@ -93,6 +93,7 @@ export default async function LoginPage() {
         <LoginForm 
           tenantName={branding.name}
           tenantLogo={branding.logo}
+          shortName={(branding.settings?.navbarConfig as any)?.shortName || undefined}
           isGlobal={!tenant || tenant === "super-admin"}
           variant={!tenant || tenant === "super-admin" ? "super-admin" : "franchise"}
           primaryColor={branding.settings?.primaryColor || undefined}

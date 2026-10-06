@@ -328,6 +328,20 @@ export function WorkspaceSettingsForm({ settings }: { settings: any }) {
                       </div>
 
                       <div className="space-y-1.5">
+                        <Label htmlFor="shortName" className="text-[10px] font-bold uppercase tracking-wider text-slate-400 ml-0.5">
+                          Brand Short Name (Mobile &amp; Badges)
+                        </Label>
+                        <Input
+                          id="shortName"
+                          value={navbarConfig?.shortName || ""}
+                          onChange={(e) => setNavbarConfig({ ...navbarConfig, shortName: e.target.value })}
+                          placeholder="e.g. ABCD-CP"
+                          className="h-8 sm:h-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 font-bold"
+                        />
+                        <p className="text-[9px] text-slate-400 font-medium">Used for mobile screen navbar, &quot;Powered by&quot;, and &quot;Secured by&quot;.</p>
+                      </div>
+
+                      <div className="space-y-1.5">
                         <Label htmlFor="navbarSubtitle" className="text-[10px] font-bold uppercase tracking-wider text-slate-400 ml-0.5">
                           Navbar Subtitle / Tagline
                         </Label>
@@ -339,6 +353,20 @@ export function WorkspaceSettingsForm({ settings }: { settings: any }) {
                           className="h-8 sm:h-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 font-medium"
                         />
                         <p className="text-[9px] text-slate-400 font-medium">Shows under main title in navbar. Defaults to &quot;An Authorized Study & Training Center&quot;.</p>
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <Label htmlFor="secondaryShortName" className="text-[10px] font-bold uppercase tracking-wider text-slate-400 ml-0.5">
+                          Secondary Short Name
+                        </Label>
+                        <Input
+                          id="secondaryShortName"
+                          value={navbarConfig?.secondaryShortName || ""}
+                          onChange={(e) => setNavbarConfig({ ...navbarConfig, secondaryShortName: e.target.value })}
+                          placeholder="e.g. Regional Acronym"
+                          className="h-8 sm:h-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 font-medium"
+                        />
+                        <p className="text-[9px] text-slate-400 font-medium">Optional compact secondary branding.</p>
                       </div>
                     </div>
 

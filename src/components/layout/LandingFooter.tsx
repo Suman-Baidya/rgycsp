@@ -8,9 +8,11 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { getBrandShortName } from "@/lib/branding";
 
 export function LandingFooter({ settings }: { settings?: any }) {
   const siteName = settings?.siteName || "ABCD Edu Hub";
+  const brandShortName = (settings?.navbarConfig as any)?.shortName || getBrandShortName(siteName);
   const footerBrandName = settings?.navbarConfig?.footerBrandName || siteName;
   const logoUrl = settings?.logoUrl || "/logo.png";
   const contactEmail = settings?.contactEmail || "sb.abcd321@gmail.com";
@@ -203,14 +205,14 @@ export function LandingFooter({ settings }: { settings?: any }) {
             <p>© {new Date().getFullYear()} {siteName}. All Rights Reserved.</p>
             <div className="hidden md:flex items-center gap-2 text-primary">
                <ShieldCheck className="w-4 h-4" />
-               <span>Verified Secure Institute</span>
+               <span>Secured by {brandShortName}</span>
             </div>
           </div>
           
           <div className="flex items-center gap-6">
              <div className="flex items-center gap-2 text-[11px] font-bold tracking-widest text-zinc-500">
                 <Globe className="w-4 h-4 text-primary" />
-                <span>Global Presence</span>
+                <span>Powered by {brandShortName}</span>
              </div>
              {whatsapp && (
                 <Link 

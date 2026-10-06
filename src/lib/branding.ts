@@ -15,10 +15,7 @@ export function getBrandShortName(
 ): string {
   // 1. If explicit short name is provided and valid, use it
   if (explicitShortName && explicitShortName.trim().length > 0) {
-    const trimmed = explicitShortName.trim();
-    if (trimmed.length <= maxCharLength) {
-      return trimmed;
-    }
+    return explicitShortName.trim();
   }
 
   const raw = (brandName || "").trim();

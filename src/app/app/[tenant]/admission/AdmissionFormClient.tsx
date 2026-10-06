@@ -19,6 +19,7 @@ import { ArrowRight, ArrowLeft, CheckCircle2, Download, Copy, Loader2, Mail, Shi
 import Link from "next/link";
 import { useParams, usePathname, useSearchParams } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { getBrandShortName } from "@/lib/branding";
 
 // Form Schema
 const formSchema = z.object({
@@ -348,7 +349,7 @@ export default function AdmissionFormClient({
             </div>
           </CardContent>
           <CardFooter className="bg-slate-50 dark:bg-zinc-900/80 border-t p-6 flex justify-center items-center gap-2">
-            <span className="text-[10px] font-bold text-slate-400 tracking-widest">Powered by {workspaceName} Admission Portal</span>
+            <span className="text-[10px] font-bold text-slate-400 tracking-widest">Powered by {getBrandShortName(workspaceName, config?.shortName)} Admission Portal</span>
           </CardFooter>
         </Card>
       </div>
