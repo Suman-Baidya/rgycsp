@@ -38,8 +38,10 @@ function createPrismaClient(): PrismaClient {
       const pool = new pg.Pool({
         connectionString,
         max: 10,
-        idleTimeoutMillis: 30000,
-        connectionTimeoutMillis: 10000,
+        idleTimeoutMillis: 15000,
+        connectionTimeoutMillis: 25000,
+        keepAlive: true,
+        keepAliveInitialDelayMillis: 10000,
       });
       pool.on('error', (err) => {
         console.warn('PRISMA: PG Pool idle client disconnected (auto-reconnecting):', err.message);

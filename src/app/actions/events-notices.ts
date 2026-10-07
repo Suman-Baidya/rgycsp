@@ -340,9 +340,13 @@ export async function createAdminEvent(data: {
       await revalidateWorkspacePath(targetWorkspaceId, "/admin/events-notices");
       await revalidateWorkspacePath(targetWorkspaceId, "/admin/settings");
       await revalidateWorkspacePath(targetWorkspaceId, "/events");
+      await revalidateWorkspacePath(targetWorkspaceId, "/about");
       await revalidateWorkspacePath(targetWorkspaceId, "/", "layout");
     } else {
       revalidatePath("/app/[tenant]/admin/events-notices");
+      revalidatePath("/app/[tenant]/about");
+      revalidatePath("/app/[tenant]/events");
+      revalidatePath("/app/[tenant]");
     }
 
     return { success: true, event };
@@ -429,10 +433,12 @@ export async function deleteAdminEvent(eventId: string) {
       await revalidateWorkspacePath(event.workspaceId, "/admin/events-notices");
       await revalidateWorkspacePath(event.workspaceId, "/admin/settings");
       await revalidateWorkspacePath(event.workspaceId, "/events");
+      await revalidateWorkspacePath(event.workspaceId, "/about");
       await revalidateWorkspacePath(event.workspaceId, "/", "layout");
     } else {
       revalidatePath("/app/[tenant]/admin/events-notices");
       revalidatePath("/app/[tenant]/admin/settings");
+      revalidatePath("/app/[tenant]/about");
       revalidatePath("/app/[tenant]/events");
       revalidatePath("/app/[tenant]");
     }
@@ -462,10 +468,12 @@ export async function toggleEventStatus(eventId: string, field: "isActive" | "is
       await revalidateWorkspacePath(updated.workspaceId, "/admin/events-notices");
       await revalidateWorkspacePath(updated.workspaceId, "/admin/settings");
       await revalidateWorkspacePath(updated.workspaceId, "/events");
+      await revalidateWorkspacePath(updated.workspaceId, "/about");
       await revalidateWorkspacePath(updated.workspaceId, "/", "layout");
     } else {
       revalidatePath("/app/[tenant]/admin/events-notices");
       revalidatePath("/app/[tenant]/admin/settings");
+      revalidatePath("/app/[tenant]/about");
       revalidatePath("/app/[tenant]/events");
       revalidatePath("/app/[tenant]");
     }

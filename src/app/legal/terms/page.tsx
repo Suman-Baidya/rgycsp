@@ -21,7 +21,7 @@ export default async function TermsPage() {
       <main className="flex-1">
         <PageHeader 
           title="Terms of Service"
-          subtitle="The rules and guidelines for using our platform"
+          subtitle="Review our terms of service, policies, and guidelines governing the use of our educational platform and services."
           bgImage="https://images.unsplash.com/photo-1450101499163-c8848c66ca85?q=80&w=2070"
           breadcrumb="Terms of Service"
         />

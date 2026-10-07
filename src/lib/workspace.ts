@@ -18,6 +18,7 @@
  */
 
 import { db } from "@/lib/prisma";
+import { Prisma } from "@prisma/client";
 
 /**
  * Resolves the correct `where` clause for a workspace lookup
@@ -49,16 +50,31 @@ export function tenantWhereClause(slug: string) {
  * });
  * if (!workspace) notFound();
  */
-import { Prisma } from "@prisma/client";
-
 export async function findWorkspaceByTenant<T extends Prisma.WorkspaceFindFirstArgs = {}>(
   slug: string,
   options?: Prisma.SelectSubset<T, Prisma.WorkspaceFindFirstArgs>
 ): Promise<Prisma.WorkspaceGetPayload<T> | null> {
-  return db.workspace.findFirst({
+  const executeQuery = () => db.workspace.findFirst({
     where: tenantWhereClause(slug),
     ...(options as any),
   }) as Promise<Prisma.WorkspaceGetPayload<T> | null>;
+
+  try {
+    return await executeQuery();
+  } catch (err: any) {
+    const isTransient =
+      err?.message?.includes("Connection terminated") ||
+      err?.message?.includes("connection timeout") ||
+      err?.message?.includes("Can't reach database server") ||
+      err?.code === "P1001";
+
+    if (isTransient) {
+      console.warn("PRISMA: Transient database error in findWorkspaceByTenant, retrying query...", err.message);
+      await new Promise((res) => setTimeout(res, 500));
+      return await executeQuery();
+    }
+    throw err;
+  }
 }
 
 /**
@@ -69,8 +85,25 @@ export async function findWorkspaceByTenant<T extends Prisma.WorkspaceFindFirstA
  *   db.workspace.findUnique({ where: { subdomain: tenant } })
  */
 export async function getWorkspaceByTenant(slug: string) {
-  return db.workspace.findFirst({
+  const executeQuery = () => db.workspace.findFirst({
     where: tenantWhereClause(slug),
     include: { siteSettings: true },
   });
+
+  try {
+    return await executeQuery();
+  } catch (err: any) {
+    const isTransient =
+      err?.message?.includes("Connection terminated") ||
+      err?.message?.includes("connection timeout") ||
+      err?.message?.includes("Can't reach database server") ||
+      err?.code === "P1001";
+
+    if (isTransient) {
+      console.warn("PRISMA: Transient database error in getWorkspaceByTenant, retrying query...", err.message);
+      await new Promise((res) => setTimeout(res, 500));
+      return await executeQuery();
+    }
+    throw err;
+  }
 }

@@ -8,12 +8,17 @@ import Link from "next/link";
 import { getTenantLink, detectTenant } from "@/lib/routing";
 import { usePathname } from "next/navigation";
 
+import { DEFAULT_WORKSPACE_NOTICES } from "@/lib/workspace-defaults";
+
 export function AboutNoticeSection({ data }: { data: any }) {
   const pathname = usePathname();
   const tenant = detectTenant(pathname, typeof window !== 'undefined' ? window.location.hostname : undefined);
   const getLink = (path: string) => getTenantLink(path, tenant, pathname);
 
-  const notices = data?.content?.notices || [];
+  const rawNotices = data?.content?.notices || [];
+  const notices = (rawNotices && rawNotices.length > 0)
+    ? rawNotices
+    : DEFAULT_WORKSPACE_NOTICES;
   const content = data?.content || {};
 
   return (
@@ -21,12 +26,25 @@ export function AboutNoticeSection({ data }: { data: any }) {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-16">
         {/* Left Side: About Us */}
         <div className="lg:col-span-2 space-y-8">
-          <div className="inline-flex items-center gap-3 text-primary font-black tracking-[0.2em] text-[10px] uppercase">
-            <div className="h-0.5 w-10 bg-primary" />
-            {data?.subtitle || "About Our Institute"}
+          <div className="inline-flex items-center gap-2.5 text-primary text-xs font-bold tracking-[0.22em] uppercase">
+            <span className="w-2 h-2 rounded-full bg-primary animate-pulse shrink-0" />
+            <span>{data?.subtitle || "About Our Institute"}</span>
           </div>
-          <h2 className="text-4xl md:text-6xl font-black tracking-tight text-slate-900 dark:text-white leading-[1.1]">
-            {data?.title || "Dedicated to Empowering Future Leaders"}
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tight text-slate-900 dark:text-white leading-[1.1]">
+            {(() => {
+              const title = data?.title || "Dedicated to Empowering Future Leaders";
+              const words = title.split(" ");
+              if (words.length <= 1) return title;
+              const lastWord = words.pop();
+              return (
+                <>
+                  {words.join(" ")}{" "}
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-primary/70">
+                    {lastWord}
+                  </span>
+                </>
+              );
+            })()}
           </h2>
           <div className="prose prose-slate dark:prose-invert max-w-none text-slate-600 dark:text-slate-400 text-lg leading-relaxed space-y-6">
             {content.description ? (

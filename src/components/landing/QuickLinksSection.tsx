@@ -34,13 +34,26 @@ export function QuickLinksSection({ data, tenant }: QuickLinksSectionProps) {
       <div className="container px-4 md:px-6 mx-auto">
         <div className="text-center mb-10 md:mb-16 flex flex-col items-center">
           {data.subtitle && (
-            <div className="inline-flex items-center gap-2 py-1.5 px-4 rounded-full bg-primary/5 border border-primary/20 text-primary font-bold text-[10px] tracking-[0.2em] uppercase mb-4 shadow-sm">
-              <span className="w-2 h-2 rounded-full bg-black dark:bg-white animate-pulse"></span>
-              {data.subtitle}
+            <div className="inline-flex items-center gap-2.5 text-primary font-bold text-xs tracking-[0.22em] uppercase mb-3">
+              <span className="w-2 h-2 rounded-full bg-primary animate-pulse shrink-0" />
+              <span>{data.subtitle}</span>
             </div>
           )}
           <h2 className="text-3xl md:text-5xl font-black tracking-tight mb-4">
-            {data.title || "Quick Links"}
+            {(() => {
+              const title = data.title || "Quick Links";
+              const words = title.split(" ");
+              if (words.length <= 1) return title;
+              const lastWord = words.pop();
+              return (
+                <>
+                  {words.join(" ")}{" "}
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-primary/70">
+                    {lastWord}
+                  </span>
+                </>
+              );
+            })()}
           </h2>
         </div>
 

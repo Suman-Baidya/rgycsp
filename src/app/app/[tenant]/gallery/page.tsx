@@ -1,5 +1,4 @@
-﻿import { findWorkspaceByTenant } from "@/lib/workspace";
-import { db } from "@/lib/prisma";
+import { findWorkspaceByTenant } from "@/lib/workspace";
 import { GalleryList } from "./GalleryList";
 import { WorkspacePageHeader } from "@/components/layout/WorkspacePageHeader";
 import { WorkspaceFooter } from "@/components/layout/WorkspaceFooter";
@@ -8,6 +7,7 @@ import { WorkspaceNavbar } from "@/components/layout/WorkspaceNavbar";
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { getServerTenantLink } from "@/lib/routing-server";
+import { DEFAULT_WORKSPACE_GALLERY } from "@/lib/workspace-defaults";
 
 export default async function GalleryPage({ params }: { params: Promise<{ tenant: string }> }) {
   const { tenant } = await params;
@@ -26,8 +26,11 @@ export default async function GalleryPage({ params }: { params: Promise<{ tenant
     redirect(await getServerTenantLink("/", tenant));
   }
 
-  // Pre-defined categories for initial filter buttons
-  const galleryItems = workspace.galleryItems || [];
+  // Fallback to rich dummy gallery items when none are uploaded yet
+  const galleryItems = (workspace.galleryItems && workspace.galleryItems.length > 0)
+    ? workspace.galleryItems
+    : DEFAULT_WORKSPACE_GALLERY;
+
   const categories = Array.from(new Set(galleryItems.map(item => item.category).filter(Boolean)));
 
   return (

@@ -1,15 +1,20 @@
 import { LandingNavbar } from "@/components/layout/LandingNavbar";
 import { MainFooter } from "@/components/layout/MainFooter";
 import { PageHeader } from "@/components/layout/PageHeader";
+import { CustomThemeStyle } from "@/components/providers/CustomThemeStyle";
+import { GlobalPremiumBackground } from "@/components/layout/GlobalPremiumBackground";
 import dynamic from "next/dynamic";
 
 const WhyChooseUs = dynamic(() => import("@/components/landing/WhyChooseUs").then(mod => mod.WhyChooseUs));
 const ServicesSection = dynamic(() => import("@/components/landing/ServicesSection").then(mod => mod.ServicesSection));
 const ReadyToModernize = dynamic(() => import("@/components/landing/ReadyToModernize").then(mod => mod.ReadyToModernize));
-import { db } from "@/lib/prisma";
 import { auth } from "@/auth";
-
 import { getCachedGlobalSettings } from "@/lib/settings";
+
+export const metadata = {
+  title: "Our Services | ABCD Edu Hub",
+  description: "Comprehensive digital solutions tailored for modern educational excellence.",
+};
 
 export default async function ServicesPage() {
   const session = await auth();
@@ -29,15 +34,17 @@ export default async function ServicesPage() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-background">
+    <div className="flex flex-col min-h-screen font-sans bg-transparent selection:bg-primary/30 relative">
+      <GlobalPremiumBackground />
+      <CustomThemeStyle primaryColor={settings.primaryColor || undefined} accentColor={settings.accentColor || undefined} />
       <LandingNavbar settings={settings} user={session?.user} />
 
-      <main className="flex-1">
+      <main className="flex-1 w-full">
         {isSectionActive("page-header-services") && (
           <PageHeader
             data={getSectionData("page-header-services")}
             title="Our Services"
-            subtitle="Comprehensive digital solutions tailored for modern educational excellence."
+            subtitle="Comprehensive digital solutions tailored for modern educational excellence and student career readiness."
             bgImage="https://cdn.pixabay.com/photo/2016/11/22/21/26/notebook-1850613_1280.jpg"
             breadcrumb="Services"
           />

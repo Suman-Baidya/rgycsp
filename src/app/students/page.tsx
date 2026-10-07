@@ -37,7 +37,7 @@ export default async function StudentsPage() {
           <PageHeader
             data={getSectionData("page-header-students")}
             title="Student Portal & Admissions"
-            subtitle="Join thousands of students building their future with our advanced curriculum."
+            subtitle="Join thousands of students building their future with our advanced curriculum and industry-recognized certifications."
             bgImage="https://images.unsplash.com/photo-1523240795612-9a054b0db644?q=80&w=2070"
             breadcrumb="Students"
           />

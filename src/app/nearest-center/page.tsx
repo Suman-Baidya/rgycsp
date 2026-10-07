@@ -5,6 +5,7 @@ import { Suspense } from "react";
 import { db } from "@/lib/prisma";
 import { auth } from "@/auth";
 import { CustomThemeStyle } from "@/components/providers/CustomThemeStyle";
+import { GlobalPremiumBackground } from "@/components/layout/GlobalPremiumBackground";
 
 export const metadata = {
   title: "Find Nearest Center | ABCD",
@@ -22,12 +23,13 @@ export default async function NearestCenterPage() {
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-slate-50 dark:bg-zinc-950 font-sans">
+    <div className="flex flex-col min-h-screen font-sans bg-transparent selection:bg-primary/30 relative">
+      <GlobalPremiumBackground />
       <CustomThemeStyle primaryColor={settings.primaryColor || undefined} accentColor={settings.accentColor || undefined} />
       <LandingNavbar settings={settings} user={session?.user} />
       
-      <main className="flex-1 w-full pt-32 pb-24 px-4 sm:px-6">
-        <Suspense fallback={<div className="text-center py-20">Loading...</div>}>
+      <main className="flex-1 w-full pt-32 pb-24 px-4 sm:px-6 relative z-10">
+        <Suspense fallback={<div className="text-center py-20 text-muted-foreground font-medium">Loading search finder...</div>}>
           <NearestCenterClient />
         </Suspense>
       </main>

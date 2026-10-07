@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { getGlobalCourses } from "@/app/actions/globalCourse";
 import { getGlobalCourseGroups } from "@/app/actions/globalCourseGroup";
 import CoursesPageClient from "./CoursesPageClient";
@@ -6,6 +7,7 @@ import { MainFooter } from "@/components/layout/MainFooter";
 import { db } from "@/lib/prisma";
 import { auth } from "@/auth";
 import { CustomThemeStyle } from "@/components/providers/CustomThemeStyle";
+import { GlobalPremiumBackground } from "@/components/layout/GlobalPremiumBackground";
 import { PageHeader } from "@/components/layout/PageHeader";
 
 export const metadata = {
@@ -25,7 +27,8 @@ export default async function CoursesPage() {
   const initialGroups = groupsRes.success ? groupsRes.groups : [];
 
   return (
-    <div className="flex flex-col min-h-screen font-sans bg-slate-50 dark:bg-zinc-950 selection:bg-primary/30">
+    <div className="flex flex-col min-h-screen font-sans bg-transparent selection:bg-primary/30 relative">
+      <GlobalPremiumBackground />
       {settings && <CustomThemeStyle primaryColor={settings.primaryColor || undefined} accentColor={settings.accentColor || undefined} />}
       <LandingNavbar settings={settings} user={session?.user} />
       
@@ -36,8 +39,10 @@ export default async function CoursesPage() {
           bgImage="https://cdn.pixabay.com/photo/2015/07/17/22/43/student-849825_1280.jpg"
           breadcrumb="Courses"
         />
-        <div className="pt-16">
-          <CoursesPageClient initialData={initialData} initialGroups={initialGroups} />
+        <div className="pt-6 sm:pt-8">
+          <Suspense fallback={<div className="py-20 text-center text-muted-foreground font-medium">Loading courses catalog...</div>}>
+            <CoursesPageClient initialData={initialData} initialGroups={initialGroups} />
+          </Suspense>
         </div>
       </main>
 

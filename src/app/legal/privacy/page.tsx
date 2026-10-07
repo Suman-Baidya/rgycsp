@@ -21,7 +21,7 @@ export default async function PrivacyPage() {
       <main className="flex-1">
         <PageHeader 
           title="Privacy Policy"
-          subtitle="How we protect and manage your data"
+          subtitle="Learn how we collect, safeguard, and responsibly manage your personal information across all digital services."
           bgImage="https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=2070"
           breadcrumb="Privacy Policy"
         />

@@ -60,10 +60,14 @@ export async function createEvent(data: any) {
     if (event.workspaceId) {
       await revalidateWorkspacePath(event.workspaceId, "/", "layout");
       await revalidateWorkspacePath(event.workspaceId, "/events");
+      await revalidateWorkspacePath(event.workspaceId, "/about");
       await revalidateWorkspacePath(event.workspaceId, "/admin/events-notices");
       await revalidateWorkspacePath(event.workspaceId, "/admin/settings");
     } else {
+      revalidatePath("/app/[tenant]", "layout");
       revalidatePath("/app/[tenant]/admin/events-notices");
+      revalidatePath("/app/[tenant]/about");
+      revalidatePath("/app/[tenant]/events");
     }
     revalidatePath("/events");
     revalidatePath("/super-admin/events-notices");
@@ -103,10 +107,14 @@ export async function updateEvent(eventId: string, data: any) {
     if (updated.workspaceId) {
       await revalidateWorkspacePath(updated.workspaceId, "/", "layout");
       await revalidateWorkspacePath(updated.workspaceId, "/events");
+      await revalidateWorkspacePath(updated.workspaceId, "/about");
       await revalidateWorkspacePath(updated.workspaceId, "/admin/events-notices");
       await revalidateWorkspacePath(updated.workspaceId, "/admin/settings");
     } else {
+      revalidatePath("/app/[tenant]", "layout");
       revalidatePath("/app/[tenant]/admin/events-notices");
+      revalidatePath("/app/[tenant]/about");
+      revalidatePath("/app/[tenant]/events");
     }
     revalidatePath("/events");
     revalidatePath("/super-admin/events-notices");
@@ -128,10 +136,14 @@ export async function deleteEvent(eventId: string) {
     if (deleted.workspaceId) {
       await revalidateWorkspacePath(deleted.workspaceId, "/", "layout");
       await revalidateWorkspacePath(deleted.workspaceId, "/events");
+      await revalidateWorkspacePath(deleted.workspaceId, "/about");
       await revalidateWorkspacePath(deleted.workspaceId, "/admin/events-notices");
       await revalidateWorkspacePath(deleted.workspaceId, "/admin/settings");
     } else {
+      revalidatePath("/app/[tenant]", "layout");
       revalidatePath("/app/[tenant]/admin/events-notices");
+      revalidatePath("/app/[tenant]/about");
+      revalidatePath("/app/[tenant]/events");
     }
     revalidatePath("/events");
     revalidatePath("/super-admin/events-notices");

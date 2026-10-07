@@ -33,9 +33,9 @@ export function Testimonials({ data }: { data?: any }) {
 
          <div className="max-w-7xl mx-auto w-full relative z-10">
             <div className="text-center max-w-2xl mx-auto mb-16">
-               <div className="inline-flex items-center gap-2 py-1.5 px-4 rounded-full bg-primary/5 border border-primary/20 text-primary font-bold text-[10px] tracking-[0.2em] mb-4 shadow-sm">
-                  <span className="w-2 h-2 rounded-full bg-black dark:bg-white animate-pulse"></span>
-                  {subtitle}
+               <div className="inline-flex items-center gap-2.5 text-primary font-bold text-xs tracking-[0.22em] uppercase mb-3">
+                  <span className="w-2 h-2 rounded-full bg-primary animate-pulse shrink-0" />
+                  <span>{subtitle}</span>
                </div>
                <h2 className="text-4xl md:text-5xl font-extrabold mt-3 tracking-tight leading-tight font-heading">
                   {title}

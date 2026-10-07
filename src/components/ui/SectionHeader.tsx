@@ -81,16 +81,14 @@ export function SectionHeader({
     <div className={cn(alignStyles[alignment], className, "mb-16")}>
       <div
         className={cn(
-          "inline-flex items-center gap-2 py-1.5 px-4 rounded-full border font-bold text-[10px] tracking-[0.2em] uppercase mb-4 shadow-sm",
-          theme.badgeBg,
-          theme.badgeBorder,
+          "inline-flex items-center gap-2.5 font-bold text-xs tracking-[0.22em] uppercase mb-3",
           theme.badgeText
         )}
       >
         <span
-          className={cn("w-2 h-2 rounded-full animate-pulse", theme.pulseColor)}
-        ></span>
-        {subtitle}
+          className={cn("w-2 h-2 rounded-full animate-pulse shrink-0", theme.pulseColor)}
+        />
+        <span>{subtitle}</span>
       </div>
       <h2
         className={cn(

@@ -7,13 +7,23 @@ import { Clock, IndianRupee, BookOpen, Layers, Target, GraduationCap, X } from "
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { getTenantLink } from "@/lib/routing";
+import { getRoutingConfig, getTenantLink } from "@/lib/routing";
 
 export default function CourseDetailsModal({ isOpen, onClose, course }: { isOpen: boolean, onClose: () => void, course: any }) {
   const pathname = usePathname();
-  const isAppRoute = pathname.startsWith('/app/');
-  const tenant = isAppRoute ? pathname.split('/')[2] : '';
-  const enrollHref = tenant ? getTenantLink(`/admission?courseId=${course?.id}`, tenant, pathname) : `/admission?courseId=${course?.id}`;
+  const isAppRoute = pathname?.startsWith('/app/') ?? false;
+  let tenant = isAppRoute ? pathname.split('/')[2] : '';
+  
+  if (!tenant && typeof window !== 'undefined') {
+    const config = getRoutingConfig(pathname, window.location.hostname);
+    if (config.mode === 'subdomain' && config.tenant) {
+      tenant = config.tenant;
+    }
+  }
+
+  const enrollHref = tenant 
+    ? getTenantLink(`/admission?courseId=${course?.id}`, tenant, pathname) 
+    : `/nearest-center?courseId=${course?.id}`;
 
   if (!course) return null;
 

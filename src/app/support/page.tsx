@@ -1,10 +1,17 @@
 import { LandingNavbar } from "@/components/layout/LandingNavbar";
 import { MainFooter } from "@/components/layout/MainFooter";
 import { PageHeader } from "@/components/layout/PageHeader";
+import { CustomThemeStyle } from "@/components/providers/CustomThemeStyle";
+import { GlobalPremiumBackground } from "@/components/layout/GlobalPremiumBackground";
 import { ContactSection } from "@/components/landing/ContactSection";
 import { FaqSection } from "@/components/landing/FaqSection";
 import { db } from "@/lib/prisma";
 import { auth } from "@/auth";
+
+export const metadata = {
+  title: "Support Center | ABCD Edu Hub",
+  description: "Our dedicated team is here to ensure your institution's digital journey is smooth and successful.",
+};
 
 export default async function SupportPage() {
   const session = await auth();
@@ -31,21 +38,23 @@ export default async function SupportPage() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-background">
+    <div className="flex flex-col min-h-screen font-sans bg-transparent selection:bg-primary/30 relative">
+      <GlobalPremiumBackground />
+      <CustomThemeStyle primaryColor={settings.primaryColor || undefined} accentColor={settings.accentColor || undefined} />
       <LandingNavbar settings={settings} user={session?.user} />
       
-      <main className="flex-1">
+      <main className="flex-1 w-full">
         {isSectionActive("page-header-support") && (
           <PageHeader 
             data={getSectionData("page-header-support")}
             title="Support Center"
-            subtitle="Our dedicated team is here to ensure your institution's digital journey is smooth and successful."
+            subtitle="Our dedicated team is here to ensure your institution's digital journey is smooth, efficient, and successful."
             bgImage="https://cdn.pixabay.com/photo/2026/02/09/09/10/mv-fotos-woman-10113152_1280.png"
             breadcrumb="Support"
           />
         )}
 
-        <div className="bg-zinc-50 dark:bg-transparent">
+        <div className="bg-transparent">
           {isSectionActive("contact") && <ContactSection data={getSectionData("contact")} settings={settings} />}
         </div>
         

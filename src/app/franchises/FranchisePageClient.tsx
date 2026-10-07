@@ -165,11 +165,9 @@ export function FranchisePageClient({ settings, initialWorkspaces }: FranchisePa
             
             {/* Left: Rules & Criteria */}
             <div className="lg:col-span-6 space-y-10 lg:sticky lg:top-32">
-              <div className="flex items-center gap-3 mb-6 justify-start">
-                <div className="px-3 py-1.5 rounded-full border border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-black dark:bg-white animate-pulse"></span>
-                  <span className="text-[10px] font-black uppercase tracking-[0.2em] text-black/70 dark:text-white/70">Affiliation Criteria</span>
-                </div>
+              <div className="inline-flex items-center gap-2.5 text-primary font-bold text-xs tracking-[0.22em] uppercase mb-3">
+                <span className="w-2 h-2 rounded-full bg-primary animate-pulse shrink-0" />
+                <span>Affiliation Criteria</span>
               </div>
               <div className="space-y-4">
                 <h2 className="text-4xl lg:text-5xl font-extrabold tracking-tight leading-tight">{rulesSection?.title || "Franchise Rules"}</h2>
@@ -436,11 +434,9 @@ export function FranchisePageClient({ settings, initialWorkspaces }: FranchisePa
         <section className="py-20 lg:py-32 bg-slate-50 dark:bg-slate-900/20 relative border-t border-slate-200 dark:border-slate-800">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center space-y-4 mb-16 flex flex-col items-center">
-              <div className="flex items-center gap-3 justify-center mb-2">
-                <div className="px-3 py-1.5 rounded-full border border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-black dark:bg-white animate-pulse"></span>
-                  <span className="text-[10px] font-black uppercase tracking-[0.2em] text-black/70 dark:text-white/70">Step-by-Step Guide</span>
-                </div>
+              <div className="inline-flex items-center gap-2.5 text-primary font-bold text-xs tracking-[0.22em] uppercase mb-3 justify-center">
+                <span className="w-2 h-2 rounded-full bg-primary animate-pulse shrink-0" />
+                <span>Step-by-Step Guide</span>
               </div>
               <h2 className="text-4xl lg:text-5xl font-extrabold tracking-tight leading-tight">
                 {guideSection.title || "Registration Process"}

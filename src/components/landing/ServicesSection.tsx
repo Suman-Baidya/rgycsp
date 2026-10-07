@@ -1,5 +1,6 @@
 "use client";
 
+import React from "react";
 import {
   ShieldCheck,
   Briefcase,
@@ -15,6 +16,8 @@ import {
   Target
 } from "lucide-react";
 import Image from "next/image";
+import { cn } from "@/lib/utils";
+import { SectionHeader } from "@/components/ui/SectionHeader";
 
 const ICON_MAP: any = {
   shield: ShieldCheck,
@@ -79,40 +82,44 @@ export function ServicesSection({ data }: { data?: any }) {
   const lms = { ...lmsDefaults, ...content.lms };
   const ecosystem = { ...ecosystemDefaults, ...content.ecosystem };
   
-  // Ensure nested arrays also fallback if empty
   if (!lms.features || lms.features.length === 0) lms.features = lmsDefaults.features;
   if (!ecosystem.roles || ecosystem.roles.length === 0) ecosystem.roles = ecosystemDefaults.roles;
 
+  const lmsTitleWords = (lms.title || "").split(" ");
+  const lmsLastWord = lmsTitleWords.length > 1 ? lmsTitleWords.pop() : "";
+  const lmsFirstPart = lmsTitleWords.join(" ");
+
+  const ecoTitleWords = (ecosystem.title || "").split(" ");
+  const ecoLastWord = ecoTitleWords.length > 1 ? ecoTitleWords.pop() : "";
+  const ecoFirstPart = ecoTitleWords.join(" ");
+
   return (
-    <section id="services" className="py-24 px-6 overflow-hidden bg-transparent">
+    <section id="services" className="py-20 sm:py-24 px-4 sm:px-6 overflow-hidden bg-transparent">
       <div className="max-w-7xl mx-auto">
         
-        {/* 1. Main Header (Always Visible) */}
-        <div className="text-center mb-16">
-          <div className="inline-flex items-center gap-2 py-1.5 px-4 rounded-full bg-primary/5 border border-primary/20 text-primary font-bold text-[10px] tracking-[0.2em] mb-4">
-            <Zap className="w-4 h-4" />
-            Our Services
-          </div>
-          <h2 className="text-4xl md:text-6xl font-black tracking-tight mb-6 bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">
-            {mainTitle}
-          </h2>
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-            {mainSubtitle}
-          </p>
-        </div>
+        {/* 1. Main Header */}
+        <SectionHeader 
+          subtitle="OUR CAPABILITIES"
+          title={mainTitle}
+          description={mainSubtitle}
+          highlightStyle="primary"
+        />
 
         {/* 2. Highlight Cards (Conditional) */}
         {showHighlights && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-24">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-20 sm:mb-24">
             {highlights.slice(0, 4).map((h: any, i: number) => {
               const Icon = ICON_MAP[h.icon] || Globe;
               return (
-                <div key={i} className="p-8 rounded-[2rem] bg-white dark:bg-zinc-900 border border-border/50 hover:shadow-xl transition-all group">
-                  <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary mb-6 group-hover:brightness-110 transition-transform">
+                <div 
+                  key={i} 
+                  className="p-6 sm:p-8 rounded-[2rem] bg-white dark:bg-zinc-900 border border-slate-200/80 dark:border-zinc-800 shadow-sm hover:border-primary/40 hover:shadow-xl hover:shadow-primary/5 transition-all duration-300 hover:-translate-y-1 group"
+                >
+                  <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary mb-6 group-hover:scale-110 transition-transform">
                     <Icon className="w-6 h-6" />
                   </div>
-                  <h4 className="text-lg font-bold mb-3">{h.title}</h4>
-                  <p className="text-sm text-muted-foreground leading-relaxed">{h.desc}</p>
+                  <h4 className="text-base sm:text-lg font-bold mb-2 text-slate-900 dark:text-white">{h.title}</h4>
+                  <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed">{h.desc}</p>
                 </div>
               );
             })}
@@ -122,90 +129,96 @@ export function ServicesSection({ data }: { data?: any }) {
         {/* 3. Next-Gen LMS Content (Conditional) */}
         {showLms && (
           <div className={cn(
-            "flex flex-col lg:flex-row items-center gap-16",
-            showEcosystem ? "mb-32" : ""
+            "flex flex-col lg:flex-row items-center gap-12 lg:gap-16",
+            showEcosystem ? "mb-24 sm:mb-32" : ""
           )}>
-            <div className="flex-1">
-              <div className="inline-flex items-center gap-2 py-1.5 px-4 rounded-full bg-primary/5 border border-primary/20 text-primary font-bold text-[10px] tracking-[0.2em] uppercase mb-6">
-                <Cpu className="w-4 h-4" />
-                {lms.subtitle}
+            <div className="flex-1 w-full">
+              <div className="inline-flex items-center gap-2.5 text-primary font-bold text-xs tracking-[0.22em] uppercase mb-3 sm:mb-4">
+                <span className="w-2 h-2 rounded-full bg-primary animate-pulse shrink-0" />
+                <span>{lms.subtitle}</span>
               </div>
-              <h2 className="text-4xl md:text-5xl font-extrabold tracking-tight leading-tight mb-8">
-                {lms.title}
+              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight leading-[1.15] mb-5 text-slate-900 dark:text-white">
+                {lmsFirstPart && <>{lmsFirstPart} </>}
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-primary/60">
+                  {lmsLastWord || lms.title}
+                </span>
               </h2>
-              <p className="text-lg text-muted-foreground leading-relaxed mb-10 max-w-2xl">
+              <p className="text-base sm:text-lg text-slate-600 dark:text-slate-400 leading-relaxed mb-8 max-w-2xl">
                 {lms.description}
               </p>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                 {(lms.features || []).map((feat: any, i: number) => (
-                  <div key={i} className="flex items-start gap-4 p-4 rounded-2xl bg-white dark:bg-zinc-900 border border-border/50">
-                    <CheckCircle2 className="w-6 h-6 text-primary shrink-0" />
+                  <div key={i} className="flex items-start gap-4 p-4 rounded-2xl bg-white/70 dark:bg-zinc-900/60 border border-slate-200/80 dark:border-zinc-800 shadow-xs">
+                    <CheckCircle2 className="w-5 h-5 text-primary shrink-0 mt-0.5" />
                     <div>
-                      <h4 className="font-bold">{feat.title}</h4>
-                      <p className="text-sm text-muted-foreground">{feat.text}</p>
+                      <h4 className="font-bold text-sm sm:text-base text-slate-900 dark:text-white">{feat.title}</h4>
+                      <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 mt-0.5">{feat.text}</p>
                     </div>
                   </div>
                 ))}
               </div>
             </div>
 
-            <div className="flex-1 relative">
-              <div className="relative rounded-[2.5rem] overflow-hidden aspect-video shadow-2xl z-10 border border-white dark:border-zinc-800">
+            <div className="flex-1 w-full relative group">
+              <div className="relative rounded-[2rem] overflow-hidden aspect-video shadow-2xl z-10 border border-slate-200/80 dark:border-zinc-800">
                 <Image
                   src={lms.image || ""}
                   alt={lms.title}
                   fill
-                  className="object-cover"
+                  sizes="(max-width: 1024px) 100vw, 50vw"
+                  className="object-cover transition-transform duration-700 group-hover:scale-105"
                 />
-                <div className="absolute inset-0 bg-primary/10 backdrop-blur-[1px]"></div>
+                <div className="absolute inset-0 bg-primary/10 mix-blend-overlay pointer-events-none" />
               </div>
-              <div className="absolute -top-10 -right-10 w-40 h-40 bg-primary/20 rounded-full blur-3xl -z-10 animate-pulse"></div>
+              <div className="absolute -top-10 -right-10 w-40 h-40 bg-primary/20 rounded-full blur-3xl -z-10 pointer-events-none" />
             </div>
           </div>
         )}
 
         {/* 4. Dashboard Ecosystem Content (Conditional) */}
         {showEcosystem && (
-          <div className="pt-12 border-t border-border/40">
-            <div className="text-center mb-16">
-               <div className="inline-flex items-center gap-2 py-1.5 px-4 rounded-full bg-primary/5 border border-primary/20 text-primary font-bold text-[10px] tracking-[0.2em] uppercase mb-4 shadow-sm">
-                <LayoutDashboard className="w-4 h-4" />
-                {ecosystem.subtitle}
+          <div className="pt-12 sm:pt-16 border-t border-slate-200/60 dark:border-zinc-800/60">
+            <div className="text-center mb-14 sm:mb-16">
+              <div className="inline-flex items-center gap-2.5 text-primary font-bold text-xs tracking-[0.22em] uppercase mb-3">
+                <span className="w-2 h-2 rounded-full bg-primary animate-pulse shrink-0" />
+                <span>{ecosystem.subtitle}</span>
               </div>
-              <h2 className="text-4xl md:text-5xl font-extrabold tracking-tight leading-tight mb-6">
-                {ecosystem.title}
+              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight leading-[1.15] mb-4 text-slate-900 dark:text-white">
+                {ecoFirstPart && <>{ecoFirstPart} </>}
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-primary/60">
+                  {ecoLastWord || ecosystem.title}
+                </span>
               </h2>
-              <p className="text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+              <p className="text-base sm:text-lg text-slate-600 dark:text-slate-400 max-w-2xl mx-auto leading-relaxed">
                 {ecosystem.description}
               </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
               {(ecosystem.roles || []).map((role: any, i: number) => {
                 const Icon = ICON_MAP[role.icon] || Users;
                 return (
                   <div
                     key={i}
-                    className="group relative p-10 rounded-[3rem] bg-white dark:bg-zinc-900 border border-border/50 hover:border-primary/50 transition-all duration-500 hover:shadow-[0_40px_80px_-20px_rgba(0,0,0,0.1)] dark:hover:shadow-[0_40px_80px_-20px_rgba(0,0,0,0.4)] hover:-translate-y-3 overflow-hidden"
+                    className="group relative p-8 sm:p-10 rounded-[2.5rem] bg-white dark:bg-zinc-900 border border-slate-200/80 dark:border-zinc-800 hover:border-primary/40 transition-all duration-300 hover:shadow-2xl hover:shadow-primary/10 hover:-translate-y-2 overflow-hidden flex flex-col"
                   >
-                    <div className="absolute top-8 right-10 text-8xl font-black text-zinc-100 dark:text-zinc-800/50 select-none group-hover:text-primary/10 transition-colors duration-500">
+                    <div className="absolute top-6 right-8 text-7xl font-black text-slate-100 dark:text-zinc-800/40 select-none group-hover:text-primary/10 transition-colors pointer-events-none">
                       0{i + 1}
                     </div>
-                    <div className={`relative z-10 w-20 h-20 rounded-[2rem] ${role.color || "bg-primary/10 text-primary"} flex items-center justify-center mb-10 shadow-lg group-hover:brightness-110 group-hover:rotate-6 transition-all duration-500 group-hover:shadow-[0_0_30px_rgba(var(--primary),0.3)]`}>
-                      <Icon className="w-6 h-6" />
+                    <div className={`relative z-10 w-16 h-16 rounded-2xl ${role.color || "bg-primary/10 text-primary"} flex items-center justify-center mb-6 shadow-sm group-hover:scale-110 transition-transform`}>
+                      <Icon className="w-7 h-7" />
                     </div>
-                    <div className="relative z-10">
-                      <h4 className="text-2xl font-black mb-4 tracking-tight text-foreground group-hover:text-primary transition-colors">
+                    <div className="relative z-10 flex-1 flex flex-col">
+                      <h4 className="text-xl font-extrabold mb-3 tracking-tight text-slate-900 dark:text-white group-hover:text-primary transition-colors">
                         {role.title}
                       </h4>
-                      <p className="text-[15px] text-muted-foreground leading-relaxed font-medium">
+                      <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed font-normal flex-1">
                         {role.description}
                       </p>
                     </div>
-                    <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-primary/5 rounded-full blur-[80px] group-hover:bg-primary/20 transition-all duration-700"></div>
-                    <div className="absolute bottom-0 left-0 w-full h-1.5 bg-zinc-100 dark:bg-zinc-800 overflow-hidden">
-                      <div className="h-full w-0 bg-primary group-hover:w-full transition-all duration-700 ease-in-out"></div>
+                    <div className="absolute bottom-0 left-0 w-full h-1 bg-slate-100 dark:bg-zinc-800 overflow-hidden">
+                      <div className="h-full w-0 bg-primary group-hover:w-full transition-all duration-500 ease-out" />
                     </div>
                   </div>
                 );
@@ -216,9 +229,4 @@ export function ServicesSection({ data }: { data?: any }) {
       </div>
     </section>
   );
-}
-
-// Helper for conditional classNames
-function cn(...classes: any[]) {
-  return classes.filter(Boolean).join(" ");
 }

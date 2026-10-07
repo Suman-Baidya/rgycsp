@@ -1,6 +1,8 @@
 import { LandingNavbar } from "@/components/layout/LandingNavbar";
 import { MainFooter } from "@/components/layout/MainFooter";
 import { PageHeader } from "@/components/layout/PageHeader";
+import { CustomThemeStyle } from "@/components/providers/CustomThemeStyle";
+import { GlobalPremiumBackground } from "@/components/layout/GlobalPremiumBackground";
 import { db } from "@/lib/prisma";
 import { auth } from "@/auth";
 import { StudyCenterClient } from "./StudyCenterClient";
@@ -38,13 +40,15 @@ export default async function StudyCenterPage() {
   );
 
   return (
-    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 font-sans selection:bg-primary/30">
+    <div className="flex flex-col min-h-screen font-sans bg-transparent selection:bg-primary/30 relative">
+      <GlobalPremiumBackground />
+      <CustomThemeStyle primaryColor={settings.primaryColor || undefined} accentColor={settings.accentColor || undefined} />
       <LandingNavbar settings={settings} user={session?.user} />
       
-      <main className="flex-1">
+      <main className="flex-1 w-full">
         <PageHeader 
           title="Study Center" 
-          subtitle="Find Your Nearest Institute" 
+          subtitle="Locate your nearest authorized study center and explore modern training facilities across the nationwide network." 
           breadcrumb="Study Center"
           data={headerSection}
           bgImage="https://cdn.pixabay.com/photo/2018/10/27/15/40/zhejiang-university-3776783_1280.jpg"

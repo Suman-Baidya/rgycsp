@@ -1,19 +1,7 @@
-"use client"
+"use client";
 
 import { useState } from "react";
 import { Check, Zap, BookOpenCheck, ShieldCheck, Rocket } from "lucide-react";
-
-
-const FEATURES = [
-  "Complete Separate Workspace",
-  "AI-Powered Assessments",
-  "Role-Based Dashboards",
-  "Custom Sub-domain Branding",
-  "Financial & Fee Management",
-  "Attendance & Schedule Tracking",
-  "Parental Access Portal",
-  "24/7 Priority Support"
-];
 
 export function PricingSection({ data }: { data?: any }) {
   const [isYearly, setIsYearly] = useState(true);
@@ -48,36 +36,43 @@ export function PricingSection({ data }: { data?: any }) {
 
   const planIcons = [BookOpenCheck, Zap, ShieldCheck];
 
+  const titleWords = title.split(" ");
+  const lastWord = titleWords.length > 1 ? titleWords.pop() : "";
+  const firstPart = titleWords.join(" ");
+
   return (
-    <div id="pricing" className="bg-zinc-50 dark:bg-black/20">
+    <div id="pricing" className="bg-transparent">
       {/* 1. Free Demo Section - High Impact Banner */}
       {showDemoBanner && (
-        <section className="py-20 px-6 border-b border-zinc-200 dark:border-zinc-800">
+        <section className="py-16 sm:py-20 px-4 sm:px-6">
           <div className="max-w-5xl mx-auto">
-            <div className="relative group p-8 md:p-12 rounded-[3rem] bg-white dark:bg-zinc-900 border-2 border-dashed border-primary/30 flex flex-col md:flex-row items-center gap-10 overflow-hidden">
+            <div className="relative group p-6 sm:p-10 md:p-12 rounded-[2.5rem] bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md border border-primary/30 flex flex-col md:flex-row items-center gap-8 md:gap-10 overflow-hidden shadow-xl shadow-primary/5">
               {/* Background Glow */}
-              <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-[100px] -z-10"></div>
+              <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 rounded-full blur-[100px] -z-10 pointer-events-none" />
 
               <div className="flex-1 text-center md:text-left">
-                <div className="inline-flex items-center gap-2 py-1 px-3 rounded-full bg-primary/10 text-primary text-[10px] font-black uppercase tracking-widest mb-6">
-                  Limited Time Offer
+                <div className="inline-flex items-center gap-2.5 text-primary text-xs font-bold uppercase tracking-[0.22em] mb-3">
+                  <span className="w-2 h-2 rounded-full bg-primary animate-pulse shrink-0" />
+                  <span>Limited Time Offer</span>
                 </div>
-                <h2 className="text-3xl md:text-4xl font-black mb-4 tracking-tight">
+                <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold mb-3 tracking-tight text-slate-900 dark:text-white">
                   Try Our <span className="text-primary">Free Demo Version</span>
                 </h2>
-                <p className="text-lg text-muted-foreground font-medium mb-0">
+                <p className="text-sm sm:text-base text-slate-600 dark:text-slate-400 font-normal leading-relaxed">
                   Experience the complete ABCD Edu Hub ecosystem for 30 days. No credit card required. No hidden strings.
                 </p>
               </div>
 
-              <div className="flex flex-col items-center gap-4 min-w-[240px]">
-                <div className="text-center mb-2">
-                  <span className="text-5xl font-black">₹0</span>
-                  <span className="text-muted-foreground text-sm font-bold">/30 Days</span>
+              <div className="flex flex-col items-center gap-4 min-w-[220px] w-full md:w-auto">
+                <div className="text-center">
+                  <span className="text-4xl sm:text-5xl font-black text-slate-900 dark:text-white">₹0</span>
+                  <span className="text-muted-foreground text-xs sm:text-sm font-bold ml-1">/30 Days</span>
                 </div>
-                <button className="w-full h-14 bg-zinc-950 dark:bg-white text-white dark:text-zinc-950 font-black rounded-2xl  transition-all shadow-xl">
-                  Get Instant Access
-                </button>
+                <a href="/contact" className="w-full">
+                  <button className="w-full h-12 sm:h-14 bg-primary hover:bg-primary/90 text-primary-foreground font-bold rounded-2xl transition-all shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 text-sm sm:text-base">
+                    Get Instant Access
+                  </button>
+                </a>
               </div>
             </div>
           </div>
@@ -85,37 +80,46 @@ export function PricingSection({ data }: { data?: any }) {
       )}
 
       {/* 2. Main Pricing Table */}
-      <section className="py-24 px-6">
+      <section className="py-20 sm:py-24 px-4 sm:px-6">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
-          <div className="text-center mb-16">
-            <div className="inline-flex items-center gap-2 py-1.5 px-4 rounded-full bg-primary/5 border border-primary/20 text-primary font-bold text-[10px] tracking-[0.2em] uppercase mb-4">
-              <Zap className="w-4 h-4" />
-              Subscription Plans
+          <div className="text-center mb-14 sm:mb-16">
+            <div className="inline-flex items-center gap-2.5 text-primary font-bold text-xs tracking-[0.22em] uppercase mb-3">
+              <span className="w-2 h-2 rounded-full bg-primary animate-pulse shrink-0" />
+              <span>Subscription Plans</span>
             </div>
-            <h2 className="text-4xl md:text-5xl font-black tracking-tight leading-tight mb-6">
-              {title}
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight leading-[1.15] mb-4 text-slate-900 dark:text-white">
+              {firstPart && <>{firstPart} </>}
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-primary/60">
+                {lastWord || title}
+              </span>
             </h2>
 
             {/* Billing Toggle */}
-            <div className="flex items-center justify-center gap-6 mt-10">
-              <span className={`text-sm font-bold transition-all duration-300 ${!isYearly ? "text-primary scale-110" : "text-muted-foreground opacity-50"}`}>Monthly</span>
+            <div className="flex items-center justify-center gap-4 sm:gap-6 mt-8">
+              <span className={`text-sm font-bold transition-all duration-300 ${!isYearly ? "text-primary scale-105" : "text-muted-foreground opacity-60"}`}>
+                Monthly
+              </span>
               <button
+                type="button"
                 onClick={() => setIsYearly(!isYearly)}
-                className="relative w-20 h-10 bg-zinc-200 dark:bg-zinc-800 rounded-full p-1.5 transition-all duration-500  active:scale-95 shadow-inner group"
+                className="relative w-16 sm:w-20 h-9 sm:h-10 bg-slate-200 dark:bg-zinc-800 rounded-full p-1 transition-all duration-300 active:scale-95 shadow-inner focus:outline-none"
+                aria-label="Toggle billing frequency"
               >
-                <div className={`h-full aspect-square bg-primary rounded-full shadow-lg transition-all duration-500 ease-in-out transform ${isYearly ? "translate-x-10" : "translate-x-0"}`}>
-                  <div className="absolute inset-0 bg-zinc-950 dark:bg-white rounded-full group-hover:opacity-100 transition-opacity"></div>
-                </div>
+                <div className={`h-full aspect-square bg-primary rounded-full shadow-md transition-all duration-300 ease-in-out transform ${isYearly ? "translate-x-7 sm:translate-x-10" : "translate-x-0"}`} />
               </button>
-              <div className="flex items-center gap-3">
-                <span className={`text-sm font-bold transition-all duration-300 ${isYearly ? "text-primary scale-110" : "text-muted-foreground opacity-50"}`}>Yearly</span>
-                <span className="py-1.5 px-3 rounded-full bg-primary/10 text-primary text-[10px] font-black uppercase tracking-[0.1em] border border-primary/20 animate-pulse">Save 20%</span>
+              <div className="flex items-center gap-2.5">
+                <span className={`text-sm font-bold transition-all duration-300 ${isYearly ? "text-primary scale-105" : "text-muted-foreground opacity-60"}`}>
+                  Yearly
+                </span>
+                <span className="py-1 px-2.5 rounded-full bg-primary/10 text-primary text-[10px] font-bold uppercase tracking-wider border border-primary/20">
+                  Save 20%
+                </span>
               </div>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 items-stretch">
             {plans.map((plan: any, idx: number) => {
               const Icon = planIcons[idx] || Rocket;
               const isMain = idx === 1; // Institute plan is main
@@ -124,52 +128,66 @@ export function PricingSection({ data }: { data?: any }) {
               return (
                 <div
                   key={idx}
-                  className={`group relative p-10 rounded-[3rem] transition-all duration-500 hover:-translate-y-2 flex flex-col ${isMain
-                    ? "bg-zinc-950 dark:bg-zinc-900 text-white border-4 border-primary/30 shadow-2xl scale-105 z-10"
-                    : "bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-sm hover:shadow-2xl"
-                    }`}
+                  className={`group relative p-8 sm:p-10 rounded-[2.5rem] transition-all duration-300 hover:-translate-y-2 flex flex-col ${
+                    isMain
+                      ? "bg-slate-950 dark:bg-zinc-900 text-white border-2 border-primary/50 shadow-2xl scale-[1.02] z-10"
+                      : "bg-white/80 dark:bg-zinc-900/70 backdrop-blur-md border border-slate-200/80 dark:border-zinc-800 shadow-sm hover:shadow-xl hover:border-primary/40"
+                  }`}
                 >
-                  {isMain && <div className="absolute top-0 right-0 w-32 h-32 bg-primary/20 rounded-full blur-[60px] -mr-10 -mt-10"></div>}
+                  {isMain && (
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-primary/20 rounded-full blur-[60px] -mr-10 -mt-10 pointer-events-none" />
+                  )}
 
-                  <div className="relative z-10 mb-8">
+                  <div className="relative z-10 mb-6">
                     {isMain && (
-                      <div className="inline-flex items-center gap-2 py-1 px-3 rounded-full bg-white text-black text-[10px] font-black uppercase tracking-widest mb-6">
+                      <div className="inline-flex items-center gap-1.5 py-1 px-3 rounded-full bg-primary text-primary-foreground text-[10px] font-black uppercase tracking-widest mb-5 shadow-sm">
                         Recommended
                       </div>
                     )}
-                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center mb-6 ${isMain ? "bg-white/20 text-white" : "bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400"}`}>
+                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center mb-5 ${isMain ? "bg-white/10 text-primary" : "bg-primary/10 text-primary"}`}>
                       <Icon className="w-6 h-6" />
                     </div>
-                    <h3 className={`text-2xl font-black mb-2 ${isMain ? "text-white" : "text-foreground"}`}>{plan.name}</h3>
-                    <p className={`text-sm font-medium ${isMain ? "text-zinc-300" : "text-zinc-600 dark:text-zinc-400"}`}>{plan.description}</p>
+                    <h3 className={`text-xl sm:text-2xl font-extrabold mb-2 ${isMain ? "text-white" : "text-slate-900 dark:text-white"}`}>
+                      {plan.name}
+                    </h3>
+                    <p className={`text-xs sm:text-sm font-normal ${isMain ? "text-zinc-300" : "text-slate-600 dark:text-slate-400"}`}>
+                      {plan.description}
+                    </p>
                   </div>
 
                   <div className="relative z-10 mb-8">
                     <div className="flex items-baseline gap-1">
-                      <span className={`text-4xl font-black ${isMain ? "text-white" : "text-foreground"}`}>
+                      <span className={`text-3xl sm:text-4xl font-black ${isMain ? "text-white" : "text-slate-900 dark:text-white"}`}>
                         {price !== "Custom" ? `₹${price}` : price}
                       </span>
-                      {price !== "Custom" && <span className={`${isMain ? "text-zinc-400" : "text-zinc-500"} text-sm font-bold`}>/month</span>}
+                      {price !== "Custom" && (
+                        <span className={`${isMain ? "text-zinc-400" : "text-slate-500"} text-xs sm:text-sm font-bold`}>
+                          /month
+                        </span>
+                      )}
                     </div>
                     {isYearly && price !== "Custom" && (
-                      <p className={`${isMain ? "text-white" : "text-primary"} text-[10px] font-black mt-2 uppercase tracking-widest`}>
+                      <p className={`${isMain ? "text-primary-foreground/80" : "text-primary"} text-[10px] font-bold mt-1.5 uppercase tracking-widest`}>
                         Billed Annually
                       </p>
                     )}
                   </div>
 
-                  <button className={`relative z-10 w-full h-14 font-black rounded-2xl  active:scale-95 transition-all mb-10 ${isMain
-                    ? "bg-white text-black shadow-[0_15px_30px_rgba(var(--primary),0.3)]"
-                    : "bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white hover:bg-zinc-200 dark:hover:bg-zinc-700"
+                  <a href="/contact" className="relative z-10 w-full mb-8">
+                    <button className={`w-full h-12 sm:h-14 font-bold rounded-2xl active:scale-95 transition-all text-sm sm:text-base ${
+                      isMain
+                        ? "bg-primary text-primary-foreground shadow-lg shadow-primary/25 hover:bg-primary/90"
+                        : "bg-slate-100 dark:bg-zinc-800 text-slate-900 dark:text-white hover:bg-primary hover:text-primary-foreground"
                     }`}>
-                    {price === "Custom" ? "Contact for Custom Plan" : `Choose ${plan.name}`}
-                  </button>
+                      {price === "Custom" ? "Contact for Custom Plan" : `Choose ${plan.name}`}
+                    </button>
+                  </a>
 
-                  <ul className="relative z-10 space-y-4 flex-1">
+                  <ul className="relative z-10 space-y-3.5 flex-1 border-t border-slate-100 dark:border-zinc-800/80 pt-6">
                     {plan.features?.map((f: string, i: number) => (
-                      <li key={i} className={`flex items-center gap-3 text-sm font-bold ${isMain ? "text-zinc-100" : "text-zinc-700 dark:text-zinc-300"}`}>
-                        <Check className={`w-4 h-4 ${isMain ? "text-white" : "text-primary"}`} />
-                        {f}
+                      <li key={i} className={`flex items-center gap-3 text-xs sm:text-sm font-medium ${isMain ? "text-zinc-200" : "text-slate-700 dark:text-slate-300"}`}>
+                        <Check className="w-4 h-4 text-primary shrink-0" />
+                        <span>{f}</span>
                       </li>
                     ))}
                   </ul>
@@ -182,7 +200,3 @@ export function PricingSection({ data }: { data?: any }) {
     </div>
   );
 }
-
-
-
-

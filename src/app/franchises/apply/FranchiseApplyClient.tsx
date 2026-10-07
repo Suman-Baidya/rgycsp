@@ -94,11 +94,9 @@ export function FranchiseApplyClient() {
         <div className="bg-card border-2 border-border/40 rounded-[2.5rem] p-6 sm:p-12 shadow-2xl relative overflow-hidden">
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between border-b pb-8 mb-10 gap-6">
             <div className="space-y-4">
-              <div className="flex items-center gap-3 justify-start">
-                <div className="px-3 py-1.5 rounded-full border border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-black dark:bg-white animate-pulse"></span>
-                  <span className="text-[10px] font-black uppercase tracking-[0.2em] text-black/70 dark:text-white/70">Application Portal</span>
-                </div>
+              <div className="inline-flex items-center gap-2.5 text-primary font-bold text-xs tracking-[0.22em] uppercase mb-3">
+                <span className="w-2 h-2 rounded-full bg-primary animate-pulse shrink-0" />
+                <span>Application Portal</span>
               </div>
               <h1 className="text-4xl lg:text-5xl font-extrabold tracking-tight leading-tight">Apply Online</h1>
               <p className="text-sm text-muted-foreground font-bold uppercase tracking-widest">Step {formStep} of 4</p>

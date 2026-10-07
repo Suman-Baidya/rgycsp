@@ -1,7 +1,7 @@
 import Image from "next/image";
+
 export function PartnersMarquee({ data }: { data?: any }) {
    const content = data?.content || {};
-   const subtitle = data?.subtitle || "Trusted Innovators";
    const logos = content.logos || [
       "https://cdn.pixabay.com/photo/2015/12/11/11/43/google-1088004_1280.png",
       "https://cdn.pixabay.com/photo/2022/08/24/23/12/apple-7408883_1280.png",
@@ -12,24 +12,18 @@ export function PartnersMarquee({ data }: { data?: any }) {
    ];
 
    return (
-      <section className="py-16 border-y border-border overflow-hidden bg-transparent">
-         <div className="max-w-7xl mx-auto px-6 mb-8 text-center">
-            <div className="inline-flex items-center gap-2 py-1.5 px-4 rounded-full bg-primary/5 border border-primary/20 text-primary font-bold text-[10px] tracking-[0.2em] uppercase mb-4 shadow-sm">
-               <span className="w-2 h-2 rounded-full bg-black dark:bg-white animate-pulse"></span>
-               {subtitle}
-            </div>
-         </div>
-
+      <section className="py-10 sm:py-12 border-y border-border/60 overflow-hidden bg-transparent">
          <div className="relative flex max-w-full w-full">
             <div className="flex w-max animate-marquee">
                {/* Ensure at least a decent number of logos for a smooth loop */}
                {[...logos, ...logos, ...logos].map((logo, index) => (
-                  <div key={index} className="flex-shrink-0 w-[250px] md:w-[250px] flex justify-center items-center px-4 py-4 relative h-20 md:h-24">
+                  <div key={index} className="flex-shrink-0 w-[200px] sm:w-[250px] flex justify-center items-center px-4 py-3 relative h-16 sm:h-20">
                      <Image
                         src={logo || ""}
                         alt={`Partner ${index}`}
                         fill
-                        className="object-contain grayscale opacity-40 hover:grayscale-0 hover:opacity-100 transition-all duration-300 drop-shadow-sm hover:drop-shadow-xl hover:brightness-110"
+                        sizes="(max-width: 768px) 200px, 250px"
+                        className="object-contain"
                      />
                   </div>
                ))}

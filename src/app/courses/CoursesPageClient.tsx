@@ -11,8 +11,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { motion, AnimatePresence } from "framer-motion";
 import CourseDetailsModal from "./CourseDetailsModal";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 
 export default function CoursesPageClient({ initialData, initialGroups = [] }: { initialData: any, initialGroups?: any[] }) {
+  const searchParams = useSearchParams();
+  const paramCourseId = searchParams?.get("courseId");
+
   const [courses, setCourses] = useState(initialData.courses);
   const [total, setTotal] = useState(initialData.total);
   const [totalPages, setTotalPages] = useState(initialData.totalPages);
@@ -24,6 +28,16 @@ export default function CoursesPageClient({ initialData, initialGroups = [] }: {
 
   const [selectedCourse, setSelectedCourse] = useState<any>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  useEffect(() => {
+    if (paramCourseId && courses?.length > 0) {
+      const match = courses.find((c: any) => c.id === paramCourseId);
+      if (match) {
+        setSelectedCourse(match);
+        setIsModalOpen(true);
+      }
+    }
+  }, [paramCourseId, courses]);
 
   const fetchCourses = useCallback(async () => {
     setIsLoading(true);
@@ -56,31 +70,31 @@ export default function CoursesPageClient({ initialData, initialGroups = [] }: {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
-        className="bg-white dark:bg-zinc-900 rounded-[2rem] p-4 md:p-6 shadow-xl shadow-slate-200/50 dark:shadow-none border border-slate-200 dark:border-zinc-800 mb-16 flex flex-col md:flex-row gap-4"
+        className="bg-white dark:bg-zinc-900 rounded-2xl p-2 sm:p-2.5 shadow-md shadow-slate-200/50 dark:shadow-none border border-slate-200 dark:border-zinc-800 mb-8 sm:mb-10 flex flex-col md:flex-row gap-2.5"
       >
         <div className="relative flex-1">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
           <Input 
             placeholder="Search for courses (e.g. DCA, Python)..." 
             value={search}
             onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-            className="pl-12 h-14 rounded-2xl border-2 border-slate-100 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-950/50 focus-visible:border-primary text-base font-medium"
+            className="pl-10 h-11 sm:h-12 rounded-xl border border-slate-100 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-950/50 focus-visible:border-primary text-sm sm:text-base font-medium"
           />
         </div>
-        <div className="w-full md:w-[300px] shrink-0 relative">
+        <div className="w-full md:w-[240px] shrink-0 relative">
           <Select value={group} onValueChange={(val) => { setGroup(val as string); setPage(1); }}>
-            <SelectTrigger className="h-14 rounded-2xl border-2 border-slate-100 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-950/50 focus:ring-0 focus:border-primary text-base font-medium capitalize">
+            <SelectTrigger className="h-11 sm:h-12 rounded-xl border border-slate-100 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-950/50 focus:ring-0 focus:border-primary text-sm sm:text-base font-medium capitalize">
               <div className="flex items-center gap-2">
                 <Filter className="h-4 w-4 text-primary" />
                 <SelectValue placeholder="All Categories" />
               </div>
             </SelectTrigger>
-            <SelectContent className="rounded-2xl border border-slate-200 dark:border-zinc-800 p-2">
-              <SelectItem value="all" className="rounded-xl py-3 font-medium cursor-pointer">
+            <SelectContent className="rounded-xl border border-slate-200 dark:border-zinc-800 p-1.5">
+              <SelectItem value="all" className="rounded-lg py-2 font-medium cursor-pointer">
                 All Categories
               </SelectItem>
               {courseGroups.filter(g => g.isActive).map(g => (
-                <SelectItem key={g.value} value={g.value} className="rounded-xl py-3 font-medium cursor-pointer">
+                <SelectItem key={g.value} value={g.value} className="rounded-lg py-2 font-medium cursor-pointer">
                   {g.label}
                 </SelectItem>
               ))}

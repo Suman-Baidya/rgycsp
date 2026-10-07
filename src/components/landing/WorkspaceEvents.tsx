@@ -16,29 +16,11 @@ export function WorkspaceEvents({ data }: { data: any }) {
   const pathname = usePathname();
   const tenant = detectTenant(pathname, typeof window !== 'undefined' ? window.location.hostname : undefined);
   const getLink = (path: string) => getTenantLink(path, tenant, pathname);
-  const events = (data?.events && data.events.length > 0) ? data.events : [
-    {
-      title: "Annual Cultural Fest 2026",
-      date: "15 May, 2026",
-      time: "10:00 AM",
-      location: "Main Auditorium",
-      image: "https://cdn.pixabay.com/photo/2019/03/19/09/58/dreamcatcher-4065288_1280.jpg"
-    },
-    {
-      title: "Tech Innovation Workshop",
-      date: "22 May, 2026",
-      time: "11:30 AM",
-      location: "Computer Lab 1",
-      image: "https://cdn.pixabay.com/photo/2017/05/10/19/29/robot-2301646_1280.jpg"
-    },
-    {
-      title: "Inter-College Sports Meet",
-      date: "05 June, 2026",
-      time: "09:00 AM",
-      location: "Sports Ground",
-      image: "https://cdn.pixabay.com/photo/2022/11/08/02/27/track-7577525_1280.jpg"
-    },
-  ];
+  const events = data?.events;
+
+  if (!events || events.length === 0) {
+    return null;
+  }
 
   const title = data?.title || "Upcoming Events & Workshops";
   const subtitle = data?.subtitle || "Institute Events";

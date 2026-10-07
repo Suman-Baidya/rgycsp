@@ -1,9 +1,16 @@
 import { LandingNavbar } from "@/components/layout/LandingNavbar";
 import { MainFooter } from "@/components/layout/MainFooter";
 import { PageHeader } from "@/components/layout/PageHeader";
+import { CustomThemeStyle } from "@/components/providers/CustomThemeStyle";
+import { GlobalPremiumBackground } from "@/components/layout/GlobalPremiumBackground";
 import { db } from "@/lib/prisma";
 import { auth } from "@/auth";
 import { FranchisePageClient } from "./FranchisePageClient";
+
+export const metadata = {
+  title: "Franchise Network | ABCD Edu Hub",
+  description: "Verify active centers, track registration status, or apply online to scale your education program.",
+};
 
 export default async function FranchisesPage() {
   const session = await auth();
@@ -36,10 +43,12 @@ export default async function FranchisesPage() {
   });
 
   return (
-    <div className="flex flex-col min-h-screen bg-background">
+    <div className="flex flex-col min-h-screen font-sans bg-transparent selection:bg-primary/30 relative">
+      <GlobalPremiumBackground />
+      <CustomThemeStyle primaryColor={settings.primaryColor || undefined} accentColor={settings.accentColor || undefined} />
       <LandingNavbar settings={settings} user={session?.user} />
 
-      <main className="flex-1">
+      <main className="flex-1 w-full">
         {isSectionActive("page-header-franchises") && (
           <PageHeader
             data={getSectionData("page-header-franchises")}

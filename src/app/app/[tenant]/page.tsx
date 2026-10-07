@@ -232,7 +232,7 @@ export default async function InstituteLandingPage({
 
         {isSectionActive("partners") && <WorkspacePartners data={getSectionData("partners")} />}
 
-        {isSectionActive("events") && <WorkspaceEvents data={{ ...getSectionData("events"), events: top3Events }} />}
+        {isSectionActive("events") && top3Events.length > 0 && <WorkspaceEvents data={{ ...getSectionData("events"), events: top3Events }} />}
 
         {isSectionActive("testimonials") && <div id="testimonials"><WorkspaceTestimonials data={getSectionData("testimonials")} /></div>}
 

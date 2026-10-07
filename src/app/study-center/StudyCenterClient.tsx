@@ -144,9 +144,9 @@ export function StudyCenterClient({ initialCenters, contentSection }: StudyCente
         <div className="bg-white/60 dark:bg-zinc-950/60 backdrop-blur-2xl rounded-[23px] p-8 lg:p-12 shadow-sm border border-white/20 dark:border-zinc-800/50 flex flex-col items-center text-center">
           <div className="max-w-2xl w-full mx-auto">
             {contentSection?.subtitle && (
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary font-bold text-sm mb-6 border border-primary/20">
-                <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-                {contentSection.subtitle}
+              <div className="inline-flex items-center gap-2.5 text-primary font-bold text-xs tracking-[0.22em] uppercase mb-4 justify-center">
+                <span className="w-2 h-2 rounded-full bg-primary animate-pulse shrink-0" />
+                <span>{contentSection.subtitle}</span>
               </div>
             )}
             <h2 className="text-3xl lg:text-4xl font-black mb-4 tracking-tight">

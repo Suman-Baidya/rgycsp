@@ -7,9 +7,11 @@ import { WorkspacePageHeader } from "@/components/layout/WorkspacePageHeader";
 import { CustomThemeStyle } from "@/components/providers/CustomThemeStyle";
 import { auth } from "@/auth";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Calendar, Image as ImageIcon, MapPin, Clock } from "lucide-react";
+import { ArrowRight, MapPin, Clock } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import { DEFAULT_WORKSPACE_GALLERY } from "@/lib/workspace-defaults";
+import { getServerTenantLink } from "@/lib/routing-server";
 
 export default async function WorkspaceAboutPage({
   params
@@ -18,16 +20,12 @@ export default async function WorkspaceAboutPage({
 }) {
   const { tenant } = await params;
 
-  const workspace = await findWorkspaceByTenant(tenant, { include: {
+  const workspace = await findWorkspaceByTenant(tenant, {
+    include: {
       siteSettings: {
         include: {
           sections: true
         }
-      },
-      events: {
-        where: { isActive: true },
-        orderBy: { date: 'asc' },
-        take: 3
       },
       galleryItems: {
         where: { isActive: true },
@@ -42,6 +40,33 @@ export default async function WorkspaceAboutPage({
   const session = await auth();
   const aboutSection = workspace.siteSettings.sections.find(s => s.type === "about");
   const aboutContent = (aboutSection?.content as any) || {};
+
+  const galleryItems = (workspace.galleryItems && workspace.galleryItems.length > 0)
+    ? workspace.galleryItems
+    : DEFAULT_WORKSPACE_GALLERY.slice(0, 6);
+
+  const rawEvents = await db.event.findMany({
+    where: {
+      isActive: true,
+      OR: [
+        { workspaceId: workspace.id },
+        { workspaceId: null, showOnFranchises: true },
+      ],
+    },
+    orderBy: { date: 'asc' },
+    take: 3,
+  });
+
+  const allEventsHref = await getServerTenantLink("/events", tenant);
+  const eventsWithHrefs = await Promise.all(
+    rawEvents.map(async (event) => ({
+      ...event,
+      href: await getServerTenantLink(`/events/${event.id}`, tenant),
+    }))
+  );
+
+  const storyImage1 = workspace.galleryItems?.[0]?.image || DEFAULT_WORKSPACE_GALLERY[1].image;
+  const storyImage2 = workspace.galleryItems?.[1]?.image || DEFAULT_WORKSPACE_GALLERY[4].image;
 
   return (
     <div className="flex flex-col min-h-screen font-sans bg-background">
@@ -58,8 +83,6 @@ export default async function WorkspaceAboutPage({
           title="About Us"
           description={workspace.siteSettings.brandDescription || "Learn more about our mission, vision, and dedication to excellence."}
           bgImage={workspace.siteSettings.pageHeaderBanner || "https://images.unsplash.com/photo-1523050338192-067352869d2f?q=80&w=2070"}
-          statusTitle="ONLINE"
-          statusSub="24/7 Support"
           breadcrumbs={[
             { name: "About", href: "/about" }
           ]}
@@ -74,7 +97,7 @@ export default async function WorkspaceAboutPage({
                   <div className="h-0.5 w-10 bg-primary" />
                   Our Story
                 </div>
-                <h2 className="text-4xl md:text-6xl font-black tracking-tight text-slate-900 dark:text-white leading-[1.1]">
+                <h2 className="text-4xl md:text-6xl font-black tracking-tight leading-[1]">
                   {aboutSection?.title || "Dedicated to Empowering Future Leaders"}
                 </h2>
                 <div className="prose prose-slate dark:prose-invert max-w-none text-slate-600 dark:text-slate-400 text-lg leading-relaxed space-y-6">
@@ -106,14 +129,14 @@ export default async function WorkspaceAboutPage({
               <div className="relative">
                 <div className="aspect-square rounded-[3rem] overflow-hidden shadow-2xl rotate-3 scale-95 transition-transform hover:rotate-0 hover:scale-100 duration-700">
                   <img 
-                    src={workspace.galleryItems[0]?.image || "https://images.unsplash.com/photo-1524178232363-1fb2b075b655?q=80&w=2070"} 
+                    src={storyImage1} 
                     alt="Institute Life" 
                     className="w-full h-full object-cover"
                   />
                 </div>
                 <div className="absolute -bottom-10 -left-10 aspect-video w-2/3 rounded-[2rem] overflow-hidden shadow-2xl -rotate-6 border-8 border-white dark:border-slate-900 hidden md:block">
                    <img 
-                    src={workspace.galleryItems[1]?.image || "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?q=80&w=2071"} 
+                    src={storyImage2} 
                     alt="Student Collaboration" 
                     className="w-full h-full object-cover"
                   />
@@ -145,9 +168,9 @@ export default async function WorkspaceAboutPage({
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-              {workspace.galleryItems.map((item, i) => (
+              {galleryItems.map((item: any, i: number) => (
                 <div 
-                  key={item.id} 
+                  key={item.id || i} 
                   className={cn(
                     "group relative overflow-hidden rounded-[1.5rem] bg-muted border border-border/40 transition-all duration-700 hover:-translate-y-2",
                     i === 0 ? "md:col-span-2 md:row-span-2 aspect-square" : "aspect-square"
@@ -168,63 +191,65 @@ export default async function WorkspaceAboutPage({
         </section>
 
         {/* Events Preview */}
-        <section className="py-24 px-6">
-          <div className="max-w-7xl mx-auto space-y-16">
-             <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 text-center md:text-left">
-              <div className="space-y-4">
-                <div className="inline-flex items-center gap-3 text-primary font-black tracking-[0.2em] text-[10px] uppercase">
-                  <div className="h-0.5 w-10 bg-primary" />
-                  Upcoming
-                </div>
-                <h2 className="text-3xl md:text-5xl font-black tracking-tight">Recent Events</h2>
-              </div>
-              <Link href="/events">
-                <Button variant="ghost" className="rounded-2xl h-12 font-black gap-2 hover:bg-primary/5 hover:text-primary transition-all">
-                  All Events <ArrowRight className="w-4 h-4" />
-                </Button>
-              </Link>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {workspace.events.map((event) => (
-                <Link key={event.id} href={`/events/${event.id}`}>
-                  <div className="group bg-white dark:bg-zinc-900 border border-border/40 rounded-[2.5rem] overflow-hidden hover:shadow-2xl transition-all duration-500 h-full flex flex-col">
-                    <div className="relative aspect-video overflow-hidden">
-                      <img 
-                        src={event.image || "https://images.unsplash.com/photo-1514525253361-bee8718a74a2?q=80&w=2070"} 
-                        alt={event.title} 
-                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
-                      />
-                      <div className="absolute top-4 left-4 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md px-3 py-2 rounded-2xl text-center shadow-lg border border-white/20">
-                        <div className="text-[8px] font-black text-primary uppercase tracking-tighter">
-                          {new Date(event.date).toLocaleDateString('en-GB', { month: 'short' })}
-                        </div>
-                        <div className="text-xl font-black text-slate-900 dark:text-white leading-none">
-                          {new Date(event.date).getDate()}
-                        </div>
-                      </div>
-                    </div>
-                    <div className="p-8 flex-1 flex flex-col space-y-4">
-                      <h3 className="text-xl font-black tracking-tight group-hover:text-primary transition-colors line-clamp-2 leading-tight">
-                        {event.title}
-                      </h3>
-                      <div className="space-y-2 pt-2">
-                        <div className="flex items-center gap-3 text-slate-500 dark:text-slate-400 font-bold text-[10px] uppercase tracking-widest">
-                          <MapPin className="h-3 w-3 text-primary" />
-                          {event.location || "On Campus"}
-                        </div>
-                        <div className="flex items-center gap-3 text-slate-500 dark:text-slate-400 font-bold text-[10px] uppercase tracking-widest">
-                          <Clock className="h-3 w-3 text-primary" />
-                          {event.time || "All Day"}
-                        </div>
-                      </div>
-                    </div>
+        {eventsWithHrefs.length > 0 && (
+          <section className="py-24 px-6">
+            <div className="max-w-7xl mx-auto space-y-16">
+               <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 text-center md:text-left">
+                <div className="space-y-4">
+                  <div className="inline-flex items-center gap-3 text-primary font-black tracking-[0.2em] text-[10px] uppercase">
+                    <div className="h-0.5 w-10 bg-primary" />
+                    Upcoming
                   </div>
+                  <h2 className="text-3xl md:text-5xl font-black tracking-tight">Recent Events</h2>
+                </div>
+                <Link href={allEventsHref}>
+                  <Button variant="ghost" className="rounded-2xl h-12 font-black gap-2 hover:bg-primary/5 hover:text-primary transition-all">
+                    All Events <ArrowRight className="w-4 h-4" />
+                  </Button>
                 </Link>
-              ))}
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                {eventsWithHrefs.map((event: any, idx: number) => (
+                  <Link key={event.id || idx} href={event.href}>
+                    <div className="group bg-white dark:bg-zinc-900 border border-border/40 rounded-[2.5rem] overflow-hidden hover:shadow-2xl transition-all duration-500 h-full flex flex-col">
+                      <div className="relative aspect-video overflow-hidden">
+                        <img 
+                          src={event.image || "https://images.unsplash.com/photo-1514525253361-bee8718a74a2?q=80&w=2070"} 
+                          alt={event.title} 
+                          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
+                        />
+                        <div className="absolute top-4 left-4 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md px-3 py-2 rounded-2xl text-center shadow-lg border border-white/20">
+                          <div className="text-[8px] font-black text-primary uppercase tracking-tighter">
+                            {new Date(event.date).toLocaleDateString('en-GB', { month: 'short' })}
+                          </div>
+                          <div className="text-xl font-black text-slate-900 dark:text-white leading-none">
+                            {new Date(event.date).getDate()}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="p-8 flex-1 flex flex-col space-y-4">
+                        <h3 className="text-xl font-black tracking-tight group-hover:text-primary transition-colors line-clamp-2 leading-tight">
+                          {event.title}
+                        </h3>
+                        <div className="space-y-2 pt-2">
+                          <div className="flex items-center gap-3 text-slate-500 dark:text-slate-400 font-bold text-[10px] uppercase tracking-widest">
+                            <MapPin className="h-3 w-3 text-primary" />
+                            {event.location || "On Campus"}
+                          </div>
+                          <div className="flex items-center gap-3 text-slate-500 dark:text-slate-400 font-bold text-[10px] uppercase tracking-widest">
+                            <Clock className="h-3 w-3 text-primary" />
+                            {event.time || "All Day"}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </Link>
+                ))}
+              </div>
             </div>
-          </div>
-        </section>
+          </section>
+        )}
       </main>
 
       <WorkspaceFooter settings={workspace.siteSettings} tenant={tenant} />

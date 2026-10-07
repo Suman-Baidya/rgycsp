@@ -84,9 +84,9 @@ export function WorkspaceHero({ data }: { data: any }) {
           transition={{ duration: 0.8, delay: 0.2 }}
           className="space-y-8"
         >
-          <div className="inline-flex items-center gap-3 px-4 py-2 rounded-lg bg-white/10 border border-white/20 backdrop-blur-sm">
-            <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-            <span className="text-[11px] font-bold text-white tracking-[0.2em] uppercase">{slide.tagline || slide.subtitle}</span>
+          <div className="inline-flex items-center gap-2.5 text-primary font-bold text-xs tracking-[0.22em] uppercase mb-1">
+            <span className="w-2 h-2 rounded-full bg-primary animate-pulse shrink-0" />
+            <span>{slide.tagline || slide.subtitle}</span>
           </div>
 
           <h1 className="text-5xl md:text-6xl lg:text-[76px] font-black text-white leading-[0.9] tracking-tight max-w-[15ch]">

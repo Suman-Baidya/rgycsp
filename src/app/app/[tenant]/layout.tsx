@@ -4,19 +4,36 @@ import { auth } from "@/auth";
 import type { Metadata } from "next";
 import { getWorkspaceByTenant } from "@/lib/workspace";
 import { isDeveloperEmail } from "@/lib/developer";
+import { getCachedGlobalSettings } from "@/lib/settings";
 
 export async function generateMetadata({ params }: { params: Promise<{ tenant: string }> }): Promise<Metadata> {
   const { tenant } = await params;
   
-  const workspace = await getWorkspaceByTenant(tenant);
+  const [workspace, globalSettings] = await Promise.all([
+    getWorkspaceByTenant(tenant),
+    getCachedGlobalSettings().catch(() => null)
+  ]);
 
-  if (!workspace || !workspace.siteSettings) {
+  if (!workspace) {
     return {};
   }
 
-  const siteName = workspace.siteSettings.siteName || workspace.name;
-  const desc = workspace.siteSettings.brandDescription || `${siteName} Educational Portal`;
-  const iconUrl = workspace.siteSettings.logoUrl || workspace.siteSettings.faviconUrl || "https://res.cloudinary.com/dmhipemqk/image/upload/v1780409947/RGYCSP/SuperAdmin/branding/mjwcqjcyprkxpyleggms.webp";
+  const siteName = workspace.siteSettings?.siteName || workspace.name;
+  const desc = workspace.siteSettings?.brandDescription || `${siteName} Educational Portal`;
+
+  // Default main landing page favicon/logo
+  const mainDefaultFavicon = 
+    globalSettings?.faviconUrl?.trim() || 
+    globalSettings?.logoUrl?.trim() || 
+    "https://res.cloudinary.com/dmhipemqk/image/upload/v1780409947/RGYCSP/SuperAdmin/branding/mjwcqjcyprkxpyleggms.webp";
+
+  // If the franchise admin has provided their own logo (or custom favicon), use it.
+  // Otherwise, default to the main landing page's favicon.
+  const franchiseCustomIcon = 
+    workspace.siteSettings?.logoUrl?.trim() || 
+    workspace.siteSettings?.faviconUrl?.trim();
+
+  const iconUrl = franchiseCustomIcon || mainDefaultFavicon;
 
   return {
     title: {

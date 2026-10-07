@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { Quote, MessageSquareQuote } from "lucide-react";
+import { Quote } from "lucide-react";
 
 export function OurMessage({ data }: { data?: any }) {
   const content = data?.content || {};
@@ -26,8 +26,8 @@ export function OurMessage({ data }: { data?: any }) {
   const sideImage = final.sideImage;
 
   return (
-    <section className="relative py-32 px-6 overflow-hidden min-h-[700px] flex items-center bg-black">
-      {/* Sticky Background Image (Parallax Effect) */}
+    <section className="relative py-24 sm:py-32 px-4 sm:px-6 overflow-hidden min-h-[600px] flex items-center bg-black">
+      {/* Sticky Background Image (Parallax Depth) */}
       <div
         className="absolute inset-0 z-0"
         style={{
@@ -37,64 +37,65 @@ export function OurMessage({ data }: { data?: any }) {
           backgroundPosition: 'center'
         }}
       >
-        {/* Multi-layered dark overlays for depth and readability */}
-        <div className="absolute inset-0 bg-black/70 backdrop-blur-[1px]"></div>
-        {/* <div className="absolute inset-0 bg-gradient-to-b from-black via-transparent to-black"></div> */}
-        {/* <div className="absolute inset-0 bg-black/20"></div> */}
+        <div className="absolute inset-0 bg-black/75 backdrop-blur-[2px]" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black/60 pointer-events-none" />
       </div>
 
-      <div className="max-w-7xl mx-auto flex flex-col lg:flex-row items-center gap-20 relative z-10">
+      <div className="max-w-7xl mx-auto flex flex-col lg:flex-row items-center gap-12 lg:gap-20 relative z-10 w-full">
         {/* Message Content */}
         <div className="flex-1 order-2 lg:order-1 text-white">
-          <div className="inline-flex items-center gap-3 py-1.5 px-4 rounded-full bg-white/10 border border-white/20 text-white font-bold text-[10px] tracking-[0.2em] uppercase mb-8 shadow-sm">
-            <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
-            {subtitle}
+          <div className="inline-flex items-center gap-2.5 text-emerald-400 font-bold text-xs sm:text-sm tracking-[0.25em] uppercase mb-6 drop-shadow-sm">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.9)] animate-pulse shrink-0" />
+            <span>{subtitle}</span>
           </div>
 
           <div className="relative">
-            <Quote className="absolute -top-12 left-140 w-24 h-24 text-white/10 -z-10" />
+            <Quote className="absolute -top-10 -left-6 w-20 h-20 text-white/10 -z-10 pointer-events-none" />
             {title && (
-              <h3 className="text-xl font-bold text-white mb-4 tracking-wide opacity-90">
+              <h3 className="text-lg font-bold text-white/90 mb-3 tracking-wide">
                 {title}
               </h3>
             )}
-            <h2 className="text-4xl md:text-5xl font-extrabold italic leading-[1.1] mb-10 font-heading text-white tracking-tight">
-              "{quote}"
+            <h2 className="text-2xl sm:text-4xl lg:text-5xl font-extrabold italic leading-[1.2] mb-6 sm:mb-8 font-heading text-white tracking-tight">
+              &ldquo;{quote}&rdquo;
             </h2>
           </div>
 
-          <p className="text-xl text-zinc-300 leading-relaxed mb-10 max-w-2xl font-medium">
+          <p className="text-base sm:text-lg text-zinc-300 leading-relaxed mb-8 max-w-2xl font-normal">
             {description}
           </p>
 
-          <div className="flex items-center gap-6 pt-10 border-t border-white/80">
-            <div className="w-20 h-20 rounded-full overflow-hidden border-2 border-white shadow-[0_0_20px_rgba(255,255,255,0.3)] shrink-0">
-              <Image width={800} height={800}
+          <div className="flex items-center gap-5 pt-8 border-t border-white/20">
+            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full overflow-hidden border-2 border-white/80 shadow-[0_0_20px_rgba(255,255,255,0.2)] shrink-0">
+              <Image 
+                width={120} 
+                height={120}
                 src={authorAvatar}
                 alt={authorName}
                 className="w-full h-full object-cover"
               />
             </div>
             <div>
-              <h4 className="text-3xl font-bold text-white mb-2">{authorName}</h4>
-              <p className="text-white tracking-wide uppercase text-xs">{authorRole}</p>
+              <h4 className="text-xl sm:text-2xl font-extrabold text-white mb-1">{authorName}</h4>
+              <p className="text-zinc-300 tracking-wider uppercase text-[11px] sm:text-xs font-semibold">{authorRole}</p>
             </div>
           </div>
         </div>
 
         {/* Cinematic Image Side */}
-        <div className="flex-1 order-1 lg:order-2 w-full max-w-[550px] hidden lg:block">
+        <div className="flex-1 order-1 lg:order-2 w-full max-w-[500px] hidden lg:block">
           <div className="relative group">
-            <div className="relative rounded-[2.5rem] overflow-hidden aspect-[4/5] shadow-2xl z-10 border border-white/10 scale-95 group-hover:scale-100 transition-transform duration-700">
-              <Image width={800} height={800}
+            <div className="relative rounded-[2.5rem] overflow-hidden aspect-[4/5] shadow-2xl z-10 border border-white/20 group-hover:scale-[1.02] transition-transform duration-700">
+              <Image 
+                width={800} 
+                height={800}
                 src={sideImage}
-                alt="Office and Strategy"
+                alt="Leadership Vision"
                 className="w-full h-full object-cover"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-zinc-950/80 via-transparent to-transparent"></div>
+              <div className="absolute inset-0 bg-gradient-to-t from-zinc-950/80 via-transparent to-transparent" />
             </div>
-            {/* Floating Decoration */}
-            <div className="absolute -bottom-6 -right-6 w-32 h-32 bg-white/10 rounded-full blur-[60px] animate-pulse"></div>
+            <div className="absolute -bottom-6 -right-6 w-32 h-32 bg-primary/20 rounded-full blur-[60px] pointer-events-none" />
           </div>
         </div>
       </div>

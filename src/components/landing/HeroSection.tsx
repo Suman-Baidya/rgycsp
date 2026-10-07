@@ -17,7 +17,7 @@ import Image from "next/image"
 const HERO_SLIDES = [
   {
     src: "https://cdn.pixabay.com/photo/2022/07/21/02/53/business-idea-7335270_1280.jpg",
-    tagline: "Welcome to ABCD Edu Hub",
+    tagline: "Next-Gen AI Educational Ecosystem",
     title: "Innovative AI Automation",
     subtitle: "Streamline workflows, boost efficiency, reduce effort, empower intelligent decisions.",
     primaryButtonText: "Get Started",
@@ -27,7 +27,7 @@ const HERO_SLIDES = [
   },
   {
     src: "https://cdn.pixabay.com/photo/2018/03/10/12/00/teamwork-3213924_1280.jpg",
-    tagline: "Empower Your Team",
+    tagline: "Empowering Future-Ready Learners",
     title: "Empower Your Educational Team",
     subtitle: "Foster collaboration, provide tools, encourage growth, cultivate supportive culture.",
     primaryButtonText: "Join Us",
@@ -37,7 +37,7 @@ const HERO_SLIDES = [
   },
   {
     src: "https://cdn.pixabay.com/photo/2024/11/19/03/43/handshake-9208017_1280.jpg",
-    tagline: "Build Partnerships",
+    tagline: "Bridging Institutes & Students Nationwide",
     title: "Forge Powerful Partnerships",
     subtitle: "Forge powerful partnerships by cultivating trust, aligning shared goals, and driving innovation together.",
     primaryButtonText: "Book a Demo",
@@ -137,12 +137,9 @@ export function HeroSection({ data }: { data?: any }) {
                         className="max-w-3xl"
                       >
                         <motion.div variants={itemVariants}>
-                          <div className="inline-flex items-center gap-2 py-2 px-6 rounded-full bg-white/5 backdrop-blur-sm border border-white/20 text-white font-bold text-xs tracking-[0.25em] uppercase mb-8 shadow-[0_0_20px_rgba(255,255,255,0.1)] relative overflow-hidden group">
-                            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-[shimmer_2s_infinite]"></div>
-                            <span className="relative z-10 flex items-center gap-2">
-                              <span className="w-2 h-2 rounded-full bg-white animate-pulse"></span>
-                              {slide.tagline || "Welcome to ABCD Edu Hub"}
-                            </span>
+                          <div className="inline-flex items-center gap-2.5 font-bold text-xs sm:text-sm tracking-[0.25em] uppercase mb-6 text-emerald-400 drop-shadow-sm">
+                            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_10px_rgba(52,211,153,0.9)] shrink-0" />
+                            <span>{slide.tagline || "Next-Gen AI Educational Ecosystem"}</span>
                           </div>
                         </motion.div>
 

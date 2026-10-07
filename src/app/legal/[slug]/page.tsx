@@ -2,6 +2,8 @@ import { db } from "@/lib/prisma";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { LandingNavbar } from "@/components/layout/LandingNavbar";
 import { MainFooter } from "@/components/layout/MainFooter";
+import { CustomThemeStyle } from "@/components/providers/CustomThemeStyle";
+import { GlobalPremiumBackground } from "@/components/layout/GlobalPremiumBackground";
 import { notFound } from "next/navigation";
 import { auth } from "@/auth";
 
@@ -29,11 +31,13 @@ export default async function LegalPage({ params }: { params: Promise<{ slug: st
 
   if (!section) {
     return (
-      <div className="flex flex-col min-h-screen bg-background items-center justify-center p-6 text-center space-y-6">
+      <div className="flex flex-col min-h-screen bg-transparent items-center justify-center p-6 text-center space-y-6 relative">
+        <GlobalPremiumBackground />
+        <CustomThemeStyle primaryColor={settings.primaryColor || undefined} accentColor={settings.accentColor || undefined} />
         <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center text-4xl">🛠️</div>
         <h1 className="text-3xl font-black">Page Not Initialized</h1>
         <p className="text-muted-foreground max-w-md">The <strong>{slug.replace("-", " ")}</strong> has not been synchronized with your database yet.</p>
-        <div className="bg-muted p-6 rounded-2xl border border-border text-sm font-medium text-left">
+        <div className="bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md p-6 rounded-2xl border border-border text-sm font-medium text-left">
            <p className="mb-2 font-black uppercase text-[10px] tracking-widest text-primary">Instructions for Admin:</p>
            <ol className="list-decimal list-inside space-y-1">
              <li>Go to your <strong>Super Admin Dashboard</strong>.</li>
@@ -51,19 +55,21 @@ export default async function LegalPage({ params }: { params: Promise<{ slug: st
   const lastUpdated = content?.lastUpdated || "";
 
   return (
-    <div className="flex flex-col min-h-screen bg-background">
+    <div className="flex flex-col min-h-screen font-sans bg-transparent selection:bg-primary/30 relative">
+      <GlobalPremiumBackground />
+      <CustomThemeStyle primaryColor={settings.primaryColor || undefined} accentColor={settings.accentColor || undefined} />
       <LandingNavbar settings={settings} user={session?.user} />
 
-      <main className="flex-1">
+      <main className="flex-1 w-full">
         <PageHeader 
           title={section.title || slug.replace("-", " ")}
-          subtitle={section.subtitle || "Legal Information & Guidelines"}
+          subtitle={section.subtitle || "Official documentation and regulatory guidelines governing our educational platform and services."}
           bgImage={content.bgImage || "https://cdn.pixabay.com/photo/2016/11/29/01/16/abacus-1866497_1280.jpg"}
           breadcrumb={content.breadcrumb || section.title || "Legal"}
         />
 
-        <div className="max-w-4xl mx-auto px-6 py-24">
-          <div className="bg-card border border-border/50 rounded-[2.5rem] p-8 md:p-16 shadow-2xl shadow-black/5">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 py-16 sm:py-24">
+          <div className="bg-white/90 dark:bg-zinc-900/90 backdrop-blur-md border border-slate-200/80 dark:border-zinc-800 rounded-[2.5rem] p-6 sm:p-10 md:p-16 shadow-2xl shadow-black/5">
             {lastUpdated && (
               <div className="text-[10px] uppercase font-black tracking-widest text-primary mb-8 border-b border-primary/10 pb-4">
                 Last Updated: {lastUpdated}
@@ -74,8 +80,8 @@ export default async function LegalPage({ params }: { params: Promise<{ slug: st
               className="prose prose-zinc dark:prose-invert max-w-none 
                 prose-h1:text-3xl prose-h1:font-black prose-h1:tracking-tight
                 prose-h2:text-2xl prose-h2:font-bold prose-h2:mt-12 prose-h2:mb-6
-                prose-p:text-zinc-600 dark:prose-p:text-zinc-400 prose-p:leading-relaxed prose-p:text-lg
-                prose-li:text-zinc-600 dark:prose-li:text-zinc-400 prose-li:text-lg
+                prose-p:text-zinc-600 dark:prose-p:text-zinc-400 prose-p:leading-relaxed prose-p:text-base sm:prose-p:text-lg
+                prose-li:text-zinc-600 dark:prose-li:text-zinc-400 prose-li:text-base sm:prose-li:text-lg
                 prose-strong:text-foreground prose-strong:font-black"
               dangerouslySetInnerHTML={{ __html: htmlContent }}
             />

@@ -21,7 +21,7 @@ export default async function CookiePage() {
       <main className="flex-1">
         <PageHeader 
           title="Cookie Policy"
-          subtitle="Understanding how we use cookies"
+          subtitle="Understand how we utilize cookies and tracking technologies to optimize and enhance your browsing experience."
           bgImage="https://images.unsplash.com/photo-1516321497487-e288fb19713f?q=80&w=2070"
           breadcrumb="Cookie Policy"
         />

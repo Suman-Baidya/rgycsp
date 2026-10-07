@@ -1,10 +1,17 @@
 import { LandingNavbar } from "@/components/layout/LandingNavbar";
 import { MainFooter } from "@/components/layout/MainFooter";
 import { PageHeader } from "@/components/layout/PageHeader";
+import { CustomThemeStyle } from "@/components/providers/CustomThemeStyle";
+import { GlobalPremiumBackground } from "@/components/layout/GlobalPremiumBackground";
 import { GuideSteps } from "@/components/landing/GuideSteps";
 import { GuideResources } from "@/components/landing/GuideResources";
 import { db } from "@/lib/prisma";
 import { auth } from "@/auth";
+
+export const metadata = {
+  title: "User Guide | ABCD Edu Hub",
+  description: "Everything you need to know about navigating and mastering the ABCD Edu Hub ecosystem.",
+};
 
 export default async function GuidePage() {
   const session = await auth();
@@ -31,10 +38,12 @@ export default async function GuidePage() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-background">
+    <div className="flex flex-col min-h-screen font-sans bg-transparent selection:bg-primary/30 relative">
+      <GlobalPremiumBackground />
+      <CustomThemeStyle primaryColor={settings.primaryColor || undefined} accentColor={settings.accentColor || undefined} />
       <LandingNavbar settings={settings} user={session?.user} />
 
-      <main className="flex-1">
+      <main className="flex-1 w-full">
         {isSectionActive("page-header-guide") && (
           <PageHeader
             data={getSectionData("page-header-guide")}
@@ -47,7 +56,6 @@ export default async function GuidePage() {
 
         {isSectionActive("guide-steps") && <GuideSteps data={getSectionData("guide-steps")} />}
         {isSectionActive("guide-resources") && <GuideResources data={getSectionData("guide-resources")} />}
-
       </main>
 
       <MainFooter settings={settings} />
