@@ -9,20 +9,24 @@ import { getTenantLink, detectTenant } from "@/lib/routing";
 import { usePathname } from "next/navigation";
 
 import { DEFAULT_WORKSPACE_NOTICES } from "@/lib/workspace-defaults";
+import { getNoticeSlug } from "@/lib/notice-utils";
 
-export function AboutNoticeSection({ data }: { data: any }) {
+export function AboutNoticeSection({ data, tenant: propTenant }: { data: any; tenant?: string }) {
   const pathname = usePathname();
-  const tenant = detectTenant(pathname, typeof window !== 'undefined' ? window.location.hostname : undefined);
+  const tenant = propTenant || detectTenant(pathname, typeof window !== 'undefined' ? window.location.hostname : undefined);
   const getLink = (path: string) => getTenantLink(path, tenant, pathname);
 
   const rawNotices = data?.content?.notices || [];
-  const notices = (rawNotices && rawNotices.length > 0)
+  const allNotices = (rawNotices && rawNotices.length > 0)
     ? rawNotices
     : DEFAULT_WORKSPACE_NOTICES;
+  // Keep only 3 featured notices on homepage notice board
+  const notices = allNotices.slice(0, 3);
   const content = data?.content || {};
 
+
   return (
-    <section className="py-24 max-w-[1400px] mx-auto px-6 sm:px-12">
+    <section className="py-24 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-16">
         {/* Left Side: About Us */}
         <div className="lg:col-span-2 space-y-8">
@@ -58,12 +62,18 @@ export function AboutNoticeSection({ data }: { data: any }) {
           </div>
           
           <div className="pt-4 flex flex-wrap gap-4">
-            <Link href={getLink(content.btnLink || "/about")}>
-              <Button size="lg" className="rounded-full gap-3 px-10 h-14 font-black shadow-xl shadow-primary/20  transition-all group">
-                {content.btnText || "Discover More"}
-                <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
-              </Button>
-            </Link>
+            {(() => {
+              const rawBtnLink = content.btnLink?.trim();
+              const targetBtnLink = (!rawBtnLink || rawBtnLink === "/" || rawBtnLink === "#") ? "/about" : rawBtnLink;
+              return (
+                <Link href={getLink(targetBtnLink)}>
+                  <Button size="lg" className="rounded-full gap-3 px-10 h-14 font-black shadow-xl shadow-primary/20  transition-all group">
+                    {content.btnText || "Discover More"}
+                    <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                  </Button>
+                </Link>
+              );
+            })()}
             
             <Link href={getLink("/courses")}>
               <Button size="lg" variant="outline" className="rounded-full gap-3 px-10 h-14 font-black hover:bg-primary/5 border-primary/20 transition-all">
@@ -87,21 +97,36 @@ export function AboutNoticeSection({ data }: { data: any }) {
             </CardHeader>
             <CardContent className="p-0">
               <div className="divide-y divide-border/40">
-                {notices.map((notice: any, i: number) => (
-                  <div key={i} className="p-5 hover:bg-primary/5 transition-colors group cursor-pointer">
-                    <div className="flex justify-between items-start gap-4">
-                      <div className="space-y-1">
-                        <h4 className="font-bold text-slate-800 dark:text-slate-200 group-hover:text-primary transition-colors line-clamp-2">
-                          {notice.title}
-                        </h4>
-                        <p className="text-xs text-muted-foreground font-medium">{notice.date}</p>
+                {notices.map((notice: any, i: number) => {
+                  const slug = getNoticeSlug(notice, i);
+                  const noticeHref = getLink(`/notice/${slug}`);
+                  return (
+                    <Link
+                      key={`${notice.id || 'notice'}-${i}`}
+                      href={noticeHref}
+                      className="p-5 hover:bg-primary/5 transition-colors group cursor-pointer block"
+                    >
+                      <div className="flex justify-between items-start gap-4">
+                        <div className="space-y-1.5 flex-1 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            {notice.category && (
+                              <span className="text-[10px] font-bold uppercase tracking-wider text-primary bg-primary/10 px-2 py-0.5 rounded-full">
+                                {notice.category}
+                              </span>
+                            )}
+                            <p className="text-xs text-muted-foreground font-medium">{notice.date}</p>
+                          </div>
+                          <h4 className="font-bold text-slate-800 dark:text-slate-200 group-hover:text-primary transition-colors line-clamp-2 text-sm leading-snug">
+                            {notice.title}
+                          </h4>
+                        </div>
+                        <div className="bg-muted p-2 rounded-lg group-hover:bg-primary/20 transition-colors shrink-0 mt-0.5">
+                          <ExternalLink className="h-4 w-4 text-muted-foreground group-hover:text-primary" />
+                        </div>
                       </div>
-                      <div className="bg-muted p-2 rounded-lg group-hover:bg-primary/20 transition-colors">
-                        <ExternalLink className="h-4 w-4 text-muted-foreground group-hover:text-primary" />
-                      </div>
-                    </div>
-                  </div>
-                ))}
+                    </Link>
+                  );
+                })}
               </div>
               <div className="p-4 bg-muted/30">
                 <Link href={getLink("/notice")}>

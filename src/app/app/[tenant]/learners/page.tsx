@@ -1,4 +1,4 @@
-﻿import { findWorkspaceByTenant } from "@/lib/workspace";
+import { findWorkspaceByTenant } from "@/lib/workspace";
 import { db } from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import { WorkspaceNavbar } from "@/components/layout/WorkspaceNavbar";
@@ -9,6 +9,7 @@ import { auth } from "@/auth";
 import { GraduationCap, Users, BookOpen, Star, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { getServerTenantLink } from "@/lib/routing-server";
 
 export default async function WorkspaceLearnersPage({
   params
@@ -16,6 +17,7 @@ export default async function WorkspaceLearnersPage({
   params: Promise<{ tenant: string }>;
 }) {
   const { tenant } = await params;
+  const dashboardHref = await getServerTenantLink("/student/dashboard", tenant);
 
   const workspace = await findWorkspaceByTenant(tenant, { include: {
       siteSettings: true
@@ -63,7 +65,7 @@ export default async function WorkspaceLearnersPage({
             </p>
             {session?.user && (
               <div className="pt-8">
-                <Link href="/student/dashboard">
+                <Link href={dashboardHref}>
                   <Button size="lg" className="rounded-2xl h-14 px-10 font-black gap-3 shadow-xl shadow-primary/20 hover:scale-105 transition-all">
                     Go to My Dashboard <ArrowRight className="w-5 h-5" />
                   </Button>

@@ -132,7 +132,7 @@ export function WorkspaceFooter({ settings, tenant: propTenant, user }: { settin
       <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[120px] pointer-events-none -translate-y-1/2" />
       <div className="absolute top-0 right-1/4 w-[400px] h-[400px] bg-blue-500/5 rounded-full blur-[100px] pointer-events-none -translate-y-1/2" />
 
-      <div className="max-w-7xl mx-auto px-6 relative z-10">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 w-full">
         {/* Top Newsletter Section - Sleek & Compact */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-center pb-10 sm:pb-12 border-b border-white/10 mb-12 sm:mb-14">
           <div className="lg:col-span-6 space-y-1 sm:space-y-1.5">

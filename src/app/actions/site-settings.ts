@@ -120,6 +120,12 @@ export async function syncAllSections(settingsId: string, sectionTypes: string[]
 
     if (missingTypes.length === 0) return { success: true, created: 0 };
 
+    const targetSettings = await db.siteSettings.findUnique({
+      where: { id: settingsId },
+      select: { workspaceId: true }
+    });
+    const isWorkspace = !!targetSettings?.workspaceId;
+
     await Promise.all(missingTypes.map((type, index) => {
       let defaultContent = {};
       let title = type.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
@@ -153,7 +159,14 @@ export async function syncAllSections(settingsId: string, sectionTypes: string[]
           ]
         };
       } else if (type === 'quick-links') {
-        defaultContent = {
+        defaultContent = isWorkspace ? {
+          links: [
+            { title: "Student Admission", description: "Apply online for new academic session", url: "/admission", icon: "GraduationCap" },
+            { title: "Explore Courses", description: "Browse verified programs & syllabus", url: "/courses", icon: "BookOpen" },
+            { title: "Student Portal", description: "Access classes, notices & results", url: "/student/dashboard", icon: "LayoutDashboard" },
+            { title: "Admission Status", description: "Track your admission status", url: "/admission/status", icon: "CheckCircle2" }
+          ]
+        } : {
           links: [
             { title: "Franchises Enquiry", description: "Join our network", url: "/contact", icon: "Building2" },
             { title: "Students Admission", description: "Apply online now", url: "/students", icon: "GraduationCap" },

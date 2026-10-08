@@ -79,7 +79,7 @@ export default async function WorkspaceSettingsPage({ params }: { params: Promis
     });
 
     const { syncAllSections } = await import("@/app/actions/site-settings");
-    const types = ['hero', 'about', 'counters', 'courses', 'why-choose-us', 'achievements', 'partners', 'events', 'testimonials', 'faq', 'contact'];
+    const types = ['hero', 'quick-links', 'about', 'counters', 'courses', 'why-choose-us', 'achievements', 'partners', 'events', 'testimonials', 'faq', 'contact'];
     await syncAllSections(siteSettings.id, types, true);
 
     siteSettings = await db.siteSettings.findFirst({

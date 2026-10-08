@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { 
   Search, Star, Clock, BookOpen, Users, 
   ArrowRight, Filter, SlidersHorizontal, 
-  ChevronDown, LayoutGrid, List
+  ChevronDown, LayoutGrid, List, X
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
@@ -53,67 +53,121 @@ export function CoursesList({ initialCourses }: { initialCourses: Course[] }) {
   }, [initialCourses, debouncedSearch, selectedCategory]);
 
   return (
-    <div className="space-y-12">
-      {/* Search & Filter Bar */}
-      <div className="flex flex-col lg:flex-row gap-6 items-center justify-between p-6 bg-white dark:bg-zinc-900 border border-border/40 rounded-[2.5rem] shadow-sm">
-        <div className="relative w-full lg:max-w-md group">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
-          <Input 
-            placeholder="Search our programs..." 
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="pl-12 h-14 rounded-2xl border-none bg-slate-50 dark:bg-zinc-800 font-medium text-lg focus:ring-2 focus:ring-primary/20 transition-all"
-          />
+    <div className="space-y-6 sm:space-y-8 w-full">
+      {/* Modern Search & Filter Toolbar */}
+      <div className="space-y-3">
+        <div className="bg-white dark:bg-slate-900 p-2.5 sm:p-3.5 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-xs flex flex-col md:flex-row md:items-center gap-2.5 sm:gap-3">
+          {/* Search Input - Full flex width, no artificial narrow cap */}
+          <div className="relative flex-1 group w-full">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-primary transition-colors pointer-events-none" />
+            <Input 
+              placeholder="Search our programs, topics, or skills..." 
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pl-10 pr-9 h-10 sm:h-11 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 text-xs sm:text-sm font-medium focus-visible:ring-1 focus-visible:ring-primary shadow-none w-full"
+            />
+            {search && (
+              <button
+                type="button"
+                onClick={() => setSearch("")}
+                className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-500 hover:text-slate-800 dark:hover:text-white flex items-center justify-center transition-colors"
+                title="Clear search"
+              >
+                <X className="w-3 h-3" />
+              </button>
+            )}
+          </div>
+
+          {/* Right Controls: Category Dropdown & View Mode Switcher */}
+          <div className="flex items-center gap-2 shrink-0 w-full md:w-auto justify-between md:justify-start">
+            <div className="relative flex-1 md:flex-none min-w-[150px] sm:min-w-[180px]">
+              <Filter className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-primary pointer-events-none" />
+              <select
+                value={selectedCategory}
+                onChange={(e) => setSelectedCategory(e.target.value)}
+                className="w-full h-10 sm:h-11 pl-8.5 pr-8 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 rounded-xl font-semibold text-xs sm:text-sm appearance-none cursor-pointer focus:outline-none focus:ring-1 focus:ring-primary transition-colors hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 shadow-none truncate"
+              >
+                {categories.map((cat: any) => (
+                  <option key={cat} value={cat}>
+                    {cat === "All" ? "All Categories" : cat}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400 pointer-events-none" />
+            </div>
+
+            <div className="flex bg-slate-50 dark:bg-slate-800/60 p-1 rounded-xl border border-slate-200 dark:border-slate-700/80 shrink-0">
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={() => setViewMode("grid")}
+                className={cn(
+                  "h-8 w-8 sm:h-9 sm:w-9 rounded-lg transition-all",
+                  viewMode === "grid" ? "bg-white dark:bg-slate-700 shadow-xs text-primary" : "text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
+                )}
+                title="Grid View"
+              >
+                <LayoutGrid className="h-4 w-4" />
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={() => setViewMode("list")}
+                className={cn(
+                  "h-8 w-8 sm:h-9 sm:w-9 rounded-lg transition-all",
+                  viewMode === "list" ? "bg-white dark:bg-slate-700 shadow-xs text-primary" : "text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
+                )}
+                title="List View"
+              >
+                <List className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-4 w-full lg:w-auto">
-          <div className="relative w-full sm:w-64">
-            <Filter className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-primary pointer-events-none" />
-            <select
-              value={selectedCategory}
-              onChange={(e) => setSelectedCategory(e.target.value)}
-              className="w-full h-14 pl-12 pr-10 bg-slate-50 dark:bg-zinc-800 border-none rounded-2xl font-bold text-sm appearance-none cursor-pointer focus:ring-2 focus:ring-primary/20 outline-none transition-all hover:bg-slate-100 dark:hover:bg-zinc-700"
-            >
-              {categories.map((cat: any) => (
-                <option key={cat} value={cat}>{cat === "All" ? "All Categories" : cat}</option>
-              ))}
-            </select>
-            <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+        {/* Quick Category Filter Pills */}
+        {categories.length > 1 && (
+          <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5 px-0.5">
+            {categories.map((cat: any) => {
+              const isActive = selectedCategory === cat;
+              return (
+                <button
+                  key={cat}
+                  type="button"
+                  onClick={() => setSelectedCategory(cat)}
+                  className={cn(
+                    "text-xs px-3 py-1.5 rounded-full shrink-0 transition-all font-medium whitespace-nowrap",
+                    isActive
+                      ? "bg-primary text-primary-foreground font-semibold shadow-xs"
+                      : "bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200/80 dark:border-slate-800"
+                  )}
+                >
+                  {cat === "All" ? "All Programs" : cat}
+                </button>
+              );
+            })}
           </div>
-          
-          <div className="h-8 w-px bg-border/40 hidden lg:block mx-2" />
+        )}
 
-          <div className="flex bg-slate-50 dark:bg-zinc-800 p-1.5 rounded-2xl">
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              onClick={() => setViewMode("grid")}
-              className={cn(
-                "h-11 w-11 rounded-xl transition-all",
-                viewMode === "grid" ? "bg-white dark:bg-zinc-700 shadow-md text-primary" : "text-muted-foreground"
-              )}
+        {/* Meta Count Bar */}
+        <div className="flex items-center justify-between text-[11px] sm:text-xs text-slate-500 font-medium px-1">
+          <span>
+            Showing <strong>{filteredCourses.length}</strong> {filteredCourses.length === 1 ? "course" : "courses"}
+            {selectedCategory !== "All" && ` in ${selectedCategory}`}
+          </span>
+          {(search || selectedCategory !== "All") && (
+            <button
+              type="button"
+              onClick={() => {
+                setSearch("");
+                setSelectedCategory("All");
+              }}
+              className="text-primary hover:underline font-bold"
             >
-              <LayoutGrid className="h-5 w-5" />
-            </Button>
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              onClick={() => setViewMode("list")}
-              className={cn(
-                "h-11 w-11 rounded-xl transition-all",
-                viewMode === "list" ? "bg-white dark:bg-zinc-700 shadow-md text-primary" : "text-muted-foreground"
-              )}
-            >
-              <List className="h-5 w-5" />
-            </Button>
-          </div>
+              Clear filters
+            </button>
+          )}
         </div>
-      </div>
-
-      {/* Results Count */}
-      <div className="flex items-center gap-4">
-        <span className="text-sm font-black uppercase tracking-widest text-muted-foreground">Showing {filteredCourses.length} Courses</span>
-        <div className="flex-1 h-px bg-gradient-to-r from-border/40 to-transparent" />
       </div>
 
       {/* Courses Grid/List */}

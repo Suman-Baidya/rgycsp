@@ -10,7 +10,7 @@ import Link from "next/link";
 import { getTenantLink, detectTenant } from "@/lib/routing";
 import { usePathname } from "next/navigation";
 
-export function WorkspaceHero({ data }: { data: any }) {
+export function WorkspaceHero({ data, tenant: propTenant }: { data: any; tenant?: string }) {
   const pathname = usePathname();
   const [currentSlide, setCurrentSlide] = useState(0);
   const slides = (data?.content?.slides && data.content.slides.length > 0) ? data.content.slides : [
@@ -49,8 +49,8 @@ export function WorkspaceHero({ data }: { data: any }) {
   const slide = slides[currentSlide];
   
   // Robust tenant detection
-  const tenant = detectTenant(pathname, typeof window !== 'undefined' ? window.location.hostname : undefined);
-  const getLink = (path: string) => getTenantLink(path, tenant, pathname);
+  const activeTenant = propTenant || detectTenant(pathname, typeof window !== 'undefined' ? window.location.hostname : undefined);
+  const getLink = (path: string) => getTenantLink(path, activeTenant, pathname);
 
   return (
     <section className="dark dark-context relative w-full h-screen min-h-[700px] overflow-hidden bg-zinc-950 flex items-center text-slate-100">
@@ -75,7 +75,7 @@ export function WorkspaceHero({ data }: { data: any }) {
         </AnimatePresence>
       </div>
 
-      <div className="relative z-10 max-w-[1400px] mx-auto px-6 sm:px-12 pt-8 grid grid-cols-1 lg:grid-cols-[1.3fr_0.7fr] items-center gap-12">
+      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 grid grid-cols-1 lg:grid-cols-[1.3fr_0.7fr] items-center gap-12 w-full">
         {/* Left Content */}
         <motion.div
           key={`content-${currentSlide}`}

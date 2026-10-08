@@ -16,8 +16,9 @@ import {
   Mail, ShieldCheck, UserCheck, BookOpenCheck, Menu,
   MousePointer2, ExternalLink, Plus, Check, X, Zap, Bell,
   Calendar, Trophy, Handshake, Star, HelpCircle, MapPin, Clock, Send, Search, Image as ImageIcon, Pencil,
-  Link2, Sparkles
+  Link2, Sparkles, RotateCcw
 } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { updateSiteSettings, updateLandingSection, syncAllSections } from "@/app/actions/site-settings";
 import { createEvent, updateEvent, deleteEvent } from "@/app/actions/events";
 import { createGalleryItem, updateGalleryItem, deleteGalleryItem } from "@/app/actions/gallery";
@@ -26,6 +27,7 @@ import { ImageUpload } from "@/components/ui/ImageUpload";
 import { EventEditorDialog } from "@/components/events/EventEditorDialog";
 import { cn } from "@/lib/utils";
 import { ThemeContrastIndicator } from "@/components/theme/ThemeContrastIndicator";
+import { NoticeBoardManagement } from "./NoticeBoardManagement";
 
 const THEME_PRESETS = [
   { name: "Academic Indigo", primary: "#4f46e5", accent: "#4338ca", description: "Standard professional indigo." },
@@ -946,36 +948,11 @@ export function WorkspaceSettingsForm({ settings }: { settings: any }) {
               );
 
               return (
-                <div className="p-3.5 sm:p-4 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-xl shadow-xs space-y-4">
-                  <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-lg bg-amber-500/10 text-amber-600 flex items-center justify-center shrink-0">
-                        <Bell className="w-4 h-4" />
-                      </div>
-                      <div>
-                        <h3 className="text-xs sm:text-sm font-bold tracking-tight text-slate-900 dark:text-white">Live Notice Board</h3>
-                        <p className="text-[10px] text-slate-500 font-medium">Updates shown on your landing page notice ticker</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2 px-2.5 py-1 bg-slate-50 dark:bg-slate-800 rounded-lg border border-slate-200/80 dark:border-slate-700">
-                      <span className="text-[9px] font-bold uppercase tracking-wider text-slate-500">{aboutSection.isActive ? "Online" : "Offline"}</span>
-                      <Switch
-                        checked={aboutSection.isActive}
-                        onCheckedChange={(val) => updateLandingSection(aboutSection.id, { ...aboutSection, isActive: val })}
-                        className="data-[state=checked]:bg-primary"
-                      />
-                    </div>
-                  </div>
-
-                  <AboutNoticeContentEditor
-                    content={aboutSection.content || {}}
-                    setContent={async (newContent: any) => {
-                      await updateLandingSection(aboutSection.id, { ...aboutSection, content: newContent });
-                      toast.success("Notice board updated");
-                    }}
-                    mediaFolderBase={mediaFolderBase}
-                  />
-                </div>
+                <NoticeBoardManagement
+                  section={aboutSection}
+                  settings={settings}
+                  mediaFolderBase={mediaFolderBase}
+                />
               );
             })()}
           </TabsContent>
@@ -1197,140 +1174,325 @@ function SectionEditor({ section, settings, mediaFolderBase }: { section: any, s
 
 // --- Specialized Content Editors ---
 
+const CORE_HERO_DESTINATIONS = [
+  { value: "/admission", label: "Student Admission Form (/admission)", defaultText: "Apply for Admission" },
+  { value: "/courses", label: "Explore Courses (/courses)", defaultText: "Explore Courses" },
+  { value: "/student/dashboard", label: "Student Portal (/student/dashboard)", defaultText: "Student Portal" },
+  { value: "/enquiry", label: "Student Enquiry Form (/enquiry)", defaultText: "Enquiry Now" },
+  { value: "/notice", label: "Notice Board (/notice)", defaultText: "Notice Board" },
+  { value: "/contact", label: "Contact Center (/contact)", defaultText: "Contact Us" },
+  { value: "custom", label: "Custom Link / External URL...", defaultText: "" },
+];
+
 function HeroContentEditor({ content, setContent, mediaFolderBase }: any) {
   const slides = content.slides || [];
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h4 className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Hero Slides ({slides.length})</h4>
+        <div>
+          <h4 className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Hero Slides ({slides.length})</h4>
+          <p className="text-[11px] text-slate-500">Configure slide banners, text, and select-box driven button actions.</p>
+        </div>
         <Button size="sm" variant="outline" onClick={() => setContent({
           ...content, slides: [...slides, {
-            title: "New Slide",
-            tagline: "Empowering Future",
-            description: "Description here",
+            title: "Empowering Smart Learning",
+            tagline: "Empowering Future Innovators",
+            description: "Experience a next-generation learning environment equipped with state-of-the-art facilities.",
             banner: "",
             offerImage: "",
-            btn1Text: "Get Started",
-            btn1Link: "/login",
-            btn2Text: "Learn More",
-            btn2Link: "/about"
+            btn1Text: "Apply for Admission",
+            btn1Link: "/admission",
+            btn2Text: "Explore Courses",
+            btn2Link: "/courses"
           }]
-        })} className="h-7 sm:h-8 px-2.5 sm:px-3 rounded-lg text-xs font-semibold gap-1.5 border-slate-200 dark:border-slate-700">
+        })} className="h-7 sm:h-8 px-2.5 sm:px-3 rounded-lg text-xs font-semibold gap-1.5 border-slate-200 dark:border-slate-700 text-primary">
           <Plus className="w-3.5 h-3.5" /> Add Slide
         </Button>
       </div>
       <div className="space-y-3">
-        {slides.map((slide: any, idx: number) => (
-          <div key={idx} className="p-3.5 sm:p-4 bg-white dark:bg-slate-900 rounded-xl border border-slate-200/80 dark:border-slate-800 shadow-xs relative group">
-            <Button variant="ghost" size="icon" className="absolute top-3 right-3 h-7 w-7 text-slate-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-lg transition-all" onClick={() => setContent({ ...content, slides: slides.filter((_: any, i: number) => i !== idx) })}>
-              <Trash2 className="w-3.5 h-3.5" />
-            </Button>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              <div className="space-y-3">
-                <div className="space-y-1">
-                  <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Tagline (Badge)</Label>
-                  <Input value={slide.tagline || ""} onChange={(e) => {
-                    const next = [...slides];
-                    next[idx].tagline = e.target.value;
-                    setContent({ ...content, slides: next });
-                  }} className="h-8 sm:h-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 font-medium" />
-                </div>
-                <div className="space-y-1">
-                  <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Hero Title</Label>
-                  <Input value={slide.title || ""} onChange={(e) => {
-                    const next = [...slides];
-                    next[idx].title = e.target.value;
-                    setContent({ ...content, slides: next });
-                  }} className="h-8 sm:h-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 font-semibold text-slate-900 dark:text-white" />
-                </div>
-                <div className="space-y-1">
-                  <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Description</Label>
-                  <Textarea value={slide.description || ""} onChange={(e) => {
-                    const next = [...slides];
-                    next[idx].description = e.target.value;
-                    setContent({ ...content, slides: next });
-                  }} className="min-h-[60px] text-xs p-2.5 rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 resize-none font-normal" />
-                </div>
-                <div className="grid grid-cols-2 gap-2.5">
+        {slides.map((slide: any, idx: number) => {
+          const isBtn1Predefined = CORE_HERO_DESTINATIONS.some(d => d.value === slide.btn1Link);
+          const btn1SelectVal = isBtn1Predefined ? slide.btn1Link : (slide.btn1Link ? "custom" : "/admission");
+
+          const isBtn2Predefined = CORE_HERO_DESTINATIONS.some(d => d.value === slide.btn2Link);
+          const btn2SelectVal = isBtn2Predefined ? slide.btn2Link : (slide.btn2Link ? "custom" : "/courses");
+
+          return (
+            <div key={idx} className="p-3.5 sm:p-4 bg-white dark:bg-slate-900 rounded-xl border border-slate-200/80 dark:border-slate-800 shadow-xs relative group">
+              <Button variant="ghost" size="icon" className="absolute top-3 right-3 h-7 w-7 text-slate-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-lg transition-all" onClick={() => setContent({ ...content, slides: slides.filter((_: any, i: number) => i !== idx) })}>
+                <Trash2 className="w-3.5 h-3.5" />
+              </Button>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <div className="space-y-3">
                   <div className="space-y-1">
-                    <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Primary Button</Label>
-                    <Input value={slide.btn1Text || ""} onChange={(e) => {
+                    <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Tagline (Badge)</Label>
+                    <Input value={slide.tagline || ""} onChange={(e) => {
                       const next = [...slides];
-                      next[idx].btn1Text = e.target.value;
+                      next[idx].tagline = e.target.value;
                       setContent({ ...content, slides: next });
-                    }} placeholder="Text" className="h-8 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700" />
-                    <Input value={slide.btn1Link || ""} onChange={(e) => {
-                      const next = [...slides];
-                      next[idx].btn1Link = e.target.value;
-                      setContent({ ...content, slides: next });
-                    }} placeholder="Link (/courses)" className="h-8 text-[11px] rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700" />
+                    }} className="h-8 sm:h-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 font-medium" />
                   </div>
                   <div className="space-y-1">
-                    <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Secondary Button</Label>
-                    <Input value={slide.btn2Text || ""} onChange={(e) => {
+                    <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Hero Title</Label>
+                    <Input value={slide.title || ""} onChange={(e) => {
                       const next = [...slides];
-                      next[idx].btn2Text = e.target.value;
+                      next[idx].title = e.target.value;
                       setContent({ ...content, slides: next });
-                    }} placeholder="Text" className="h-8 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700" />
-                    <Input value={slide.btn2Link || ""} onChange={(e) => {
+                    }} className="h-8 sm:h-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 font-semibold text-slate-900 dark:text-white" />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Description</Label>
+                    <Textarea value={slide.description || ""} onChange={(e) => {
                       const next = [...slides];
-                      next[idx].btn2Link = e.target.value;
+                      next[idx].description = e.target.value;
                       setContent({ ...content, slides: next });
-                    }} placeholder="Link (/about)" className="h-8 text-[11px] rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700" />
+                    }} className="min-h-[60px] text-xs p-2.5 rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 resize-none font-normal" />
+                  </div>
+
+                  {/* Button Configuration with Select Box */}
+                  <div className="p-3 rounded-xl bg-slate-50/70 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-800 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-primary">Hero Slide Action Buttons</span>
+                      <span className="text-[9px] text-slate-400 font-medium">Select Box Driven</span>
+                    </div>
+
+                    {/* Primary Button */}
+                    <div className="space-y-2 pt-1 border-t border-slate-200/50 dark:border-slate-700/50">
+                      <div className="flex items-center justify-between">
+                        <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Primary Button</Label>
+                        <span className="text-[9px] text-primary font-semibold">Active CTA</span>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <div className="space-y-1">
+                          <Label className="text-[9px] text-slate-400 font-medium">Destination (Select)</Label>
+                          <div className="relative">
+                            <select
+                              value={btn1SelectVal}
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                const next = [...slides];
+                                if (val === "custom") {
+                                  if (isBtn1Predefined) next[idx].btn1Link = "";
+                                } else {
+                                  next[idx].btn1Link = val;
+                                  const dest = CORE_HERO_DESTINATIONS.find(d => d.value === val);
+                                  if (dest && (!next[idx].btn1Text || next[idx].btn1Text === "Get Started" || next[idx].btn1Text === "Admission" || CORE_HERO_DESTINATIONS.some(d => d.defaultText === next[idx].btn1Text))) {
+                                    next[idx].btn1Text = dest.defaultText;
+                                  }
+                                }
+                                setContent({ ...content, slides: next });
+                              }}
+                              className="h-8 sm:h-9 text-xs font-semibold rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 pl-2.5 pr-7 w-full appearance-none cursor-pointer focus:outline-none focus:ring-1 focus:ring-primary shadow-xs truncate"
+                            >
+                              {CORE_HERO_DESTINATIONS.map((dest) => (
+                                <option key={dest.value} value={dest.value} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 py-1.5">
+                                  {dest.label}
+                                </option>
+                              ))}
+                            </select>
+                            <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
+                          </div>
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-[9px] text-slate-400 font-medium">Button Label</Label>
+                          <Input
+                            value={slide.btn1Text || ""}
+                            onChange={(e) => {
+                              const next = [...slides];
+                              next[idx].btn1Text = e.target.value;
+                              setContent({ ...content, slides: next });
+                            }}
+                            placeholder="e.g. Apply for Admission"
+                            className="h-8 sm:h-9 text-xs rounded-lg bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 font-medium shadow-xs"
+                          />
+                        </div>
+                      </div>
+                      {btn1SelectVal === "custom" && (
+                        <div className="space-y-1">
+                          <Label className="text-[9px] text-amber-500 font-semibold">Custom Destination URL</Label>
+                          <Input
+                            value={slide.btn1Link || ""}
+                            onChange={(e) => {
+                              const next = [...slides];
+                              next[idx].btn1Link = e.target.value;
+                              setContent({ ...content, slides: next });
+                            }}
+                            placeholder="e.g. /custom-page or https://..."
+                            className="h-8 text-[11px] rounded-lg bg-amber-50/40 dark:bg-amber-950/20 border-amber-200 dark:border-amber-800/50"
+                          />
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Secondary Button */}
+                    <div className="space-y-2 pt-2 border-t border-slate-200/50 dark:border-slate-700/50">
+                      <div className="flex items-center justify-between">
+                        <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Secondary Button</Label>
+                        <span className="text-[9px] text-slate-400 font-medium">Outline CTA</span>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <div className="space-y-1">
+                          <Label className="text-[9px] text-slate-400 font-medium">Destination (Select)</Label>
+                          <div className="relative">
+                            <select
+                              value={btn2SelectVal}
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                const next = [...slides];
+                                if (val === "custom") {
+                                  if (isBtn2Predefined) next[idx].btn2Link = "";
+                                } else {
+                                  next[idx].btn2Link = val;
+                                  const dest = CORE_HERO_DESTINATIONS.find(d => d.value === val);
+                                  if (dest && (!next[idx].btn2Text || next[idx].btn2Text === "Learn More" || next[idx].btn2Text === "Our Story" || CORE_HERO_DESTINATIONS.some(d => d.defaultText === next[idx].btn2Text))) {
+                                    next[idx].btn2Text = dest.defaultText;
+                                  }
+                                }
+                                setContent({ ...content, slides: next });
+                              }}
+                              className="h-8 sm:h-9 text-xs font-semibold rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 pl-2.5 pr-7 w-full appearance-none cursor-pointer focus:outline-none focus:ring-1 focus:ring-primary shadow-xs truncate"
+                            >
+                              {CORE_HERO_DESTINATIONS.map((dest) => (
+                                <option key={dest.value} value={dest.value} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 py-1.5">
+                                  {dest.label}
+                                </option>
+                              ))}
+                            </select>
+                            <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
+                          </div>
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-[9px] text-slate-400 font-medium">Button Label</Label>
+                          <Input
+                            value={slide.btn2Text || ""}
+                            onChange={(e) => {
+                              const next = [...slides];
+                              next[idx].btn2Text = e.target.value;
+                              setContent({ ...content, slides: next });
+                            }}
+                            placeholder="e.g. Explore Courses"
+                            className="h-8 sm:h-9 text-xs rounded-lg bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 font-medium shadow-xs"
+                          />
+                        </div>
+                      </div>
+                      {btn2SelectVal === "custom" && (
+                        <div className="space-y-1">
+                          <Label className="text-[9px] text-amber-500 font-semibold">Custom Destination URL</Label>
+                          <Input
+                            value={slide.btn2Link || ""}
+                            onChange={(e) => {
+                              const next = [...slides];
+                              next[idx].btn2Link = e.target.value;
+                              setContent({ ...content, slides: next });
+                            }}
+                            placeholder="e.g. /custom-page or https://..."
+                            className="h-8 text-[11px] rounded-lg bg-amber-50/40 dark:bg-amber-950/20 border-amber-200 dark:border-amber-800/50"
+                          />
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
-              <div className="space-y-3">
-                <div className="space-y-1.5">
-                  <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Background Banner</Label>
-                  <ImageUpload value={slide.banner || slide.src} onChange={(url) => {
-                    const next = [...slides];
-                    next[idx].banner = url;
-                    next[idx].src = url;
-                    setContent({ ...content, slides: next });
-                  }} folder={`${mediaFolderBase}/hero`} />
-                </div>
-                <div className="space-y-1.5">
-                  <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Right Side Promo Graphic</Label>
-                  <ImageUpload value={slide.offerImage} onChange={(url) => {
-                    const next = [...slides];
-                    next[idx].offerImage = url;
-                    setContent({ ...content, slides: next });
-                  }} folder={`${mediaFolderBase}/hero`} />
+
+                <div className="space-y-3">
+                  <div className="space-y-1.5">
+                    <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Background Banner</Label>
+                    <ImageUpload value={slide.banner || slide.src} onChange={(url) => {
+                      const next = [...slides];
+                      next[idx].banner = url;
+                      next[idx].src = url;
+                      setContent({ ...content, slides: next });
+                    }} folder={`${mediaFolderBase}/hero`} />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Right Side Promo Graphic / Offer</Label>
+                    <ImageUpload value={slide.offerImage} onChange={(url) => {
+                      const next = [...slides];
+                      next[idx].offerImage = url;
+                      setContent({ ...content, slides: next });
+                    }} folder={`${mediaFolderBase}/hero`} />
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
 }
 
+const ABOUT_DESTINATIONS = [
+  { value: "/about", label: "About Our Center (/about)", defaultText: "Discover More" },
+  { value: "/courses", label: "Explore Courses (/courses)", defaultText: "Our Programs" },
+  { value: "/admission", label: "Student Admission (/admission)", defaultText: "Apply Now" },
+  { value: "/enquiry", label: "Student Enquiry (/enquiry)", defaultText: "Enquiry Now" },
+  { value: "/notice", label: "Notice Board (/notice)", defaultText: "Notice Board" },
+  { value: "/contact", label: "Contact Center (/contact)", defaultText: "Contact Us" },
+  { value: "custom", label: "Custom Link / External URL...", defaultText: "" },
+];
+
 function AboutNoticeContentEditor({ content, setContent, mediaFolderBase }: any) {
   const notices = content.notices || [];
+  const isAboutPredefined = ABOUT_DESTINATIONS.some(d => d.value === content.btnLink);
+  const aboutSelectVal = isAboutPredefined ? content.btnLink : (content.btnLink ? "custom" : "/about");
+
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div className="space-y-1">
-          <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">CTA Button Text</Label>
+          <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">CTA Destination (Select Box)</Label>
+          <div className="relative">
+            <select
+              value={aboutSelectVal}
+              onChange={(e) => {
+                const val = e.target.value;
+                if (val === "custom") {
+                  if (isAboutPredefined) setContent({ ...content, btnLink: "" });
+                } else {
+                  const dest = ABOUT_DESTINATIONS.find(d => d.value === val);
+                  setContent({
+                    ...content,
+                    btnLink: val,
+                    btnText: (!content.btnText || content.btnText === "Discover More" || ABOUT_DESTINATIONS.some(d => d.defaultText === content.btnText))
+                      ? (dest?.defaultText || content.btnText)
+                      : content.btnText
+                  });
+                }
+              }}
+              className="h-8 sm:h-9 text-xs font-semibold rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 pl-2.5 pr-7 w-full appearance-none cursor-pointer focus:outline-none focus:ring-1 focus:ring-primary shadow-xs truncate"
+            >
+              {ABOUT_DESTINATIONS.map((dest) => (
+                <option key={dest.value} value={dest.value} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 py-1.5">
+                  {dest.label}
+                </option>
+              ))}
+            </select>
+            <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
+          </div>
+        </div>
+        <div className="space-y-1">
+          <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">CTA Button Label</Label>
           <Input
             value={content.btnText || ""}
             onChange={(e) => setContent({ ...content, btnText: e.target.value })}
-            placeholder="e.g. Read More"
-            className="h-8 sm:h-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700"
-          />
-        </div>
-        <div className="space-y-1">
-          <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">CTA Button Link</Label>
-          <Input
-            value={content.btnLink || ""}
-            onChange={(e) => setContent({ ...content, btnLink: e.target.value })}
-            placeholder="e.g. /about"
+            placeholder="e.g. Discover More"
             className="h-8 sm:h-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700"
           />
         </div>
       </div>
+
+      {aboutSelectVal === "custom" && (
+        <div className="space-y-1">
+          <Label className="text-[10px] font-bold uppercase tracking-wider text-amber-500">Custom Destination URL</Label>
+          <Input
+            value={content.btnLink || ""}
+            onChange={(e) => setContent({ ...content, btnLink: e.target.value })}
+            placeholder="e.g. /custom-page or https://..."
+            className="h-8 text-xs rounded-lg bg-amber-50/40 dark:bg-amber-950/20 border-amber-200 dark:border-amber-800/50"
+          />
+        </div>
+      )}
 
       <div className="space-y-1">
         <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">About Full Description</Label>
@@ -1340,26 +1502,38 @@ function AboutNoticeContentEditor({ content, setContent, mediaFolderBase }: any)
       <div className="pt-3 border-t border-slate-200/70 dark:border-slate-800 space-y-3">
         <div className="flex items-center justify-between">
           <h4 className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Notices List ({notices.length})</h4>
-          <Button size="sm" variant="outline" onClick={() => setContent({ ...content, notices: [...notices, { title: "New Notice", date: new Date().toLocaleDateString(), link: "#" }] })} className="h-7 sm:h-8 px-2.5 sm:px-3 rounded-lg text-xs font-semibold gap-1.5 border-slate-200 dark:border-slate-700">
+          <Button size="sm" variant="outline" onClick={() => setContent({ ...content, notices: [...notices, { id: `notice-${Date.now()}`, title: "New Notice", date: new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }), category: "General", description: "", link: "" }] })} className="h-7 sm:h-8 px-2.5 sm:px-3 rounded-lg text-xs font-semibold gap-1.5 border-slate-200 dark:border-slate-700">
             <Plus className="w-3.5 h-3.5" /> Post Notice
           </Button>
         </div>
         <div className="space-y-2">
           {notices.map((notice: any, idx: number) => (
-            <div key={idx} className="flex gap-2 items-center bg-white dark:bg-slate-900 p-2 sm:p-2.5 rounded-lg border border-slate-200/70 dark:border-slate-800 group">
-              <Input value={notice.title || ""} onChange={(e) => {
+            <div key={`${notice.id || 'notice'}-${idx}`} className="flex flex-col gap-2 bg-white dark:bg-slate-900 p-2 sm:p-2.5 rounded-lg border border-slate-200/70 dark:border-slate-800 group">
+              <div className="flex gap-2 items-center">
+                <Input value={notice.title || ""} onChange={(e) => {
+                  const next = [...notices];
+                  next[idx] = { ...next[idx], title: e.target.value, id: next[idx].id || `notice-${idx + 1}` };
+                  setContent({ ...content, notices: next });
+                }} placeholder="Notice title..." className="flex-1 h-8 text-xs rounded-md bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 font-medium" />
+                <Input value={notice.category || ""} onChange={(e) => {
+                  const next = [...notices];
+                  next[idx] = { ...next[idx], category: e.target.value };
+                  setContent({ ...content, notices: next });
+                }} placeholder="Category" className="w-24 sm:w-28 h-8 text-[11px] rounded-md bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 font-medium text-center" />
+                <Input value={notice.date || ""} onChange={(e) => {
+                  const next = [...notices];
+                  next[idx] = { ...next[idx], date: e.target.value };
+                  setContent({ ...content, notices: next });
+                }} placeholder="Date" className="w-24 sm:w-28 h-8 text-[11px] rounded-md bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 font-medium text-center" />
+                <Button variant="ghost" size="icon" className="h-7 w-7 text-slate-400 hover:text-red-500 rounded-md transition-colors" onClick={() => setContent({ ...content, notices: notices.filter((_: any, i: number) => i !== idx) })}>
+                  <Trash2 className="w-3.5 h-3.5" />
+                </Button>
+              </div>
+              <Input value={notice.description || ""} onChange={(e) => {
                 const next = [...notices];
-                next[idx].title = e.target.value;
+                next[idx] = { ...next[idx], description: e.target.value };
                 setContent({ ...content, notices: next });
-              }} placeholder="Notice title..." className="flex-1 h-8 text-xs rounded-md bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 font-medium" />
-              <Input value={notice.date || ""} onChange={(e) => {
-                const next = [...notices];
-                next[idx].date = e.target.value;
-                setContent({ ...content, notices: next });
-              }} placeholder="Date" className="w-28 sm:w-32 h-8 text-[11px] rounded-md bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 font-medium text-center" />
-              <Button variant="ghost" size="icon" className="h-7 w-7 text-slate-400 hover:text-red-500 rounded-md transition-colors" onClick={() => setContent({ ...content, notices: notices.filter((_: any, i: number) => i !== idx) })}>
-                <Trash2 className="w-3.5 h-3.5" />
-              </Button>
+              }} placeholder="Notice circular details / description..." className="h-7 text-[11px] rounded-md bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 font-normal" />
             </div>
           ))}
         </div>
@@ -2618,48 +2792,257 @@ function LegalContentEditor({ settings }: { settings: any }) {
   );
 }
 
+const CORE_WORKSPACE_QUICK_LINK_PRESETS = [
+  { 
+    value: "/admission",
+    title: "Student Admission", 
+    description: "Apply online for current academic session", 
+    url: "/admission", 
+    icon: "GraduationCap",
+    label: "Student Admission Form (/admission)"
+  },
+  { 
+    value: "/courses",
+    title: "Explore Courses", 
+    description: "Explore industry-aligned syllabus & certifications", 
+    url: "/courses", 
+    icon: "BookOpen",
+    label: "Course Catalog (/courses)"
+  },
+  { 
+    value: "/student/dashboard",
+    title: "Student Portal", 
+    description: "Access classes, notices & learning resources", 
+    url: "/student/dashboard", 
+    icon: "LayoutDashboard",
+    label: "Student Portal (/student/dashboard)"
+  },
+  { 
+    value: "/notice",
+    title: "Notice Board", 
+    description: "Stay informed with official circulars & updates", 
+    url: "/notice", 
+    icon: "Bell",
+    label: "Notice Board (/notice)"
+  },
+  { 
+    value: "/enquiry",
+    title: "Student Enquiry", 
+    description: "Ask questions about courses and fee structure", 
+    url: "/enquiry", 
+    icon: "Send",
+    label: "Student Enquiry (/enquiry)"
+  },
+  { 
+    value: "/contact",
+    title: "Contact Center", 
+    description: "Helpline, phone support & center location", 
+    url: "/contact", 
+    icon: "PhoneCall",
+    label: "Contact Center (/contact)"
+  },
+  { 
+    value: "custom",
+    title: "Custom Link", 
+    description: "Custom destination page or external link", 
+    url: "", 
+    icon: "Link2",
+    label: "Custom Destination Link..."
+  }
+];
+
+const CORE_QUICK_LINK_ICONS = [
+  { value: "GraduationCap", label: "Graduation Cap (Admission)" },
+  { value: "BookOpen", label: "Book Open (Courses)" },
+  { value: "LayoutDashboard", label: "Dashboard (Student Portal)" },
+  { value: "Bell", label: "Bell (Notices)" },
+  { value: "Send", label: "Send (Enquiry)" },
+  { value: "PhoneCall", label: "Phone (Contact)" },
+  { value: "Award", label: "Award (Achievements)" },
+  { value: "Sparkles", label: "Sparkles (Special Offers)" },
+  { value: "Link2", label: "Link (Custom Link)" },
+];
+
 function QuickLinksContentEditor({ content, setContent }: any) {
+  const links = content.links || [];
+
+  const handleResetDefaults = () => {
+    const defaults = [
+      { title: "Student Admission", description: "Apply online for current academic session", url: "/admission", icon: "GraduationCap" },
+      { title: "Explore Courses", description: "Explore industry-aligned syllabus & certifications", url: "/courses", icon: "BookOpen" },
+      { title: "Student Portal", description: "Access classes, notices & learning resources", url: "/student/dashboard", icon: "LayoutDashboard" },
+      { title: "Notice Board", description: "Stay informed with official circulars & updates", url: "/notice", icon: "Bell" }
+    ];
+    setContent({ ...content, links: defaults });
+    toast.success("Restored 4 recommended student quick links");
+  };
+
   return (
-    <div className="space-y-3">
-      <div className="flex items-center justify-between">
-        <h4 className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Quick Links</h4>
-        <Button size="sm" variant="outline" onClick={() => {
-          const newLinks = [...(content.links || []), { title: "New Link", description: "Description", url: "#", icon: "Link" }];
-          setContent({ ...content, links: newLinks });
-        }} className="h-7 sm:h-8 px-2.5 sm:px-3 rounded-lg text-xs font-semibold gap-1.5 border-slate-200 dark:border-slate-700">
-          <Plus className="w-3.5 h-3.5" /> Add Link
-        </Button>
+    <div className="space-y-3.5">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div>
+          <h4 className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Quick Links Management ({links.length})</h4>
+          <p className="text-[11px] text-slate-500">Student-focused navigation cards on your public franchise homepage.</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={handleResetDefaults}
+            className="h-7 sm:h-8 px-2.5 text-xs font-semibold gap-1.5 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:text-primary"
+            title="Restore student defaults"
+          >
+            <RotateCcw className="w-3.5 h-3.5" /> Reset Defaults
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => {
+              const newLinks = [...links, {
+                title: "Student Admission",
+                description: "Apply online for new session",
+                url: "/admission",
+                icon: "GraduationCap"
+              }];
+              setContent({ ...content, links: newLinks });
+            }}
+            className="h-7 sm:h-8 px-2.5 sm:px-3 rounded-lg text-xs font-semibold gap-1.5 border-slate-200 dark:border-slate-700 text-primary"
+          >
+            <Plus className="w-3.5 h-3.5" /> Add Link
+          </Button>
+        </div>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
-        {(content.links || []).map((link: any, idx: number) => (
-          <div key={idx} className="p-3 bg-white dark:bg-slate-900 border border-slate-200/70 dark:border-slate-800 rounded-xl space-y-2 shadow-xs relative group">
-            <div className="flex justify-between items-center">
-              <span className="text-[9px] font-bold text-primary uppercase tracking-wider">Link #{idx + 1}</span>
-              <Button variant="ghost" size="icon" className="h-6 w-6 text-slate-400 hover:text-red-500 rounded-md transition-colors" onClick={() => {
-                const newLinks = content.links.filter((_: any, i: number) => i !== idx);
-                setContent({ ...content, links: newLinks });
-              }}><Trash2 className="h-3.5 w-3.5" /></Button>
-            </div>
-            <div className="space-y-1">
-              <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Title</Label>
-              <Input value={link.title || ""} onChange={(e) => { const n = [...content.links]; n[idx].title = e.target.value; setContent({ ...content, links: n }); }} className="h-8 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 font-semibold" />
-            </div>
-            <div className="space-y-1">
-              <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Description</Label>
-              <Input value={link.description || ""} onChange={(e) => { const n = [...content.links]; n[idx].description = e.target.value; setContent({ ...content, links: n }); }} className="h-8 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700" />
-            </div>
-            <div className="grid grid-cols-2 gap-2">
-              <div className="space-y-1">
-                <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">URL</Label>
-                <Input value={link.url || ""} onChange={(e) => { const n = [...content.links]; n[idx].url = e.target.value; setContent({ ...content, links: n }); }} className="h-8 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700" placeholder="/student/dashboard" />
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        {links.map((link: any, idx: number) => {
+          const isPresetMatch = CORE_WORKSPACE_QUICK_LINK_PRESETS.some(p => p.value === link.url);
+          const currentPresetVal = isPresetMatch ? link.url : (link.url ? "custom" : "/admission");
+
+          return (
+            <div key={idx} className="p-3.5 bg-white dark:bg-slate-900 border border-slate-200/70 dark:border-slate-800 rounded-xl space-y-3 shadow-xs relative group">
+              <div className="flex justify-between items-center">
+                <div className="flex items-center gap-2">
+                  <span className="text-[9px] font-bold text-primary uppercase tracking-wider">Quick Link #{idx + 1}</span>
+                  <span className="text-[10px] font-medium px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 truncate max-w-[180px]">
+                    {link.title || "Untitled"}
+                  </span>
+                </div>
+                <Button variant="ghost" size="icon" className="h-6 w-6 text-slate-400 hover:text-red-500 rounded-md transition-colors" onClick={() => {
+                  const newLinks = links.filter((_: any, i: number) => i !== idx);
+                  setContent({ ...content, links: newLinks });
+                }}>
+                  <Trash2 className="h-3.5 w-3.5" />
+                </Button>
               </div>
+
+              {/* Destination Preset Select Box */}
               <div className="space-y-1">
-                <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Icon Name</Label>
-                <Input value={link.icon || ""} onChange={(e) => { const n = [...content.links]; n[idx].icon = e.target.value; setContent({ ...content, links: n }); }} className="h-8 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700" placeholder="Building2" />
+                <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Destination Page (Select Box)</Label>
+                <div className="relative">
+                  <select
+                    value={currentPresetVal}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      const next = [...links];
+                      if (val === "custom") {
+                        if (isPresetMatch) next[idx].url = "";
+                      } else {
+                        const preset = CORE_WORKSPACE_QUICK_LINK_PRESETS.find(p => p.value === val);
+                        if (preset) {
+                          next[idx].url = preset.url;
+                          next[idx].icon = preset.icon;
+                          if (!next[idx].title || CORE_WORKSPACE_QUICK_LINK_PRESETS.some(p => p.title === next[idx].title)) {
+                            next[idx].title = preset.title;
+                          }
+                          if (!next[idx].description || CORE_WORKSPACE_QUICK_LINK_PRESETS.some(p => p.description === next[idx].description)) {
+                            next[idx].description = preset.description;
+                          }
+                        }
+                      }
+                      setContent({ ...content, links: next });
+                    }}
+                    className="h-8 sm:h-9 text-xs font-semibold rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 pl-2.5 pr-7 w-full appearance-none cursor-pointer focus:outline-none focus:ring-1 focus:ring-primary shadow-xs truncate"
+                  >
+                    {CORE_WORKSPACE_QUICK_LINK_PRESETS.map((preset) => (
+                      <option key={preset.value} value={preset.value} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 py-1.5">
+                        {preset.label}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
+                </div>
+              </div>
+
+              {/* Icon Picker & Target Path */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <div className="space-y-1">
+                  <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Icon</Label>
+                  <div className="relative">
+                    <select
+                      value={link.icon || "GraduationCap"}
+                      onChange={(e) => {
+                        const next = [...links];
+                        next[idx].icon = e.target.value;
+                        setContent({ ...content, links: next });
+                      }}
+                      className="h-8 sm:h-9 text-xs font-semibold rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 pl-2.5 pr-7 w-full appearance-none cursor-pointer focus:outline-none focus:ring-1 focus:ring-primary shadow-xs truncate"
+                    >
+                      {CORE_QUICK_LINK_ICONS.map((ic) => (
+                        <option key={ic.value} value={ic.value} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 py-1.5">
+                          {ic.label}
+                        </option>
+                      ))}
+                    </select>
+                    <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Target Path</Label>
+                  <Input
+                    value={link.url || ""}
+                    onChange={(e) => {
+                      const next = [...links];
+                      next[idx].url = e.target.value;
+                      setContent({ ...content, links: next });
+                    }}
+                    placeholder="/courses"
+                    className="h-8 sm:h-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 font-medium"
+                  />
+                </div>
+              </div>
+
+              {/* Title & Description */}
+              <div className="space-y-2">
+                <div className="space-y-1">
+                  <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Card Title</Label>
+                  <Input
+                    value={link.title || ""}
+                    onChange={(e) => {
+                      const next = [...links];
+                      next[idx].title = e.target.value;
+                      setContent({ ...content, links: next });
+                    }}
+                    placeholder="e.g. Student Admission"
+                    className="h-8 sm:h-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 font-semibold"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Description</Label>
+                  <Input
+                    value={link.description || ""}
+                    onChange={(e) => {
+                      const next = [...links];
+                      next[idx].description = e.target.value;
+                      setContent({ ...content, links: next });
+                    }}
+                    placeholder="Brief explanation..."
+                    className="h-8 sm:h-9 text-xs rounded-lg bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 font-normal"
+                  />
+                </div>
               </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

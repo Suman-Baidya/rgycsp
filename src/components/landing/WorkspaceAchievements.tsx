@@ -2,6 +2,8 @@
 
 import Image from "next/image";
 import { Trophy, Star, Users, BookOpen, GraduationCap, Award, CheckCircle, Zap } from "lucide-react";
+import { AnimatedCounter } from "./AnimatedCounter";
+import { motion } from "framer-motion";
 
 export function WorkspaceAchievements({ data }: { data?: any }) {
   const content = data?.content || {};
@@ -26,7 +28,7 @@ export function WorkspaceAchievements({ data }: { data?: any }) {
 
   return (
     <section id="achievements" className="py-24 relative bg-primary/[0.02]">
-      <div className="max-w-[1400px] mx-auto px-6 sm:px-12">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
         <div className="text-center max-w-3xl mx-auto mb-20 space-y-4">
           <div className="inline-flex items-center justify-center gap-3 text-primary font-black tracking-[0.2em] text-[10px] uppercase w-full">
             <div className="h-0.5 w-10 bg-primary" />
@@ -42,22 +44,38 @@ export function WorkspaceAchievements({ data }: { data?: any }) {
         </div>
 
         {/* Stats Strip */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 mb-24">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8 mb-16 sm:mb-24">
           {stats.map((stat: any, i: number) => {
             const Icon = iconMap[stat.icon] || Trophy;
+            const rawValStr = (stat.value ?? "").toString().trim();
+            const match = rawValStr.match(/^([^\d.]*)(\d+(?:\.\d+)?)(.*)$/);
+            const prefix = match ? match[1] : "";
+            const num = match ? parseFloat(match[2]) : (parseInt(rawValStr.replace(/[^0-9]/g, '')) || 0);
+            const suffix = (match ? match[3] : "") || stat.suffix || "";
+
             return (
-              <div key={i} className="relative group p-10 bg-white dark:bg-zinc-900 rounded-[2.5rem] border border-border/50 shadow-sm hover:shadow-xl transition-all duration-500 overflow-hidden">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -mr-16 -mt-16 group-hover:scale-150 transition-transform duration-700" />
+              <motion.div 
+                key={i} 
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.1, duration: 0.5 }}
+                viewport={{ once: true }}
+                className="relative group p-6 sm:p-8 lg:p-10 bg-white dark:bg-zinc-900 rounded-[2rem] sm:rounded-[2.5rem] border border-border/50 shadow-sm hover:shadow-xl transition-all duration-500 overflow-hidden"
+              >
+                <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -mr-16 -mt-16 group-hover:scale-150 transition-transform duration-700 pointer-events-none" />
                 <div className="relative z-10 space-y-4 text-center">
-                  <div className="w-14 h-14 bg-primary text-white rounded-2xl flex items-center justify-center mx-auto shadow-lg shadow-primary/30 group-hover:-translate-y-2 transition-transform">
-                    <Icon className="w-7 h-7" />
+                  <div className="w-12 h-12 sm:w-14 sm:h-14 bg-primary text-white rounded-2xl flex items-center justify-center mx-auto shadow-lg shadow-primary/30 group-hover:-translate-y-1 transition-transform">
+                    <Icon className="w-6 h-6 sm:w-7 sm:h-7" />
                   </div>
                   <div>
-                    <div className="text-4xl font-black tracking-tight text-primary">{stat.value}{stat.suffix || ""}</div>
-                    <div className="text-xs uppercase font-bold text-muted-foreground tracking-widest mt-1">{stat.label}</div>
+                    <div className="text-3xl sm:text-4xl font-black tracking-tight text-primary">
+                      {prefix}
+                      <AnimatedCounter to={num} suffix={suffix} decimals={num % 1 !== 0 ? 1 : 0} />
+                    </div>
+                    <div className="text-[11px] sm:text-xs uppercase font-bold text-muted-foreground tracking-widest mt-1.5">{stat.label}</div>
                   </div>
                 </div>
-              </div>
+              </motion.div>
             );
           })}
         </div>

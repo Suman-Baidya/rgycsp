@@ -91,7 +91,7 @@ export default async function InstituteLandingPage({
     });
 
     const { syncAllSections } = await import("@/app/actions/site-settings");
-    const types = ['hero', 'about', 'counters', 'courses', 'why-choose-us', 'achievements', 'partners', 'events', 'testimonials', 'faq', 'contact'];
+    const types = ['hero', 'quick-links', 'about', 'counters', 'courses', 'why-choose-us', 'achievements', 'partners', 'events', 'testimonials', 'faq', 'contact'];
     await syncAllSections(workspaceSettings.id, types, true);
 
     workspaceSettings = await db.siteSettings.findFirst({
@@ -211,11 +211,11 @@ export default async function InstituteLandingPage({
         </div>
 
         <div className="relative z-10 flex flex-col w-full">
-        {isSectionActive("hero") && <WorkspaceHero data={getSectionData("hero")} />}
+        {isSectionActive("hero") && <WorkspaceHero data={getSectionData("hero")} tenant={tenant} />}
         
         {isSectionActive("quick-links") && <QuickLinksSection data={getSectionData("quick-links")} tenant={tenant} />}
         
-        {isSectionActive("about") && <AboutNoticeSection data={getSectionData("about")} />}
+        {isSectionActive("about") && <AboutNoticeSection data={getSectionData("about")} tenant={tenant} />}
 
         {isSectionActive("counters") && <DynamicCounters data={getSectionData("counters")} />}
 
@@ -223,6 +223,7 @@ export default async function InstituteLandingPage({
           <WorkspaceCourses 
             data={getSectionData("courses")} 
             dbCourses={top3Courses} 
+            tenant={tenant}
           />
         )}
 
@@ -232,7 +233,7 @@ export default async function InstituteLandingPage({
 
         {isSectionActive("partners") && <WorkspacePartners data={getSectionData("partners")} />}
 
-        {isSectionActive("events") && top3Events.length > 0 && <WorkspaceEvents data={{ ...getSectionData("events"), events: top3Events }} />}
+        {isSectionActive("events") && top3Events.length > 0 && <WorkspaceEvents data={{ ...getSectionData("events"), events: top3Events }} tenant={tenant} />}
 
         {isSectionActive("testimonials") && <div id="testimonials"><WorkspaceTestimonials data={getSectionData("testimonials")} /></div>}
 

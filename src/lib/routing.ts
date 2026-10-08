@@ -142,13 +142,18 @@ export function getTenantLink(
     forcedMode
   );
   
-  // Clean the path
-  const cleanPath = path.startsWith('/') ? path : `/${path}`;
-  
+  // If path is empty or anchor, return immediately
+  if (!path || path === '#' || path.startsWith('#')) {
+    return path || "#";
+  }
+
   // If the path is already absolute or has a protocol, return as is
-  if (path.startsWith('http') || path.startsWith('mailto:') || path.startsWith('tel:')) {
+  if (path.startsWith('http') || path.startsWith('mailto:') || path.startsWith('tel:') || path.startsWith('javascript:')) {
     return path;
   }
+
+  // Clean the path
+  const cleanPath = path.startsWith('/') ? path : `/${path}`;
 
   // Prevent double prefixing or redundant subdirectory nesting
   // If we are in subdirectory mode, the link should NEVER start with another tenant's /app/

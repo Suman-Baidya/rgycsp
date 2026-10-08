@@ -1,4 +1,4 @@
-﻿import { findWorkspaceByTenant } from "@/lib/workspace";
+import { findWorkspaceByTenant } from "@/lib/workspace";
 import { db } from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import { WorkspaceNavbar } from "@/components/layout/WorkspaceNavbar";
@@ -81,12 +81,12 @@ export default async function WorkspaceCoursesPage({
           ]}
         />
 
-        <div className="max-w-7xl mx-auto px-6 py-24">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 lg:py-16 w-full">
           <CoursesList initialCourses={initialCourses} />
         </div>
       </main>
 
-      <WorkspaceFooter settings={workspace.siteSettings} tenant={tenant} />
+      <WorkspaceFooter settings={workspace.siteSettings} tenant={tenant} user={session?.user} />
     </div>
   );
 }

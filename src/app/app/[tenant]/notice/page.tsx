@@ -11,6 +11,10 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { WorkspacePageHeader } from "@/components/layout/WorkspacePageHeader";
 import { DEFAULT_WORKSPACE_NOTICES } from "@/lib/workspace-defaults";
+import { getNoticeSlug } from "@/lib/notice-utils";
+import { Tag } from "lucide-react";
+
+import { getServerTenantLink } from "@/lib/routing-server";
 
 export default async function WorkspaceNoticePage({
   params
@@ -46,6 +50,18 @@ export default async function WorkspaceNoticePage({
 
   const session = await auth();
 
+  const noticesWithLinks = await Promise.all(
+    notices.map(async (n: any, idx: number) => {
+      const slug = getNoticeSlug(n, idx);
+      const detailHref = await getServerTenantLink(`/notice/${slug}`, tenant);
+      return {
+        ...n,
+        slug,
+        detailHref
+      };
+    })
+  );
+
   return (
     <div className="flex flex-col min-h-screen font-sans bg-background selection:bg-primary/30">
       <CustomThemeStyle 
@@ -58,47 +74,64 @@ export default async function WorkspaceNoticePage({
       <main className="flex-1 w-full flex flex-col">
         <WorkspacePageHeader 
           title="Notice Board"
-          description="Stay updated with the latest news, events, and announcements from our institute."
+          description="Stay updated with the latest news, official circulars, and announcements from our institute."
           bgImage={(workspaceSettings as any).pageHeaderBanner || undefined}
           breadcrumbs={[
             { name: "Notice", href: "/notice" }
           ]}
         />
 
-        <section className="py-24 px-6 container mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {notices.map((notice: any, idx: number) => (
-              <Card key={idx} className="group overflow-hidden border-primary/10 hover:border-primary/30 transition-all hover:shadow-2xl hover:shadow-primary/5 rounded-[2rem] bg-card/50 backdrop-blur-sm">
-                <CardContent className="p-8 space-y-6">
-                  <div className="flex items-center justify-between">
-                    <div className="w-12 h-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center group-hover:scale-110 transition-transform">
-                      <Bell className="w-6 h-6" />
+        <section className="py-12 sm:py-16 lg:py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-7 lg:gap-8">
+            {noticesWithLinks.map((notice: any, idx: number) => (
+              <Card 
+                key={`${notice.id || 'notice'}-${idx}`} 
+                className="group overflow-hidden border border-slate-200/80 dark:border-slate-800 hover:border-primary/40 transition-all hover:shadow-xl hover:shadow-primary/5 rounded-2xl sm:rounded-3xl bg-white dark:bg-slate-900 shadow-xs flex flex-col justify-between"
+              >
+                <CardContent className="p-5 sm:p-6 space-y-4 sm:space-y-5 flex-1 flex flex-col justify-between">
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-2">
+                        <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center group-hover:scale-105 transition-transform shrink-0">
+                          <Bell className="w-4 h-4 sm:w-5 sm:h-5" />
+                        </div>
+                        {notice.category && (
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-primary bg-primary/10 px-2.5 py-0.5 rounded-full">
+                            {notice.category}
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-1.5 text-[11px] font-bold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-full shrink-0">
+                        <Calendar className="w-3 h-3 text-slate-400" />
+                        <span>{notice.date || "Recent"}</span>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2 text-xs font-bold text-muted-foreground bg-muted px-4 py-2 rounded-full">
-                      <Calendar className="w-3.5 h-3.5" />
-                      {notice.date}
+                    
+                    <div className="space-y-2">
+                      <Link href={notice.detailHref} className="block">
+                        <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white group-hover:text-primary transition-colors leading-snug line-clamp-2">
+                          {notice.title}
+                        </h3>
+                      </Link>
+                      <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 line-clamp-3 leading-relaxed">
+                        {notice.description ||
+                          `Latest official communication regarding ${notice.title.toLowerCase()}. Please check the official portal notice details for comprehensive instructions.`}
+                      </p>
                     </div>
-                  </div>
-                  
-                  <div className="space-y-3">
-                    <h3 className="text-xl font-bold text-foreground group-hover:text-primary transition-colors leading-tight">
-                      {notice.title}
-                    </h3>
-                    <p className="text-sm text-muted-foreground line-clamp-3 leading-relaxed">
-                      Latest official communication regarding {notice.title.toLowerCase()}. Please check the official portal notice details for comprehensive instructions.
-                    </p>
                   </div>
 
-                  <div className="pt-4 border-t border-border/40 flex items-center justify-between">
-                    <Link href={notice.link || "#"}>
-                      <Button variant="ghost" className="p-0 h-auto font-bold text-primary gap-2 hover:bg-transparent group/btn">
+                  <div className="pt-3.5 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between mt-auto">
+                    <Link href={notice.detailHref} className="inline-flex items-center">
+                      <Button variant="ghost" className="p-0 h-auto font-bold text-xs sm:text-sm text-primary gap-1.5 hover:bg-transparent hover:text-primary/80 group/btn">
                         View Details 
-                        <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
+                        <ArrowRight className="w-3.5 h-3.5 group-hover/btn:translate-x-1 transition-transform" />
                       </Button>
                     </Link>
-                    <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                       <ExternalLink className="w-4 h-4 text-muted-foreground" />
-                    </div>
+                    <Link href={notice.detailHref}>
+                      <div className="w-7 h-7 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center opacity-60 group-hover:opacity-100 group-hover:bg-primary/10 group-hover:text-primary transition-all">
+                        <ExternalLink className="w-3.5 h-3.5" />
+                      </div>
+                    </Link>
                   </div>
                 </CardContent>
               </Card>
@@ -107,7 +140,7 @@ export default async function WorkspaceNoticePage({
         </section>
       </main>
 
-      <WorkspaceFooter settings={workspaceSettings} />
+      <WorkspaceFooter settings={workspaceSettings} tenant={tenant} user={session?.user} />
     </div>
   );
 }

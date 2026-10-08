@@ -58,6 +58,9 @@ export default async function WorkspaceAboutPage({
   });
 
   const allEventsHref = await getServerTenantLink("/events", tenant);
+  const coursesHref = await getServerTenantLink("/courses", tenant);
+  const contactHref = await getServerTenantLink("/contact", tenant);
+  const galleryHref = await getServerTenantLink("/gallery", tenant);
   const eventsWithHrefs = await Promise.all(
     rawEvents.map(async (event) => ({
       ...event,
@@ -112,13 +115,13 @@ export default async function WorkspaceAboutPage({
                 </div>
                 
                 <div className="pt-4 flex flex-wrap gap-4">
-                  <Link href="/courses">
+                  <Link href={coursesHref}>
                     <Button size="lg" className="rounded-full gap-3 px-10 h-14 font-black shadow-xl shadow-primary/20 hover:scale-105 transition-all group">
                       Explore Courses
                       <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
                     </Button>
                   </Link>
-                  <Link href="/contact">
+                  <Link href={contactHref}>
                     <Button size="lg" variant="outline" className="rounded-full gap-3 px-10 h-14 font-black hover:bg-primary/5 border-primary/20 transition-all">
                       Contact Us
                     </Button>
@@ -160,7 +163,7 @@ export default async function WorkspaceAboutPage({
                 </div>
                 <h2 className="text-3xl md:text-5xl font-black tracking-tight">Our Campus Life</h2>
               </div>
-              <Link href="/gallery">
+              <Link href={galleryHref}>
                 <Button variant="ghost" className="rounded-2xl h-12 font-black gap-2 hover:bg-primary/5 hover:text-primary transition-all">
                   View Full Gallery <ArrowRight className="w-4 h-4" />
                 </Button>

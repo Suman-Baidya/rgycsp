@@ -32,85 +32,101 @@ export function WorkspaceFaq({ data }: { data?: any }) {
   const [activeIndex, setActiveIndex] = useState<number | null>(0);
 
   return (
-    <section id="faq" className="py-24 relative overflow-hidden bg-transparent">
+    <section id="faq" className="py-12 sm:py-16 md:py-20 relative overflow-hidden bg-transparent">
       {/* Decorative Background Elements */}
-      <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-primary/5 rounded-full blur-[100px] -mr-64 -mt-64" />
-      <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-blue-500/5 rounded-full blur-[80px] -ml-48 -mb-48" />
+      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[90px] -mr-60 -mt-60 pointer-events-none" />
+      <div className="absolute bottom-0 left-0 w-[350px] h-[350px] bg-blue-500/5 rounded-full blur-[70px] -ml-40 -mb-40 pointer-events-none" />
       
       {/* Watermark Icon */}
-      <div className="absolute top-20 left-10 opacity-[0.03] dark:opacity-[0.05] -rotate-12 pointer-events-none">
-        <HelpCircle className="w-[400px] h-[400px] text-slate-900 dark:text-white" />
+      <div className="absolute top-16 left-6 opacity-[0.02] dark:opacity-[0.04] -rotate-12 pointer-events-none hidden sm:block">
+        <HelpCircle className="w-[300px] h-[300px] text-slate-900 dark:text-white" />
       </div>
 
-      <div className="max-w-4xl mx-auto px-6 sm:px-12 relative z-10">
-        <div className="text-center mb-16 space-y-4">
-          <div className="inline-flex items-center justify-center gap-3 text-primary font-black tracking-[0.2em] text-[10px] uppercase w-full">
-            <div className="h-0.5 w-10 bg-primary" />
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 w-full">
+        <div className="text-center mb-7 sm:mb-10 space-y-2 sm:space-y-2.5">
+          <div className="inline-flex items-center justify-center gap-2.5 text-primary font-bold tracking-[0.2em] text-[10px] sm:text-xs uppercase w-full">
+            <div className="h-0.5 w-6 sm:w-8 bg-primary/60" />
             {subtitle}
-            <div className="h-0.5 w-10 bg-primary" />
+            <div className="h-0.5 w-6 sm:w-8 bg-primary/60" />
           </div>
-          <h2 className="text-4xl md:text-6xl font-black tracking-tight text-slate-900 dark:text-white leading-[1.1]">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white leading-tight">
             {title}
           </h2>
-          <p className="text-lg text-slate-600 dark:text-slate-400">
+          <p className="text-xs sm:text-sm md:text-base text-slate-600 dark:text-slate-400 max-w-xl mx-auto font-normal">
             {content.description || "Everything you need to know about our admission process, campus life, and more."}
           </p>
         </div>
 
-        <div className="space-y-4">
-          {faqs.map((faq: any, i: number) => (
-            <div 
-              key={i} 
-              className={cn(
-                "group rounded-[2rem] border transition-all duration-300 overflow-hidden",
-                activeIndex === i ? "bg-white dark:bg-zinc-900 border-primary/20 shadow-md shadow-primary/5" : "bg-transparent border-border/60 hover:border-primary/20"
-              )}
-            >
-              <button 
-                onClick={() => setActiveIndex(activeIndex === i ? null : i)}
-                suppressHydrationWarning
-                className="w-full p-8 flex items-center justify-between text-left focus:outline-none"
+        <div className="space-y-2 sm:space-y-2.5">
+          {faqs.map((faq: any, i: number) => {
+            const isOpen = activeIndex === i;
+            return (
+              <div 
+                key={i} 
+                className={cn(
+                  "group rounded-xl sm:rounded-2xl border transition-all duration-200 overflow-hidden",
+                  isOpen 
+                    ? "bg-white dark:bg-slate-900 border-primary/30 shadow-xs shadow-primary/5" 
+                    : "bg-white/70 dark:bg-slate-900/40 border-slate-200/80 dark:border-slate-800 hover:border-primary/20 hover:bg-white dark:hover:bg-slate-900/60"
+                )}
               >
-                <span className="text-xl font-bold pr-8">{faq.question}</span>
+                <button 
+                  onClick={() => setActiveIndex(isOpen ? null : i)}
+                  suppressHydrationWarning
+                  className="w-full px-3.5 py-3 sm:px-4.5 sm:py-3.5 flex items-center justify-between text-left focus:outline-none gap-2.5 cursor-pointer"
+                >
+                  <span className={cn(
+                    "text-xs sm:text-sm md:text-[15px] font-bold leading-snug flex-1 transition-colors",
+                    isOpen ? "text-primary dark:text-primary" : "text-slate-900 dark:text-white"
+                  )}>
+                    {faq.question}
+                  </span>
+                  <div className={cn(
+                    "w-6 h-6 sm:w-7 sm:h-7 rounded-full flex items-center justify-center transition-all shrink-0",
+                    isOpen 
+                      ? "bg-primary text-primary-foreground" 
+                      : "bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 group-hover:bg-primary group-hover:text-primary-foreground"
+                  )}>
+                    {isOpen ? <Minus className="w-3.5 h-3.5" /> : <Plus className="w-3.5 h-3.5" />}
+                  </div>
+                </button>
+                
                 <div className={cn(
-                  "w-10 h-10 rounded-full flex items-center justify-center transition-all",
-                  activeIndex === i ? "bg-primary text-primary-foreground rotate-180" : "bg-muted text-muted-foreground group-hover:bg-primary group-hover:text-primary-foreground"
+                  "transition-all duration-300 ease-in-out px-3.5 sm:px-4.5 overflow-hidden",
+                  isOpen ? "max-h-[500px] pb-3 sm:pb-3.5 opacity-100" : "max-h-0 opacity-0"
                 )}>
-                  {activeIndex === i ? <Minus className="w-5 h-5" /> : <Plus className="w-5 h-5" />}
-                </div>
-              </button>
-              
-              <div className={cn(
-                "transition-all duration-500 ease-in-out px-8 overflow-hidden",
-                activeIndex === i ? "max-h-[500px] pb-8 opacity-100" : "max-h-0 opacity-0"
-              )}>
-                <div className="text-lg text-muted-foreground leading-relaxed border-t border-border/40 pt-6">
-                  {faq.answer}
+                  <div className="text-xs sm:text-[13px] text-slate-600 dark:text-slate-300 leading-relaxed border-t border-slate-100 dark:border-slate-800/80 pt-2 sm:pt-2.5 font-normal">
+                    {faq.answer}
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
-        <div className="mt-20 p-10 rounded-[3rem] bg-zinc-950 text-white flex flex-col md:flex-row items-center justify-between gap-8 relative overflow-hidden group">
-           <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 rounded-full -mr-32 -mt-32 blur-3xl group-hover:bg-primary/20 transition-colors" />
-           <div className="relative z-10 flex items-center gap-6">
-              <div className="w-16 h-16 bg-white/10 rounded-2xl flex items-center justify-center">
-                 <MessageCircle className="w-8 h-8 text-primary" />
+        <div className="mt-8 sm:mt-10 p-4 sm:p-5 md:p-6 rounded-xl sm:rounded-2xl bg-slate-950 text-white flex flex-col sm:flex-row items-center justify-between gap-4 sm:gap-6 relative overflow-hidden group border border-slate-800 shadow-sm">
+           <div className="absolute top-0 right-0 w-48 h-48 bg-primary/10 rounded-full -mr-24 -mt-24 blur-2xl group-hover:bg-primary/20 transition-colors pointer-events-none" />
+           <div className="relative z-10 flex items-center gap-3 sm:gap-4 w-full sm:w-auto">
+              <div className="w-9 h-9 sm:w-11 sm:h-11 bg-white/10 rounded-xl flex items-center justify-center shrink-0">
+                 <MessageCircle className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
               </div>
-              <div>
-                 <h4 className="text-2xl font-black">{content.ctaTitle || "Still have questions?"}</h4>
-                 <p className="text-zinc-400 font-medium">{content.ctaDesc || "We're here to help you every step of the way."}</p>
+              <div className="space-y-0.5">
+                 <h4 className="text-xs sm:text-sm md:text-base font-bold text-white">
+                   {content.ctaTitle || "Still have questions?"}
+                 </h4>
+                 <p className="text-[11px] sm:text-xs text-slate-400 font-normal">
+                   {content.ctaDesc || "We're here to help you every step of the way."}
+                 </p>
               </div>
            </div>
            {content.ctaButtonLink ? (
-             <a href={content.ctaButtonLink}>
-                <Button className="relative z-10 h-14 px-10 rounded-2xl font-black text-lg bg-primary  transition-transform shadow-lg shadow-primary/20 border-none">
+             <a href={content.ctaButtonLink} className="w-full sm:w-auto shrink-0">
+                <Button className="relative z-10 h-8 sm:h-9 px-4 sm:px-5 rounded-lg font-bold text-xs bg-primary text-primary-foreground hover:bg-primary/90 transition-transform shadow-sm shadow-primary/20 border-none w-full sm:w-auto">
                    {content.ctaButtonText || "Chat with Admissions"}
                 </Button>
              </a>
            ) : (
-              <Button className="relative z-10 h-14 px-10 rounded-2xl font-black text-lg bg-primary  transition-transform shadow-lg shadow-primary/20 border-none">
+              <Button className="relative z-10 h-8 sm:h-9 px-4 sm:px-5 rounded-lg font-bold text-xs bg-primary text-primary-foreground hover:bg-primary/90 transition-transform shadow-sm shadow-primary/20 border-none w-full sm:w-auto shrink-0">
                  {content.ctaButtonText || "Chat with Admissions"}
               </Button>
            )}

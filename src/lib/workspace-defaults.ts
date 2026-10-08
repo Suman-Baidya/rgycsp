@@ -65,27 +65,36 @@ export const DEFAULT_WORKSPACE_GALLERY = [
 
 export const DEFAULT_WORKSPACE_NOTICES = [
   {
+    id: "notice-exam-schedule-2026",
     title: "Semester Examination Schedule 2026 Released",
     date: "12 Oct, 2026",
-    link: "#",
-    category: "Exams"
+    category: "Exams",
+    description: "The official examination timetable for the upcoming semester examination session has been approved by the academic council. All enrolled students are requested to review their course-wise exam dates, reporting timings, and hall ticket download guidelines.\n\nPlease ensure your attendance criteria and laboratory practical clearances are completed prior to the issuance of examination admit cards.",
+    link: ""
   },
   {
+    id: "notice-admissions-open-2026",
     title: "Admissions Open for Summer Diploma & Certificate Batches",
     date: "08 Oct, 2026",
-    link: "#",
-    category: "Admissions"
+    category: "Admissions",
+    description: "Applications are invited for admissions into our industry-aligned Diploma, Advanced Diploma, and Professional Certificate programs for the upcoming academic session.\n\nStudents seeking admission are encouraged to apply online or visit the campus admission desk during office hours. Early applicants are eligible for special enrollment waivers and career counselling sessions.",
+    link: ""
   },
   {
+    id: "notice-recruitment-drive-2026",
     title: "Campus Recruitment Drive - Top Hiring Partners",
     date: "05 Oct, 2026",
-    link: "#",
-    category: "Placement"
+    category: "Placement",
+    description: "Our dedicated Training and Placement Cell is organizing an exclusive campus recruitment drive featuring premier IT and vocational hiring partners.\n\nFinal year and outgoing batch students should submit their updated resumes to the placement cell and prepare for technical interviews and aptitude screening rounds.",
+    link: ""
   },
   {
+    id: "notice-scholarship-portal-2026",
     title: "Merit-Based Scholarship Application Portal Now Live",
     date: "01 Oct, 2026",
-    link: "#",
-    category: "Scholarship"
+    category: "Scholarship",
+    description: "We are pleased to announce that our merit-cum-means financial scholarship application window is officially open for qualified learners.\n\nEligible candidates can submit their academic scorecards and verification documentation through the administrative desk to receive up to 50% tuition assistance.",
+    link: ""
   }
 ];
+

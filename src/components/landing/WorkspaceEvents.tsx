@@ -12,9 +12,9 @@ import Link from "next/link";
 import { getTenantLink, detectTenant } from "@/lib/routing";
 import { usePathname } from "next/navigation";
 
-export function WorkspaceEvents({ data }: { data: any }) {
+export function WorkspaceEvents({ data, tenant: propTenant }: { data: any; tenant?: string }) {
   const pathname = usePathname();
-  const tenant = detectTenant(pathname, typeof window !== 'undefined' ? window.location.hostname : undefined);
+  const tenant = propTenant || detectTenant(pathname, typeof window !== 'undefined' ? window.location.hostname : undefined);
   const getLink = (path: string) => getTenantLink(path, tenant, pathname);
   const events = data?.events;
 
@@ -28,7 +28,7 @@ export function WorkspaceEvents({ data }: { data: any }) {
 
   return (
     <section id="events" className="py-24 /50 dark:/[0.02] bg-transparent">
-      <div className="max-w-[1400px] mx-auto px-6 sm:px-12">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
           <div className="space-y-4 max-w-2xl">
             <div className="inline-flex items-center gap-3 text-primary font-black tracking-[0.2em] text-[10px] uppercase">

@@ -9,6 +9,7 @@ interface WorkspacePageHeaderProps {
   bgImage?: string;
   statusTitle?: string;
   statusSub?: string;
+  academicYear?: string | number;
 }
 
 export function WorkspacePageHeader({
@@ -17,8 +18,11 @@ export function WorkspacePageHeader({
   breadcrumbs = [],
   bgImage = "https://cdn.pixabay.com/photo/2016/01/19/01/42/library-1147815_1280.jpg",
   statusTitle = "LIVE",
-  statusSub = "Updates"
+  statusSub = "Updates",
+  academicYear
 }: WorkspacePageHeaderProps) {
+  const currentYear = academicYear || new Date().getFullYear();
+
   return (
     <div className="relative w-full overflow-hidden bg-slate-950 group">
       {/* Background with Animation */}
@@ -41,9 +45,9 @@ export function WorkspacePageHeader({
       </div>
 
       {/* Content Container */}
-      <div className="relative z-20 max-w-7xl mx-auto px-6 pt-36 pb-16 md:pt-48 md:pb-20">
-        <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-10">
-          <div className="space-y-6 max-w-3xl">
+      <div className="relative z-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-36 pb-16 md:pt-48 md:pb-20 w-full">
+        <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-8 lg:gap-10 w-full">
+          <div className="space-y-4 sm:space-y-5 flex-1 min-w-0 max-w-4xl">
             {/* Clean Unboxed Breadcrumbs */}
             <nav className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.2em] text-white/60">
               <Link href="/" className="hover:text-primary transition-colors flex items-center gap-1.5">
@@ -63,12 +67,15 @@ export function WorkspacePageHeader({
               ))}
             </nav>
 
-            <div className="space-y-6">
+            <div className="space-y-3 sm:space-y-4 min-w-0">
               <div className="flex items-center gap-3 animate-in slide-in-from-left duration-700">
                 <div className="h-0.5 w-8 bg-primary shadow-[0_0_10px_rgba(var(--primary),0.5)]" />
                 <span className="text-primary text-[10px] font-black uppercase tracking-[0.4em] drop-shadow-sm">Official Page</span>
               </div>
-              <h1 className="text-4xl md:text-5xl lg:text-6xl font-black text-white tracking-tighter leading-[0.9] drop-shadow-2xl">
+              <h1 
+                title={title}
+                className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-black text-white tracking-tight leading-tight drop-shadow-2xl truncate block whitespace-nowrap"
+              >
                 {title.split(' ').map((word, i, arr) => (
                   <span key={i} className={i === arr.length - 1 ? "text-primary" : ""}>
                     {word}{" "}
@@ -76,7 +83,10 @@ export function WorkspacePageHeader({
                 ))}
               </h1>
               {description && (
-                <p className="text-base md:text-lg text-white/50 font-medium leading-relaxed max-w-xl py-2 line-clamp-1">
+                <p 
+                  title={description}
+                  className="text-xs sm:text-sm md:text-base text-white/60 font-medium leading-normal max-w-2xl truncate block mt-1 sm:mt-2"
+                >
                   {description}
                 </p>
               )}
@@ -84,10 +94,10 @@ export function WorkspacePageHeader({
           </div>
 
           {/* Decorative Stats or Element */}
-          <div className="hidden lg:flex items-center gap-8 pb-4">
+          <div className="hidden lg:flex items-center gap-8 pb-4 shrink-0">
             <div className="h-16 w-px bg-gradient-to-b from-transparent via-white/20 to-transparent" />
             <div className="space-y-1">
-              <div className="text-3xl font-black text-white">2026</div>
+              <div className="text-3xl font-black text-white">{currentYear}</div>
               <div className="text-[10px] font-black text-white/40 uppercase tracking-widest">Academic Year</div>
             </div>
             <div className="h-16 w-px bg-gradient-to-b from-transparent via-white/20 to-transparent" />

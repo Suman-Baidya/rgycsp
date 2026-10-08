@@ -11,9 +11,9 @@ import { getTenantLink, detectTenant } from "@/lib/routing";
 import { usePathname } from "next/navigation";
 import CourseDetailsModal from "@/app/courses/CourseDetailsModal";
 
-export function WorkspaceCourses({ data, dbCourses }: { data: any, dbCourses?: any[] }) {
+export function WorkspaceCourses({ data, dbCourses, tenant: propTenant }: { data: any, dbCourses?: any[], tenant?: string }) {
   const pathname = usePathname();
-  const tenant = detectTenant(pathname, typeof window !== 'undefined' ? window.location.hostname : undefined);
+  const tenant = propTenant || detectTenant(pathname, typeof window !== 'undefined' ? window.location.hostname : undefined);
   const getLink = (path: string) => getTenantLink(path, tenant, pathname);
   
   const hasDbCourses = dbCourses && dbCourses.length > 0;
@@ -67,7 +67,7 @@ export function WorkspaceCourses({ data, dbCourses }: { data: any, dbCourses?: a
 
   return (
     <section id="courses" className="py-24 overflow-hidden bg-transparent">
-      <div className="max-w-[1400px] mx-auto px-6 sm:px-12">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
           <div className="space-y-4 max-w-2xl">
             <div className="inline-flex items-center gap-3 text-primary font-black tracking-[0.2em] text-[10px] uppercase">
@@ -176,11 +176,11 @@ export function WorkspaceCourses({ data, dbCourses }: { data: any, dbCourses?: a
                     >
                       Details
                     </Button>
-                    <a href={`/admission?view=form&courseId=${course.id}`} target="_blank" rel="noopener noreferrer" className="flex-1">
+                    <Link href={getLink(`/admission?view=form&courseId=${course.id}`)} className="flex-1">
                       <Button className="w-full rounded-2xl h-11 font-bold group-hover:bg-primary group-hover:text-primary-foreground transition-all border-none shadow-sm text-xs px-1">
                         Enroll
                       </Button>
-                    </a>
+                    </Link>
                   </div>
                 </CardContent>
               </Card>

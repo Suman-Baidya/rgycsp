@@ -35,7 +35,7 @@ export function WorkspaceWhyChooseUs({ data }: { data?: any }) {
       <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/5 rounded-full -mr-64 -mt-64 blur-3xl" />
       <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-primary/5 rounded-full -ml-64 -mb-64 blur-3xl" />
 
-      <div className="max-w-[1400px] mx-auto px-6 sm:px-12 flex flex-col lg:flex-row gap-20 items-center relative z-10">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col lg:flex-row gap-20 items-center relative z-10 w-full">
         {/* Image Side with Floating Elements */}
         <div className="flex-1 w-full relative">
           <div className="relative rounded-[3rem] overflow-hidden aspect-[4/5] shadow-2xl border-8 border-white dark:border-zinc-900 group">

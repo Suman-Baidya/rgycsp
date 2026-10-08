@@ -241,7 +241,7 @@ export function WorkspaceNavbar({ settings, user, tenant: propTenant }: { settin
             exit={{ height: 0, opacity: 0 }}
             className="hidden lg:flex w-full bg-slate-950/40 backdrop-blur-sm border-b border-white/5 py-3 items-center text-[10px] font-bold tracking-[0.2em] text-zinc-400 overflow-hidden"
           >
-            <div className="max-w-7xl mx-auto px-6 w-full flex items-center justify-between">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full flex items-center justify-between">
               <div className="flex items-center gap-5">
                 {socialLinks.facebook && <Link href={socialLinks.facebook} className="hover:text-white transition-all hover:brightness-110"><Facebook className="h-3.5 w-3.5" /></Link>}
                 {socialLinks.twitter && <Link href={socialLinks.twitter} className="hover:text-white transition-all hover:brightness-110"><Twitter className="h-3.5 w-3.5" /></Link>}
@@ -273,7 +273,7 @@ export function WorkspaceNavbar({ settings, user, tenant: propTenant }: { settin
         "w-full bg-white/5 backdrop-blur-sm border-b border-white/5 py-1 sm:py-1.5 overflow-hidden transition-all duration-500",
         isScrolled ? "lg:hidden fixed top-0 bg-zinc-950/90 border-b border-white/10 py-1.5 shadow-2xl z-[150]" : "relative"
       )}>
-        <div className="max-w-7xl mx-auto px-4 lg:px-6 flex items-center justify-between gap-2 lg:gap-4">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between gap-2 lg:gap-4">
           <Link href={rootHref} className="min-w-0 flex-1">
             <Logo />
           </Link>
@@ -371,7 +371,7 @@ export function WorkspaceNavbar({ settings, user, tenant: propTenant }: { settin
           ? "fixed top-0 bg-zinc-950/90 backdrop-blur-sm border-b border-white/5 py-3 shadow-2xl"
           : "bg-transparent"
       )}>
-        <div className="max-w-7xl mx-auto px-6 w-full grid grid-cols-3 items-center">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full grid grid-cols-3 items-center">
           {/* Left: Logo (Only when scrolled) */}
           <div className="flex justify-start">
             {isScrolled && (
